@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, ExternalLink, MapPin, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +26,7 @@ interface DirectoryContentProps {
 function DirectoryContent({ showHeader = false, showStats = false }: DirectoryContentProps) {
   const [organizations, setOrganizations] = useState<PublicOrganization[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedState, setSelectedState] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   const fetchOrganizations = async () => {
@@ -58,11 +60,17 @@ function DirectoryContent({ showHeader = false, showStats = false }: DirectoryCo
     fetchOrganizations();
   }, []);
 
-  const filteredOrganizations = organizations.filter(org =>
-    org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    org.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    org.state?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredOrganizations = organizations.filter(org => {
+    const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      org.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      org.state?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesState = selectedState === '' || org.state === selectedState;
+    
+    return matchesSearch && matchesState;
+  });
+
+  const uniqueStates = Array.from(new Set(organizations.map(org => org.state).filter(Boolean))).sort();
 
   if (loading) {
     return (
@@ -110,15 +118,30 @@ function DirectoryContent({ showHeader = false, showStats = false }: DirectoryCo
         </div>
       )}
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search organizations..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
+      {/* Search and Filter */}
+      <div className="flex gap-4 items-center max-w-2xl">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search organizations..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={selectedState} onValueChange={setSelectedState}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by state" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All states</SelectItem>
+            {uniqueStates.map((state) => (
+              <SelectItem key={state} value={state}>
+                {state}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Organizations List - More compact */}
