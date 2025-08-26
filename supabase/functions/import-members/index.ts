@@ -74,41 +74,54 @@ serve(async (req) => {
 
     for (const member of members) {
       try {
-        // Create user account with a temporary password
-        const tempPassword = crypto.randomUUID();
-        const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
-          email: member.email,
-          password: tempPassword,
-          email_confirm: true, // Skip email confirmation for imported users
-          user_metadata: {
-            first_name: member.first_name,
-            last_name: member.last_name,
-            imported: true
-          }
-        });
+        let userId: string;
+        let isNewUser = false;
 
-        if (userError) {
-          // Check if user already exists
-          if (userError.message.includes('already exists') || userError.message.includes('already registered')) {
-            console.log(`User ${member.email} already exists, skipping`);
-            results.existing.push(member.email);
+        // First, check if user already exists by looking up their profile
+        const { data: existingProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('user_id')
+          .eq('email', member.email)
+          .single();
+
+        if (existingProfile) {
+          // User already exists, update their profile
+          console.log(`User ${member.email} already exists, updating profile`);
+          userId = existingProfile.user_id;
+          results.existing.push(member.email);
+        } else {
+          // Create new user account
+          const tempPassword = crypto.randomUUID();
+          const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
+            email: member.email,
+            password: tempPassword,
+            email_confirm: true, // Skip email confirmation for imported users
+            user_metadata: {
+              first_name: member.first_name,
+              last_name: member.last_name,
+              imported: true
+            }
+          });
+
+          if (userError) {
+            console.error(`Failed to create user ${member.email}:`, userError);
+            results.failed.push({ email: member.email, error: userError.message });
             continue;
           }
-          
-          console.error(`Failed to create user ${member.email}:`, userError);
-          results.failed.push({ email: member.email, error: userError.message });
-          continue;
+
+          if (!userData.user) {
+            results.failed.push({ email: member.email, error: 'User creation returned no data' });
+            continue;
+          }
+
+          userId = userData.user.id;
+          isNewUser = true;
+
+          // Wait for the handle_new_user trigger to complete
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        if (!userData.user) {
-          results.failed.push({ email: member.email, error: 'User creation returned no data' });
-          continue;
-        }
-
-        // The handle_new_user trigger will automatically create a basic profile
-        // Wait a moment for the trigger to complete, then update with imported data
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
+        // Update profile with imported data (works for both new and existing users)
         const { error: profileError } = await supabaseAdmin
           .from('profiles')
           .update({
@@ -144,36 +157,41 @@ serve(async (req) => {
             primary_office_other_details: member.primary_office_other_details,
             other_software_comments: member.other_software_comments
           })
-          .eq('user_id', userData.user.id);
+          .eq('user_id', userId);
 
         if (profileError) {
-          console.error(`Failed to create profile for ${member.email}:`, profileError);
+          console.error(`Failed to update profile for ${member.email}:`, profileError);
           results.failed.push({ email: member.email, error: profileError.message });
           continue;
         }
 
-        // Assign member role
-        const { error: roleError } = await supabaseAdmin
-          .from('user_roles')
-          .insert({
-            user_id: userData.user.id,
-            role: 'member'
+        // Only assign role and send password reset for new users
+        if (isNewUser) {
+          // Assign member role
+          const { error: roleError } = await supabaseAdmin
+            .from('user_roles')
+            .insert({
+              user_id: userId,
+              role: 'member'
+            });
+
+          if (roleError) {
+            console.error(`Failed to assign role for ${member.email}:`, roleError);
+            results.failed.push({ email: member.email, error: roleError.message });
+            continue;
+          }
+
+          // Send password reset email so user can set their own password
+          await supabaseAdmin.auth.admin.generateLink({
+            type: 'recovery',
+            email: member.email
           });
 
-        if (roleError) {
-          console.error(`Failed to assign role for ${member.email}:`, roleError);
-          results.failed.push({ email: member.email, error: roleError.message });
-          continue;
+          console.log(`Successfully imported new user ${member.email}`);
+          results.successful.push(member.email);
+        } else {
+          console.log(`Successfully updated existing user ${member.email}`);
         }
-
-        // Send password reset email so user can set their own password
-        await supabaseAdmin.auth.admin.generateLink({
-          type: 'recovery',
-          email: member.email
-        });
-
-        console.log(`Successfully imported ${member.email}`);
-        results.successful.push(member.email);
 
       } catch (error) {
         console.error(`Unexpected error importing ${member.email}:`, error);
