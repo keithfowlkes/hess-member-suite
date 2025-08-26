@@ -191,7 +191,11 @@ export default function Members() {
                         {organization.city}{organization.city && organization.state && ', '}{organization.state}
                       </div>
                     )}
-                    <div className="pt-2 border-t">
+                    <div className="pt-2 border-t space-y-1">
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Student FTE:</span>
+                        <span className="font-medium">{organization.profiles?.student_fte || 'N/A'}</span>
+                      </div>
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>Annual Fee:</span>
                         <span className="font-medium">${organization.annual_fee_amount}</span>
@@ -206,10 +210,11 @@ export default function Members() {
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-muted/50 px-6 py-3 border-b">
               <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
-                <div className="col-span-3">Organization</div>
+                <div className="col-span-2">Organization</div>
                 <div className="col-span-2">Primary Contact</div>
                 <div className="col-span-2">Email</div>
                 <div className="col-span-2">Location</div>
+                <div className="col-span-1">Student FTE</div>
                 <div className="col-span-2">Status</div>
                 <div className="col-span-1">Annual Fee</div>
               </div>
@@ -225,7 +230,7 @@ export default function Members() {
                   }}
                 >
                   <div className="grid grid-cols-12 gap-4 items-center">
-                    <div className="col-span-3">
+                    <div className="col-span-2">
                       <div className="flex items-center space-x-3">
                         <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
                         <div>
@@ -263,6 +268,11 @@ export default function Members() {
                       ) : (
                         <span className="text-muted-foreground text-sm">—</span>
                       )}
+                    </div>
+                    <div className="col-span-1">
+                      <div className="text-sm font-medium">
+                        {organization.profiles?.student_fte || '—'}
+                      </div>
                     </div>
                     <div className="col-span-2">
                       <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
