@@ -180,6 +180,7 @@ export type Database = {
           notes: string | null
           phone: string | null
           state: string | null
+          student_fte: number | null
           updated_at: string
           website: string | null
           zip_code: string | null
@@ -203,6 +204,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           state?: string | null
+          student_fte?: number | null
           updated_at?: string
           website?: string | null
           zip_code?: string | null
@@ -226,6 +228,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           state?: string | null
+          student_fte?: number | null
           updated_at?: string
           website?: string | null
           zip_code?: string | null

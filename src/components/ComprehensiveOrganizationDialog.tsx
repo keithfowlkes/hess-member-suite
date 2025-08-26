@@ -199,7 +199,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           phone: profile.phone || '',
           organization: profile.organization || '',
           state_association: profile.state_association || '',
-          student_fte: profile.student_fte || 0,
+          student_fte: organization?.student_fte || 0,
           address: profile.address || '',
           city: profile.city || '',
           state: profile.state || '',
@@ -260,37 +260,49 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
     try {
       if (organization) {
         console.log('Updating existing organization...');
-        // Update organization
-        const updateData = {
-          ...orgData,
-          membership_start_date: orgData.membership_start_date?.toISOString().split('T')[0],
-          membership_end_date: orgData.membership_end_date?.toISOString().split('T')[0],
-          email: orgData.email || null,
-          phone: orgData.phone || null,
-          website: orgData.website || null,
-          address_line_1: orgData.address_line_1 || null,
-          address_line_2: orgData.address_line_2 || null,
-          city: orgData.city || null,
-          state: orgData.state || null,
-          zip_code: orgData.zip_code || null,
-          notes: orgData.notes || null,
-        };
+        // First update the organization record
+        console.log('Updating organization with data:', orgData);
+        console.log('Organization ID:', organization.id);
         
-        console.log('Organization update data:', updateData);
-        await updateOrganization(organization.id, updateData);
-        console.log('Organization updated successfully');
-
-        // Update profile if it exists
-        if (organization.profiles && organization.contact_person_id) {
-          console.log('Updating profile with contact_person_id:', organization.contact_person_id);
-          const profileUpdateData = {
-            first_name: profileData.first_name,
-            last_name: profileData.last_name,
-            email: profileData.email,
-            phone: profileData.phone || null,
-            organization: profileData.organization || null,
-            state_association: profileData.state_association || null,
+        const profileData = profileForm.getValues();
+        
+        const { data: updatedOrg, error: orgError } = await supabase
+          .from('organizations')
+          .update({
+            name: orgData.name,
+            email: orgData.email || null,
+            phone: orgData.phone || null,
+            website: orgData.website || null,
+            address_line_1: orgData.address_line_1 || null,
+            address_line_2: orgData.address_line_2 || null,
+            city: orgData.city || null,
+            state: orgData.state || null,
+            zip_code: orgData.zip_code || null,
+            country: orgData.country,
+            membership_status: orgData.membership_status,
             student_fte: profileData.student_fte || null,
+            notes: orgData.notes || null,
+          })
+          .eq('id', organization.id)
+          .select()
+          .single();
+
+        if (orgError) {
+          console.error('Organization update error:', orgError);
+          throw orgError;
+        }
+
+        console.log('Organization updated successfully:', updatedOrg);
+
+        // Then update the profile if it exists (excluding student_fte since it's now in organizations)
+        if (organization.contact_person_id) {
+          const profileUpdateData = {
+            first_name: profileData.first_name || '',
+            last_name: profileData.last_name || '',
+            email: profileData.email || '',
+            phone: profileData.phone || null,
+            organization: profileData.organization || '',
+            state_association: profileData.state_association || null,
             address: profileData.address || null,
             city: profileData.city || null,
             state: profileData.state || null,
@@ -321,7 +333,6 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           };
           
           console.log('Profile update data:', profileUpdateData);
-          console.log('Student FTE being saved:', profileUpdateData.student_fte);
           console.log('Updating profile with ID:', organization.contact_person_id);
           
           const { data: updatedProfile, error } = await supabase
@@ -336,15 +347,6 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           }
 
           console.log('Profile updated successfully, result:', updatedProfile);
-          console.log('Updated profile student_fte:', updatedProfile?.[0]?.student_fte);
-          
-          // Verify the update worked by querying the profile directly
-          const { data: verifyProfile } = await supabase
-            .from('profiles')
-            .select('id, student_fte')
-            .eq('id', organization.contact_person_id)
-            .single();
-          console.log('Verification query result:', verifyProfile);
           
           // Refresh the data to show updated Student FTE
           console.log('Refreshing organizations data...');

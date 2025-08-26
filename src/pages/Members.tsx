@@ -98,7 +98,7 @@ export default function Members() {
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
                 {organizations.reduce((total, org) => {
-                  const fte = org.profiles?.student_fte || 0;
+                  const fte = org.student_fte || 0;
                   return total + fte;
                 }, 0).toLocaleString()}
               </div>
@@ -194,7 +194,7 @@ export default function Members() {
                     <div className="pt-2 border-t space-y-1">
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>Student FTE:</span>
-                        <span className="font-medium">{organization.profiles?.student_fte || 'N/A'}</span>
+                        <span className="font-medium">{organization.student_fte || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>Annual Fee:</span>
@@ -271,7 +271,7 @@ export default function Members() {
                     </div>
                     <div className="col-span-1">
                       <div className="text-sm font-medium">
-                        {organization.profiles?.student_fte || '—'}
+                        {organization.student_fte || '—'}
                       </div>
                     </div>
                     <div className="col-span-2">
