@@ -27,7 +27,36 @@ export interface Organization {
     last_name: string;
     email: string;
     phone?: string;
+    organization?: string;
+    state_association?: string;
     student_fte?: number;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    primary_contact_title?: string;
+    secondary_first_name?: string;
+    secondary_last_name?: string;
+    secondary_contact_title?: string;
+    secondary_contact_email?: string;
+    student_information_system?: string;
+    financial_system?: string;
+    financial_aid?: string;
+    hcm_hr?: string;
+    payroll_system?: string;
+    purchasing_system?: string;
+    housing_management?: string;
+    learning_management?: string;
+    admissions_crm?: string;
+    alumni_advancement_crm?: string;
+    primary_office_apple?: boolean;
+    primary_office_asus?: boolean;
+    primary_office_dell?: boolean;
+    primary_office_hp?: boolean;
+    primary_office_microsoft?: boolean;
+    primary_office_other?: boolean;
+    primary_office_other_details?: string;
+    other_software_comments?: string;
   };
 }
 
@@ -61,11 +90,15 @@ export function useMembers() {
         .select(`
           *,
           profiles:contact_person_id (
-            first_name,
-            last_name,
-            email,
-            phone,
-            student_fte
+            first_name, last_name, email, phone, organization, state_association,
+            student_fte, address, city, state, zip, primary_contact_title,
+            secondary_first_name, secondary_last_name, secondary_contact_title,
+            secondary_contact_email, student_information_system, financial_system,
+            financial_aid, hcm_hr, payroll_system, purchasing_system,
+            housing_management, learning_management, admissions_crm,
+            alumni_advancement_crm, primary_office_apple, primary_office_asus,
+            primary_office_dell, primary_office_hp, primary_office_microsoft,
+            primary_office_other, primary_office_other_details, other_software_comments
           )
         `)
         .order('name');

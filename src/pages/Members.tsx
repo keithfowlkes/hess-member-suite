@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useMembers } from '@/hooks/useMembers';
 import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload } from 'lucide-react';
 import { OrganizationDialog } from '@/components/OrganizationDialog';
+import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
 import { ImportMembersDialog } from '@/components/ImportMembersDialog';
 
 export default function Members() {
@@ -287,7 +288,7 @@ export default function Members() {
         )}
       </div>
 
-      <OrganizationDialog
+      <ComprehensiveOrganizationDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         organization={selectedOrganization}
