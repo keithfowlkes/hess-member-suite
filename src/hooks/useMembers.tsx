@@ -19,7 +19,6 @@ export interface Organization {
   membership_start_date?: string;
   membership_end_date?: string;
   annual_fee_amount: number;
-  student_fte?: number;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -30,6 +29,7 @@ export interface Organization {
     phone?: string;
     organization?: string;
     state_association?: string;
+    student_fte?: number;
     address?: string;
     city?: string;
     state?: string;
@@ -91,7 +91,7 @@ export function useMembers() {
           *,
           profiles:contact_person_id (
             first_name, last_name, email, phone, organization, state_association,
-            address, city, state, zip, primary_contact_title,
+            student_fte, address, city, state, zip, primary_contact_title,
             secondary_first_name, secondary_last_name, secondary_contact_title,
             secondary_contact_email, student_information_system, financial_system,
             financial_aid, hcm_hr, payroll_system, purchasing_system,
