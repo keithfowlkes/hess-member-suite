@@ -22,9 +22,11 @@ export default function Members() {
   const filteredOrganizations = organizations.filter(org =>
     org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     org.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (org.profiles?.email && org.profiles.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (org.profiles?.first_name && org.profiles.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (org.profiles?.last_name && org.profiles.last_name.toLowerCase().includes(searchTerm.toLowerCase()))
+    (org.profiles && org.profiles.length > 0 && (
+      org.profiles.some(p => p.first_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      org.profiles.some(p => p.last_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      org.profiles.some(p => p.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+    ))
   );
 
   const getStatusColor = (status: string) => {
@@ -164,13 +166,16 @@ export default function Members() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-sm">
-                    {organization.profiles && (
+                    {organization.profiles && organization.profiles.length > 0 && (
                       <div className="space-y-1">
                         <div className="text-xs text-muted-foreground">Primary Contact</div>
                         <div className="flex items-center text-foreground">
                           <User className="h-4 w-4 mr-2" />
-                          {organization.profiles.first_name} {organization.profiles.last_name}
+                          {organization.profiles.find(p => p.is_primary_contact)?.first_name || organization.profiles[0]?.first_name} {organization.profiles.find(p => p.is_primary_contact)?.last_name || organization.profiles[0]?.last_name}
                         </div>
+                        {organization.profiles.length > 1 && (
+                          <div className="text-xs text-muted-foreground">+{organization.profiles.length - 1} more member{organization.profiles.length > 2 ? 's' : ''}</div>
+                        )}
                       </div>
                     )}
                     {organization.email && (
@@ -242,11 +247,14 @@ export default function Members() {
                       </div>
                     </div>
                     <div className="col-span-2">
-                      {organization.profiles ? (
+                      {organization.profiles && organization.profiles.length > 0 ? (
                         <div className="text-sm">
-                          <div className="font-medium">{organization.profiles.first_name} {organization.profiles.last_name}</div>
-                          {organization.profiles.phone && (
-                            <div className="text-muted-foreground">{organization.profiles.phone}</div>
+                          <div className="font-medium">{organization.profiles.find(p => p.is_primary_contact)?.first_name || organization.profiles[0]?.first_name} {organization.profiles.find(p => p.is_primary_contact)?.last_name || organization.profiles[0]?.last_name}</div>
+                          {organization.profiles.length > 1 && (
+                            <div className="text-muted-foreground">+{organization.profiles.length - 1} more</div>
+                          )}
+                          {(organization.profiles.find(p => p.is_primary_contact)?.phone || organization.profiles[0]?.phone) && (
+                            <div className="text-muted-foreground">{organization.profiles.find(p => p.is_primary_contact)?.phone || organization.profiles[0]?.phone}</div>
                           )}
                         </div>
                       ) : (

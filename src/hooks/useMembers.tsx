@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 export interface Organization {
   id: string;
   name: string;
-  contact_person_id?: string;
   address_line_1?: string;
   address_line_2?: string;
   city?: string;
@@ -23,7 +22,9 @@ export interface Organization {
   notes?: string;
   created_at: string;
   updated_at: string;
-  profiles?: {
+  profiles?: Array<{
+    id: string;
+    user_id: string;
     first_name: string;
     last_name: string;
     email: string;
@@ -35,6 +36,7 @@ export interface Organization {
     state?: string;
     zip?: string;
     primary_contact_title?: string;
+    is_primary_contact: boolean;
     secondary_first_name?: string;
     secondary_last_name?: string;
     secondary_contact_title?: string;
@@ -57,7 +59,7 @@ export interface Organization {
     primary_office_other?: boolean;
     primary_office_other_details?: string;
     other_software_comments?: string;
-  };
+  }>;
 }
 
 export interface CreateOrganizationData {
@@ -89,9 +91,9 @@ export function useMembers() {
         .from('organizations')
         .select(`
           *,
-          profiles:contact_person_id (
-            first_name, last_name, email, phone, organization, state_association,
-            address, city, state, zip, primary_contact_title,
+          profiles!organization_id (
+            id, user_id, first_name, last_name, email, phone, organization, state_association,
+            address, city, state, zip, primary_contact_title, is_primary_contact,
             secondary_first_name, secondary_last_name, secondary_contact_title,
             secondary_contact_email, student_information_system, financial_system,
             financial_aid, hcm_hr, payroll_system, purchasing_system,

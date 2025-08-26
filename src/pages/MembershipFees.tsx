@@ -156,14 +156,20 @@ export default function MembershipFees() {
     pdf.setFontSize(14);
     pdf.text('Organization Details', 20, finalY);
     
-    const organizationData = organizations.map(org => [
-      org.name,
-      org.membership_status,
-      `$${org.annual_fee_amount || 0}`,
-      org.membership_start_date || 'Not set',
-      org.membership_end_date || 'Not set',
-      org.profiles ? `${org.profiles.first_name} ${org.profiles.last_name}` : 'No contact'
-    ]);
+    const organizationData = organizations.map(org => {
+      const primaryContact = org.profiles && org.profiles.length > 0 
+        ? org.profiles.find(p => p.is_primary_contact) || org.profiles[0]
+        : null;
+      
+      return [
+        org.name,
+        org.membership_status,
+        `$${org.annual_fee_amount || 0}`,
+        org.membership_start_date || 'Not set',
+        org.membership_end_date || 'Not set',
+        primaryContact ? `${primaryContact.first_name} ${primaryContact.last_name}` : 'No contact'
+      ];
+    });
     
     (pdf as any).autoTable({
       head: [['Organization', 'Status', 'Annual Fee', 'Start Date', 'End Date', 'Contact']],

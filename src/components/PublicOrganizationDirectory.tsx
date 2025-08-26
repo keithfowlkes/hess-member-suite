@@ -27,19 +27,20 @@ interface PublicOrganization {
   membership_end_date?: string;
   annual_fee_amount?: number;
   notes?: string;
-  profiles?: {
+  student_fte?: number;
+  profiles?: Array<{
     first_name?: string;
     last_name?: string;
     email?: string;
     phone?: string;
     organization?: string;
     state_association?: string;
-    student_fte?: number;
     address?: string;
     city?: string;
     state?: string;
     zip?: string;
     primary_contact_title?: string;
+    is_primary_contact: boolean;
     secondary_first_name?: string;
     secondary_last_name?: string;
     secondary_contact_title?: string;
@@ -62,7 +63,7 @@ interface PublicOrganization {
     primary_office_other?: boolean;
     primary_office_other_details?: string;
     other_software_comments?: string;
-  };
+  }>;
 }
 
 // Import the shared component from PublicDirectory
@@ -81,9 +82,9 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
         .from('organizations')
         .select(`
           *,
-          profiles:contact_person_id (
+          profiles!organization_id (
             first_name, last_name, email, phone, organization, state_association,
-            student_fte, address, city, state, zip, primary_contact_title,
+            address, city, state, zip, primary_contact_title, is_primary_contact,
             secondary_first_name, secondary_last_name, secondary_contact_title,
             secondary_contact_email, student_information_system, financial_system,
             financial_aid, hcm_hr, payroll_system, purchasing_system,
@@ -175,7 +176,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
           <div className="text-center p-3 bg-secondary/10 rounded">
             <div className="text-xl font-bold text-foreground">
               {organizations.reduce((total, org) => {
-                const fte = org.profiles?.student_fte || 0;
+                const fte = org.student_fte || 0;
                 return total + fte;
               }, 0).toLocaleString()}
             </div>

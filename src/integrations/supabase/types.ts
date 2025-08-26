@@ -166,7 +166,6 @@ export type Database = {
           address_line_2: string | null
           annual_fee_amount: number | null
           city: string | null
-          contact_person_id: string | null
           country: string | null
           created_at: string
           email: string | null
@@ -190,7 +189,6 @@ export type Database = {
           address_line_2?: string | null
           annual_fee_amount?: number | null
           city?: string | null
-          contact_person_id?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
@@ -214,7 +212,6 @@ export type Database = {
           address_line_2?: string | null
           annual_fee_amount?: number | null
           city?: string | null
-          contact_person_id?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
@@ -233,15 +230,7 @@ export type Database = {
           website?: string | null
           zip_code?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "organizations_contact_person_id_fkey"
-            columns: ["contact_person_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -257,9 +246,11 @@ export type Database = {
           hcm_hr: string | null
           housing_management: string | null
           id: string
+          is_primary_contact: boolean | null
           last_name: string
           learning_management: string | null
           organization: string | null
+          organization_id: string | null
           other_software_comments: string | null
           payroll_system: string | null
           phone: string | null
@@ -297,9 +288,11 @@ export type Database = {
           hcm_hr?: string | null
           housing_management?: string | null
           id?: string
+          is_primary_contact?: boolean | null
           last_name: string
           learning_management?: string | null
           organization?: string | null
+          organization_id?: string | null
           other_software_comments?: string | null
           payroll_system?: string | null
           phone?: string | null
@@ -337,9 +330,11 @@ export type Database = {
           hcm_hr?: string | null
           housing_management?: string | null
           id?: string
+          is_primary_contact?: boolean | null
           last_name?: string
           learning_management?: string | null
           organization?: string | null
+          organization_id?: string | null
           other_software_comments?: string | null
           payroll_system?: string | null
           phone?: string | null
@@ -364,7 +359,15 @@ export type Database = {
           user_id?: string
           zip?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_settings: {
         Row: {

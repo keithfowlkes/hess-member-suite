@@ -514,19 +514,22 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
                 <CardContent className="space-y-3">
                   <div>
                     <p className="font-medium">
-                      {organization.profiles.first_name} {organization.profiles.last_name}
+                      {organization.profiles && organization.profiles.length > 0 
+                        ? `${organization.profiles.find(p => p.is_primary_contact)?.first_name || organization.profiles[0]?.first_name} ${organization.profiles.find(p => p.is_primary_contact)?.last_name || organization.profiles[0]?.last_name}`
+                        : 'No contact'
+                      }
                     </p>
                   </div>
-                  {organization.profiles.email && (
+                  {organization.profiles && organization.profiles.length > 0 && (organization.profiles.find(p => p.is_primary_contact)?.email || organization.profiles[0]?.email) && (
                     <div>
                       <label className="text-xs text-muted-foreground">Email</label>
-                      <p className="text-sm">{organization.profiles.email}</p>
+                      <p className="text-sm">{organization.profiles.find(p => p.is_primary_contact)?.email || organization.profiles[0]?.email}</p>
                     </div>
                   )}
-                  {organization.profiles.phone && (
+                  {organization.profiles && organization.profiles.length > 0 && (organization.profiles.find(p => p.is_primary_contact)?.phone || organization.profiles[0]?.phone) && (
                     <div>
                       <label className="text-xs text-muted-foreground">Phone</label>
-                      <p className="text-sm">{organization.profiles.phone}</p>
+                      <p className="text-sm">{organization.profiles.find(p => p.is_primary_contact)?.phone || organization.profiles[0]?.phone}</p>
                     </div>
                   )}
                 </CardContent>
