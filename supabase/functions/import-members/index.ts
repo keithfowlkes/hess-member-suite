@@ -74,6 +74,22 @@ serve(async (req) => {
 
     for (const member of members) {
       try {
+        // Clean and validate email address
+        const cleanEmail = member.email
+          ?.trim()
+          .replace(/[\r\n\t\v\f]/g, '') // Remove control characters
+          .toLowerCase();
+
+        // Skip invalid emails
+        if (!cleanEmail || !cleanEmail.includes('@') || cleanEmail === 'other') {
+          console.log(`Skipping invalid email: ${member.email}`);
+          results.failed.push({ 
+            email: member.email, 
+            error: 'Invalid email address format' 
+          });
+          continue;
+        }
+
         let userId: string;
         let isNewUser = false;
 
@@ -81,19 +97,19 @@ serve(async (req) => {
         const { data: existingProfile } = await supabaseAdmin
           .from('profiles')
           .select('user_id')
-          .eq('email', member.email)
+          .eq('email', cleanEmail)
           .single();
 
         if (existingProfile) {
           // User already exists, update their profile
-          console.log(`User ${member.email} already exists, updating profile`);
+          console.log(`User ${cleanEmail} already exists, updating profile`);
           userId = existingProfile.user_id;
-          results.existing.push(member.email);
+          results.existing.push(cleanEmail);
         } else {
           // Create new user account
           const tempPassword = crypto.randomUUID();
           const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
-            email: member.email,
+            email: cleanEmail,
             password: tempPassword,
             email_confirm: true, // Skip email confirmation for imported users
             user_metadata: {
@@ -104,7 +120,7 @@ serve(async (req) => {
           });
 
           if (userError) {
-            console.error(`Failed to create user ${member.email}:`, userError);
+            console.error(`Failed to create user ${cleanEmail}:`, userError);
             results.failed.push({ email: member.email, error: userError.message });
             continue;
           }
@@ -184,13 +200,13 @@ serve(async (req) => {
           // Send password reset email so user can set their own password
           await supabaseAdmin.auth.admin.generateLink({
             type: 'recovery',
-            email: member.email
+            email: cleanEmail
           });
 
-          console.log(`Successfully imported new user ${member.email}`);
-          results.successful.push(member.email);
+          console.log(`Successfully imported new user ${cleanEmail}`);
+          results.successful.push(cleanEmail);
         } else {
-          console.log(`Successfully updated existing user ${member.email}`);
+          console.log(`Successfully updated existing user ${cleanEmail}`);
         }
 
       } catch (error) {
