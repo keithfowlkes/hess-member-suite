@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrgan
 import { ImportMembersDialog } from '@/components/ImportMembersDialog';
 
 export default function Members() {
+  const navigate = useNavigate();
   const { organizations, loading } = useMembers();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrganization, setSelectedOrganization] = useState(null);
@@ -169,7 +171,15 @@ export default function Members() {
                         <div className="text-xs text-muted-foreground">Primary Contact</div>
                         <div className="flex items-center text-foreground">
                           <User className="h-4 w-4 mr-2" />
-                          {organization.profiles.first_name} {organization.profiles.last_name}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/profile/${organization.contact_person_id}`);
+                            }}
+                            className="text-primary hover:text-primary/80 hover:underline font-medium"
+                          >
+                            {organization.profiles.first_name} {organization.profiles.last_name}
+                          </button>
                         </div>
                       </div>
                     )}
@@ -244,7 +254,15 @@ export default function Members() {
                     <div className="col-span-2">
                       {organization.profiles ? (
                         <div className="text-sm">
-                          <div className="font-medium">{organization.profiles.first_name} {organization.profiles.last_name}</div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/profile/${organization.contact_person_id}`);
+                            }}
+                            className="font-medium text-primary hover:text-primary/80 hover:underline"
+                          >
+                            {organization.profiles.first_name} {organization.profiles.last_name}
+                          </button>
                           {organization.profiles.phone && (
                             <div className="text-muted-foreground">{organization.profiles.phone}</div>
                           )}
