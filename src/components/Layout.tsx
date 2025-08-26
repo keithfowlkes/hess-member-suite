@@ -26,7 +26,7 @@ export function Layout({ children }: LayoutProps) {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Building2, show: true },
-    { name: 'Members', href: '/members', icon: Users, show: isAdmin },
+    { name: 'Member Organizations', href: '/members', icon: Users, show: isAdmin },
     { name: 'Invoices', href: '/invoices', icon: FileText, show: true },
     { name: 'Profile', href: '/profile', icon: User, show: !isAdmin },
     { name: 'Organization', href: '/organization', icon: Building2, show: !isAdmin },
