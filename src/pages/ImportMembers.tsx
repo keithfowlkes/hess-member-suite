@@ -259,9 +259,9 @@ export default function ImportMembers() {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold">Import Results</h1>
-                  <p className="text-muted-foreground">Member import completed</p>
+                  <p className="text-muted-foreground">Member organization import completed</p>
                 </div>
-                <Button onClick={resetImport}>Import More Members</Button>
+                <Button onClick={resetImport}>Import More Member Organizations</Button>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
@@ -336,8 +336,8 @@ export default function ImportMembers() {
         <main className="flex-1 p-6">
           <div className="max-w-4xl mx-auto space-y-6">
             <div>
-              <h1 className="text-3xl font-bold">Import Members</h1>
-              <p className="text-muted-foreground">Upload and import member data from CSV files</p>
+              <h1 className="text-3xl font-bold">Import Member Organizations</h1>
+              <p className="text-muted-foreground">Upload and import member organization data from CSV files</p>
             </div>
 
             {csvData.length === 0 ? (
@@ -483,7 +483,7 @@ export default function ImportMembers() {
                 <div className="flex justify-end gap-4">
                   <Button variant="outline" onClick={resetImport}>Cancel</Button>
                   <Button onClick={handleImport} disabled={importing || fieldMappings.length === 0}>
-                    {importing ? 'Importing...' : `Import ${csvData.length} Members`}
+                    {importing ? 'Importing...' : `Import ${csvData.length} Member Organizations`}
                   </Button>
                 </div>
               </>

@@ -22,7 +22,7 @@ export function AppSidebar() {
   const adminItems = [
     { title: 'Dashboard', url: '/', icon: Home },
     { title: 'Member Organizations', url: '/members', icon: Users },
-    { title: 'Import Members', url: '/import-members', icon: Upload },
+    { title: 'Import Member Organizations', url: '/import-members', icon: Upload },
     { title: 'Invoices', url: '/invoices', icon: FileText },
     { title: 'Settings', url: '/settings', icon: Settings },
   ];
