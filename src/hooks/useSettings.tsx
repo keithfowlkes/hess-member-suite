@@ -9,6 +9,7 @@ export interface UserProfile {
   last_name: string;
   email: string;
   phone?: string;
+  organization?: string;
   created_at: string;
   user_roles?: {
     role: 'admin' | 'member';
@@ -58,6 +59,27 @@ export function useSettings() {
         title: 'Error fetching users',
         description: error.message,
         variant: 'destructive'
+      });
+    }
+  };
+
+  const resetUserPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Password reset sent',
+        description: 'A password reset link has been sent to the user\'s email'
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error sending password reset',
+        description: error.message,
+        variant: 'destructive'  
       });
     }
   };
@@ -187,6 +209,7 @@ export function useSettings() {
     fetchUsers,
     fetchStats,
     updateUserRole,
-    deleteUser
+    deleteUser,
+    resetUserPassword
   };
 }

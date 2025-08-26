@@ -33,12 +33,13 @@ import {
   Shield, 
   UserMinus, 
   Settings as SettingsIcon,
-  BarChart3
+  BarChart3,
+  KeyRound
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Settings() {
-  const { users, stats, loading, updateUserRole, deleteUser } = useSettings();
+  const { users, stats, loading, updateUserRole, deleteUser, resetUserPassword } = useSettings();
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
 
   const handleRoleUpdate = async (userId: string, currentRole: string) => {
@@ -50,6 +51,10 @@ export default function Settings() {
 
   const handleDeleteUser = async (userId: string) => {
     await deleteUser(userId);
+  };
+
+  const handlePasswordReset = async (email: string) => {
+    await resetUserPassword(email);
   };
 
   if (loading) {
@@ -192,10 +197,9 @@ export default function Settings() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Name</TableHead>
+                          <TableHead>User</TableHead>
                           <TableHead>Email</TableHead>
                           <TableHead>Role</TableHead>
-                          <TableHead>Joined</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -205,7 +209,12 @@ export default function Settings() {
                           return (
                             <TableRow key={user.id}>
                               <TableCell className="font-medium">
-                                {user.first_name} {user.last_name}
+                                <div>
+                                  <div>{user.first_name} {user.last_name}</div>
+                                  {user.organization && (
+                                    <div className="text-sm text-muted-foreground">{user.organization}</div>
+                                  )}
+                                </div>
                               </TableCell>
                               <TableCell>{user.email}</TableCell>
                               <TableCell>
@@ -216,11 +225,16 @@ export default function Settings() {
                                   {userRole}
                                 </Badge>
                               </TableCell>
-                              <TableCell>
-                                {format(new Date(user.created_at), 'MMM dd, yyyy')}
-                              </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end space-x-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handlePasswordReset(user.email)}
+                                    title="Reset Password"
+                                  >
+                                    <KeyRound className="h-4 w-4" />
+                                  </Button>
                                   <Button
                                     size="sm"
                                     variant="outline"
