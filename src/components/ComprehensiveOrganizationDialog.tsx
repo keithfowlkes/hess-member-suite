@@ -107,7 +107,7 @@ interface OrganizationDialogProps {
 }
 
 export function ComprehensiveOrganizationDialog({ open, onOpenChange, organization }: OrganizationDialogProps) {
-  const { createOrganization, updateOrganization } = useMembers();
+  const { createOrganization, updateOrganization, fetchOrganizations } = useMembers();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -309,6 +309,9 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           if (error) {
             throw error;
           }
+
+          // Refresh the data to show updated Student FTE
+          await fetchOrganizations();
 
           toast({
             title: 'Success',
