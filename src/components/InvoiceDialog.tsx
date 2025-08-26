@@ -40,9 +40,17 @@ import {
 import { cn } from '@/lib/utils';
 
 const invoiceSchema = z.object({
-  organization_id: z.string().min(1, 'Organization is required'),
+  organization_id: z.string().min(1, 'Organization is required').optional(),
   amount: z.number().min(0, 'Amount must be positive'),
   prorated_amount: z.number().min(0).optional(),
+  due_date: z.date({ required_error: 'Due date is required' }),
+  period_start_date: z.date({ required_error: 'Period start date is required' }),
+  period_end_date: z.date({ required_error: 'Period end date is required' }),
+  notes: z.string().optional(),
+});
+
+const bulkInvoiceSchema = z.object({
+  amount: z.number().min(0, 'Amount must be positive'),
   due_date: z.date({ required_error: 'Due date is required' }),
   period_start_date: z.date({ required_error: 'Period start date is required' }),
   period_end_date: z.date({ required_error: 'Period end date is required' }),
@@ -55,18 +63,19 @@ interface InvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoice?: Invoice | null;
+  bulkMode?: boolean;
 }
 
-export function InvoiceDialog({ open, onOpenChange, invoice }: InvoiceDialogProps) {
-  const { createInvoice, updateInvoice } = useInvoices();
+export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }: InvoiceDialogProps) {
+  const { createInvoice, createBulkInvoices, updateInvoice } = useInvoices();
   const { organizations } = useMembers();
   const { isAdmin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<InvoiceFormData>({
-    resolver: zodResolver(invoiceSchema),
+    resolver: zodResolver(bulkMode ? bulkInvoiceSchema : invoiceSchema),
     defaultValues: {
-      organization_id: '',
+      organization_id: bulkMode ? undefined : '',
       amount: 1000,
       prorated_amount: undefined,
       notes: '',
@@ -92,7 +101,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice }: InvoiceDialogProp
       const dueDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
 
       form.reset({
-        organization_id: '',
+        organization_id: bulkMode ? undefined : '',
         amount: 1000,
         prorated_amount: undefined,
         due_date: dueDate,
@@ -119,16 +128,27 @@ export function InvoiceDialog({ open, onOpenChange, invoice }: InvoiceDialogProp
         await updateInvoice(invoice.id, updateData);
       } else {
         // For creates
-        const createData: CreateInvoiceData = {
-          organization_id: data.organization_id,
-          amount: data.amount,
-          prorated_amount: data.prorated_amount || undefined,
-          due_date: data.due_date.toISOString().split('T')[0],
-          period_start_date: data.period_start_date.toISOString().split('T')[0],
-          period_end_date: data.period_end_date.toISOString().split('T')[0],
-          notes: data.notes || undefined,
-        };
-        await createInvoice(createData);
+        if (bulkMode) {
+          const bulkData = {
+            amount: data.amount,
+            due_date: data.due_date.toISOString().split('T')[0],
+            period_start_date: data.period_start_date.toISOString().split('T')[0],
+            period_end_date: data.period_end_date.toISOString().split('T')[0],
+            notes: data.notes || undefined,
+          };
+          await createBulkInvoices(bulkData);
+        } else {
+          const createData: CreateInvoiceData = {
+            organization_id: data.organization_id!,
+            amount: data.amount,
+            prorated_amount: data.prorated_amount || undefined,
+            due_date: data.due_date.toISOString().split('T')[0],
+            period_start_date: data.period_start_date.toISOString().split('T')[0],
+            period_end_date: data.period_end_date.toISOString().split('T')[0],
+            notes: data.notes || undefined,
+          };
+          await createInvoice(createData);
+        }
       }
       
       onOpenChange(false);
@@ -169,45 +189,62 @@ export function InvoiceDialog({ open, onOpenChange, invoice }: InvoiceDialogProp
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {invoice ? 'View Invoice Details' : 'Create New Invoice'}
+            {invoice 
+              ? 'View Invoice Details' 
+              : bulkMode 
+                ? 'Create Invoices for All Organizations' 
+                : 'Create New Invoice'
+            }
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="organization_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Organization *</FormLabel>
-                  <Select 
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      setTimeout(calculateProration, 100);
-                    }} 
-                    defaultValue={field.value}
-                    disabled={!!invoice && !isAdmin}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select organization" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {organizations.map((org) => (
-                        <SelectItem key={org.id} value={org.id}>
-                          {org.name} ({org.membership_status})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {bulkMode && (
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="font-medium text-sm mb-2">Bulk Invoice Creation</h3>
+                <p className="text-sm text-muted-foreground">
+                  This will create invoices for all active member organizations. 
+                  Prorated amounts will be calculated automatically based on each organization's membership start date.
+                </p>
+              </div>
+            )}
 
-            <div className="grid grid-cols-2 gap-4">
+            {!bulkMode && (
+              <FormField
+                control={form.control}
+                name="organization_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Organization *</FormLabel>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setTimeout(calculateProration, 100);
+                      }} 
+                      defaultValue={field.value}
+                      disabled={!!invoice && !isAdmin}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select organization" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {organizations.map((org) => (
+                          <SelectItem key={org.id} value={org.id}>
+                            {org.name} ({org.membership_status})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <div className={bulkMode ? "grid grid-cols-1 gap-4" : "grid grid-cols-2 gap-4"}>
               <FormField
                 control={form.control}
                 name="amount"
@@ -223,7 +260,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice }: InvoiceDialogProp
                         {...field}
                         onChange={(e) => {
                           field.onChange(parseFloat(e.target.value) || 0);
-                          setTimeout(calculateProration, 100);
+                          if (!bulkMode) setTimeout(calculateProration, 100);
                         }}
                         disabled={!!invoice && !isAdmin}
                       />
@@ -233,28 +270,30 @@ export function InvoiceDialog({ open, onOpenChange, invoice }: InvoiceDialogProp
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="prorated_amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prorated Amount</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        step="0.01"
-                        placeholder="Auto-calculated" 
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
-                        disabled={!!invoice && !isAdmin}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!bulkMode && (
+                <FormField
+                  control={form.control}
+                  name="prorated_amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prorated Amount</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          step="0.01"
+                          placeholder="Auto-calculated" 
+                          {...field}
+                          value={field.value || ''}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                          disabled={!!invoice && !isAdmin}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -388,14 +427,16 @@ export function InvoiceDialog({ open, onOpenChange, invoice }: InvoiceDialogProp
               />
             </div>
 
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={calculateProration}
-              disabled={!!invoice}
-            >
-              Calculate Proration
-            </Button>
+            {!bulkMode && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={calculateProration}
+                disabled={!!invoice}
+              >
+                Calculate Proration
+              </Button>
+            )}
 
             <FormField
               control={form.control}
@@ -425,7 +466,14 @@ export function InvoiceDialog({ open, onOpenChange, invoice }: InvoiceDialogProp
               </Button>
               {(!invoice || isAdmin) && (
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving...' : invoice ? 'Update Invoice' : 'Create Invoice'}
+                  {isSubmitting 
+                    ? 'Creating...' 
+                    : invoice 
+                      ? 'Update Invoice' 
+                      : bulkMode 
+                        ? 'Create Invoices for All Organizations'
+                        : 'Create Invoice'
+                  }
                 </Button>
               )}
             </div>

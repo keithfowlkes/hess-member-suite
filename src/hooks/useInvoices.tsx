@@ -209,6 +209,70 @@ export function useInvoices() {
     }
   };
 
+  const createBulkInvoices = async (invoiceData: Omit<CreateInvoiceData, 'organization_id'>) => {
+    try {
+      // Get all active organizations
+      const { data: organizations, error: orgError } = await supabase
+        .from('organizations')
+        .select('id, name, membership_start_date')
+        .eq('membership_status', 'active');
+
+      if (orgError) throw orgError;
+
+      if (!organizations || organizations.length === 0) {
+        throw new Error('No active organizations found');
+      }
+
+      const invoicesToCreate = organizations.map(org => {
+        const invoiceNumber = `INV-${Date.now()}-${org.id.slice(-6)}`;
+        
+        // Calculate prorated amount if membership started after period start
+        let proratedAmount = undefined;
+        if (org.membership_start_date) {
+          const membershipStart = new Date(org.membership_start_date);
+          const periodStart = new Date(invoiceData.period_start_date);
+          const periodEnd = new Date(invoiceData.period_end_date);
+          
+          if (membershipStart > periodStart) {
+            const totalDays = Math.ceil((periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
+            const remainingDays = Math.ceil((periodEnd.getTime() - membershipStart.getTime()) / (1000 * 60 * 60 * 24));
+            proratedAmount = Math.round((invoiceData.amount * remainingDays / totalDays) * 100) / 100;
+          }
+        }
+
+        return {
+          ...invoiceData,
+          organization_id: org.id,
+          invoice_number: invoiceNumber,
+          prorated_amount: proratedAmount,
+          status: 'draft' as const
+        };
+      });
+
+      const { data, error } = await supabase
+        .from('invoices')
+        .insert(invoicesToCreate)
+        .select();
+
+      if (error) throw error;
+      
+      toast({
+        title: 'Success',
+        description: `${data?.length || 0} invoices created successfully for all active organizations`
+      });
+      
+      await fetchInvoices();
+      return data;
+    } catch (error: any) {
+      toast({
+        title: 'Error creating bulk invoices',
+        description: error.message,
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchInvoices();
@@ -220,6 +284,7 @@ export function useInvoices() {
     loading,
     fetchInvoices,
     createInvoice,
+    createBulkInvoices,
     updateInvoice,
     markAsPaid,
     sendInvoice

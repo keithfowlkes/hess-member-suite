@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye } from 'lucide-react';
+import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, ChevronDown, Users } from 'lucide-react';
 import { InvoiceDialog } from '@/components/InvoiceDialog';
 import { format } from 'date-fns';
 
@@ -17,6 +18,7 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
 
   const filteredInvoices = invoices.filter(invoice =>
     invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,13 +77,37 @@ export default function Invoices() {
                 </p>
               </div>
               {isAdmin && (
-                <Button onClick={() => {
-                  setSelectedInvoice(null);
-                  setDialogOpen(true);
-                }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Invoice
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Invoice
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        setSelectedInvoice(null);
+                        setBulkMode(false);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Create Individual Invoice
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        setSelectedInvoice(null);
+                        setBulkMode(true);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Create Invoices for All Organizations
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
 
@@ -106,6 +132,7 @@ export default function Invoices() {
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => {
                     setSelectedInvoice(invoice);
+                    setBulkMode(false);
                     setDialogOpen(true);
                   }}
                 >
@@ -175,6 +202,7 @@ export default function Invoices() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedInvoice(invoice);
+                                setBulkMode(false);
                                 setDialogOpen(true);
                               }}
                             >
@@ -212,6 +240,7 @@ export default function Invoices() {
             open={dialogOpen}
             onOpenChange={setDialogOpen}
             invoice={selectedInvoice}
+            bulkMode={bulkMode}
           />
         </main>
       </div>
