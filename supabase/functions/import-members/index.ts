@@ -74,15 +74,6 @@ serve(async (req) => {
 
     for (const member of members) {
       try {
-        // Check if user already exists
-        const { data: existingUser } = await supabaseAdmin.auth.admin.getUserByEmail(member.email);
-        
-        if (existingUser.user) {
-          console.log(`User ${member.email} already exists, skipping`);
-          results.existing.push(member.email);
-          continue;
-        }
-
         // Create user account with a temporary password
         const tempPassword = crypto.randomUUID();
         const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
@@ -97,6 +88,13 @@ serve(async (req) => {
         });
 
         if (userError) {
+          // Check if user already exists
+          if (userError.message.includes('already exists') || userError.message.includes('already registered')) {
+            console.log(`User ${member.email} already exists, skipping`);
+            results.existing.push(member.email);
+            continue;
+          }
+          
           console.error(`Failed to create user ${member.email}:`, userError);
           results.failed.push({ email: member.email, error: userError.message });
           continue;

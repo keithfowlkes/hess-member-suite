@@ -451,10 +451,10 @@ export default function ImportMembers() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {csvData.slice(0, 3).map((row, index) => (
-                            <TableRow key={index}>
+                        {csvData.slice(0, 3).map((row, index) => (
+                            <TableRow key={`preview-${index}`}>
                               {fieldMappings.map(mapping => (
-                                <TableCell key={mapping.profileField}>
+                                <TableCell key={`${index}-${mapping.profileField}`}>
                                   {row[mapping.csvField] || '-'}
                                 </TableCell>
                               ))}
