@@ -109,21 +109,26 @@ const Profile = () => {
         return;
       }
 
-      // Check organization membership
+      // Check if current user is the primary contact for their organization
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('contact_person_id, profiles!inner(user_id)')
+        .eq('profiles.user_id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error checking permissions:', error);
+        return;
+      }
+
+      // User can edit if they are the primary contact
       const { data: currentProfile } = await supabase
         .from('profiles')
-        .select('organization_id')
+        .select('id')
         .eq('user_id', user?.id)
         .single();
 
-      // Check if current user has permission to edit this organization (is a member of it)  
-      const { data: orgData } = await supabase
-        .from('organizations')
-        .select('id')
-        .eq('id', currentProfile?.organization_id)
-        .single();
-
-      setCanEdit(orgData?.id === currentProfile?.organization_id);
+      setCanEdit(data?.contact_person_id === currentProfile?.id);
     } catch (error) {
       console.error('Error checking edit permissions:', error);
     }

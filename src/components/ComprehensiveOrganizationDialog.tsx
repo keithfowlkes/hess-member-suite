@@ -189,44 +189,44 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
         notes: organization.notes || '',
       });
 
-      // Set profile form data if profiles exist
-      if (organization.profiles && organization.profiles.length > 0) {
-        const primaryContact = organization.profiles.find(p => p.is_primary_contact) || organization.profiles[0];
+      // Set profile form data if profile exists
+      if (organization.profiles) {
+        const profile = organization.profiles;
         profileForm.reset({
-          first_name: primaryContact?.first_name || '',
-          last_name: primaryContact?.last_name || '',
-          email: primaryContact?.email || '',
-          phone: primaryContact?.phone || '',
-          organization: primaryContact?.organization || '',
-          state_association: primaryContact?.state_association || '',
+          first_name: profile.first_name || '',
+          last_name: profile.last_name || '',
+          email: profile.email || '',
+          phone: profile.phone || '',
+          organization: profile.organization || '',
+          state_association: profile.state_association || '',
           student_fte: organization?.student_fte || 0,
-          address: primaryContact?.address || '',
-          city: primaryContact?.city || '',
-          state: primaryContact?.state || '',
-          zip: primaryContact?.zip || '',
-          primary_contact_title: primaryContact?.primary_contact_title || '',
-          secondary_first_name: primaryContact?.secondary_first_name || '',
-          secondary_last_name: primaryContact?.secondary_last_name || '',
-          secondary_contact_title: primaryContact?.secondary_contact_title || '',
-          secondary_contact_email: primaryContact?.secondary_contact_email || '',
-          student_information_system: primaryContact?.student_information_system || '',
-          financial_system: primaryContact?.financial_system || '',
-          financial_aid: primaryContact?.financial_aid || '',
-          hcm_hr: primaryContact?.hcm_hr || '',
-          payroll_system: primaryContact?.payroll_system || '',
-          purchasing_system: primaryContact?.purchasing_system || '',
-          housing_management: primaryContact?.housing_management || '',
-          learning_management: primaryContact?.learning_management || '',
-          admissions_crm: primaryContact?.admissions_crm || '',
-          alumni_advancement_crm: primaryContact?.alumni_advancement_crm || '',
-          primary_office_apple: primaryContact?.primary_office_apple || false,
-          primary_office_asus: primaryContact?.primary_office_asus || false,
-          primary_office_dell: primaryContact?.primary_office_dell || false,
-          primary_office_hp: primaryContact?.primary_office_hp || false,
-          primary_office_microsoft: primaryContact?.primary_office_microsoft || false,
-          primary_office_other: primaryContact?.primary_office_other || false,
-          primary_office_other_details: primaryContact?.primary_office_other_details || '',
-          other_software_comments: primaryContact?.other_software_comments || '',
+          address: profile.address || '',
+          city: profile.city || '',
+          state: profile.state || '',
+          zip: profile.zip || '',
+          primary_contact_title: profile.primary_contact_title || '',
+          secondary_first_name: profile.secondary_first_name || '',
+          secondary_last_name: profile.secondary_last_name || '',
+          secondary_contact_title: profile.secondary_contact_title || '',
+          secondary_contact_email: profile.secondary_contact_email || '',
+          student_information_system: profile.student_information_system || '',
+          financial_system: profile.financial_system || '',
+          financial_aid: profile.financial_aid || '',
+          hcm_hr: profile.hcm_hr || '',
+          payroll_system: profile.payroll_system || '',
+          purchasing_system: profile.purchasing_system || '',
+          housing_management: profile.housing_management || '',
+          learning_management: profile.learning_management || '',
+          admissions_crm: profile.admissions_crm || '',
+          alumni_advancement_crm: profile.alumni_advancement_crm || '',
+          primary_office_apple: profile.primary_office_apple || false,
+          primary_office_asus: profile.primary_office_asus || false,
+          primary_office_dell: profile.primary_office_dell || false,
+          primary_office_hp: profile.primary_office_hp || false,
+          primary_office_microsoft: profile.primary_office_microsoft || false,
+          primary_office_other: profile.primary_office_other || false,
+          primary_office_other_details: profile.primary_office_other_details || '',
+          other_software_comments: profile.other_software_comments || '',
         });
       }
     } else {
@@ -239,7 +239,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
     console.log('=== Form Submission Debug ===');
     
     const orgValid = await orgForm.trigger();
-    const profileValid = organization?.profiles && organization.profiles.length > 0 ? await profileForm.trigger() : true;
+    const profileValid = organization?.profiles ? await profileForm.trigger() : true;
     
     console.log('Organization form valid:', orgValid);
     console.log('Profile form valid:', profileValid);
@@ -260,7 +260,10 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
     try {
       if (organization) {
         console.log('Updating existing organization...');
-        // Update organization
+        // First update the organization record
+        console.log('Updating organization with data:', orgData);
+        console.log('Organization ID:', organization.id);
+        
         const profileData = profileForm.getValues();
         
         const { data: updatedOrg, error: orgError } = await supabase
@@ -291,9 +294,8 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
 
         console.log('Organization updated successfully:', updatedOrg);
 
-        // Update the primary contact profile if it exists
-        const primaryContact = organization.profiles?.find(p => p.is_primary_contact) || organization.profiles?.[0];
-        if (primaryContact) {
+        // Then update the profile if it exists (excluding student_fte since it's now in organizations)
+        if (organization.contact_person_id) {
           const profileUpdateData = {
             first_name: profileData.first_name || '',
             last_name: profileData.last_name || '',
@@ -330,10 +332,13 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
             other_software_comments: profileData.other_software_comments || null,
           };
           
+          console.log('Profile update data:', profileUpdateData);
+          console.log('Updating profile with ID:', organization.contact_person_id);
+          
           const { data: updatedProfile, error } = await supabase
             .from('profiles')
             .update(profileUpdateData)
-            .eq('id', primaryContact.id)
+            .eq('id', organization.contact_person_id)
             .select();
 
           if (error) {
@@ -361,15 +366,6 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           
         } else {
           console.log('No profile to update');
-          
-          // Refresh the data even if no profile to update
-          await fetchOrganizations();
-          
-          toast({
-            title: 'Success',
-            description: 'Organization updated successfully'
-          });
-          
           onOpenChange(false);
         }
       } else {
@@ -421,10 +417,10 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
         <Tabs defaultValue="organization" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="organization">Organization</TabsTrigger>
-            <TabsTrigger value="contact" disabled={!organization?.profiles?.length}>Primary Contact</TabsTrigger>
-            <TabsTrigger value="secondary" disabled={!organization?.profiles?.length}>Secondary Contact</TabsTrigger>
-            <TabsTrigger value="systems" disabled={!organization?.profiles?.length}>Systems</TabsTrigger>
-            <TabsTrigger value="hardware" disabled={!organization?.profiles?.length}>Hardware</TabsTrigger>
+            <TabsTrigger value="contact" disabled={!organization?.profiles}>Primary Contact</TabsTrigger>
+            <TabsTrigger value="secondary" disabled={!organization?.profiles}>Secondary Contact</TabsTrigger>
+            <TabsTrigger value="systems" disabled={!organization?.profiles}>Systems</TabsTrigger>
+            <TabsTrigger value="hardware" disabled={!organization?.profiles}>Hardware</TabsTrigger>
           </TabsList>
 
           <TabsContent value="organization" className="space-y-4">
@@ -727,7 +723,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
             </Form>
           </TabsContent>
 
-          {organization?.profiles && organization.profiles.length > 0 && (
+          {organization?.profiles && (
             <>
               <TabsContent value="contact" className="space-y-4">
                 <Form {...profileForm}>
