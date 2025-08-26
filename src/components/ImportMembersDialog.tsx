@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload, FileText, CheckCircle, AlertCircle, X } from 'lucide-react';
@@ -180,6 +180,18 @@ export function ImportMembersDialog({ open, onOpenChange }: ImportMembersDialogP
       fieldMappings.forEach(mapping => {
         let value = row[mapping.csvField];
         
+        // Handle empty or whitespace-only values
+        if (!value || value.trim() === '') {
+          // For integer fields, set to null instead of empty string
+          if (mapping.profileField === 'student_fte') {
+            transformedRow[mapping.profileField] = null;
+            return;
+          }
+          // For other fields, set to empty string or null as appropriate
+          transformedRow[mapping.profileField] = '';
+          return;
+        }
+        
         // Transform boolean fields
         if (mapping.profileField.startsWith('primary_office_') && mapping.profileField !== 'primary_office_other_details') {
           value = ['yes', 'true', '1', 'x'].includes(value?.toLowerCase()) ? 'true' : 'false';
@@ -188,10 +200,15 @@ export function ImportMembersDialog({ open, onOpenChange }: ImportMembersDialogP
         // Transform numeric fields
         if (mapping.profileField === 'student_fte') {
           const numValue = parseInt(value);
-          value = !isNaN(numValue) ? numValue.toString() : '';
+          if (isNaN(numValue)) {
+            transformedRow[mapping.profileField] = null;
+            return;
+          }
+          transformedRow[mapping.profileField] = numValue.toString();
+          return;
         }
         
-        transformedRow[mapping.profileField] = value || '';
+        transformedRow[mapping.profileField] = value;
       });
       return transformedRow;
     });
@@ -251,9 +268,10 @@ export function ImportMembersDialog({ open, onOpenChange }: ImportMembersDialogP
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Import Results</DialogTitle>
-          </DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Import Results</DialogTitle>
+          <DialogDescription>Review the results of your member organization import</DialogDescription>
+        </DialogHeader>
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground">Member organization import completed</p>
@@ -320,9 +338,10 @@ export function ImportMembersDialog({ open, onOpenChange }: ImportMembersDialogP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Import Member Organizations</DialogTitle>
-        </DialogHeader>
+      <DialogHeader>
+        <DialogTitle>Import Member Organizations</DialogTitle>
+        <DialogDescription>Upload a CSV file to import member organization data into the system</DialogDescription>
+      </DialogHeader>
         
         <div className="space-y-6">
           {csvData.length === 0 ? (
