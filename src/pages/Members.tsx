@@ -7,17 +7,20 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useMembers } from '@/hooks/useMembers';
 import { Plus, Search, Building2, Mail, Phone, MapPin, User } from 'lucide-react';
-import { MemberDialog } from '@/components/MemberDialog';
+import { OrganizationDialog } from '@/components/OrganizationDialog';
 
 export default function Members() {
   const { organizations, loading } = useMembers();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const filteredMembers = organizations.filter(org =>
+  const filteredOrganizations = organizations.filter(org =>
     org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    org.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    org.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (org.profiles?.email && org.profiles.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (org.profiles?.first_name && org.profiles.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (org.profiles?.last_name && org.profiles.last_name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const getStatusColor = (status: string) => {
@@ -51,17 +54,17 @@ export default function Members() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Member Organizations</h1>
+            <h1 className="text-3xl font-bold text-foreground">Organizations</h1>
             <p className="text-muted-foreground mt-2">
-              Manage member organizations and their details
+              Manage member organizations and their membership details
             </p>
           </div>
           <Button onClick={() => {
-            setSelectedMember(null);
+            setSelectedOrganization(null);
             setDialogOpen(true);
           }}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Member
+            Add Organization
           </Button>
         </div>
 
@@ -70,7 +73,7 @@ export default function Members() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Search members..."
+              placeholder="Search organizations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -78,14 +81,14 @@ export default function Members() {
           </div>
         </div>
 
-        {/* Members Grid */}
+        {/* Organizations Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMembers.map((member) => (
+          {filteredOrganizations.map((organization) => (
             <Card 
-              key={member.id} 
+              key={organization.id} 
               className="cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => {
-                setSelectedMember(member);
+                setSelectedOrganization(organization);
                 setDialogOpen(true);
               }}
             >
@@ -94,9 +97,9 @@ export default function Members() {
                   <div className="flex items-center space-x-3">
                     <Building2 className="h-8 w-8 text-primary" />
                     <div>
-                      <CardTitle className="text-lg">{member.name}</CardTitle>
-                      <Badge className={`mt-1 ${getStatusColor(member.membership_status)}`}>
-                        {member.membership_status}
+                      <CardTitle className="text-lg">{organization.name}</CardTitle>
+                      <Badge className={`mt-1 ${getStatusColor(organization.membership_status)}`}>
+                        {organization.membership_status}
                       </Badge>
                     </div>
                   </div>
@@ -104,34 +107,37 @@ export default function Members() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">
-                  {member.profiles && (
-                    <div className="flex items-center text-muted-foreground">
-                      <User className="h-4 w-4 mr-2" />
-                      {member.profiles.first_name} {member.profiles.last_name}
+                  {organization.profiles && (
+                    <div className="space-y-1">
+                      <div className="text-xs text-muted-foreground">Primary Contact</div>
+                      <div className="flex items-center text-foreground">
+                        <User className="h-4 w-4 mr-2" />
+                        {organization.profiles.first_name} {organization.profiles.last_name}
+                      </div>
                     </div>
                   )}
-                  {member.email && (
+                  {organization.email && (
                     <div className="flex items-center text-muted-foreground">
                       <Mail className="h-4 w-4 mr-2" />
-                      {member.email}
+                      {organization.email}
                     </div>
                   )}
-                  {member.phone && (
+                  {organization.phone && (
                     <div className="flex items-center text-muted-foreground">
                       <Phone className="h-4 w-4 mr-2" />
-                      {member.phone}
+                      {organization.phone}
                     </div>
                   )}
-                  {(member.city || member.state) && (
+                  {(organization.city || organization.state) && (
                     <div className="flex items-center text-muted-foreground">
                       <MapPin className="h-4 w-4 mr-2" />
-                      {member.city}{member.city && member.state && ', '}{member.state}
+                      {organization.city}{organization.city && organization.state && ', '}{organization.state}
                     </div>
                   )}
                   <div className="pt-2 border-t">
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Annual Fee:</span>
-                      <span className="font-medium">${member.annual_fee_amount}</span>
+                      <span className="font-medium">${organization.annual_fee_amount}</span>
                     </div>
                   </div>
                 </div>
@@ -140,19 +146,19 @@ export default function Members() {
           ))}
         </div>
 
-        {filteredMembers.length === 0 && (
+        {filteredOrganizations.length === 0 && (
           <div className="text-center py-12">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground">No members found</h3>
-            <p className="text-muted-foreground">Try adjusting your search or add a new member.</p>
+            <h3 className="text-lg font-medium text-muted-foreground">No organizations found</h3>
+            <p className="text-muted-foreground">Try adjusting your search or add a new organization.</p>
           </div>
         )}
       </div>
 
-      <MemberDialog
+      <OrganizationDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        member={selectedMember}
+        organization={selectedOrganization}
       />
         </main>
       </div>
