@@ -96,6 +96,29 @@ export function useSettings() {
     }
   };
 
+  const changeUserPassword = async (userId: string, newPassword: string) => {
+    try {
+      // Note: This requires a service role key which should be handled server-side
+      // For now, we'll use the admin updateUser function
+      const { error } = await supabase.auth.admin.updateUserById(userId, {
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Password changed',
+        description: 'User password has been updated successfully'
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error changing password',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  };
+
   const fetchSettings = async () => {
     try {
       const { data, error } = await supabase
@@ -268,6 +291,7 @@ export function useSettings() {
     updateUserRole,
     deleteUser,
     resetUserPassword,
+    changeUserPassword,
     updateSetting
   };
 }

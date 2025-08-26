@@ -7,6 +7,16 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -36,15 +46,23 @@ import {
   UserMinus, 
   Settings as SettingsIcon,
   BarChart3,
-  KeyRound
+  KeyRound,
+  Lock
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Settings() {
-  const { users, stats, settings, loading, updateUserRole, deleteUser, resetUserPassword, updateSetting } = useSettings();
+  const { users, stats, settings, loading, updateUserRole, deleteUser, resetUserPassword, changeUserPassword, updateSetting } = useSettings();
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [passwordResetMessage, setPasswordResetMessage] = useState('');
   const [savingMessage, setSavingMessage] = useState(false);
+  const [changePasswordDialog, setChangePasswordDialog] = useState<{open: boolean, userId: string, userName: string}>({
+    open: false,
+    userId: '',
+    userName: ''
+  });
+  const [newPassword, setNewPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const handleRoleUpdate = async (userId: string, currentRole: string) => {
     setUpdatingUser(userId);
@@ -59,6 +77,23 @@ export default function Settings() {
 
   const handlePasswordReset = async (email: string) => {
     await resetUserPassword(email);
+  };
+
+  const handleOpenChangePassword = (userId: string, userName: string) => {
+    setChangePasswordDialog({ open: true, userId, userName });
+    setNewPassword('');
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword.trim()) {
+      return;
+    }
+    
+    setChangingPassword(true);
+    await changeUserPassword(changePasswordDialog.userId, newPassword);
+    setChangingPassword(false);
+    setChangePasswordDialog({ open: false, userId: '', userName: '' });
+    setNewPassword('');
   };
 
   const handleSavePasswordMessage = async () => {
@@ -250,9 +285,18 @@ export default function Settings() {
                                     size="sm"
                                     variant="outline"
                                     onClick={() => handlePasswordReset(user.email)}
-                                    title="Reset Password"
+                                    title="Send Password Reset Email"
                                   >
                                     <KeyRound className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleOpenChangePassword(user.user_id, `${user.first_name} ${user.last_name}`)}
+                                    title="Change Password"
+                                    disabled={user.email === 'keith.fowlkes@hessconsortium.org'}
+                                  >
+                                    <Lock className="h-4 w-4" />
                                   </Button>
                                   <Button
                                     size="sm"
@@ -301,6 +345,44 @@ export default function Settings() {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              <Dialog open={changePasswordDialog.open} onOpenChange={(open) => setChangePasswordDialog({...changePasswordDialog, open})}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Change Password</DialogTitle>
+                    <DialogDescription>
+                      Set a new password for {changePasswordDialog.userName}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div>
+                      <Label htmlFor="new-password">New Password</Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setChangePasswordDialog({ open: false, userId: '', userName: '' })}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleChangePassword}
+                      disabled={changingPassword || !newPassword.trim()}
+                    >
+                      {changingPassword ? "Changing..." : "Change Password"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
 
               <TabsContent value="messages" className="space-y-6">
                 <Card>
