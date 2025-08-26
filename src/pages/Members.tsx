@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useMembers } from '@/hooks/useMembers';
-import { Plus, Search, Building2, Mail, Phone, MapPin, User } from 'lucide-react';
+import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List } from 'lucide-react';
 import { OrganizationDialog } from '@/components/OrganizationDialog';
 
 export default function Members() {
@@ -14,6 +14,7 @@ export default function Members() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const filteredOrganizations = organizations.filter(org =>
     org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,8 +69,8 @@ export default function Members() {
           </Button>
         </div>
 
-        {/* Search and Filters */}
-        <div className="flex gap-4">
+        {/* Search and View Toggle */}
+        <div className="flex gap-4 items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -79,72 +80,167 @@ export default function Members() {
               className="pl-10"
             />
           </div>
+          <div className="flex border rounded-md">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="rounded-r-none"
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="rounded-l-none"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
-        {/* Organizations Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOrganizations.map((organization) => (
-            <Card 
-              key={organization.id} 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => {
-                setSelectedOrganization(organization);
-                setDialogOpen(true);
-              }}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Building2 className="h-8 w-8 text-primary" />
-                    <div>
-                      <CardTitle className="text-lg">{organization.name}</CardTitle>
-                      <Badge className={`mt-1 ${getStatusColor(organization.membership_status)}`}>
+        {/* Organizations Display */}
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredOrganizations.map((organization) => (
+              <Card 
+                key={organization.id} 
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => {
+                  setSelectedOrganization(organization);
+                  setDialogOpen(true);
+                }}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Building2 className="h-8 w-8 text-primary" />
+                      <div>
+                        <CardTitle className="text-lg">{organization.name}</CardTitle>
+                        <Badge className={`mt-1 ${getStatusColor(organization.membership_status)}`}>
+                          {organization.membership_status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    {organization.profiles && (
+                      <div className="space-y-1">
+                        <div className="text-xs text-muted-foreground">Primary Contact</div>
+                        <div className="flex items-center text-foreground">
+                          <User className="h-4 w-4 mr-2" />
+                          {organization.profiles.first_name} {organization.profiles.last_name}
+                        </div>
+                      </div>
+                    )}
+                    {organization.email && (
+                      <div className="flex items-center text-muted-foreground">
+                        <Mail className="h-4 w-4 mr-2" />
+                        {organization.email}
+                      </div>
+                    )}
+                    {organization.phone && (
+                      <div className="flex items-center text-muted-foreground">
+                        <Phone className="h-4 w-4 mr-2" />
+                        {organization.phone}
+                      </div>
+                    )}
+                    {(organization.city || organization.state) && (
+                      <div className="flex items-center text-muted-foreground">
+                        <MapPin className="h-4 w-4 mr-2" />
+                        {organization.city}{organization.city && organization.state && ', '}{organization.state}
+                      </div>
+                    )}
+                    <div className="pt-2 border-t">
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Annual Fee:</span>
+                        <span className="font-medium">${organization.annual_fee_amount}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="border rounded-lg overflow-hidden">
+            <div className="bg-muted/50 px-6 py-3 border-b">
+              <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
+                <div className="col-span-3">Organization</div>
+                <div className="col-span-2">Primary Contact</div>
+                <div className="col-span-2">Email</div>
+                <div className="col-span-2">Location</div>
+                <div className="col-span-2">Status</div>
+                <div className="col-span-1">Annual Fee</div>
+              </div>
+            </div>
+            <div className="divide-y">
+              {filteredOrganizations.map((organization) => (
+                <div 
+                  key={organization.id}
+                  className="px-6 py-4 hover:bg-muted/30 cursor-pointer transition-colors"
+                  onClick={() => {
+                    setSelectedOrganization(organization);
+                    setDialogOpen(true);
+                  }}
+                >
+                  <div className="grid grid-cols-12 gap-4 items-center">
+                    <div className="col-span-3">
+                      <div className="flex items-center space-x-3">
+                        <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
+                        <div>
+                          <div className="font-medium text-foreground">{organization.name}</div>
+                          {organization.phone && (
+                            <div className="text-sm text-muted-foreground">{organization.phone}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-span-2">
+                      {organization.profiles ? (
+                        <div className="text-sm">
+                          <div className="font-medium">{organization.profiles.first_name} {organization.profiles.last_name}</div>
+                          {organization.profiles.phone && (
+                            <div className="text-muted-foreground">{organization.profiles.phone}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
+                    </div>
+                    <div className="col-span-2">
+                      {organization.email ? (
+                        <div className="text-sm text-muted-foreground">{organization.email}</div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
+                    </div>
+                    <div className="col-span-2">
+                      {(organization.city || organization.state) ? (
+                        <div className="text-sm text-muted-foreground">
+                          {organization.city}{organization.city && organization.state && ', '}{organization.state}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
+                    </div>
+                    <div className="col-span-2">
+                      <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
                         {organization.membership_status}
                       </Badge>
                     </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  {organization.profiles && (
-                    <div className="space-y-1">
-                      <div className="text-xs text-muted-foreground">Primary Contact</div>
-                      <div className="flex items-center text-foreground">
-                        <User className="h-4 w-4 mr-2" />
-                        {organization.profiles.first_name} {organization.profiles.last_name}
-                      </div>
-                    </div>
-                  )}
-                  {organization.email && (
-                    <div className="flex items-center text-muted-foreground">
-                      <Mail className="h-4 w-4 mr-2" />
-                      {organization.email}
-                    </div>
-                  )}
-                  {organization.phone && (
-                    <div className="flex items-center text-muted-foreground">
-                      <Phone className="h-4 w-4 mr-2" />
-                      {organization.phone}
-                    </div>
-                  )}
-                  {(organization.city || organization.state) && (
-                    <div className="flex items-center text-muted-foreground">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      {organization.city}{organization.city && organization.state && ', '}{organization.state}
-                    </div>
-                  )}
-                  <div className="pt-2 border-t">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Annual Fee:</span>
-                      <span className="font-medium">${organization.annual_fee_amount}</span>
+                    <div className="col-span-1">
+                      <div className="text-sm font-medium">${organization.annual_fee_amount}</div>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {filteredOrganizations.length === 0 && (
           <div className="text-center py-12">
