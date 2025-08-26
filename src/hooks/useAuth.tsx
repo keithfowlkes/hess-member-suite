@@ -7,7 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, userData: any) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
 }
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+  const signUp = async (email: string, password: string, userData: any) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -72,8 +72,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: {
         emailRedirectTo: redirectUrl,
         data: {
-          first_name: firstName,
-          last_name: lastName,
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          organization: userData.organization,
+          state_association: userData.stateAssociation,
+          student_fte: userData.studentFte,
+          address: userData.address,
+          city: userData.city,
+          state: userData.state,
+          zip: userData.zip,
+          primary_contact_title: userData.primaryContactTitle,
+          secondary_first_name: userData.secondaryFirstName,
+          secondary_last_name: userData.secondaryLastName,
+          secondary_contact_title: userData.secondaryContactTitle,
+          secondary_contact_email: userData.secondaryContactEmail,
+          student_information_system: userData.studentInformationSystem,
+          financial_system: userData.financialSystem,
+          financial_aid: userData.financialAid,
+          hcm_hr: userData.hcmHr,
+          payroll_system: userData.payrollSystem,
+          purchasing_system: userData.purchasingSystem,
+          housing_management: userData.housingManagement,
+          learning_management: userData.learningManagement,
+          admissions_crm: userData.admissionsCrm,
+          alumni_advancement_crm: userData.alumniAdvancementCrm,
+          primary_office_apple: userData.primaryOfficeApple,
+          primary_office_asus: userData.primaryOfficeAsus,
+          primary_office_dell: userData.primaryOfficeDell,
+          other_software_comments: userData.otherSoftwareComments
         }
       }
     });

@@ -158,34 +158,112 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
+          admissions_crm: string | null
+          alumni_advancement_crm: string | null
+          city: string | null
           created_at: string
           email: string
+          financial_aid: string | null
+          financial_system: string | null
           first_name: string
+          hcm_hr: string | null
+          housing_management: string | null
           id: string
           last_name: string
+          learning_management: string | null
+          organization: string | null
+          other_software_comments: string | null
+          payroll_system: string | null
           phone: string | null
+          primary_contact_title: string | null
+          primary_office_apple: boolean | null
+          primary_office_asus: boolean | null
+          primary_office_dell: boolean | null
+          purchasing_system: string | null
+          secondary_contact_email: string | null
+          secondary_contact_title: string | null
+          secondary_first_name: string | null
+          secondary_last_name: string | null
+          state: string | null
+          state_association: string | null
+          student_fte: number | null
+          student_information_system: string | null
           updated_at: string
           user_id: string
+          zip: string | null
         }
         Insert: {
+          address?: string | null
+          admissions_crm?: string | null
+          alumni_advancement_crm?: string | null
+          city?: string | null
           created_at?: string
           email: string
+          financial_aid?: string | null
+          financial_system?: string | null
           first_name: string
+          hcm_hr?: string | null
+          housing_management?: string | null
           id?: string
           last_name: string
+          learning_management?: string | null
+          organization?: string | null
+          other_software_comments?: string | null
+          payroll_system?: string | null
           phone?: string | null
+          primary_contact_title?: string | null
+          primary_office_apple?: boolean | null
+          primary_office_asus?: boolean | null
+          primary_office_dell?: boolean | null
+          purchasing_system?: string | null
+          secondary_contact_email?: string | null
+          secondary_contact_title?: string | null
+          secondary_first_name?: string | null
+          secondary_last_name?: string | null
+          state?: string | null
+          state_association?: string | null
+          student_fte?: number | null
+          student_information_system?: string | null
           updated_at?: string
           user_id: string
+          zip?: string | null
         }
         Update: {
+          address?: string | null
+          admissions_crm?: string | null
+          alumni_advancement_crm?: string | null
+          city?: string | null
           created_at?: string
           email?: string
+          financial_aid?: string | null
+          financial_system?: string | null
           first_name?: string
+          hcm_hr?: string | null
+          housing_management?: string | null
           id?: string
           last_name?: string
+          learning_management?: string | null
+          organization?: string | null
+          other_software_comments?: string | null
+          payroll_system?: string | null
           phone?: string | null
+          primary_contact_title?: string | null
+          primary_office_apple?: boolean | null
+          primary_office_asus?: boolean | null
+          primary_office_dell?: boolean | null
+          purchasing_system?: string | null
+          secondary_contact_email?: string | null
+          secondary_contact_title?: string | null
+          secondary_first_name?: string | null
+          secondary_last_name?: string | null
+          state?: string | null
+          state_association?: string | null
+          student_fte?: number | null
+          student_information_system?: string | null
           updated_at?: string
           user_id?: string
+          zip?: string | null
         }
         Relationships: []
       }

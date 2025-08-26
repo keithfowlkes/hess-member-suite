@@ -18,7 +18,33 @@ export default function Auth() {
     email: '', 
     password: '', 
     firstName: '', 
-    lastName: '' 
+    lastName: '',
+    organization: '',
+    stateAssociation: '',
+    studentFte: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    primaryContactTitle: '',
+    secondaryFirstName: '',
+    secondaryLastName: '',
+    secondaryContactTitle: '',
+    secondaryContactEmail: '',
+    studentInformationSystem: '',
+    financialSystem: '',
+    financialAid: '',
+    hcmHr: '',
+    payrollSystem: '',
+    purchasingSystem: '',
+    housingManagement: '',
+    learningManagement: '',
+    admissionsCrm: '',
+    alumniAdvancementCrm: '',
+    primaryOfficeApple: false,
+    primaryOfficeAsus: false,
+    primaryOfficeDell: false,
+    otherSoftwareComments: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -62,8 +88,7 @@ export default function Auth() {
     const { error } = await signUp(
       signUpForm.email, 
       signUpForm.password,
-      signUpForm.firstName,
-      signUpForm.lastName
+      signUpForm
     );
     
     if (error) {
@@ -83,7 +108,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-6xl">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <Building2 className="h-12 w-12 text-primary" />
@@ -95,7 +120,7 @@ export default function Auth() {
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsTrigger value="signup">Member Registration</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
@@ -139,62 +164,354 @@ export default function Auth() {
           </TabsContent>
           
           <TabsContent value="signup">
-            <Card>
+            <Card className="max-w-4xl mx-auto">
               <CardHeader>
-                <CardTitle>Sign Up</CardTitle>
+                <CardTitle>Member Registration</CardTitle>
                 <CardDescription>
-                  Create a new HESS Consortium account
+                  Register your organization with HESS Consortium
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <form onSubmit={handleSignUp} className="space-y-6">
+                  {/* Organization Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Organization Information</h3>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-firstname">First Name</Label>
+                      <Label htmlFor="organization">Organization</Label>
                       <Input
-                        id="signup-firstname"
-                        placeholder="First name"
-                        value={signUpForm.firstName}
-                        onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
+                        id="organization"
+                        placeholder="Organization name"
+                        value={signUpForm.organization}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
                         required
                       />
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="state-association">State Association (if applicable)</Label>
+                        <Input
+                          id="state-association"
+                          placeholder="State association"
+                          value={signUpForm.stateAssociation}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="student-fte">Student FTE</Label>
+                        <Input
+                          id="student-fte"
+                          type="number"
+                          placeholder="Student FTE"
+                          value={signUpForm.studentFte}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, studentFte: e.target.value }))}
+                        />
+                      </div>
+                    </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-lastname">Last Name</Label>
+                      <Label htmlFor="address">Address</Label>
                       <Input
-                        id="signup-lastname"
-                        placeholder="Last name"
-                        value={signUpForm.lastName}
-                        onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
+                        id="address"
+                        placeholder="Street address"
+                        value={signUpForm.address}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="city">City</Label>
+                        <Input
+                          id="city"
+                          placeholder="City"
+                          value={signUpForm.city}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="state">State</Label>
+                        <Input
+                          id="state"
+                          placeholder="State"
+                          value={signUpForm.state}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="zip">Zip</Label>
+                        <Input
+                          id="zip"
+                          placeholder="ZIP code"
+                          value={signUpForm.zip}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Primary Contact */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Primary Contact</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-firstname">First Name - Primary Contact</Label>
+                        <Input
+                          id="signup-firstname"
+                          placeholder="First name"
+                          value={signUpForm.firstName}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-lastname">Last Name - Primary Contact</Label>
+                        <Input
+                          id="signup-lastname"
+                          placeholder="Last name"
+                          value={signUpForm.lastName}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="primary-contact-title">Primary Contact Title</Label>
+                        <Input
+                          id="primary-contact-title"
+                          placeholder="Job title"
+                          value={signUpForm.primaryContactTitle}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactTitle: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-email">Primary Email</Label>
+                        <Input
+                          id="signup-email"
+                          type="email"
+                          placeholder="Enter your email"
+                          value={signUpForm.email}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, email: e.target.value }))}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Password</Label>
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="Create a password"
+                        value={signUpForm.password}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
                         required
+                        minLength={6}
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={signUpForm.email}
-                      onChange={(e) => setSignUpForm(prev => ({ ...prev, email: e.target.value }))}
-                      required
-                    />
+
+                  {/* Secondary Contact */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Secondary Contact</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="secondary-firstname">First Name - Secondary Contact</Label>
+                        <Input
+                          id="secondary-firstname"
+                          placeholder="First name"
+                          value={signUpForm.secondaryFirstName}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryFirstName: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="secondary-lastname">Last Name - Secondary Contact</Label>
+                        <Input
+                          id="secondary-lastname"
+                          placeholder="Last name"
+                          value={signUpForm.secondaryLastName}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryLastName: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="secondary-contact-title">Secondary Contact Title</Label>
+                        <Input
+                          id="secondary-contact-title"
+                          placeholder="Job title"
+                          value={signUpForm.secondaryContactTitle}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactTitle: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="secondary-contact-email">Secondary Contact Email</Label>
+                        <Input
+                          id="secondary-contact-email"
+                          type="email"
+                          placeholder="Secondary contact email"
+                          value={signUpForm.secondaryContactEmail}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactEmail: e.target.value }))}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="Create a password"
-                      value={signUpForm.password}
-                      onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                      required
-                      minLength={6}
-                    />
+
+                  {/* Systems Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Systems Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="student-info-system">Student Information System</Label>
+                        <Input
+                          id="student-info-system"
+                          placeholder="Student information system"
+                          value={signUpForm.studentInformationSystem}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="financial-system">Financial System</Label>
+                        <Input
+                          id="financial-system"
+                          placeholder="Financial system"
+                          value={signUpForm.financialSystem}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, financialSystem: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="financial-aid">Financial Aid</Label>
+                        <Input
+                          id="financial-aid"
+                          placeholder="Financial aid system"
+                          value={signUpForm.financialAid}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, financialAid: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="hcm-hr">HCM (HR)</Label>
+                        <Input
+                          id="hcm-hr"
+                          placeholder="HCM/HR system"
+                          value={signUpForm.hcmHr}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, hcmHr: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="payroll-system">Payroll System</Label>
+                        <Input
+                          id="payroll-system"
+                          placeholder="Payroll system"
+                          value={signUpForm.payrollSystem}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, payrollSystem: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="purchasing-system">Purchasing System</Label>
+                        <Input
+                          id="purchasing-system"
+                          placeholder="Purchasing system"
+                          value={signUpForm.purchasingSystem}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, purchasingSystem: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="housing-management">Housing Management</Label>
+                        <Input
+                          id="housing-management"
+                          placeholder="Housing management system"
+                          value={signUpForm.housingManagement}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, housingManagement: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="learning-management">Learning Management (LMS)</Label>
+                        <Input
+                          id="learning-management"
+                          placeholder="Learning management system"
+                          value={signUpForm.learningManagement}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, learningManagement: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="admissions-crm">Admissions CRM</Label>
+                        <Input
+                          id="admissions-crm"
+                          placeholder="Admissions CRM system"
+                          value={signUpForm.admissionsCrm}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, admissionsCrm: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="alumni-advancement-crm">Alumni / Advancement CRM</Label>
+                        <Input
+                          id="alumni-advancement-crm"
+                          placeholder="Alumni/Advancement CRM"
+                          value={signUpForm.alumniAdvancementCrm}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: e.target.value }))}
+                        />
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Primary Office Computers */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Primary Office Computers</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="apple"
+                          checked={signUpForm.primaryOfficeApple}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeApple: e.target.checked }))}
+                          className="rounded"
+                        />
+                        <Label htmlFor="apple">Apple</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="asus"
+                          checked={signUpForm.primaryOfficeAsus}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeAsus: e.target.checked }))}
+                          className="rounded"
+                        />
+                        <Label htmlFor="asus">Asus</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="dell"
+                          checked={signUpForm.primaryOfficeDell}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeDell: e.target.checked }))}
+                          className="rounded"
+                        />
+                        <Label htmlFor="dell">Dell</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Comments */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="other-software-comments">If you answered other above, please share other software and any comments on your operation?</Label>
+                      <textarea
+                        id="other-software-comments"
+                        placeholder="Please share any additional information about your software and operations..."
+                        value={signUpForm.otherSoftwareComments}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, otherSoftwareComments: e.target.value }))}
+                        className="w-full min-h-[100px] p-3 border border-input rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                  </div>
+
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Creating account...' : 'Sign Up'}
+                    {isSubmitting ? 'Creating account...' : 'Register Organization'}
                   </Button>
                 </form>
               </CardContent>
