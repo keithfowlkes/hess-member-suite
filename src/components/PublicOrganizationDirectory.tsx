@@ -103,42 +103,36 @@ export function PublicOrganizationDirectory() {
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-2">
             {filteredOrganizations.map((org) => (
-              <Card key={org.id} className="hover:shadow-md transition-shadow bg-background/50 backdrop-blur-sm">
-                <CardContent className="p-4 space-y-3">
-                  <div>
-                    <h3 className="font-semibold text-foreground text-lg leading-tight">
+              <div key={org.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/5 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-4">
+                    <h3 className="font-semibold text-foreground text-lg">
                       {org.name}
                     </h3>
-                  </div>
-                  
-                  {(org.city || org.state) && (
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      <span className="text-sm">
-                        {[org.city, org.state].filter(Boolean).join(', ')}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-xs">
-                      Active Member
-                    </Badge>
-                    {org.website && (
-                      <Button
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => window.open(org.website, '_blank')}
-                        className="h-8 px-2 text-primary hover:text-primary/80"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                      </Button>
+                    {(org.city || org.state) && (
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <MapPin className="h-4 w-4" />
+                        <span>
+                          {[org.city, org.state].filter(Boolean).join(', ')}
+                        </span>
+                      </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                
+                {org.website && (
+                  <Button
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => window.open(org.website, '_blank')}
+                    className="flex-shrink-0 ml-4 text-primary hover:text-primary/80"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             ))}
           </div>
 
