@@ -10,6 +10,7 @@ import Members from "./pages/Members";
 import MembershipFees from "./pages/MembershipFees";
 import FormFields from "./pages/FormFields";
 import Invoices from "./pages/Invoices";
+import PublicViews from "./pages/PublicViews";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/membership-fees" element={<MembershipFees />} />
             <Route path="/form-fields" element={<FormFields />} />
             <Route path="/invoices" element={<Invoices />} />
+            <Route path="/public-views" element={<PublicViews />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Building2, Users, FileText, User, Settings, Home, FormInput } from 'lucide-react';
+import { Building2, Users, FileText, User, Settings, Home, FormInput, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Sidebar,
@@ -25,6 +25,7 @@ export function AppSidebar() {
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
     { title: 'Registration Forms', url: '/form-fields', icon: FormInput },
     { title: 'Invoices', url: '/invoices', icon: FileText },
+    { title: 'Public Views', url: '/public-views', icon: Eye },
     { title: 'Settings', url: '/settings', icon: Settings },
   ];
 
