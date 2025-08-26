@@ -244,7 +244,10 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
     console.log('Organization form valid:', orgValid);
     console.log('Profile form valid:', profileValid);
 
-    if (!orgValid || !profileValid) return;
+    if (!orgValid || !profileValid) {
+      console.log('Form validation failed, stopping submission');
+      return;
+    }
 
     const orgData = orgForm.getValues();
     const profileData = profileForm.getValues();
@@ -275,6 +278,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
         
         console.log('Organization update data:', updateData);
         await updateOrganization(organization.id, updateData);
+        console.log('Organization updated successfully');
 
         // Update profile if it exists
         if (organization.profiles && organization.contact_person_id) {
@@ -317,20 +321,24 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           };
           
           console.log('Profile update data:', profileUpdateData);
+          console.log('Student FTE being saved:', profileUpdateData.student_fte);
           
-          const { error } = await supabase
+          const { data: updatedProfile, error } = await supabase
             .from('profiles')
             .update(profileUpdateData)
-            .eq('id', organization.contact_person_id);
+            .eq('id', organization.contact_person_id)
+            .select()
+            .single();
 
           if (error) {
             console.error('Profile update error:', error);
             throw error;
           }
 
-          console.log('Profile updated successfully');
+          console.log('Profile updated successfully, result:', updatedProfile);
           
           // Refresh the data to show updated Student FTE
+          console.log('Refreshing organizations data...');
           await fetchOrganizations();
           console.log('Data refreshed');
 
@@ -338,6 +346,16 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
             title: 'Success',
             description: 'Organization and profile updated successfully'
           });
+          
+          // Don't close dialog immediately - wait a bit for UI to update
+          setTimeout(() => {
+            console.log('Closing dialog after delay');
+            onOpenChange(false);
+          }, 500);
+          
+        } else {
+          console.log('No profile to update');
+          onOpenChange(false);
         }
       } else {
         // Create new organization
@@ -359,9 +377,9 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           notes: orgData.notes || null,
         };
         await createOrganization(createData);
+        onOpenChange(false);
       }
       
-      onOpenChange(false);
     } catch (error: any) {
       console.error('Form submission error:', error);
       toast({
@@ -369,6 +387,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
         description: error.message,
         variant: 'destructive'
       });
+      onOpenChange(false);
     } finally {
       setIsSubmitting(false);
     }
