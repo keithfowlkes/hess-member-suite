@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Members from "./pages/Members";
 import MembershipFees from "./pages/MembershipFees";
+import FormFields from "./pages/FormFields";
 import Invoices from "./pages/Invoices";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/members" element={<Members />} />
             <Route path="/membership-fees" element={<MembershipFees />} />
+            <Route path="/form-fields" element={<FormFields />} />
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
