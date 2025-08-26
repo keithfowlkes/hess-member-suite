@@ -322,6 +322,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           
           console.log('Profile update data:', profileUpdateData);
           console.log('Student FTE being saved:', profileUpdateData.student_fte);
+          console.log('Updating profile with ID:', organization.contact_person_id);
           
           const { data: updatedProfile, error } = await supabase
             .from('profiles')
@@ -335,6 +336,15 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           }
 
           console.log('Profile updated successfully, result:', updatedProfile);
+          console.log('Updated profile student_fte:', updatedProfile?.[0]?.student_fte);
+          
+          // Verify the update worked by querying the profile directly
+          const { data: verifyProfile } = await supabase
+            .from('profiles')
+            .select('id, student_fte')
+            .eq('id', organization.contact_person_id)
+            .single();
+          console.log('Verification query result:', verifyProfile);
           
           // Refresh the data to show updated Student FTE
           console.log('Refreshing organizations data...');
