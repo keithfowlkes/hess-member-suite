@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Building2, Users, FileText, User, Settings, Home, FormInput, Eye, LogOut } from 'lucide-react';
+import { Building2, Users, FileText, User, Settings, Home, FormInput, Eye, LogOut, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,7 +18,7 @@ import {
 
 export function AppSidebar() {
   const { state } = useSidebar();
-  const { isAdmin, signOut } = useAuth();
+  const { isAdmin, isViewingAsAdmin, toggleViewMode, signOut } = useAuth();
   const location = useLocation();
   
   const adminItems = [
@@ -39,7 +39,7 @@ export function AppSidebar() {
     { title: 'Organization', url: '/organization', icon: Building2 },
   ];
 
-  const items = isAdmin ? adminItems : memberItems;
+  const items = isViewingAsAdmin ? adminItems : memberItems;
   const isCollapsed = state === 'collapsed';
   
   const isActive = (path: string) => location.pathname === path;
@@ -54,7 +54,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{isAdmin ? 'Admin Panel' : 'Member Portal'}</SidebarGroupLabel>
+          <SidebarGroupLabel>{isViewingAsAdmin ? 'Admin Panel' : 'Member Portal'}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
@@ -81,6 +81,25 @@ export function AppSidebar() {
       
       <SidebarFooter>
         <SidebarMenu>
+          {isAdmin && (
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Button
+                  variant="ghost"
+                  onClick={toggleViewMode}
+                  className="w-full justify-start text-muted-foreground hover:text-foreground"
+                >
+                  {isViewingAsAdmin ? 
+                    <ToggleRight className="h-4 w-4" /> : 
+                    <ToggleLeft className="h-4 w-4" />
+                  }
+                  {!isCollapsed && (
+                    <span>{isViewingAsAdmin ? 'Switch to Member View' : 'Switch to Admin View'}</span>
+                  )}
+                </Button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Button

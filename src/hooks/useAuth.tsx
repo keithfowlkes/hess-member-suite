@@ -10,6 +10,9 @@ interface AuthContextType {
   signUp: (email: string, password: string, userData: any) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
+  viewMode: 'admin' | 'member';
+  toggleViewMode: () => void;
+  isViewingAsAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
 
   useEffect(() => {
     // Set up auth state listener
@@ -124,6 +128,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const toggleViewMode = () => {
+    setViewMode(prev => prev === 'admin' ? 'member' : 'admin');
+  };
+
+  const isViewingAsAdmin = isAdmin && viewMode === 'admin';
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -132,7 +142,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signUp,
       signOut,
-      isAdmin
+      isAdmin,
+      viewMode,
+      toggleViewMode,
+      isViewingAsAdmin
     }}>
       {children}
     </AuthContext.Provider>

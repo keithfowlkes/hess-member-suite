@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Building2, Users, FileText, DollarSign, LogOut } from 'lucide-react';
 
 const Index = () => {
-  const { isAdmin, signOut } = useAuth();
+  const { isViewingAsAdmin, signOut } = useAuth();
 
   const adminStats = [
     { title: 'Total Members', value: '127', icon: Users, color: 'text-blue-600' },
@@ -22,7 +22,7 @@ const Index = () => {
     { title: 'Outstanding Balance', value: '$0', icon: DollarSign, color: 'text-green-600' },
   ];
 
-  const stats = isAdmin ? adminStats : memberStats;
+  const stats = isViewingAsAdmin ? adminStats : memberStats;
 
   return (
     <SidebarProvider>
@@ -33,15 +33,15 @@ const Index = () => {
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  {isAdmin ? 'Admin Dashboard' : 'Member Dashboard'}
+                  {isViewingAsAdmin ? 'Admin Dashboard' : 'Member Dashboard'}
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                  {isAdmin 
+                  {isViewingAsAdmin 
                     ? 'Manage member organizations and billing' 
                     : 'View your membership status and invoices'}
                 </p>
               </div>
-              {!isAdmin && (
+              {!isViewingAsAdmin && (
                 <Button
                   variant="outline"
                   onClick={signOut}
