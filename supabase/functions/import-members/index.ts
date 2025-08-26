@@ -105,14 +105,13 @@ serve(async (req) => {
           continue;
         }
 
-        // Create profile
+        // The handle_new_user trigger will automatically create a basic profile
+        // Wait a moment for the trigger to complete, then update with imported data
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const { error: profileError } = await supabaseAdmin
           .from('profiles')
-          .insert({
-            user_id: userData.user.id,
-            first_name: member.first_name,
-            last_name: member.last_name,
-            email: member.email,
+          .update({
             phone: member.phone,
             organization: member.organization,
             state_association: member.state_association,
@@ -144,7 +143,8 @@ serve(async (req) => {
             primary_office_other: member.primary_office_other || false,
             primary_office_other_details: member.primary_office_other_details,
             other_software_comments: member.other_software_comments
-          });
+          })
+          .eq('user_id', userData.user.id);
 
         if (profileError) {
           console.error(`Failed to create profile for ${member.email}:`, profileError);
