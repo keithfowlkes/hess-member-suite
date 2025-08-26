@@ -3,10 +3,11 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, Users, FileText, DollarSign } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Building2, Users, FileText, DollarSign, LogOut } from 'lucide-react';
 
 const Index = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, signOut } = useAuth();
 
   const adminStats = [
     { title: 'Total Members', value: '127', icon: Users, color: 'text-blue-600' },
@@ -29,15 +30,27 @@ const Index = () => {
         <AppSidebar />
         <main className="flex-1 p-8">
           <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                {isAdmin ? 'Admin Dashboard' : 'Member Dashboard'}
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                {isAdmin 
-                  ? 'Manage member organizations and billing' 
-                  : 'View your membership status and invoices'}
-              </p>
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  {isAdmin ? 'Admin Dashboard' : 'Member Dashboard'}
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                  {isAdmin 
+                    ? 'Manage member organizations and billing' 
+                    : 'View your membership status and invoices'}
+                </p>
+              </div>
+              {!isAdmin && (
+                <Button
+                  variant="outline"
+                  onClick={signOut}
+                  className="flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+              )}
             </div>
 
             {/* Stats Grid */}
