@@ -327,8 +327,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
             .from('profiles')
             .update(profileUpdateData)
             .eq('id', organization.contact_person_id)
-            .select()
-            .single();
+            .select();
 
           if (error) {
             console.error('Profile update error:', error);
