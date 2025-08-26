@@ -99,6 +99,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           primary_office_apple: userData.primaryOfficeApple,
           primary_office_asus: userData.primaryOfficeAsus,
           primary_office_dell: userData.primaryOfficeDell,
+          primary_office_hp: userData.primaryOfficeHp,
+          primary_office_microsoft: userData.primaryOfficeMicrosoft,
+          primary_office_other: userData.primaryOfficeOther,
+          primary_office_other_details: userData.primaryOfficeOtherDetails,
           other_software_comments: userData.otherSoftwareComments
         }
       }

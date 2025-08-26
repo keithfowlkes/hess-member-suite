@@ -180,6 +180,10 @@ export type Database = {
           primary_office_apple: boolean | null
           primary_office_asus: boolean | null
           primary_office_dell: boolean | null
+          primary_office_hp: boolean | null
+          primary_office_microsoft: boolean | null
+          primary_office_other: boolean | null
+          primary_office_other_details: string | null
           purchasing_system: string | null
           secondary_contact_email: string | null
           secondary_contact_title: string | null
@@ -216,6 +220,10 @@ export type Database = {
           primary_office_apple?: boolean | null
           primary_office_asus?: boolean | null
           primary_office_dell?: boolean | null
+          primary_office_hp?: boolean | null
+          primary_office_microsoft?: boolean | null
+          primary_office_other?: boolean | null
+          primary_office_other_details?: string | null
           purchasing_system?: string | null
           secondary_contact_email?: string | null
           secondary_contact_title?: string | null
@@ -252,6 +260,10 @@ export type Database = {
           primary_office_apple?: boolean | null
           primary_office_asus?: boolean | null
           primary_office_dell?: boolean | null
+          primary_office_hp?: boolean | null
+          primary_office_microsoft?: boolean | null
+          primary_office_other?: boolean | null
+          primary_office_other_details?: string | null
           purchasing_system?: string | null
           secondary_contact_email?: string | null
           secondary_contact_title?: string | null

@@ -44,6 +44,10 @@ export default function Auth() {
     primaryOfficeApple: false,
     primaryOfficeAsus: false,
     primaryOfficeDell: false,
+    primaryOfficeHp: false,
+    primaryOfficeMicrosoft: false,
+    primaryOfficeOther: false,
+    primaryOfficeOtherDetails: '',
     otherSoftwareComments: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -462,7 +466,7 @@ export default function Auth() {
                   {/* Primary Office Computers */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Primary Office Computers</h3>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="flex items-center space-x-2">
                         <input
                           type="checkbox"
@@ -493,7 +497,50 @@ export default function Auth() {
                         />
                         <Label htmlFor="dell">Dell</Label>
                       </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="hp"
+                          checked={signUpForm.primaryOfficeHp}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeHp: e.target.checked }))}
+                          className="rounded"
+                        />
+                        <Label htmlFor="hp">HP</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="microsoft"
+                          checked={signUpForm.primaryOfficeMicrosoft}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeMicrosoft: e.target.checked }))}
+                          className="rounded"
+                        />
+                        <Label htmlFor="microsoft">Microsoft</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="other"
+                          checked={signUpForm.primaryOfficeOther}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeOther: e.target.checked }))}
+                          className="rounded"
+                        />
+                        <Label htmlFor="other">Other</Label>
+                      </div>
                     </div>
+                    
+                    {/* Conditional field for Other selection */}
+                    {signUpForm.primaryOfficeOther && (
+                      <div className="space-y-2">
+                        <Label htmlFor="other-computer-details">You selected other. Please give us more information.</Label>
+                        <Input
+                          id="other-computer-details"
+                          placeholder="Please specify other computer types..."
+                          value={signUpForm.primaryOfficeOtherDetails}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeOtherDetails: e.target.value }))}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Additional Comments */}
