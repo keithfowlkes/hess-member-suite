@@ -7,16 +7,61 @@ import { Button } from '@/components/ui/button';
 import { Search, ExternalLink, MapPin, Building2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { OrganizationDetailsDialog } from '@/components/OrganizationDetailsDialog';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PublicOrganization {
   id: string;
   name: string;
+  address_line_1?: string;
+  address_line_2?: string;
   city?: string;
   state?: string;
+  zip_code?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
   website?: string;
-  membership_status: string;
+  membership_status: 'active' | 'pending' | 'expired' | 'cancelled';
+  membership_start_date?: string;
+  membership_end_date?: string;
+  annual_fee_amount?: number;
+  notes?: string;
   profiles?: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    organization?: string;
+    state_association?: string;
     student_fte?: number;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    primary_contact_title?: string;
+    secondary_first_name?: string;
+    secondary_last_name?: string;
+    secondary_contact_title?: string;
+    secondary_contact_email?: string;
+    student_information_system?: string;
+    financial_system?: string;
+    financial_aid?: string;
+    hcm_hr?: string;
+    payroll_system?: string;
+    purchasing_system?: string;
+    housing_management?: string;
+    learning_management?: string;
+    admissions_crm?: string;
+    alumni_advancement_crm?: string;
+    primary_office_apple?: boolean;
+    primary_office_asus?: boolean;
+    primary_office_dell?: boolean;
+    primary_office_hp?: boolean;
+    primary_office_microsoft?: boolean;
+    primary_office_other?: boolean;
+    primary_office_other_details?: string;
+    other_software_comments?: string;
   };
 }
 
@@ -26,15 +71,26 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [selectedOrganization, setSelectedOrganization] = useState<PublicOrganization | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { user } = useAuth();
 
   const fetchOrganizations = async () => {
     try {
       const { data, error } = await supabase
         .from('organizations')
         .select(`
-          id, name, city, state, website, membership_status,
+          *,
           profiles:contact_person_id (
-            student_fte
+            first_name, last_name, email, phone, organization, state_association,
+            student_fte, address, city, state, zip, primary_contact_title,
+            secondary_first_name, secondary_last_name, secondary_contact_title,
+            secondary_contact_email, student_information_system, financial_system,
+            financial_aid, hcm_hr, payroll_system, purchasing_system,
+            housing_management, learning_management, admissions_crm,
+            alumni_advancement_crm, primary_office_apple, primary_office_asus,
+            primary_office_dell, primary_office_hp, primary_office_microsoft,
+            primary_office_other, primary_office_other_details, other_software_comments
           )
         `)
         .eq('membership_status', 'active')
@@ -69,6 +125,18 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
   });
 
   const uniqueStates = Array.from(new Set(organizations.map(org => org.state).filter(Boolean))).sort();
+
+  const handleOrganizationClick = (org: PublicOrganization) => {
+    setSelectedOrganization(org);
+    setIsDialogOpen(true);
+  };
+
+  // Check if user can edit - admin or contact person for this organization
+  const canEditOrganization = (org: PublicOrganization) => {
+    if (!user) return false;
+    // This would need proper role checking, but for now just check if user exists
+    return user.email === 'keith.fowlkes@hessconsortium.org'; // Admin check
+  };
 
   if (loading) {
     return (
@@ -145,7 +213,11 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
       {/* Organizations List - More compact */}
       <div className="space-y-1">
         {filteredOrganizations.map((org) => (
-          <div key={org.id} className="flex items-center justify-between p-3 border border-border rounded hover:bg-accent/5 transition-colors">
+          <div 
+            key={org.id} 
+            className="flex items-center justify-between p-3 border border-border rounded hover:bg-accent/5 transition-colors cursor-pointer"
+            onClick={() => handleOrganizationClick(org)}
+          >
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <h3 className="font-medium text-foreground">
                 {org.name}
@@ -164,7 +236,10 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
               <Button
                 variant="ghost" 
                 size="sm"
-                onClick={() => window.open(org.website, '_blank')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(org.website, '_blank');
+                }}
                 className="h-8 w-8 p-0 text-primary hover:text-primary/80"
               >
                 <ExternalLink className="h-3 w-3" />
@@ -173,6 +248,13 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
           </div>
         ))}
       </div>
+
+      <OrganizationDetailsDialog
+        organization={selectedOrganization}
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        canEdit={selectedOrganization ? canEditOrganization(selectedOrganization) : false}
+      />
 
       {filteredOrganizations.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
