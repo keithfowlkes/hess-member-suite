@@ -65,7 +65,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: DirectoryCo
       org.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       org.state?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesState = selectedState === '' || org.state === selectedState;
+    const matchesState = selectedState === 'all' || selectedState === '' || org.state === selectedState;
     
     return matchesSearch && matchesState;
   });
@@ -134,7 +134,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: DirectoryCo
             <SelectValue placeholder="Filter by state" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All states</SelectItem>
+            <SelectItem value="all">All states</SelectItem>
             {uniqueStates.map((state) => (
               <SelectItem key={state} value={state}>
                 {state}

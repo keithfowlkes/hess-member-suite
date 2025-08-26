@@ -63,7 +63,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
       org.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       org.state?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesState = selectedState === '' || org.state === selectedState;
+    const matchesState = selectedState === 'all' || selectedState === '' || org.state === selectedState;
     
     return matchesSearch && matchesState;
   });
@@ -132,7 +132,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
             <SelectValue placeholder="Filter by state" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All states</SelectItem>
+            <SelectItem value="all">All states</SelectItem>
             {uniqueStates.map((state) => (
               <SelectItem key={state} value={state}>
                 {state}
