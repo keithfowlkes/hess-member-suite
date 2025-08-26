@@ -57,7 +57,6 @@ const organizationSchema = z.object({
   membership_status: z.enum(['active', 'pending', 'expired', 'cancelled']),
   membership_start_date: z.date().optional(),
   membership_end_date: z.date().optional(),
-  student_fte: z.number().min(0).optional(),
   notes: z.string().optional(),
 });
 
@@ -68,6 +67,7 @@ const profileSchema = z.object({
   phone: z.string().optional(),
   organization: z.string().optional(),
   state_association: z.string().optional(),
+  student_fte: z.number().min(0).optional(),
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
@@ -125,7 +125,6 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
       zip_code: '',
       country: 'United States',
       membership_status: 'pending',
-      student_fte: 0,
       notes: '',
     },
   });
@@ -139,6 +138,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
       phone: '',
       organization: '',
       state_association: '',
+      student_fte: 0,
       address: '',
       city: '',
       state: '',
@@ -186,7 +186,6 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
         membership_status: organization.membership_status,
         membership_start_date: organization.membership_start_date ? new Date(organization.membership_start_date) : undefined,
         membership_end_date: organization.membership_end_date ? new Date(organization.membership_end_date) : undefined,
-        student_fte: organization.profiles?.student_fte || 0,
         notes: organization.notes || '',
       });
 
@@ -200,6 +199,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           phone: profile.phone || '',
           organization: profile.organization || '',
           state_association: profile.state_association || '',
+          student_fte: profile.student_fte || 0,
           address: profile.address || '',
           city: profile.city || '',
           state: profile.state || '',
@@ -275,7 +275,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
               phone: profileData.phone || null,
               organization: profileData.organization || null,
               state_association: profileData.state_association || null,
-              student_fte: orgData.student_fte || null,
+              student_fte: profileData.student_fte || null,
               address: profileData.address || null,
               city: profileData.city || null,
               state: profileData.state || null,
@@ -456,7 +456,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
                 />
 
                 <FormField
-                  control={orgForm.control}
+                  control={profileForm.control}
                   name="student_fte"
                   render={({ field }) => (
                     <FormItem>
