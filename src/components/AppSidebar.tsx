@@ -26,6 +26,7 @@ export function AppSidebar() {
     { title: 'Registration Forms', url: '/form-fields', icon: FormInput },
     { title: 'Invoices', url: '/invoices', icon: FileText },
     { title: 'Public Views', url: '/public-views', icon: Eye },
+    { title: 'Profile', url: '/profile', icon: User },
     { title: 'Settings', url: '/settings', icon: Settings },
   ];
 
