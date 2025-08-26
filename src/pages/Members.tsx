@@ -6,14 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useMembers } from '@/hooks/useMembers';
-import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List } from 'lucide-react';
+import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload } from 'lucide-react';
 import { OrganizationDialog } from '@/components/OrganizationDialog';
+import { ImportMembersDialog } from '@/components/ImportMembersDialog';
 
 export default function Members() {
   const { organizations, loading } = useMembers();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const filteredOrganizations = organizations.filter(org =>
@@ -60,13 +62,22 @@ export default function Members() {
               Manage member organizations and their membership details
             </p>
           </div>
-          <Button onClick={() => {
-            setSelectedOrganization(null);
-            setDialogOpen(true);
-          }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Organization
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => setImportDialogOpen(true)}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Import Member Organizations
+            </Button>
+            <Button onClick={() => {
+              setSelectedOrganization(null);
+              setDialogOpen(true);
+            }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Organization
+            </Button>
+          </div>
         </div>
 
         {/* Search and View Toggle */}
@@ -255,6 +266,11 @@ export default function Members() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         organization={selectedOrganization}
+      />
+
+      <ImportMembersDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
       />
         </main>
       </div>

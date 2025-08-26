@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Building2, Users, FileText, User, Settings, Home, Upload } from 'lucide-react';
+import { Building2, Users, FileText, User, Settings, Home } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Sidebar,
@@ -22,7 +22,6 @@ export function AppSidebar() {
   const adminItems = [
     { title: 'Dashboard', url: '/', icon: Home },
     { title: 'Member Organizations', url: '/members', icon: Users },
-    { title: 'Import Member Organizations', url: '/import-members', icon: Upload },
     { title: 'Invoices', url: '/invoices', icon: FileText },
     { title: 'Settings', url: '/settings', icon: Settings },
   ];
