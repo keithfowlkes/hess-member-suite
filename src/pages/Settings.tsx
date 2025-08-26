@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -39,8 +41,10 @@ import {
 import { format } from 'date-fns';
 
 export default function Settings() {
-  const { users, stats, loading, updateUserRole, deleteUser, resetUserPassword } = useSettings();
+  const { users, stats, settings, loading, updateUserRole, deleteUser, resetUserPassword, updateSetting } = useSettings();
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
+  const [passwordResetMessage, setPasswordResetMessage] = useState('');
+  const [savingMessage, setSavingMessage] = useState(false);
 
   const handleRoleUpdate = async (userId: string, currentRole: string) => {
     setUpdatingUser(userId);
@@ -56,6 +60,20 @@ export default function Settings() {
   const handlePasswordReset = async (email: string) => {
     await resetUserPassword(email);
   };
+
+  const handleSavePasswordMessage = async () => {
+    setSavingMessage(true);
+    await updateSetting('password_reset_message', passwordResetMessage);
+    setSavingMessage(false);
+  };
+
+  // Initialize password reset message when settings load
+  useEffect(() => {
+    const passwordSetting = settings.find(s => s.setting_key === 'password_reset_message');
+    if (passwordSetting?.setting_value) {
+      setPasswordResetMessage(passwordSetting.setting_value);
+    }
+  }, [settings]);
 
   if (loading) {
     return (
@@ -90,6 +108,7 @@ export default function Settings() {
               <TabsList>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="users">User Management</TabsTrigger>
+                <TabsTrigger value="messages">Messages</TabsTrigger>
                 <TabsTrigger value="system">System Info</TabsTrigger>
               </TabsList>
 
@@ -279,6 +298,36 @@ export default function Settings() {
                         })}
                       </TableBody>
                     </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="messages" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Password Reset Message</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Customize the message shown to users when their password is reset
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="password-reset-message">Reset Message</Label>
+                      <Textarea
+                        id="password-reset-message"
+                        placeholder="Enter the password reset message..."
+                        value={passwordResetMessage}
+                        onChange={(e) => setPasswordResetMessage(e.target.value)}
+                        rows={4}
+                        className="mt-2"
+                      />
+                    </div>
+                    <Button 
+                      onClick={handleSavePasswordMessage}
+                      disabled={savingMessage}
+                    >
+                      {savingMessage ? "Saving..." : "Save Message"}
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>

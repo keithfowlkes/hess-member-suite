@@ -24,9 +24,17 @@ export interface SystemStats {
   pendingInvoices: number;
 }
 
+export interface SystemSetting {
+  id: string;
+  setting_key: string;
+  setting_value: string | null;
+  description: string | null;
+}
+
 export function useSettings() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [stats, setStats] = useState<SystemStats | null>(null);
+  const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -65,6 +73,10 @@ export function useSettings() {
 
   const resetUserPassword = async (email: string) => {
     try {
+      // Get custom password reset message
+      const passwordResetSetting = settings.find(s => s.setting_key === 'password_reset_message');
+      const customMessage = passwordResetSetting?.setting_value || "A password reset link has been sent to your email address.";
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth?reset=true`
       });
@@ -73,13 +85,56 @@ export function useSettings() {
 
       toast({
         title: 'Password reset sent',
-        description: 'A password reset link has been sent to the user\'s email'
+        description: customMessage
       });
     } catch (error: any) {
       toast({
         title: 'Error sending password reset',
         description: error.message,
         variant: 'destructive'  
+      });
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('*')
+        .order('setting_key', { ascending: true });
+
+      if (error) throw error;
+
+      setSettings(data || []);
+    } catch (error: any) {
+      toast({
+        title: 'Error fetching settings',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const updateSetting = async (settingKey: string, value: string) => {
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .update({ setting_value: value })
+        .eq('setting_key', settingKey);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Setting updated',
+        description: 'The setting has been saved successfully'
+      });
+
+      await fetchSettings();
+    } catch (error: any) {
+      toast({
+        title: 'Error updating setting',
+        description: error.message,
+        variant: 'destructive'
       });
     }
   };
@@ -195,7 +250,7 @@ export function useSettings() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchUsers(), fetchStats()]);
+      await Promise.all([fetchUsers(), fetchStats(), fetchSettings()]);
       setLoading(false);
     };
 
@@ -205,11 +260,14 @@ export function useSettings() {
   return {
     users,
     stats,
+    settings,
     loading,
     fetchUsers,
     fetchStats,
+    fetchSettings,
     updateUserRole,
     deleteUser,
-    resetUserPassword
+    resetUserPassword,
+    updateSetting
   };
 }
