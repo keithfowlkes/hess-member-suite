@@ -22,6 +22,7 @@ export function AppSidebar() {
   const adminItems = [
     { title: 'Dashboard', url: '/', icon: Home },
     { title: 'Member Organizations', url: '/members', icon: Users },
+    { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
     { title: 'Invoices', url: '/invoices', icon: FileText },
     { title: 'Settings', url: '/settings', icon: Settings },
   ];
