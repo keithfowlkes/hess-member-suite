@@ -28,6 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -44,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 0);
         } else {
           setIsAdmin(false);
+          setViewMode('admin'); // Reset view mode on sign out
         }
         setLoading(false);
       }
@@ -117,6 +120,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     console.log('Sign out clicked');
     try {
+      // Clear local state immediately
+      setUser(null);
+      setSession(null);
+      setIsAdmin(false);
+      setViewMode('admin');
+      
+      // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out error:', error);
