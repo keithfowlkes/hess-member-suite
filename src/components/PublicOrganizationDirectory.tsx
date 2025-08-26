@@ -14,6 +14,9 @@ interface PublicOrganization {
   state?: string;
   website?: string;
   membership_status: string;
+  profiles?: {
+    student_fte?: number;
+  };
 }
 
 // Import the shared component from PublicDirectory
@@ -26,7 +29,12 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
     try {
       const { data, error } = await supabase
         .from('organizations')
-        .select('id, name, city, state, website, membership_status')
+        .select(`
+          id, name, city, state, website, membership_status,
+          profiles:contact_person_id (
+            student_fte
+          )
+        `)
         .eq('membership_status', 'active')
         .order('name');
 
@@ -72,6 +80,31 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
           <p className="text-muted-foreground">
             Discover our active member organizations
           </p>
+        </div>
+      )}
+
+      {/* Statistics at top */}
+      {showStats && (
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="text-center p-3 bg-primary/5 rounded">
+            <div className="text-xl font-bold text-primary">{organizations.length}</div>
+            <div className="text-xs text-muted-foreground">Active Organizations</div>
+          </div>
+          <div className="text-center p-3 bg-accent/10 rounded">
+            <div className="text-xl font-bold text-foreground">
+              {new Set(organizations.map(org => org.state).filter(Boolean)).size}
+            </div>
+            <div className="text-xs text-muted-foreground">States</div>
+          </div>
+          <div className="text-center p-3 bg-secondary/10 rounded">
+            <div className="text-xl font-bold text-foreground">
+              {organizations.reduce((total, org) => {
+                const fte = org.profiles?.student_fte || 0;
+                return total + fte;
+              }, 0).toLocaleString()}
+            </div>
+            <div className="text-xs text-muted-foreground">Total Student FTE</div>
+          </div>
         </div>
       )}
 
@@ -122,28 +155,6 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
         <div className="text-center py-8 text-muted-foreground">
           <Building2 className="h-12 w-12 mx-auto mb-2 opacity-50" />
           <p>No organizations found matching your search.</p>
-        </div>
-      )}
-
-      {/* Statistics */}
-      {showStats && (
-        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
-          <div className="text-center p-3 bg-primary/5 rounded">
-            <div className="text-xl font-bold text-primary">{organizations.length}</div>
-            <div className="text-xs text-muted-foreground">Active Organizations</div>
-          </div>
-          <div className="text-center p-3 bg-accent/10 rounded">
-            <div className="text-xl font-bold text-foreground">
-              {new Set(organizations.map(org => org.state).filter(Boolean)).size}
-            </div>
-            <div className="text-xs text-muted-foreground">States</div>
-          </div>
-          <div className="text-center p-3 bg-secondary/10 rounded">
-            <div className="text-xl font-bold text-foreground">
-              {organizations.filter(org => org.website).length}
-            </div>
-            <div className="text-xs text-muted-foreground">With Websites</div>
-          </div>
         </div>
       )}
     </div>
