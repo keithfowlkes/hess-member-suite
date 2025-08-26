@@ -80,6 +80,31 @@ export default function Members() {
           </div>
         </div>
 
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{organizations.length}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Student FTE</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">
+                {organizations.reduce((total, org) => {
+                  const fte = org.profiles?.student_fte || 0;
+                  return total + fte;
+                }, 0).toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Search and View Toggle */}
         <div className="flex gap-4 items-center">
           <div className="relative flex-1">

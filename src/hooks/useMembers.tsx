@@ -27,6 +27,7 @@ export interface Organization {
     last_name: string;
     email: string;
     phone?: string;
+    student_fte?: number;
   };
 }
 
@@ -63,7 +64,8 @@ export function useMembers() {
             first_name,
             last_name,
             email,
-            phone
+            phone,
+            student_fte
           )
         `)
         .order('name');
