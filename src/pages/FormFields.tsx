@@ -6,8 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Settings2, Save, RotateCcw } from 'lucide-react';
+import { Settings2, Save, RotateCcw, Plus, Edit, Trash2 } from 'lucide-react';
 
 interface FormField {
   id: string;
@@ -56,9 +60,19 @@ const defaultFormFields: FormField[] = [
   { id: 'alumniAdvancementCrm', name: 'alumniAdvancementCrm', label: 'Alumni/Advancement CRM', type: 'text', section: 'Systems Information', visibility: 'optional', placeholder: 'Alumni/Advancement CRM system' },
 ];
 
+const availableSections = [
+  'Organization Information',
+  'Primary Contact', 
+  'Secondary Contact',
+  'Systems Information'
+];
+
 export default function FormFields() {
   const [formFields, setFormFields] = useState<FormField[]>(defaultFormFields);
   const [hasChanges, setHasChanges] = useState(false);
+  const [editingField, setEditingField] = useState<FormField | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const sections = Array.from(new Set(formFields.map(field => field.section)));
@@ -77,6 +91,43 @@ export default function FormFields() {
       field.id === fieldId ? { ...field, visibility } : field
     ));
     setHasChanges(true);
+  };
+
+  const handleAddField = (newField: Omit<FormField, 'id'>) => {
+    const field: FormField = {
+      ...newField,
+      id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    };
+    setFormFields(prev => [...prev, field]);
+    setHasChanges(true);
+    setIsAddDialogOpen(false);
+    toast({
+      title: 'Field Added',
+      description: `"${field.label}" has been added to the form.`,
+    });
+  };
+
+  const handleEditField = (updatedField: FormField) => {
+    setFormFields(prev => prev.map(field => 
+      field.id === updatedField.id ? updatedField : field
+    ));
+    setHasChanges(true);
+    setIsEditDialogOpen(false);
+    setEditingField(null);
+    toast({
+      title: 'Field Updated',
+      description: `"${updatedField.label}" has been updated.`,
+    });
+  };
+
+  const handleDeleteField = (fieldId: string) => {
+    const field = formFields.find(f => f.id === fieldId);
+    setFormFields(prev => prev.filter(field => field.id !== fieldId));
+    setHasChanges(true);
+    toast({
+      title: 'Field Deleted',
+      description: `"${field?.label}" has been removed from the form.`,
+    });
   };
 
   const handleSave = () => {
@@ -105,7 +156,7 @@ export default function FormFields() {
           <div className="space-y-6">
             <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Member Registration Form Fields</h1>
+                <h1 className="text-3xl font-bold text-foreground">Registration Forms</h1>
                 <p className="text-muted-foreground mt-2">
                   Configure which fields are shown on the member registration form and whether they are required
                 </p>
@@ -144,10 +195,29 @@ export default function FormFields() {
                 return (
                   <Card key={section}>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Settings2 className="h-5 w-5" />
-                        {section}
-                      </CardTitle>
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="flex items-center gap-2">
+                          <Settings2 className="h-5 w-5" />
+                          {section}
+                        </CardTitle>
+                        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Field
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Add New Field</DialogTitle>
+                            </DialogHeader>
+                            <AddFieldForm 
+                              onSubmit={handleAddField}
+                              defaultSection={section}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
@@ -185,6 +255,54 @@ export default function FormFields() {
                                   <SelectItem value="hidden">Hidden</SelectItem>
                                 </SelectContent>
                               </Select>
+                              <div className="flex gap-2">
+                                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => setEditingField(field)}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Edit Field</DialogTitle>
+                                    </DialogHeader>
+                                    {editingField && (
+                                      <EditFieldForm 
+                                        field={editingField}
+                                        onSubmit={handleEditField}
+                                      />
+                                    )}
+                                  </DialogContent>
+                                </Dialog>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Field</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "{field.label}"? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => handleDeleteField(field.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -227,5 +345,208 @@ export default function FormFields() {
         </main>
       </div>
     </SidebarProvider>
+  );
+}
+
+function AddFieldForm({ onSubmit, defaultSection }: { 
+  onSubmit: (field: Omit<FormField, 'id'>) => void;
+  defaultSection: string;
+}) {
+  const [field, setField] = useState<Omit<FormField, 'id'>>({
+    name: '',
+    label: '',
+    type: 'text',
+    section: defaultSection,
+    visibility: 'optional',
+    placeholder: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (field.name && field.label) {
+      onSubmit(field);
+      setField({
+        name: '',
+        label: '',
+        type: 'text',
+        section: defaultSection,
+        visibility: 'optional',
+        placeholder: ''
+      });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="field-name">Field Name</Label>
+        <Input
+          id="field-name"
+          value={field.name}
+          onChange={(e) => setField(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="e.g., organizationType"
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="field-label">Field Label</Label>
+        <Input
+          id="field-label"
+          value={field.label}
+          onChange={(e) => setField(prev => ({ ...prev, label: e.target.value }))}
+          placeholder="e.g., Organization Type"
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="field-type">Field Type</Label>
+        <Select value={field.type} onValueChange={(value: 'text' | 'email' | 'number' | 'password') => 
+          setField(prev => ({ ...prev, type: value }))
+        }>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="text">Text</SelectItem>
+            <SelectItem value="email">Email</SelectItem>
+            <SelectItem value="number">Number</SelectItem>
+            <SelectItem value="password">Password</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="field-section">Section</Label>
+        <Select value={field.section} onValueChange={(value) => 
+          setField(prev => ({ ...prev, section: value }))
+        }>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {availableSections.map(section => (
+              <SelectItem key={section} value={section}>{section}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="field-visibility">Visibility</Label>
+        <Select value={field.visibility} onValueChange={(value: 'required' | 'optional' | 'hidden') => 
+          setField(prev => ({ ...prev, visibility: value }))
+        }>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="required">Required</SelectItem>
+            <SelectItem value="optional">Optional</SelectItem>
+            <SelectItem value="hidden">Hidden</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="field-placeholder">Placeholder</Label>
+        <Input
+          id="field-placeholder"
+          value={field.placeholder}
+          onChange={(e) => setField(prev => ({ ...prev, placeholder: e.target.value }))}
+          placeholder="e.g., Enter organization type"
+        />
+      </div>
+      <Button type="submit" className="w-full">Add Field</Button>
+    </form>
+  );
+}
+
+function EditFieldForm({ field, onSubmit }: { 
+  field: FormField;
+  onSubmit: (field: FormField) => void;
+}) {
+  const [editedField, setEditedField] = useState<FormField>(field);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editedField.name && editedField.label) {
+      onSubmit(editedField);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="edit-field-name">Field Name</Label>
+        <Input
+          id="edit-field-name"
+          value={editedField.name}
+          onChange={(e) => setEditedField(prev => ({ ...prev, name: e.target.value }))}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="edit-field-label">Field Label</Label>
+        <Input
+          id="edit-field-label"
+          value={editedField.label}
+          onChange={(e) => setEditedField(prev => ({ ...prev, label: e.target.value }))}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="edit-field-type">Field Type</Label>
+        <Select value={editedField.type} onValueChange={(value: 'text' | 'email' | 'number' | 'password') => 
+          setEditedField(prev => ({ ...prev, type: value }))
+        }>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="text">Text</SelectItem>
+            <SelectItem value="email">Email</SelectItem>
+            <SelectItem value="number">Number</SelectItem>
+            <SelectItem value="password">Password</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="edit-field-section">Section</Label>
+        <Select value={editedField.section} onValueChange={(value) => 
+          setEditedField(prev => ({ ...prev, section: value }))
+        }>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {availableSections.map(section => (
+              <SelectItem key={section} value={section}>{section}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="edit-field-visibility">Visibility</Label>
+        <Select value={editedField.visibility} onValueChange={(value: 'required' | 'optional' | 'hidden') => 
+          setEditedField(prev => ({ ...prev, visibility: value }))
+        }>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="required">Required</SelectItem>
+            <SelectItem value="optional">Optional</SelectItem>
+            <SelectItem value="hidden">Hidden</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="edit-field-placeholder">Placeholder</Label>
+        <Input
+          id="edit-field-placeholder"
+          value={editedField.placeholder || ''}
+          onChange={(e) => setEditedField(prev => ({ ...prev, placeholder: e.target.value }))}
+          placeholder="e.g., Enter organization type"
+        />
+      </div>
+      <Button type="submit" className="w-full">Update Field</Button>
+    </form>
   );
 }

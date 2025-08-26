@@ -23,7 +23,7 @@ export function AppSidebar() {
     { title: 'Dashboard', url: '/', icon: Home },
     { title: 'Member Organizations', url: '/members', icon: Users },
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
-    { title: 'Form Fields', url: '/form-fields', icon: FormInput },
+    { title: 'Registration Forms', url: '/form-fields', icon: FormInput },
     { title: 'Invoices', url: '/invoices', icon: FileText },
     { title: 'Settings', url: '/settings', icon: Settings },
   ];
