@@ -236,17 +236,27 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
   }, [organization, orgForm, profileForm]);
 
   const onSubmit = async () => {
+    console.log('=== Form Submission Debug ===');
+    
     const orgValid = await orgForm.trigger();
     const profileValid = organization?.profiles ? await profileForm.trigger() : true;
+    
+    console.log('Organization form valid:', orgValid);
+    console.log('Profile form valid:', profileValid);
 
     if (!orgValid || !profileValid) return;
 
     const orgData = orgForm.getValues();
     const profileData = profileForm.getValues();
+    
+    console.log('Organization data:', orgData);
+    console.log('Profile data:', profileData);
+    console.log('Student FTE from profile data:', profileData.student_fte);
 
     setIsSubmitting(true);
     try {
       if (organization) {
+        console.log('Updating existing organization...');
         // Update organization
         const updateData = {
           ...orgData,
@@ -262,56 +272,67 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           zip_code: orgData.zip_code || null,
           notes: orgData.notes || null,
         };
+        
+        console.log('Organization update data:', updateData);
         await updateOrganization(organization.id, updateData);
 
         // Update profile if it exists
         if (organization.profiles && organization.contact_person_id) {
+          console.log('Updating profile with contact_person_id:', organization.contact_person_id);
+          const profileUpdateData = {
+            first_name: profileData.first_name,
+            last_name: profileData.last_name,
+            email: profileData.email,
+            phone: profileData.phone || null,
+            organization: profileData.organization || null,
+            state_association: profileData.state_association || null,
+            student_fte: profileData.student_fte || null,
+            address: profileData.address || null,
+            city: profileData.city || null,
+            state: profileData.state || null,
+            zip: profileData.zip || null,
+            primary_contact_title: profileData.primary_contact_title || null,
+            secondary_first_name: profileData.secondary_first_name || null,
+            secondary_last_name: profileData.secondary_last_name || null,
+            secondary_contact_title: profileData.secondary_contact_title || null,
+            secondary_contact_email: profileData.secondary_contact_email || null,
+            student_information_system: profileData.student_information_system || null,
+            financial_system: profileData.financial_system || null,
+            financial_aid: profileData.financial_aid || null,
+            hcm_hr: profileData.hcm_hr || null,
+            payroll_system: profileData.payroll_system || null,
+            purchasing_system: profileData.purchasing_system || null,
+            housing_management: profileData.housing_management || null,
+            learning_management: profileData.learning_management || null,
+            admissions_crm: profileData.admissions_crm || null,
+            alumni_advancement_crm: profileData.alumni_advancement_crm || null,
+            primary_office_apple: profileData.primary_office_apple || false,
+            primary_office_asus: profileData.primary_office_asus || false,
+            primary_office_dell: profileData.primary_office_dell || false,
+            primary_office_hp: profileData.primary_office_hp || false,
+            primary_office_microsoft: profileData.primary_office_microsoft || false,
+            primary_office_other: profileData.primary_office_other || false,
+            primary_office_other_details: profileData.primary_office_other_details || null,
+            other_software_comments: profileData.other_software_comments || null,
+          };
+          
+          console.log('Profile update data:', profileUpdateData);
+          
           const { error } = await supabase
             .from('profiles')
-            .update({
-              first_name: profileData.first_name,
-              last_name: profileData.last_name,
-              email: profileData.email,
-              phone: profileData.phone || null,
-              organization: profileData.organization || null,
-              state_association: profileData.state_association || null,
-              student_fte: profileData.student_fte || null,
-              address: profileData.address || null,
-              city: profileData.city || null,
-              state: profileData.state || null,
-              zip: profileData.zip || null,
-              primary_contact_title: profileData.primary_contact_title || null,
-              secondary_first_name: profileData.secondary_first_name || null,
-              secondary_last_name: profileData.secondary_last_name || null,
-              secondary_contact_title: profileData.secondary_contact_title || null,
-              secondary_contact_email: profileData.secondary_contact_email || null,
-              student_information_system: profileData.student_information_system || null,
-              financial_system: profileData.financial_system || null,
-              financial_aid: profileData.financial_aid || null,
-              hcm_hr: profileData.hcm_hr || null,
-              payroll_system: profileData.payroll_system || null,
-              purchasing_system: profileData.purchasing_system || null,
-              housing_management: profileData.housing_management || null,
-              learning_management: profileData.learning_management || null,
-              admissions_crm: profileData.admissions_crm || null,
-              alumni_advancement_crm: profileData.alumni_advancement_crm || null,
-              primary_office_apple: profileData.primary_office_apple || false,
-              primary_office_asus: profileData.primary_office_asus || false,
-              primary_office_dell: profileData.primary_office_dell || false,
-              primary_office_hp: profileData.primary_office_hp || false,
-              primary_office_microsoft: profileData.primary_office_microsoft || false,
-              primary_office_other: profileData.primary_office_other || false,
-              primary_office_other_details: profileData.primary_office_other_details || null,
-              other_software_comments: profileData.other_software_comments || null,
-            })
+            .update(profileUpdateData)
             .eq('id', organization.contact_person_id);
 
           if (error) {
+            console.error('Profile update error:', error);
             throw error;
           }
 
+          console.log('Profile updated successfully');
+          
           // Refresh the data to show updated Student FTE
           await fetchOrganizations();
+          console.log('Data refreshed');
 
           toast({
             title: 'Success',
@@ -342,6 +363,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
       
       onOpenChange(false);
     } catch (error: any) {
+      console.error('Form submission error:', error);
       toast({
         title: 'Error',
         description: error.message,
