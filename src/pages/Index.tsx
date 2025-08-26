@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Building2, Users, FileText, DollarSign, LogOut } from 'lucide-react';
 
 const Index = () => {
-  const { isViewingAsAdmin, signOut } = useAuth();
+  const { isViewingAsAdmin, signOut, user } = useAuth();
 
   const adminStats = [
     { title: 'Total Members', value: '127', icon: Users, color: 'text-blue-600' },
@@ -40,6 +40,11 @@ const Index = () => {
                     ? 'Manage member organizations and billing' 
                     : 'View your membership status and invoices'}
                 </p>
+                {user?.email && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Logged in as: <span className="font-medium text-foreground">{user.email}</span>
+                  </p>
+                )}
               </div>
               {!isViewingAsAdmin && (
                 <Button

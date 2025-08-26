@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Building2, Users, FileText, User, Settings, Home, FormInput, Eye, LogOut, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +21,8 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const { isAdmin, isViewingAsAdmin, toggleViewMode, signOut } = useAuth();
   const location = useLocation();
+  
+  console.log('Sidebar render - isAdmin:', isAdmin, 'isViewingAsAdmin:', isViewingAsAdmin);
   
   const adminItems = [
     { title: 'Dashboard', url: '/', icon: Home },
@@ -47,12 +50,15 @@ export function AppSidebar() {
     isActive ? 'bg-accent text-accent-foreground font-medium' : 'hover:bg-accent/50';
 
   return (
-    <Sidebar className={isCollapsed ? 'w-14' : 'w-60'} collapsible="icon">
+    <Sidebar className={cn(
+      "flex flex-col h-full",
+      isCollapsed ? 'w-14' : 'w-60'
+    )} collapsible="icon">
       <div className="p-2">
         <SidebarTrigger />
       </div>
 
-      <SidebarContent>
+      <SidebarContent className="flex-1">
         <SidebarGroup>
           <SidebarGroupLabel>{isViewingAsAdmin ? 'Admin Panel' : 'Member Portal'}</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -79,7 +85,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter>
+      <SidebarFooter className="mt-auto border-t">
         <SidebarMenu>
           {isAdmin && (
             <SidebarMenuItem>
@@ -87,14 +93,14 @@ export function AppSidebar() {
                 <Button
                   variant="ghost"
                   onClick={toggleViewMode}
-                  className="w-full justify-start text-muted-foreground hover:text-foreground"
+                  className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
                 >
                   {isViewingAsAdmin ? 
-                    <ToggleRight className="h-4 w-4" /> : 
-                    <ToggleLeft className="h-4 w-4" />
+                    <ToggleRight className="h-4 w-4 text-green-500" /> : 
+                    <ToggleLeft className="h-4 w-4 text-blue-500" />
                   }
                   {!isCollapsed && (
-                    <span>{isViewingAsAdmin ? 'Switch to Member View' : 'Switch to Admin View'}</span>
+                    <span className="ml-2">{isViewingAsAdmin ? 'Switch to Member View' : 'Switch to Admin View'}</span>
                   )}
                 </Button>
               </SidebarMenuButton>
@@ -105,10 +111,10 @@ export function AppSidebar() {
               <Button
                 variant="ghost"
                 onClick={signOut}
-                className="w-full justify-start text-muted-foreground hover:text-foreground"
+                className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
               >
                 <LogOut className="h-4 w-4" />
-                {!isCollapsed && <span>Sign Out</span>}
+                {!isCollapsed && <span className="ml-2">Sign Out</span>}
               </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>
