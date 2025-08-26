@@ -57,7 +57,7 @@ const organizationSchema = z.object({
   membership_status: z.enum(['active', 'pending', 'expired', 'cancelled']),
   membership_start_date: z.date().optional(),
   membership_end_date: z.date().optional(),
-  annual_fee_amount: z.number().min(0, 'Annual fee must be positive'),
+  student_fte: z.number().min(0).optional(),
   notes: z.string().optional(),
 });
 
@@ -68,7 +68,6 @@ const profileSchema = z.object({
   phone: z.string().optional(),
   organization: z.string().optional(),
   state_association: z.string().optional(),
-  student_fte: z.number().min(0).optional(),
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
@@ -126,7 +125,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
       zip_code: '',
       country: 'United States',
       membership_status: 'pending',
-      annual_fee_amount: 1000,
+      student_fte: 0,
       notes: '',
     },
   });
@@ -140,7 +139,6 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
       phone: '',
       organization: '',
       state_association: '',
-      student_fte: 0,
       address: '',
       city: '',
       state: '',
@@ -188,7 +186,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
         membership_status: organization.membership_status,
         membership_start_date: organization.membership_start_date ? new Date(organization.membership_start_date) : undefined,
         membership_end_date: organization.membership_end_date ? new Date(organization.membership_end_date) : undefined,
-        annual_fee_amount: organization.annual_fee_amount,
+        student_fte: organization.profiles?.student_fte || 0,
         notes: organization.notes || '',
       });
 
@@ -202,7 +200,6 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           phone: profile.phone || '',
           organization: profile.organization || '',
           state_association: profile.state_association || '',
-          student_fte: profile.student_fte || 0,
           address: profile.address || '',
           city: profile.city || '',
           state: profile.state || '',
@@ -278,7 +275,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
               phone: profileData.phone || null,
               organization: profileData.organization || null,
               state_association: profileData.state_association || null,
-              student_fte: profileData.student_fte || null,
+              student_fte: orgData.student_fte || null,
               address: profileData.address || null,
               city: profileData.city || null,
               state: profileData.state || null,
@@ -324,7 +321,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           name: orgData.name,
           country: orgData.country,
           membership_status: orgData.membership_status,
-          annual_fee_amount: orgData.annual_fee_amount,
+          annual_fee_amount: 1000,
           membership_start_date: orgData.membership_start_date?.toISOString().split('T')[0] || null,
           membership_end_date: orgData.membership_end_date?.toISOString().split('T')[0] || null,
           email: orgData.email || null,
@@ -632,10 +629,10 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
 
                 <FormField
                   control={orgForm.control}
-                  name="annual_fee_amount"
+                  name="student_fte"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Annual Fee</FormLabel>
+                      <FormLabel>Student FTE</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -762,86 +759,6 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
                           <FormLabel>State Association</FormLabel>
                           <FormControl>
                             <Input placeholder="State IT Association" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={profileForm.control}
-                    name="student_fte"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Student FTE</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            placeholder="1000" 
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Separator />
-                  <h4 className="font-medium">Address Information</h4>
-                  
-                  <FormField
-                    control={profileForm.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="123 Main Street" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <FormField
-                      control={profileForm.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>City</FormLabel>
-                          <FormControl>
-                            <Input placeholder="New York" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={profileForm.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>State</FormLabel>
-                          <FormControl>
-                            <Input placeholder="NY" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={profileForm.control}
-                      name="zip"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>ZIP Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="10001" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
