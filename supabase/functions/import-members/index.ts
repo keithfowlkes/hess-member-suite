@@ -138,7 +138,7 @@ serve(async (req) => {
         }
 
         // Update profile with imported data (works for both new and existing users)
-        const { error: profileError } = await supabaseAdmin
+        const { data: updatedProfile, error: profileError } = await supabaseAdmin
           .from('profiles')
           .update({
             phone: member.phone,
@@ -173,12 +173,49 @@ serve(async (req) => {
             primary_office_other_details: member.primary_office_other_details,
             other_software_comments: member.other_software_comments
           })
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .select()
+          .single();
 
         if (profileError) {
-          console.error(`Failed to update profile for ${member.email}:`, profileError);
+          console.error(`Failed to update profile for ${cleanEmail}:`, profileError);
           results.failed.push({ email: member.email, error: profileError.message });
           continue;
+        }
+
+        // Create or update organization for this member
+        if (member.organization && updatedProfile) {
+          const { data: existingOrg } = await supabaseAdmin
+            .from('organizations')
+            .select('id')
+            .eq('name', member.organization)
+            .eq('contact_person_id', updatedProfile.id)
+            .single();
+
+          if (!existingOrg) {
+            // Create new organization
+            const { error: orgError } = await supabaseAdmin
+              .from('organizations')
+              .insert({
+                name: member.organization,
+                contact_person_id: updatedProfile.id,
+                email: cleanEmail,
+                phone: member.phone,
+                address_line_1: member.address,
+                city: member.city,
+                state: member.state,
+                zip_code: member.zip,
+                country: 'United States',
+                membership_status: 'active',
+                annual_fee_amount: 1000.00
+              });
+
+            if (orgError) {
+              console.error(`Failed to create organization for ${cleanEmail}:`, orgError);
+            } else {
+              console.log(`Created organization ${member.organization} for ${cleanEmail}`);
+            }
+          }
         }
 
         // Only assign role and send password reset for new users
