@@ -218,22 +218,8 @@ serve(async (req) => {
           }
         }
 
-        // Only assign role and send password reset for new users
+        // Only send password reset for new users (role is handled by trigger)
         if (isNewUser) {
-          // Assign member role
-          const { error: roleError } = await supabaseAdmin
-            .from('user_roles')
-            .insert({
-              user_id: userId,
-              role: 'member'
-            });
-
-          if (roleError) {
-            console.error(`Failed to assign role for ${member.email}:`, roleError);
-            results.failed.push({ email: member.email, error: roleError.message });
-            continue;
-          }
-
           // Send password reset email so user can set their own password
           await supabaseAdmin.auth.admin.generateLink({
             type: 'recovery',
