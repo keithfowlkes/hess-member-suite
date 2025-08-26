@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      form_field_configurations: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          field_id: string
+          field_label: string
+          field_name: string
+          field_type: string
+          id: string
+          is_custom: boolean | null
+          placeholder: string | null
+          section: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          field_id: string
+          field_label: string
+          field_name: string
+          field_type: string
+          id?: string
+          is_custom?: boolean | null
+          placeholder?: string | null
+          section: string
+          updated_at?: string
+          visibility: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          field_id?: string
+          field_label?: string
+          field_name?: string
+          field_type?: string
+          id?: string
+          is_custom?: boolean | null
+          placeholder?: string | null
+          section?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number

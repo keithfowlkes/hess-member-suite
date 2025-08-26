@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
@@ -11,54 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Settings2, Save, RotateCcw, Plus, Edit, Trash2 } from 'lucide-react';
-
-interface FormField {
-  id: string;
-  name: string;
-  label: string;
-  type: 'text' | 'email' | 'number' | 'password';
-  section: string;
-  visibility: 'required' | 'optional' | 'hidden';
-  placeholder?: string;
-  description?: string;
-}
-
-const defaultFormFields: FormField[] = [
-  // Organization Information
-  { id: 'organization', name: 'organization', label: 'Organization', type: 'text', section: 'Organization Information', visibility: 'required', placeholder: 'Organization name' },
-  { id: 'stateAssociation', name: 'stateAssociation', label: 'State Association', type: 'text', section: 'Organization Information', visibility: 'optional', placeholder: 'State association' },
-  { id: 'studentFte', name: 'studentFte', label: 'Student FTE', type: 'number', section: 'Organization Information', visibility: 'optional', placeholder: 'Student FTE' },
-  { id: 'address', name: 'address', label: 'Address', type: 'text', section: 'Organization Information', visibility: 'optional', placeholder: 'Street address' },
-  { id: 'city', name: 'city', label: 'City', type: 'text', section: 'Organization Information', visibility: 'optional', placeholder: 'City' },
-  { id: 'state', name: 'state', label: 'State', type: 'text', section: 'Organization Information', visibility: 'optional', placeholder: 'State' },
-  { id: 'zip', name: 'zip', label: 'ZIP Code', type: 'text', section: 'Organization Information', visibility: 'optional', placeholder: 'ZIP code' },
-
-  // Primary Contact
-  { id: 'firstName', name: 'firstName', label: 'First Name - Primary Contact', type: 'text', section: 'Primary Contact', visibility: 'required', placeholder: 'First name' },
-  { id: 'lastName', name: 'lastName', label: 'Last Name - Primary Contact', type: 'text', section: 'Primary Contact', visibility: 'required', placeholder: 'Last name' },
-  { id: 'primaryContactTitle', name: 'primaryContactTitle', label: 'Primary Contact Title', type: 'text', section: 'Primary Contact', visibility: 'optional', placeholder: 'Job title' },
-  { id: 'email', name: 'email', label: 'Primary Email', type: 'email', section: 'Primary Contact', visibility: 'required', placeholder: 'Enter your email' },
-  { id: 'password', name: 'password', label: 'Password', type: 'password', section: 'Primary Contact', visibility: 'required', placeholder: 'Create a password' },
-
-  // Secondary Contact
-  { id: 'secondaryFirstName', name: 'secondaryFirstName', label: 'First Name - Secondary Contact', type: 'text', section: 'Secondary Contact', visibility: 'optional', placeholder: 'First name' },
-  { id: 'secondaryLastName', name: 'secondaryLastName', label: 'Last Name - Secondary Contact', type: 'text', section: 'Secondary Contact', visibility: 'optional', placeholder: 'Last name' },
-  { id: 'secondaryContactTitle', name: 'secondaryContactTitle', label: 'Secondary Contact Title', type: 'text', section: 'Secondary Contact', visibility: 'optional', placeholder: 'Job title' },
-  { id: 'secondaryContactEmail', name: 'secondaryContactEmail', label: 'Secondary Contact Email', type: 'email', section: 'Secondary Contact', visibility: 'optional', placeholder: 'Secondary contact email' },
-
-  // Systems Information
-  { id: 'studentInformationSystem', name: 'studentInformationSystem', label: 'Student Information System', type: 'text', section: 'Systems Information', visibility: 'optional', placeholder: 'Student information system' },
-  { id: 'financialSystem', name: 'financialSystem', label: 'Financial System', type: 'text', section: 'Systems Information', visibility: 'optional', placeholder: 'Financial system' },
-  { id: 'financialAid', name: 'financialAid', label: 'Financial Aid', type: 'text', section: 'Systems Information', visibility: 'optional', placeholder: 'Financial aid system' },
-  { id: 'hcmHr', name: 'hcmHr', label: 'HCM (HR)', type: 'text', section: 'Systems Information', visibility: 'optional', placeholder: 'HCM/HR system' },
-  { id: 'payrollSystem', name: 'payrollSystem', label: 'Payroll System', type: 'text', section: 'Systems Information', visibility: 'optional', placeholder: 'Payroll system' },
-  { id: 'purchasingSystem', name: 'purchasingSystem', label: 'Purchasing System', type: 'text', section: 'Systems Information', visibility: 'optional', placeholder: 'Purchasing system' },
-  { id: 'housingManagement', name: 'housingManagement', label: 'Housing Management', type: 'text', section: 'Systems Information', visibility: 'optional', placeholder: 'Housing management system' },
-  { id: 'learningManagement', name: 'learningManagement', label: 'Learning Management', type: 'text', section: 'Systems Information', visibility: 'optional', placeholder: 'Learning management system' },
-  { id: 'admissionsCrm', name: 'admissionsCrm', label: 'Admissions CRM', type: 'text', section: 'Systems Information', visibility: 'optional', placeholder: 'Admissions CRM system' },
-  { id: 'alumniAdvancementCrm', name: 'alumniAdvancementCrm', label: 'Alumni/Advancement CRM', type: 'text', section: 'Systems Information', visibility: 'optional', placeholder: 'Alumni/Advancement CRM system' },
-];
+import { useFormFields, FormField } from '@/hooks/useFormFields';
+import { Settings2, Save, RotateCcw, Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 
 const availableSections = [
   'Organization Information',
@@ -68,8 +22,15 @@ const availableSections = [
 ];
 
 export default function FormFields() {
-  const [formFields, setFormFields] = useState<FormField[]>(defaultFormFields);
-  const [hasChanges, setHasChanges] = useState(false);
+  const { 
+    formFields, 
+    loading, 
+    updateFieldVisibility, 
+    createFormField, 
+    updateFormField, 
+    deleteFormField, 
+    resetToDefaults 
+  } = useFormFields();
   const [editingField, setEditingField] = useState<FormField | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -86,67 +47,90 @@ export default function FormFields() {
     }
   };
 
-  const updateFieldVisibility = (fieldId: string, visibility: 'required' | 'optional' | 'hidden') => {
-    setFormFields(prev => prev.map(field => 
-      field.id === fieldId ? { ...field, visibility } : field
-    ));
-    setHasChanges(true);
+  const handleFieldVisibilityChange = async (fieldId: string, visibility: 'required' | 'optional' | 'hidden') => {
+    try {
+      await updateFieldVisibility(fieldId, visibility);
+    } catch (error) {
+      // Error is handled in the hook
+    }
   };
 
-  const handleAddField = (newField: Omit<FormField, 'id'>) => {
-    const field: FormField = {
-      ...newField,
-      id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    };
-    setFormFields(prev => [...prev, field]);
-    setHasChanges(true);
-    setIsAddDialogOpen(false);
-    toast({
-      title: 'Field Added',
-      description: `"${field.label}" has been added to the form.`,
-    });
+  const handleAddField = async (newField: Omit<FormField, 'id' | 'field_id' | 'display_order' | 'is_custom'>) => {
+    try {
+      await createFormField({
+        ...newField,
+        field_id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        field_name: newField.field_label.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        is_custom: true
+      });
+      setIsAddDialogOpen(false);
+      toast({
+        title: 'Field Added',
+        description: `"${newField.field_label}" has been added to the form.`,
+      });
+    } catch (error) {
+      // Error is handled in the hook
+    }
   };
 
-  const handleEditField = (updatedField: FormField) => {
-    setFormFields(prev => prev.map(field => 
-      field.id === updatedField.id ? updatedField : field
-    ));
-    setHasChanges(true);
-    setIsEditDialogOpen(false);
-    setEditingField(null);
-    toast({
-      title: 'Field Updated',
-      description: `"${updatedField.label}" has been updated.`,
-    });
+  const handleEditField = async (updatedField: FormField) => {
+    try {
+      await updateFormField(updatedField.id, {
+        field_name: updatedField.field_name,
+        field_label: updatedField.field_label,
+        field_type: updatedField.field_type,
+        section: updatedField.section,
+        visibility: updatedField.visibility,
+        placeholder: updatedField.placeholder,
+        description: updatedField.description
+      });
+      setIsEditDialogOpen(false);
+      setEditingField(null);
+      toast({
+        title: 'Field Updated',
+        description: `"${updatedField.field_label}" has been updated.`,
+      });
+    } catch (error) {
+      // Error is handled in the hook
+    }
   };
 
-  const handleDeleteField = (fieldId: string) => {
+  const handleDeleteField = async (fieldId: string) => {
     const field = formFields.find(f => f.id === fieldId);
-    setFormFields(prev => prev.filter(field => field.id !== fieldId));
-    setHasChanges(true);
-    toast({
-      title: 'Field Deleted',
-      description: `"${field?.label}" has been removed from the form.`,
-    });
+    try {
+      await deleteFormField(fieldId);
+      toast({
+        title: 'Field Deleted',
+        description: `"${field?.field_label}" has been removed from the form.`,
+      });
+    } catch (error) {
+      // Error is handled in the hook
+    }
   };
 
-  const handleSave = () => {
-    // In a real implementation, this would save to the database
-    toast({
-      title: 'Settings Saved',
-      description: 'Form field configurations have been updated successfully.',
-    });
-    setHasChanges(false);
+  const handleReset = async () => {
+    try {
+      await resetToDefaults();
+    } catch (error) {
+      // Error is handled in the hook
+    }
   };
 
-  const handleReset = () => {
-    setFormFields(defaultFormFields);
-    setHasChanges(false);
-    toast({
-      title: 'Settings Reset',
-      description: 'Form field configurations have been reset to defaults.',
-    });
-  };
+  if (loading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <main className="flex-1 flex items-center justify-center">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span>Loading form field configurations...</span>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -165,28 +149,12 @@ export default function FormFields() {
                 <Button 
                   variant="outline" 
                   onClick={handleReset}
-                  disabled={!hasChanges}
                 >
                   <RotateCcw className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
-                <Button 
-                  onClick={handleSave}
-                  disabled={!hasChanges}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </Button>
               </div>
             </div>
-
-            {hasChanges && (
-              <div className="bg-yellow-500/10 border border-yellow-200 rounded-lg p-4">
-                <p className="text-yellow-800 text-sm">
-                  You have unsaved changes. Don't forget to save your configuration.
-                </p>
-              </div>
-            )}
 
             <div className="grid gap-6">
               {sections.map(section => {
@@ -222,39 +190,44 @@ export default function FormFields() {
                     <CardContent>
                       <div className="space-y-4">
                         {sectionFields.map(field => (
-                          <div key={field.id} className="flex items-center justify-between p-4 border rounded-lg bg-card">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3">
-                                <h4 className="font-medium text-foreground">{field.label}</h4>
-                                <Badge className={getVisibilityColor(field.visibility)}>
-                                  {field.visibility}
+                        <div key={field.id} className="flex items-center justify-between p-4 border rounded-lg bg-card">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <h4 className="font-medium text-foreground">{field.field_label}</h4>
+                              <Badge className={getVisibilityColor(field.visibility)}>
+                                {field.visibility}
+                              </Badge>
+                              {field.is_custom && (
+                                <Badge variant="outline" className="text-xs">
+                                  Custom
                                 </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {field.placeholder}
-                              </p>
-                              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                                <span>Field Name: {field.name}</span>
-                                <span>•</span>
-                                <span>Type: {field.type}</span>
-                              </div>
+                              )}
                             </div>
-                            <div className="flex items-center gap-4">
-                              <Select
-                                value={field.visibility}
-                                onValueChange={(value: 'required' | 'optional' | 'hidden') => 
-                                  updateFieldVisibility(field.id, value)
-                                }
-                              >
-                                <SelectTrigger className="w-32">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="required">Required</SelectItem>
-                                  <SelectItem value="optional">Optional</SelectItem>
-                                  <SelectItem value="hidden">Hidden</SelectItem>
-                                </SelectContent>
-                              </Select>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {field.placeholder}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                              <span>Field Name: {field.field_name}</span>
+                              <span>•</span>
+                              <span>Type: {field.field_type}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <Select
+                              value={field.visibility}
+                              onValueChange={(value: 'required' | 'optional' | 'hidden') => 
+                                handleFieldVisibilityChange(field.id, value)
+                              }
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="required">Required</SelectItem>
+                                <SelectItem value="optional">Optional</SelectItem>
+                                <SelectItem value="hidden">Hidden</SelectItem>
+                              </SelectContent>
+                            </Select>
                               <div className="flex gap-2">
                                 <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                                   <DialogTrigger asChild>
@@ -287,9 +260,9 @@ export default function FormFields() {
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>Delete Field</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to delete "{field.label}"? This action cannot be undone.
-                                      </AlertDialogDescription>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{field.field_label}"? This action cannot be undone.
+                                </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -349,13 +322,13 @@ export default function FormFields() {
 }
 
 function AddFieldForm({ onSubmit, defaultSection }: { 
-  onSubmit: (field: Omit<FormField, 'id'>) => void;
+  onSubmit: (field: Omit<FormField, 'id' | 'field_id' | 'display_order' | 'is_custom'>) => void;
   defaultSection: string;
 }) {
-  const [field, setField] = useState<Omit<FormField, 'id'>>({
-    name: '',
-    label: '',
-    type: 'text',
+  const [field, setField] = useState<Omit<FormField, 'id' | 'field_id' | 'display_order' | 'is_custom'>>({
+    field_name: '',
+    field_label: '',
+    field_type: 'text',
     section: defaultSection,
     visibility: 'optional',
     placeholder: ''
@@ -363,12 +336,12 @@ function AddFieldForm({ onSubmit, defaultSection }: {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (field.name && field.label) {
+    if (field.field_name && field.field_label) {
       onSubmit(field);
       setField({
-        name: '',
-        label: '',
-        type: 'text',
+        field_name: '',
+        field_label: '',
+        field_type: 'text',
         section: defaultSection,
         visibility: 'optional',
         placeholder: ''
@@ -382,8 +355,8 @@ function AddFieldForm({ onSubmit, defaultSection }: {
         <Label htmlFor="field-name">Field Name</Label>
         <Input
           id="field-name"
-          value={field.name}
-          onChange={(e) => setField(prev => ({ ...prev, name: e.target.value }))}
+          value={field.field_name}
+          onChange={(e) => setField(prev => ({ ...prev, field_name: e.target.value }))}
           placeholder="e.g., organizationType"
           required
         />
@@ -392,16 +365,16 @@ function AddFieldForm({ onSubmit, defaultSection }: {
         <Label htmlFor="field-label">Field Label</Label>
         <Input
           id="field-label"
-          value={field.label}
-          onChange={(e) => setField(prev => ({ ...prev, label: e.target.value }))}
+          value={field.field_label}
+          onChange={(e) => setField(prev => ({ ...prev, field_label: e.target.value }))}
           placeholder="e.g., Organization Type"
           required
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor="field-type">Field Type</Label>
-        <Select value={field.type} onValueChange={(value: 'text' | 'email' | 'number' | 'password') => 
-          setField(prev => ({ ...prev, type: value }))
+        <Select value={field.field_type} onValueChange={(value: 'text' | 'email' | 'number' | 'password') => 
+          setField(prev => ({ ...prev, field_type: value }))
         }>
           <SelectTrigger>
             <SelectValue />
@@ -466,7 +439,7 @@ function EditFieldForm({ field, onSubmit }: {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editedField.name && editedField.label) {
+    if (editedField.field_name && editedField.field_label) {
       onSubmit(editedField);
     }
   };
@@ -477,8 +450,8 @@ function EditFieldForm({ field, onSubmit }: {
         <Label htmlFor="edit-field-name">Field Name</Label>
         <Input
           id="edit-field-name"
-          value={editedField.name}
-          onChange={(e) => setEditedField(prev => ({ ...prev, name: e.target.value }))}
+          value={editedField.field_name}
+          onChange={(e) => setEditedField(prev => ({ ...prev, field_name: e.target.value }))}
           required
         />
       </div>
@@ -486,15 +459,15 @@ function EditFieldForm({ field, onSubmit }: {
         <Label htmlFor="edit-field-label">Field Label</Label>
         <Input
           id="edit-field-label"
-          value={editedField.label}
-          onChange={(e) => setEditedField(prev => ({ ...prev, label: e.target.value }))}
+          value={editedField.field_label}
+          onChange={(e) => setEditedField(prev => ({ ...prev, field_label: e.target.value }))}
           required
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor="edit-field-type">Field Type</Label>
-        <Select value={editedField.type} onValueChange={(value: 'text' | 'email' | 'number' | 'password') => 
-          setEditedField(prev => ({ ...prev, type: value }))
+        <Select value={editedField.field_type} onValueChange={(value: 'text' | 'email' | 'number' | 'password') => 
+          setEditedField(prev => ({ ...prev, field_type: value }))
         }>
           <SelectTrigger>
             <SelectValue />
