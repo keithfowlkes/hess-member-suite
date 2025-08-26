@@ -440,19 +440,40 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
                 />
               </div>
 
-              <FormField
-                control={orgForm.control}
-                name="website"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Website</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://www.acme.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={orgForm.control}
+                  name="website"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Website</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://www.acme.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={orgForm.control}
+                  name="student_fte"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Student FTE</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="1000" 
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <Separator />
               <h3 className="text-lg font-medium">Address</h3>
@@ -546,7 +567,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
               <Separator />
               <h3 className="text-lg font-medium">Membership Details</h3>
               
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={orgForm.control}
                   name="membership_start_date"
@@ -626,27 +647,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={orgForm.control}
-                  name="student_fte"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Student FTE</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="1000" 
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
-
               <FormField
                 control={orgForm.control}
                 name="notes"
