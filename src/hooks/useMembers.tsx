@@ -142,11 +142,42 @@ export function useMembers() {
     fetchOrganizations();
   }, []);
 
+  const markAllOrganizationsActive = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .update({ 
+          membership_status: 'active',
+          membership_start_date: new Date().toISOString().split('T')[0]
+        })
+        .neq('membership_status', 'active')
+        .select();
+
+      if (error) throw error;
+      
+      toast({
+        title: 'Success',
+        description: `${data?.length || 0} organizations marked as active`
+      });
+      
+      await fetchOrganizations();
+      return data;
+    } catch (error: any) {
+      toast({
+        title: 'Error updating organizations',
+        description: error.message,
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  };
+
   return {
     organizations,
     loading,
     fetchOrganizations,
     createOrganization,
-    updateOrganization
+    updateOrganization,
+    markAllOrganizationsActive
   };
 }

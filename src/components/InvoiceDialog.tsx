@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Form,
   FormControl,
@@ -29,7 +30,7 @@ import { Button } from '@/components/ui/button';
 import { useInvoices, Invoice, CreateInvoiceData } from '@/hooks/useInvoices';
 import { useMembers } from '@/hooks/useMembers';
 import { useAuth } from '@/hooks/useAuth';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, FileText, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -38,6 +39,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 
 const invoiceSchema = z.object({
   organization_id: z.string().min(1, 'Organization is required').optional(),
@@ -94,11 +96,10 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
         notes: invoice.notes || '',
       });
     } else {
-      // Set default dates for new invoice (current year period)
       const now = new Date();
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const endOfYear = new Date(now.getFullYear(), 11, 31);
-      const dueDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+      const dueDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
       form.reset({
         organization_id: bulkMode ? undefined : '',
@@ -110,13 +111,12 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
         notes: '',
       });
     }
-  }, [invoice, form]);
+  }, [invoice, form, bulkMode]);
 
   const onSubmit = async (data: InvoiceFormData) => {
     setIsSubmitting(true);
     try {
       if (invoice) {
-        // For updates
         const updateData = {
           ...data,
           due_date: data.due_date.toISOString().split('T')[0],
@@ -127,7 +127,6 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
         };
         await updateInvoice(invoice.id, updateData);
       } else {
-        // For creates
         if (bulkMode) {
           const bulkData = {
             amount: data.amount,
@@ -159,7 +158,6 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
     }
   };
 
-  // Calculate prorated amount based on period and membership start date
   const calculateProration = () => {
     const formData = form.getValues();
     const selectedOrg = organizations.find(org => org.id === formData.organization_id);
@@ -172,7 +170,6 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
     const periodStart = formData.period_start_date;
     const periodEnd = formData.period_end_date;
     
-    // If membership started after period start, calculate prorated amount
     if (membershipStart > periodStart) {
       const totalDays = Math.ceil((periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
       const remainingDays = Math.ceil((periodEnd.getTime() - membershipStart.getTime()) / (1000 * 60 * 60 * 24));
@@ -184,13 +181,292 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
     }
   };
 
+  const renderFormFields = () => (
+    <>
+      {bulkMode && (
+        <div className="p-4 bg-muted rounded-lg">
+          <h3 className="font-medium text-sm mb-2">Bulk Invoice Creation</h3>
+          <p className="text-sm text-muted-foreground">
+            This will create invoices for all active member organizations. 
+            Prorated amounts will be calculated automatically based on each organization's membership start date.
+          </p>
+        </div>
+      )}
+
+      {!bulkMode && (
+        <FormField
+          control={form.control}
+          name="organization_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Organization *</FormLabel>
+              <Select 
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  setTimeout(calculateProration, 100);
+                }} 
+                defaultValue={field.value}
+                disabled={!!invoice && !isAdmin}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select organization" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {organizations.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name} ({org.membership_status})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      <div className={bulkMode ? "grid grid-cols-1 gap-4" : "grid grid-cols-2 gap-4"}>
+        <FormField
+          control={form.control}
+          name="amount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Amount ($) *</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  step="0.01" 
+                  placeholder="1000.00"
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(parseFloat(e.target.value) || 0);
+                    setTimeout(calculateProration, 100);
+                  }}
+                  disabled={!!invoice && !isAdmin}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {!bulkMode && (
+          <FormField
+            control={form.control}
+            name="prorated_amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Prorated Amount ($)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="Auto-calculated"
+                    {...field}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                    disabled={!!invoice && !isAdmin}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+      </div>
+
+      <FormField
+        control={form.control}
+        name="due_date"
+        render={({ field }) => (
+          <FormItem className="flex flex-col">
+            <FormLabel>Due Date *</FormLabel>
+            <Popover>
+              <PopoverTrigger asChild>
+                <FormControl>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "pl-3 text-left font-normal",
+                      !field.value && "text-muted-foreground"
+                    )}
+                    disabled={!!invoice && !isAdmin}
+                  >
+                    {field.value ? (
+                      format(field.value, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                  </Button>
+                </FormControl>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={field.value}
+                  onSelect={field.onChange}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="period_start_date"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Period Start Date *</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={!!invoice && !isAdmin}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={(date) => {
+                      field.onChange(date);
+                      setTimeout(calculateProration, 100);
+                    }}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="period_end_date"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Period End Date *</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={!!invoice && !isAdmin}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={(date) => {
+                      field.onChange(date);
+                      setTimeout(calculateProration, 100);
+                    }}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {!bulkMode && (
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={calculateProration}
+          disabled={!!invoice}
+        >
+          Calculate Proration
+        </Button>
+      )}
+
+      <FormField
+        control={form.control}
+        name="notes"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Notes</FormLabel>
+            <FormControl>
+              <Textarea 
+                placeholder="Additional notes about this invoice..." 
+                {...field} 
+                disabled={!!invoice && !isAdmin}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+        >
+          {invoice ? 'Close' : 'Cancel'}
+        </Button>
+        {(!invoice || isAdmin) && (
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting 
+              ? (invoice ? 'Updating...' : 'Creating...') 
+              : invoice 
+                ? 'Update Invoice' 
+                : bulkMode 
+                  ? 'Create Invoices for All Organizations'
+                  : 'Create Invoice'
+            }
+          </Button>
+        )}
+      </div>
+    </>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {invoice 
-              ? 'View Invoice Details' 
+              ? 'Invoice Details' 
               : bulkMode 
                 ? 'Create Invoices for All Organizations' 
                 : 'Create New Invoice'
@@ -198,287 +474,38 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
           </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {bulkMode && (
-              <div className="p-4 bg-muted rounded-lg">
-                <h3 className="font-medium text-sm mb-2">Bulk Invoice Creation</h3>
-                <p className="text-sm text-muted-foreground">
-                  This will create invoices for all active member organizations. 
-                  Prorated amounts will be calculated automatically based on each organization's membership start date.
-                </p>
-              </div>
-            )}
-
-            {!bulkMode && (
-              <FormField
-                control={form.control}
-                name="organization_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Organization *</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setTimeout(calculateProration, 100);
-                      }} 
-                      defaultValue={field.value}
-                      disabled={!!invoice && !isAdmin}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select organization" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {organizations.map((org) => (
-                          <SelectItem key={org.id} value={org.id}>
-                            {org.name} ({org.membership_status})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <div className={bulkMode ? "grid grid-cols-1 gap-4" : "grid grid-cols-2 gap-4"}>
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Annual Fee Amount *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        step="0.01"
-                        placeholder="1000.00" 
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(parseFloat(e.target.value) || 0);
-                          if (!bulkMode) setTimeout(calculateProration, 100);
-                        }}
-                        disabled={!!invoice && !isAdmin}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {!bulkMode && (
-                <FormField
-                  control={form.control}
-                  name="prorated_amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Prorated Amount</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="0" 
-                          step="0.01"
-                          placeholder="Auto-calculated" 
-                          {...field}
-                          value={field.value || ''}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
-                          disabled={!!invoice && !isAdmin}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="period_start_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Period Start *</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                            disabled={!!invoice && !isAdmin}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={(date) => {
-                            field.onChange(date);
-                            setTimeout(calculateProration, 100);
-                          }}
-                          initialFocus
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="period_end_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Period End *</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                            disabled={!!invoice && !isAdmin}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={(date) => {
-                            field.onChange(date);
-                            setTimeout(calculateProration, 100);
-                          }}
-                          initialFocus
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="due_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Due Date *</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                            disabled={!!invoice && !isAdmin}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {!bulkMode && (
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={calculateProration}
-                disabled={!!invoice}
-              >
-                Calculate Proration
-              </Button>
-            )}
-
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Additional notes about this invoice..." 
-                      {...field} 
-                      disabled={!!invoice && !isAdmin}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                {invoice ? 'Close' : 'Cancel'}
-              </Button>
-              {(!invoice || isAdmin) && (
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting 
-                    ? 'Creating...' 
-                    : invoice 
-                      ? 'Update Invoice' 
-                      : bulkMode 
-                        ? 'Create Invoices for All Organizations'
-                        : 'Create Invoice'
-                  }
-                </Button>
-              )}
-            </div>
-          </form>
-        </Form>
+        {invoice ? (
+          <Tabs defaultValue="view" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="view" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Professional View
+              </TabsTrigger>
+              <TabsTrigger value="edit" className="flex items-center gap-2">
+                <Edit className="h-4 w-4" />
+                Edit Details
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="view" className="mt-4">
+              <ProfessionalInvoice invoice={invoice} />
+            </TabsContent>
+            
+            <TabsContent value="edit" className="mt-4">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  {renderFormFields()}
+                </form>
+              </Form>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {renderFormFields()}
+            </form>
+          </Form>
+        )}
       </DialogContent>
     </Dialog>
   );

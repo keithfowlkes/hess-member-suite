@@ -279,6 +279,36 @@ export function useInvoices() {
     }
   }, [user, isAdmin]);
 
+  const markAllInvoicesAsPaid = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .update({
+          status: 'paid',
+          paid_date: new Date().toISOString()
+        })
+        .neq('status', 'paid')
+        .select();
+
+      if (error) throw error;
+      
+      toast({
+        title: 'Success',
+        description: `${data?.length || 0} invoices marked as paid`
+      });
+      
+      await fetchInvoices();
+      return data;
+    } catch (error: any) {
+      toast({
+        title: 'Error updating invoices',
+        description: error.message,
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  };
+
   return {
     invoices,
     loading,
@@ -287,6 +317,7 @@ export function useInvoices() {
     createBulkInvoices,
     updateInvoice,
     markAsPaid,
-    sendInvoice
+    sendInvoice,
+    markAllInvoicesAsPaid
   };
 }

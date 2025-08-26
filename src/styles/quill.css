@@ -1,0 +1,20 @@
+/* React Quill Editor Styles */
+.ql-editor {
+  min-height: 120px;
+}
+
+.ql-toolbar {
+  border-top: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+}
+
+.ql-container {
+  border-bottom: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+}
+
+.ql-snow .ql-picker.ql-expanded .ql-picker-options {
+  z-index: 1000;
+}

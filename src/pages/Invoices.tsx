@@ -8,17 +8,21 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, ChevronDown, Users } from 'lucide-react';
+import { useMembers } from '@/hooks/useMembers';
+import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, ChevronDown, Users, Settings, CheckCircle } from 'lucide-react';
 import { InvoiceDialog } from '@/components/InvoiceDialog';
+import { InvoiceTemplateEditor } from '@/components/InvoiceTemplateEditor';
 import { format } from 'date-fns';
 
 export default function Invoices() {
-  const { invoices, loading, markAsPaid, sendInvoice } = useInvoices();
+  const { invoices, loading, markAsPaid, sendInvoice, markAllInvoicesAsPaid } = useInvoices();
+  const { markAllOrganizationsActive } = useMembers();
   const { isAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
+  const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
 
   const filteredInvoices = invoices.filter(invoice =>
     invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,37 +81,67 @@ export default function Invoices() {
                 </p>
               </div>
               {isAdmin && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Invoice
-                      <ChevronDown className="h-4 w-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        setSelectedInvoice(null);
-                        setBulkMode(false);
-                        setDialogOpen(true);
-                      }}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Create Individual Invoice
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        setSelectedInvoice(null);
-                        setBulkMode(true);
-                        setDialogOpen(true);
-                      }}
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Create Invoices for All Organizations
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Invoice
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setSelectedInvoice(null);
+                          setBulkMode(false);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Create Individual Invoice
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setSelectedInvoice(null);
+                          setBulkMode(true);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Create Invoices for All Organizations
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Bulk Actions
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={markAllOrganizationsActive}>
+                        <Building2 className="h-4 w-4 mr-2" />
+                        Mark All Organizations Active
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={markAllInvoicesAsPaid}>
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Mark All Invoices Paid
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Button 
+                    variant="outline"
+                    onClick={() => setTemplateEditorOpen(true)}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Invoice Templates
+                  </Button>
+                </div>
               )}
             </div>
 
@@ -241,6 +275,11 @@ export default function Invoices() {
             onOpenChange={setDialogOpen}
             invoice={selectedInvoice}
             bulkMode={bulkMode}
+          />
+
+          <InvoiceTemplateEditor
+            open={templateEditorOpen}
+            onOpenChange={setTemplateEditorOpen}  
           />
         </main>
       </div>
