@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       form_field_configurations: {
         Row: {
           created_at: string
@@ -153,6 +183,117 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "invoices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invitation_token: string
+          invited_by: string
+          organization_id: string
+          updated_at: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invitation_token: string
+          invited_by: string
+          organization_id: string
+          updated_at?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_by?: string
+          organization_id?: string
+          updated_at?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_transfer_requests: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_contact_id: string | null
+          expires_at: string
+          id: string
+          new_contact_email: string
+          new_contact_id: string | null
+          organization_id: string
+          requested_by: string
+          status: string
+          transfer_token: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_contact_id?: string | null
+          expires_at: string
+          id?: string
+          new_contact_email: string
+          new_contact_id?: string | null
+          organization_id: string
+          requested_by: string
+          status?: string
+          transfer_token: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_contact_id?: string | null
+          expires_at?: string
+          id?: string
+          new_contact_email?: string
+          new_contact_id?: string | null
+          organization_id?: string
+          requested_by?: string
+          status?: string
+          transfer_token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_transfer_requests_current_contact_id_fkey"
+            columns: ["current_contact_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_transfer_requests_new_contact_id_fkey"
+            columns: ["new_contact_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_transfer_requests_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -326,6 +467,7 @@ export type Database = {
           hcm_hr: string | null
           housing_management: string | null
           id: string
+          is_private_nonprofit: boolean | null
           last_name: string
           learning_management: string | null
           organization: string | null
@@ -366,6 +508,7 @@ export type Database = {
           hcm_hr?: string | null
           housing_management?: string | null
           id?: string
+          is_private_nonprofit?: boolean | null
           last_name: string
           learning_management?: string | null
           organization?: string | null
@@ -406,6 +549,7 @@ export type Database = {
           hcm_hr?: string | null
           housing_management?: string | null
           id?: string
+          is_private_nonprofit?: boolean | null
           last_name?: string
           learning_management?: string | null
           organization?: string | null
@@ -488,6 +632,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_secure_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_organization: {
         Args: { _user_id: string }
         Returns: string
