@@ -252,37 +252,6 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="w-full max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
-          <div className="flex items-start gap-8 mb-8">
-            <div className="flex-shrink-0">
-              <img 
-                src="/lovable-uploads/06437c29-40c8-489a-b779-616d8fc6ab04.png" 
-                alt="HESS Consortium Logo"
-                className="h-24 w-auto"
-              />
-              <p className="text-sm text-gray-600 mt-2 max-w-48">
-                The Higher Education Systems & Services Consortium
-              </p>
-            </div>
-            <div className="flex-1">
-              <div className="space-y-4">
-                <p className="text-gray-800 leading-relaxed">
-                  We are excited about your interest in joining the HESS Consortium of 
-                  private, non-profit colleges and universities in technology.
-                </p>
-                <p className="text-gray-800 leading-relaxed">
-                  Please fill out the form below and click the submit button to submit your 
-                  registration. Your registration will be reviewed and you will get a welcome 
-                  message if you have been approved.
-                </p>
-                <p className="text-gray-800 leading-relaxed">
-                  Thank you again for your interest in HESS membership and we look 
-                  forward to meeting you soon.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
