@@ -234,6 +234,59 @@ export type Database = {
           },
         ]
       }
+      organization_reassignment_requests: {
+        Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          new_contact_email: string
+          new_organization_data: Json
+          organization_id: string
+          original_organization_data: Json
+          requested_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          new_contact_email: string
+          new_organization_data: Json
+          organization_id: string
+          original_organization_data: Json
+          requested_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          new_contact_email?: string
+          new_organization_data?: Json
+          organization_id?: string
+          original_organization_data?: Json
+          requested_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_reassignment_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_transfer_requests: {
         Row: {
           completed_at: string | null
