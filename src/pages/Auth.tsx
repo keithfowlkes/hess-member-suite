@@ -301,7 +301,7 @@ export default function Auth() {
                     <Label>Security Verification</Label>
                     <ReCAPTCHA
                       ref={signInCaptchaRef}
-                      sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Test key - replace with real key
+                      sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
                       onChange={setSignInCaptcha}
                     />
                   </div>
@@ -813,7 +813,7 @@ export default function Auth() {
                     <Label>Security Verification</Label>
                     <ReCAPTCHA
                       ref={signUpCaptchaRef}
-                      sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Test key - replace with real key
+                      sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
                       onChange={setSignUpCaptcha}
                     />
                   </div>
