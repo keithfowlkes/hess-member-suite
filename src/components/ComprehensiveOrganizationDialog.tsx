@@ -124,6 +124,8 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  console.log('ComprehensiveOrganizationDialog - isAdmin:', isAdmin, 'organization:', !!organization);
+
   const handleDelete = async () => {
     if (!organization) return;
     
