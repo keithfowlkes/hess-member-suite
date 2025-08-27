@@ -57,15 +57,15 @@ export default function Auth() {
       <div className="space-y-2">
         <Label htmlFor={fieldName}>{label}</Label>
         <Select 
-          value={value} 
-          onValueChange={onChange} 
+          value={value || "none"} 
+          onValueChange={(val) => onChange(val === "none" ? "" : val)} 
           disabled={disabled}
         >
           <SelectTrigger className="bg-gray-50 border-gray-300">
             <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
           </SelectTrigger>
           <SelectContent className="max-h-60 overflow-y-auto bg-white border border-gray-300 shadow-lg z-50">
-            <SelectItem value="">
+            <SelectItem value="none">
               <span className="text-gray-500">None specified</span>
             </SelectItem>
             {options.map((option) => (
