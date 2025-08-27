@@ -212,6 +212,8 @@ const AdminDashboard = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
               <TabsContent value="reassignments" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-semibold">Organization Reassignment Requests</h2>
