@@ -66,7 +66,7 @@ export default function Auth() {
           disabled={disabled}
           required={required}
         >
-          <SelectTrigger className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+          <SelectTrigger className="h-11 bg-gray-50 border-gray-300">
             <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
           </SelectTrigger>
           <SelectContent className="max-h-60 overflow-y-auto bg-white border border-gray-300 shadow-lg z-50">
@@ -86,7 +86,7 @@ export default function Auth() {
               placeholder={`Please specify ${label.toLowerCase()}`}
               value={customValue}
               onChange={(e) => onCustomValueChange(e.target.value)}
-              className="h-10 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="h-10 bg-gray-50 border-gray-300"
               disabled={disabled}
               required={required}
             />
@@ -532,7 +532,7 @@ export default function Auth() {
                           placeholder="your.email@institution.edu"
                           value={signUpForm.email}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, email: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                           required
                         />
@@ -550,7 +550,7 @@ export default function Auth() {
                             placeholder="Create a secure password"
                             value={signUpForm.password}
                             onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500 max-w-md"
+                            className="h-11 bg-gray-50 border-gray-300 max-w-md"
                             disabled={!signUpForm.isPrivateNonProfit}
                             required
                             minLength={6}
@@ -577,7 +577,7 @@ export default function Auth() {
                         </Label>
                         {isReassignment ? (
                           <Select value={selectedOrganizationId} onValueChange={handleOrganizationSelect}>
-                            <SelectTrigger className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                            <SelectTrigger className="h-11 bg-gray-50 border-gray-300">
                               <SelectValue placeholder="Select existing institution" />
                             </SelectTrigger>
                             <SelectContent className="max-h-60 overflow-y-auto bg-white border border-gray-300 shadow-lg z-50">
@@ -594,7 +594,7 @@ export default function Auth() {
                             placeholder="Full institution name"
                             value={signUpForm.organization}
                             onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            className="h-11 bg-gray-50 border-gray-300"
                             disabled={!signUpForm.isPrivateNonProfit}
                             required
                           />
@@ -611,7 +611,7 @@ export default function Auth() {
                           placeholder="e.g. 2500"
                           value={signUpForm.studentFte}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, studentFte: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                           required
                         />
@@ -628,7 +628,7 @@ export default function Auth() {
                         placeholder="State association name (if applicable)"
                         value={signUpForm.stateAssociation}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
-                        className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        className="h-11 bg-gray-50 border-gray-300"
                         disabled={!signUpForm.isPrivateNonProfit}
                       />
                     </div>
@@ -643,7 +643,7 @@ export default function Auth() {
                           placeholder="Street address"
                           value={signUpForm.address}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                           required
                         />
@@ -653,7 +653,7 @@ export default function Auth() {
                             placeholder="City"
                             value={signUpForm.city}
                             onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            className="h-11 bg-gray-50 border-gray-300"
                             disabled={!signUpForm.isPrivateNonProfit}
                             required
                           />
@@ -662,7 +662,7 @@ export default function Auth() {
                             placeholder="State (e.g. TX)"
                             value={signUpForm.state}
                             onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            className="h-11 bg-gray-50 border-gray-300"
                             disabled={!signUpForm.isPrivateNonProfit}
                             maxLength={2}
                             required
@@ -672,7 +672,7 @@ export default function Auth() {
                             placeholder="ZIP Code"
                             value={signUpForm.zip}
                             onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            className="h-11 bg-gray-50 border-gray-300"
                             disabled={!signUpForm.isPrivateNonProfit}
                             required
                           />
@@ -700,7 +700,7 @@ export default function Auth() {
                           placeholder="First name"
                           value={signUpForm.firstName}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                           required
                         />
@@ -714,7 +714,7 @@ export default function Auth() {
                           placeholder="Last name"
                           value={signUpForm.lastName}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                           required
                         />
@@ -730,7 +730,7 @@ export default function Auth() {
                         placeholder="e.g. CIO, IT Director, VP of Technology"
                         value={signUpForm.primaryContactTitle}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactTitle: e.target.value }))}
-                        className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        className="h-11 bg-gray-50 border-gray-300"
                         disabled={!signUpForm.isPrivateNonProfit}
                         required
                       />
@@ -756,7 +756,7 @@ export default function Auth() {
                           placeholder="First name"
                           value={signUpForm.secondaryFirstName}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryFirstName: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
@@ -769,7 +769,7 @@ export default function Auth() {
                           placeholder="Last name"
                           value={signUpForm.secondaryLastName}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryLastName: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
@@ -785,7 +785,7 @@ export default function Auth() {
                           placeholder="Job title"
                           value={signUpForm.secondaryContactTitle}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactTitle: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
@@ -799,7 +799,7 @@ export default function Auth() {
                           placeholder="secondary.contact@institution.edu"
                           value={signUpForm.secondaryContactEmail}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactEmail: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
@@ -1023,7 +1023,7 @@ export default function Auth() {
                             placeholder="Please specify other computer types..."
                             value={signUpForm.primaryOfficeOtherDetails}
                             onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeOtherDetails: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            className="h-11 bg-gray-50 border-gray-300"
                             disabled={!signUpForm.isPrivateNonProfit}
                             required
                           />
@@ -1044,7 +1044,7 @@ export default function Auth() {
                           value={signUpForm.otherSoftwareComments}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, otherSoftwareComments: e.target.value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
-                          className="w-full min-h-[120px] p-4 bg-gray-50 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full min-h-[120px] p-4 bg-gray-50 border border-gray-300 rounded-lg resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
                     </div>
