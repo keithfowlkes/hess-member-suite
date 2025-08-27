@@ -140,7 +140,7 @@ export default function Auth() {
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Member Registration</TabsTrigger>
+            <TabsTrigger value="signup">New Member Registration or Reassignment</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
@@ -186,7 +186,7 @@ export default function Auth() {
           <TabsContent value="signup">
             <Card className="max-w-4xl mx-auto">
               <CardHeader>
-                <CardTitle>Member Registration</CardTitle>
+                <CardTitle>New Member Registration or Reassignment</CardTitle>
                 <CardDescription>
                   Register your organization with HESS Consortium
                 </CardDescription>
