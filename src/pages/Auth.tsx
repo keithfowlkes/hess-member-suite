@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 // Logo import removed - using uploaded HESS logo instead
 
 export default function Auth() {
@@ -104,9 +105,18 @@ export default function Auth() {
         variant: "destructive"
       });
     } else {
+      // Send welcome email to new registrants
+      await supabase.functions.invoke('organization-emails', {
+        body: {
+          type: 'welcome',
+          to: signUpForm.email,
+          organizationName: signUpForm.organization
+        }
+      });
+
       toast({
-        title: "Account created!",
-        description: "Please check your email to verify your account.",
+        title: "Registration submitted!",
+        description: "Please check your email and await approval from our admin team.",
       });
     }
     setIsSubmitting(false);
