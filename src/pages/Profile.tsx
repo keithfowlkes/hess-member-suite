@@ -236,62 +236,6 @@ const Profile = () => {
               )}
             </div>
 
-            {/* Contact Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="first_name">First Name</Label>
-                    <Input
-                      id="first_name"
-                      value={editedProfile?.first_name || ''}
-                      onChange={(e) => updateField('first_name', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="last_name">Last Name</Label>
-                    <Input
-                      id="last_name"
-                      value={editedProfile?.last_name || ''}
-                      onChange={(e) => updateField('last_name', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      value={editedProfile?.email || ''}
-                      onChange={(e) => updateField('email', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      value={editedProfile?.phone || ''}
-                      onChange={(e) => updateField('phone', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="primary_contact_title">Title</Label>
-                    <Input
-                      id="primary_contact_title"
-                      value={editedProfile?.primary_contact_title || ''}
-                      onChange={(e) => updateField('primary_contact_title', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Organization Information */}
             <Card>
               <CardHeader>
@@ -363,6 +307,62 @@ const Profile = () => {
                       id="zip"
                       value={editedProfile?.zip || ''}
                       onChange={(e) => updateField('zip', e.target.value)}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Contact Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="first_name">First Name</Label>
+                    <Input
+                      id="first_name"
+                      value={editedProfile?.first_name || ''}
+                      onChange={(e) => updateField('first_name', e.target.value)}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="last_name">Last Name</Label>
+                    <Input
+                      id="last_name"
+                      value={editedProfile?.last_name || ''}
+                      onChange={(e) => updateField('last_name', e.target.value)}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      value={editedProfile?.email || ''}
+                      onChange={(e) => updateField('email', e.target.value)}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={editedProfile?.phone || ''}
+                      onChange={(e) => updateField('phone', e.target.value)}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="primary_contact_title">Title</Label>
+                    <Input
+                      id="primary_contact_title"
+                      value={editedProfile?.primary_contact_title || ''}
+                      onChange={(e) => updateField('primary_contact_title', e.target.value)}
                       disabled={!isEditing}
                     />
                   </div>
