@@ -44,6 +44,39 @@ export type Database = {
         }
         Relationships: []
       }
+      dashboards: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_public: boolean
+          layout: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          layout?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          layout?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       form_field_configurations: {
         Row: {
           created_at: string

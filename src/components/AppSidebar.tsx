@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield } from 'lucide-react';
+import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -28,6 +28,7 @@ export function AppSidebar() {
   const adminItems = [
     { title: 'Master Dashboard', url: '/dashboard', icon: Home },
     { title: 'Member Organizations', url: '/members', icon: Users },
+    { title: 'Dashboards', url: '/dashboards', icon: BarChart3 },
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
     { title: 'Invoices', url: '/invoices', icon: FileText },
     { title: 'Organization Profile', url: '/profile', icon: User },
