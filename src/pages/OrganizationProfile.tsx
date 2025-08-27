@@ -20,7 +20,7 @@ const OrganizationProfilePage = () => {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
-  const { data, loading, updateOrganizationProfile } = useOrganizationProfile(profileId);
+  const { data, loading, updateOrganizationProfile, getUserOrganization } = useOrganizationProfile(profileId);
   
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -28,13 +28,17 @@ const OrganizationProfilePage = () => {
   const [editedData, setEditedData] = useState<OrganizationProfile | null>(null);
 
   useEffect(() => {
-    if (data && user) {
-      checkEditPermissions();
-      setEditedData(data);
-    }
+    const initializePermissions = async () => {
+      if (data && user) {
+        await checkEditPermissions();
+        setEditedData(data);
+      }
+    };
+    
+    initializePermissions();
   }, [data, user]);
 
-  const checkEditPermissions = () => {
+  const checkEditPermissions = async () => {
     if (!data || !user) return;
 
     // Admin can edit any organization
@@ -47,6 +51,17 @@ const OrganizationProfilePage = () => {
     if (data.profile.user_id === user.id) {
       setCanEdit(true);
       return;
+    }
+
+    // Check if user belongs to the same organization
+    try {
+      const userOrganization = await getUserOrganization(user.id);
+      if (userOrganization && userOrganization.id === data.organization.id) {
+        setCanEdit(true);
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking user organization:', error);
     }
 
     setCanEdit(false);
