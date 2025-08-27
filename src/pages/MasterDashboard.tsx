@@ -35,6 +35,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 // Hooks
 import { useAuth } from '@/hooks/useAuth';
@@ -69,7 +76,8 @@ import {
   KeyRound,
   Lock,
   Settings as SettingsIcon,
-  Search
+  Search,
+  MoreVertical
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -648,65 +656,71 @@ const MasterDashboard = () => {
                                    {new Date(user.created_at).toLocaleDateString()}
                                  </TableCell>
                                  <TableCell className="text-right">
-                                  <div className="flex justify-end gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleRoleUpdate(user.id, user.user_roles?.[0]?.role || 'member')}
-                                      disabled={updatingUser === user.id}
-                                    >
-                                      {updatingUser === user.id ? (
-                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                      ) : (
-                                        <>
-                                          <KeyRound className="h-3 w-3 mr-1" />
-                                          {user.user_roles?.[0]?.role === 'admin' ? 'Make Member' : 'Make Admin'}
-                                        </>
-                                      )}
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handlePasswordReset(user.email)}
-                                    >
-                                      <RefreshCw className="h-3 w-3 mr-1" />
-                                      Reset Password
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleOpenChangePassword(user.id, user.email)}
-                                    >
-                                      <Lock className="h-3 w-3 mr-1" />
-                                      Change Password
-                                    </Button>
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                          <UserMinus className="h-3 w-3 mr-1" />
-                                          Delete
-                                        </Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>Delete User</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            Are you sure you want to delete {user.email}? This action cannot be undone.
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                          <AlertDialogAction
-                                            onClick={() => handleDeleteUser(user.id)}
-                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                          >
-                                            Delete
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  </div>
-                                </TableCell>
+                                   <DropdownMenu>
+                                     <DropdownMenuTrigger asChild>
+                                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                         <MoreVertical className="h-4 w-4" />
+                                       </Button>
+                                     </DropdownMenuTrigger>
+                                     <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
+                                       <DropdownMenuItem
+                                         onClick={() => handleRoleUpdate(user.id, user.user_roles?.[0]?.role || 'member')}
+                                         disabled={updatingUser === user.id}
+                                         className="flex items-center gap-2"
+                                       >
+                                         {updatingUser === user.id ? (
+                                           <Loader2 className="h-4 w-4 animate-spin" />
+                                         ) : (
+                                           <KeyRound className="h-4 w-4" />
+                                         )}
+                                         {user.user_roles?.[0]?.role === 'admin' ? 'Make Member' : 'Make Admin'}
+                                       </DropdownMenuItem>
+                                       <DropdownMenuItem
+                                         onClick={() => handlePasswordReset(user.email)}
+                                         className="flex items-center gap-2"
+                                       >
+                                         <RefreshCw className="h-4 w-4" />
+                                         Reset Password
+                                       </DropdownMenuItem>
+                                       <DropdownMenuItem
+                                         onClick={() => handleOpenChangePassword(user.id, user.email)}
+                                         className="flex items-center gap-2"
+                                       >
+                                         <Lock className="h-4 w-4" />
+                                         Change Password
+                                       </DropdownMenuItem>
+                                       <DropdownMenuSeparator />
+                                       <AlertDialog>
+                                         <AlertDialogTrigger asChild>
+                                           <DropdownMenuItem
+                                             className="text-destructive focus:text-destructive flex items-center gap-2"
+                                             onSelect={(e) => e.preventDefault()}
+                                           >
+                                             <UserMinus className="h-4 w-4" />
+                                             Delete User
+                                           </DropdownMenuItem>
+                                         </AlertDialogTrigger>
+                                         <AlertDialogContent>
+                                           <AlertDialogHeader>
+                                             <AlertDialogTitle>Delete User</AlertDialogTitle>
+                                             <AlertDialogDescription>
+                                               Are you sure you want to delete {user.email}? This action cannot be undone.
+                                             </AlertDialogDescription>
+                                           </AlertDialogHeader>
+                                           <AlertDialogFooter>
+                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                             <AlertDialogAction
+                                               onClick={() => handleDeleteUser(user.id)}
+                                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                             >
+                                               Delete
+                                             </AlertDialogAction>
+                                           </AlertDialogFooter>
+                                         </AlertDialogContent>
+                                       </AlertDialog>
+                                     </DropdownMenuContent>
+                                   </DropdownMenu>
+                                 </TableCell>
                               </TableRow>
                               ))}
                             </TableBody>
