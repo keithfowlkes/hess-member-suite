@@ -28,8 +28,11 @@ serve(async (req) => {
   try {
     const { prompt, userRole } = await req.json();
     
+    console.log('Request received:', { prompt: prompt?.substring(0, 100), userRole });
+    
     // Verify user is admin
     if (userRole !== 'admin') {
+      console.log('User not admin, rejecting request');
       return new Response(
         JSON.stringify({ error: 'Only administrators can use AI dashboard generation' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -37,8 +40,18 @@ serve(async (req) => {
     }
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log('OpenAI API Key exists:', !!openAIApiKey);
+    console.log('OpenAI API Key starts with sk-:', openAIApiKey?.startsWith('sk-'));
+    console.log('OpenAI API Key length:', openAIApiKey?.length);
+    
     if (!openAIApiKey) {
+      console.error('OpenAI API key not found in environment');
       throw new Error('OpenAI API key not found');
+    }
+
+    if (!openAIApiKey.startsWith('sk-')) {
+      console.error('Invalid OpenAI API key format - should start with sk-');
+      throw new Error('Invalid OpenAI API key format');
     }
 
     // Database schema and context for AI
@@ -150,6 +163,7 @@ serve(async (req) => {
     - Provide meaningful titles and descriptions
     - Consider the relationships between data entities`;
 
+    console.log('Making OpenAI API request...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -166,10 +180,19 @@ serve(async (req) => {
       }),
     });
 
+    console.log('OpenAI API response status:', response.status);
+
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('OpenAI API error details:', errorData);
+      return new Response(JSON.stringify({ 
+        error: 'OpenAI API request failed',
+        details: `${response.status}: ${errorData.error?.message || 'Unknown error'}`,
+        openai_error: errorData
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const data = await response.json();
