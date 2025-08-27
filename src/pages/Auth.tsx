@@ -250,84 +250,109 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-6xl">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <img 
-              src="/lovable-uploads/06437c29-40c8-489a-b779-616d8fc6ab04.png" 
-              alt="HESS Consortium Logo"
-              className="h-16 w-auto"
-            />
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="w-full max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
+          <div className="flex items-start gap-8 mb-8">
+            <div className="flex-shrink-0">
+              <img 
+                src="/lovable-uploads/06437c29-40c8-489a-b779-616d8fc6ab04.png" 
+                alt="HESS Consortium Logo"
+                className="h-24 w-auto"
+              />
+              <p className="text-sm text-gray-600 mt-2 max-w-48">
+                The Higher Education Systems & Services Consortium
+              </p>
+            </div>
+            <div className="flex-1">
+              <div className="space-y-4">
+                <p className="text-gray-800 leading-relaxed">
+                  We are excited about your interest in joining the HESS Consortium of 
+                  private, non-profit colleges and universities in technology.
+                </p>
+                <p className="text-gray-800 leading-relaxed">
+                  Please fill out the form below and click the submit button to submit your 
+                  registration. Your registration will be reviewed and you will get a welcome 
+                  message if you have been approved.
+                </p>
+                <p className="text-gray-800 leading-relaxed">
+                  Thank you again for your interest in HESS membership and we look 
+                  forward to meeting you soon.
+                </p>
+              </div>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">HESS Consortium</h1>
-          <p className="text-muted-foreground mt-2">Member Management Portal</p>
         </div>
 
         <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">New Member Registration or Reassignment</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="signin" className="text-base py-3">Sign In</TabsTrigger>
+            <TabsTrigger value="signup" className="text-base py-3">New Member Registration or Reassignment</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sign In</CardTitle>
-                <CardDescription>
+            <div className="bg-white rounded-lg shadow-sm p-8">
+              <div className="border-b border-gray-200 pb-4 mb-6">
+                <h2 className="text-xl font-semibold text-gray-800">Sign In</h2>
+                <p className="text-gray-600 mt-1">
                   Sign in to your HESS Consortium account
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSignIn} className="space-y-4">
+                </p>
+              </div>
+              <form onSubmit={handleSignIn} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="signin-email" className="text-gray-700 font-medium">
+                      Email <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="signin-email"
                       type="email"
                       placeholder="Enter your email"
                       value={signInForm.email}
                       onChange={(e) => setSignInForm(prev => ({ ...prev, email: e.target.value }))}
+                      className="bg-gray-50 border-gray-300"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
+                    <Label htmlFor="signin-password" className="text-gray-700 font-medium">
+                      Password <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="signin-password"
                       type="password"
                       placeholder="Enter your password"
                       value={signInForm.password}
                       onChange={(e) => setSignInForm(prev => ({ ...prev, password: e.target.value }))}
+                      className="bg-gray-50 border-gray-300"
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Security Verification</Label>
-                    <ReCAPTCHA
-                      ref={signInCaptchaRef}
-                      sitekey={recaptchaSiteKey}
-                      onChange={setSignInCaptcha}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting || !signInCaptcha}>
-                    {isSubmitting ? 'Signing in...' : 'Sign In'}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium">Security Verification</Label>
+                  <ReCAPTCHA
+                    ref={signInCaptchaRef}
+                    sitekey={recaptchaSiteKey}
+                    onChange={setSignInCaptcha}
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3" disabled={isSubmitting || !signInCaptcha}>
+                  {isSubmitting ? 'Signing in...' : 'Sign In'}
+                </Button>
+              </form>
+            </div>
           </TabsContent>
           
           <TabsContent value="signup">
-            <Card className="max-w-4xl mx-auto">
-              <CardHeader>
-                <CardTitle>New Member Registration or Reassignment</CardTitle>
-                <CardDescription>
+            <div className="bg-white rounded-lg shadow-sm p-8">
+              <div className="border-b border-gray-200 pb-4 mb-6">
+                <h2 className="text-xl font-semibold text-gray-800">New Member Registration or Reassignment</h2>
+                <p className="text-gray-600 mt-1">
                   Register your organization with HESS Consortium or request reassignment
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSignUp} className="space-y-6">
+                </p>
+              </div>
+              <form onSubmit={handleSignUp} className="space-y-8">
                   {/* Reassignment Checkbox */}
                   <div className="space-y-4 pb-6 border-b">
                     <div className="flex items-center space-x-2">
@@ -357,38 +382,45 @@ export default function Auth() {
                     )}
                   </div>
 
-                  {/* Institution Type Verification */}
-                  <div className="space-y-4 pb-6 border-b">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="private-nonprofit"
-                        checked={signUpForm.isPrivateNonProfit}
-                        onCheckedChange={(checked) => 
-                          setSignUpForm(prev => ({ ...prev, isPrivateNonProfit: checked === true }))
-                        }
-                      />
-                      <Label 
-                        htmlFor="private-nonprofit" 
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        I confirm that this institution is a private, non-profit college or university *
-                      </Label>
-                    </div>
-                    {!signUpForm.isPrivateNonProfit && (
-                      <p className="text-sm text-muted-foreground">
-                        Please confirm your institution type to proceed with registration.
-                      </p>
-                    )}
+                {/* Institution Type Verification */}
+                <div className="space-y-4 pb-6 border-b border-gray-200">
+                  <div className="flex items-start space-x-2">
+                    <Checkbox
+                      id="private-nonprofit"
+                      checked={signUpForm.isPrivateNonProfit}
+                      onCheckedChange={(checked) => 
+                        setSignUpForm(prev => ({ ...prev, isPrivateNonProfit: checked === true }))
+                      }
+                      className="mt-1"
+                    />
+                    <Label 
+                      htmlFor="private-nonprofit" 
+                      className="text-gray-700 font-medium leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      We are a private, non-profit institution <span className="text-red-500">*</span>
+                      <br />
+                      <span className="text-sm text-gray-600 font-normal">
+                        Yes, we are a private, non-profit institution of higher education
+                      </span>
+                      <br />
+                      <span className="text-xs text-gray-500 font-normal">
+                        Only private, non-profit institutions are eligible.
+                      </span>
+                    </Label>
                   </div>
+                </div>
 
-                  {/* Organization Information */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Organization Information</h3>
+                {/* Organization Information */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Institutional Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="organization">Organization</Label>
+                      <Label htmlFor="organization" className="text-gray-700 font-medium">
+                        Your college or university <span className="text-red-500">*</span>
+                      </Label>
                       {isReassignment ? (
                         <Select value={selectedOrganizationId} onValueChange={handleOrganizationSelect}>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-gray-50 border-gray-300">
                             <SelectValue placeholder="Select an existing organization" />
                           </SelectTrigger>
                           <SelectContent>
@@ -405,146 +437,195 @@ export default function Auth() {
                           placeholder="Organization name"
                           value={signUpForm.organization}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
+                          className="bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                           required
                         />
                       )}
+                      <p className="text-xs text-gray-500">Only private, non-profit institutions are eligible.</p>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="state-association">State Association (if applicable)</Label>
-                        <Input
-                          id="state-association"
-                          placeholder="State association"
-                          value={signUpForm.stateAssociation}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="student-fte">Student FTE</Label>
-                        <Input
-                          id="student-fte"
-                          type="number"
-                          placeholder="Student FTE"
-                          value={signUpForm.studentFte}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, studentFte: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
-                    </div>
                     <div className="space-y-2">
-                      <Label htmlFor="address">Address</Label>
+                      <Label htmlFor="state-association" className="text-gray-700 font-medium">
+                        State Association (if applicable)
+                      </Label>
                       <Input
-                        id="address"
-                        placeholder="Street address"
-                        value={signUpForm.address}
-                        onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
+                        id="state-association"
+                        placeholder="State association"
+                        value={signUpForm.stateAssociation}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
                         disabled={!signUpForm.isPrivateNonProfit}
                       />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="city">City</Label>
-                        <Input
-                          id="city"
-                          placeholder="City"
-                          value={signUpForm.city}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="state">State</Label>
-                        <Input
-                          id="state"
-                          placeholder="State"
-                          value={signUpForm.state}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="zip">Zip</Label>
-                        <Input
-                          id="zip"
-                          placeholder="ZIP code"
-                          value={signUpForm.zip}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="student-fte" className="text-gray-700 font-medium">
+                        Student FTE <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="student-fte"
+                        type="number"
+                        placeholder="Student FTE"
+                        value={signUpForm.studentFte}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, studentFte: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
+                      <p className="text-xs text-gray-500">IPEDS headcount</p>
                     </div>
                   </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="address" className="text-gray-700 font-medium">
+                        Institutional Mailing Address <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="address"
+                        placeholder="Address"
+                        value={signUpForm.address}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="city" className="text-gray-700 font-medium">
+                        City <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="city"
+                        placeholder="City"
+                        value={signUpForm.city}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="state" className="text-gray-700 font-medium">
+                        State (two letter abbrev) <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="state"
+                        placeholder="State"
+                        value={signUpForm.state}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="zip" className="text-gray-700 font-medium">
+                        Zip Code <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="zip"
+                        placeholder="Zip code"
+                        value={signUpForm.zip}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
 
-                  {/* Primary Contact */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Primary Contact</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-firstname">First Name - Primary Contact</Label>
-                        <Input
-                          id="signup-firstname"
-                          placeholder="First name"
-                          value={signUpForm.firstName}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-lastname">Last Name - Primary Contact</Label>
-                        <Input
-                          id="signup-lastname"
-                          placeholder="Last name"
-                          value={signUpForm.lastName}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
+                {/* Institutional Contacts */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Institutional Contacts</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-firstname" className="text-gray-700 font-medium">
+                        First Name- Primary Contact <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="signup-firstname"
+                        placeholder="First name"
+                        value={signUpForm.firstName}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                        required
+                      />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="primary-contact-title">Primary Contact Title</Label>
-                        <Input
-                          id="primary-contact-title"
-                          placeholder="Job title"
-                          value={signUpForm.primaryContactTitle}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactTitle: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-email">Primary Email</Label>
-                        <Input
-                          id="signup-email"
-                          type="email"
-                          placeholder="Enter your email"
-                          value={signUpForm.email}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, email: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-lastname" className="text-gray-700 font-medium">
+                        Last Name- Primary Contact <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="signup-lastname"
+                        placeholder="Last name"
+                        value={signUpForm.lastName}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                        required
+                      />
                     </div>
-                    {!isReassignment && (
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-password">Password</Label>
-                        <Input
-                          id="signup-password"
-                          type="password"
-                          placeholder="Create a password"
-                          value={signUpForm.password}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                          minLength={6}
-                        />
-                      </div>
-                    )}
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="primary-contact-title" className="text-gray-700 font-medium">
+                        Primary Contact Title <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="primary-contact-title"
+                        placeholder="Title"
+                        value={signUpForm.primaryContactTitle}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactTitle: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email" className="text-gray-700 font-medium">
+                        Primary Email <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="Email"
+                        value={signUpForm.email}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, email: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                        required
+                      />
+                      <p className="text-xs text-gray-500">Email</p>
+                    </div>
                   </div>
+                  
+                  {!isReassignment && (
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password" className="text-gray-700 font-medium">
+                        Password <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="Create a password"
+                        value={signUpForm.password}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                        className="bg-gray-50 border-gray-300 max-w-md"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                        required
+                        minLength={6}
+                      />
+                      <p className="text-xs text-gray-500">Confirm Email</p>
+                    </div>
+                  )}
+                </div>
 
                   {/* Secondary Contact */}
                   <div className="space-y-4">
@@ -813,39 +894,37 @@ export default function Auth() {
                     </div>
                   </div>
 
-                  {/* Captcha */}
-                  <div className="space-y-2">
-                    <Label>Security Verification</Label>
-                    <ReCAPTCHA
-                      ref={signUpCaptchaRef}
-                      sitekey={recaptchaSiteKey}
-                      onChange={setSignUpCaptcha}
-                    />
-                    {!recaptchaSetting?.setting_value && (
-                      <p className="text-xs text-muted-foreground">
-                        Using test reCAPTCHA key. Admin should configure production key in System Settings.
-                      </p>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium">Security Verification</Label>
+                  <ReCAPTCHA
+                    ref={signUpCaptchaRef}
+                    sitekey={recaptchaSiteKey}
+                    onChange={setSignUpCaptcha}
+                  />
+                  {!recaptchaSetting?.setting_value && (
+                    <p className="text-xs text-gray-500">
+                      Using test reCAPTCHA key. Admin should configure production key in System Settings.
+                    </p>
+                  )}
+                </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={
-                      isSubmitting || 
-                      !signUpForm.isPrivateNonProfit || 
-                      !signUpCaptcha ||
-                      (isReassignment && !selectedOrganizationId)
-                    }
-                  >
-                    {isSubmitting 
-                      ? (isReassignment ? 'Submitting request...' : 'Creating account...') 
-                      : (isReassignment ? 'Submit Reassignment Request' : 'Register Organization')
-                    }
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3" 
+                  disabled={
+                    isSubmitting || 
+                    !signUpForm.isPrivateNonProfit || 
+                    !signUpCaptcha ||
+                    (isReassignment && !selectedOrganizationId)
+                  }
+                >
+                  {isSubmitting 
+                    ? (isReassignment ? 'Submitting request...' : 'Creating account...') 
+                    : (isReassignment ? 'Submit Reassignment Request' : 'Register Organization')
+                  }
+                </Button>
+              </form>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
