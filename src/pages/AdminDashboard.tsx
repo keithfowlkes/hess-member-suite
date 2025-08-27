@@ -15,19 +15,22 @@ import {
   XCircle,
   Eye,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Settings
 } from 'lucide-react';
 import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
 import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
 import { InvitationManagementDialog } from '@/components/InvitationManagementDialog';
 import { ReassignmentRequestsDialog } from '@/components/ReassignmentRequestsDialog';
+import { SystemSettingsDialog } from '@/components/SystemSettingsDialog';
 
 const AdminDashboard = () => {
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showInvitationDialog, setShowInvitationDialog] = useState(false);
   const [showReassignmentDialog, setShowReassignmentDialog] = useState(false);
+  const [showSystemSettingsDialog, setShowSystemSettingsDialog] = useState(false);
 
   const { 
     pendingOrganizations, 
@@ -116,6 +119,7 @@ const AdminDashboard = () => {
                 <TabsTrigger value="approvals">Pending Approvals</TabsTrigger>
                 <TabsTrigger value="invitations">Manage Invitations</TabsTrigger>
                 <TabsTrigger value="reassignments">Reassignment Requests</TabsTrigger>
+                <TabsTrigger value="settings">System Settings</TabsTrigger>
               </TabsList>
 
               <TabsContent value="approvals" className="space-y-4">
@@ -232,6 +236,25 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              <TabsContent value="settings" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">System Settings</h2>
+                  <Button onClick={() => setShowSystemSettingsDialog(true)}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configure Settings
+                  </Button>
+                </div>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center text-muted-foreground">
+                      <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Configure system-wide settings including reCAPTCHA, email templates, and security options.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </Tabs>
           </div>
         </main>
@@ -254,6 +277,11 @@ const AdminDashboard = () => {
       <ReassignmentRequestsDialog
         open={showReassignmentDialog}
         onOpenChange={setShowReassignmentDialog}
+      />
+
+      <SystemSettingsDialog
+        open={showSystemSettingsDialog}
+        onOpenChange={setShowSystemSettingsDialog}
       />
     </SidebarProvider>
   );

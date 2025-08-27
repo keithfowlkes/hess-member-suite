@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useCreateReassignmentRequest } from '@/hooks/useReassignmentRequests';
+import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Auth() {
@@ -19,6 +20,7 @@ export default function Auth() {
   const { toast } = useToast();
   const { data: organizations = [] } = useOrganizations();
   const createReassignmentRequest = useCreateReassignmentRequest();
+  const { data: recaptchaSetting } = useSystemSetting('recaptcha_site_key');
   
   const [signInForm, setSignInForm] = useState({ email: '', password: '' });
   const [signInCaptcha, setSignInCaptcha] = useState<string | null>(null);
@@ -27,6 +29,9 @@ export default function Auth() {
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<string>('');
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
   const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
+  
+  // Get reCAPTCHA site key from database or fallback to test key
+  const recaptchaSiteKey = recaptchaSetting?.setting_value || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
   
   const [signUpForm, setSignUpForm] = useState({ 
     isPrivateNonProfit: false,
@@ -301,7 +306,7 @@ export default function Auth() {
                     <Label>Security Verification</Label>
                     <ReCAPTCHA
                       ref={signInCaptchaRef}
-                      sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
+                      sitekey={recaptchaSiteKey}
                       onChange={setSignInCaptcha}
                     />
                   </div>
@@ -813,9 +818,14 @@ export default function Auth() {
                     <Label>Security Verification</Label>
                     <ReCAPTCHA
                       ref={signUpCaptchaRef}
-                      sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
+                      sitekey={recaptchaSiteKey}
                       onChange={setSignUpCaptcha}
                     />
+                    {!recaptchaSetting?.setting_value && (
+                      <p className="text-xs text-muted-foreground">
+                        Using test reCAPTCHA key. Admin should configure production key in System Settings.
+                      </p>
+                    )}
                   </div>
 
                   <Button 
