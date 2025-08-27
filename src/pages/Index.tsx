@@ -2,18 +2,40 @@ import { Layout } from '@/components/Layout';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, Users, FileText, DollarSign, LogOut } from 'lucide-react';
+import { Building2, Users, FileText, DollarSign, LogOut, Loader2 } from 'lucide-react';
 
 const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
+  const { stats: dashboardStats, loading: statsLoading } = useDashboardStats();
 
   const adminStats = [
-    { title: 'Total Members', value: '127', icon: Users, color: 'text-blue-600' },
-    { title: 'Active Memberships', value: '98', icon: Building2, color: 'text-green-600' },
-    { title: 'Pending Invoices', value: '23', icon: FileText, color: 'text-orange-600' },
-    { title: 'Revenue YTD', value: '$127,000', icon: DollarSign, color: 'text-green-600' },
+    { 
+      title: 'Total Organizations', 
+      value: statsLoading ? '...' : dashboardStats.totalOrganizations.toLocaleString(), 
+      icon: Users, 
+      color: 'text-blue-600' 
+    },
+    { 
+      title: 'Active Memberships', 
+      value: statsLoading ? '...' : dashboardStats.activeOrganizations.toLocaleString(), 
+      icon: Building2, 
+      color: 'text-green-600' 
+    },
+    { 
+      title: 'Pending Invoices', 
+      value: statsLoading ? '...' : dashboardStats.pendingInvoices.toLocaleString(), 
+      icon: FileText, 
+      color: dashboardStats.pendingInvoices > 0 ? 'text-orange-600' : 'text-green-600' 
+    },
+    { 
+      title: 'Annual Revenue', 
+      value: statsLoading ? '...' : `$${dashboardStats.totalRevenue.toLocaleString()}`, 
+      icon: DollarSign, 
+      color: 'text-green-600' 
+    },
   ];
 
   const memberStats = [
@@ -71,12 +93,45 @@ const Index = () => {
                       <Icon className={`h-4 w-4 ${stat.color}`} />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{stat.value}</div>
+                      <div className="text-2xl font-bold flex items-center gap-2">
+                        {statsLoading && isViewingAsAdmin ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : null}
+                        {stat.value}
+                      </div>
                     </CardContent>
                   </Card>
                 );
               })}
             </div>
+
+            {/* Additional Stats for Admin */}
+            {isViewingAsAdmin && !statsLoading && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Organization Statistics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">Total Student FTE:</span>{' '}
+                      <span className="text-muted-foreground">
+                        {dashboardStats.totalStudentFte.toLocaleString()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Average Fee per Organization:</span>{' '}
+                      <span className="text-muted-foreground">
+                        ${dashboardStats.activeOrganizations > 0 
+                          ? Math.round(dashboardStats.totalRevenue / dashboardStats.activeOrganizations).toLocaleString()
+                          : '0'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Recent Activity */}
             <Card>
