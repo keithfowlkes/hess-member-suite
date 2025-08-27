@@ -41,7 +41,8 @@ export default function Auth() {
     onChange, 
     disabled,
     customValue,
-    onCustomValueChange
+    onCustomValueChange,
+    required = false
   }: {
     fieldName: SystemField;
     label: string;
@@ -50,18 +51,20 @@ export default function Auth() {
     disabled: boolean;
     customValue: string;
     onCustomValueChange: (value: string) => void;
+    required?: boolean;
   }) => {
     const options = useFieldOptions(fieldName);
     
     return (
       <div className="space-y-3">
         <Label htmlFor={fieldName} className="text-gray-700 font-medium text-sm">
-          {label}
+          {label} {required && <span className="text-red-500">*</span>}
         </Label>
         <Select 
           value={value || "none"} 
           onValueChange={(val) => onChange(val === "none" ? "" : val)} 
           disabled={disabled}
+          required={required}
         >
           <SelectTrigger className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
             <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
@@ -85,6 +88,7 @@ export default function Auth() {
               onChange={(e) => onCustomValueChange(e.target.value)}
               className="h-10 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               disabled={disabled}
+              required={required}
             />
           </div>
         )}
@@ -617,7 +621,7 @@ export default function Auth() {
                     
                     <div className="space-y-2">
                       <Label htmlFor="state-association" className="text-gray-700 font-medium text-sm">
-                        State Association
+                        State Association <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="state-association"
@@ -626,6 +630,7 @@ export default function Auth() {
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
                         className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         disabled={!signUpForm.isPrivateNonProfit}
+                        required
                       />
                     </div>
                     
@@ -745,7 +750,7 @@ export default function Auth() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="secondary-firstname" className="text-gray-700 font-medium text-sm">
-                          First Name
+                          First Name <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="secondary-firstname"
@@ -754,11 +759,12 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryFirstName: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="secondary-lastname" className="text-gray-700 font-medium text-sm">
-                          Last Name
+                          Last Name <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="secondary-lastname"
@@ -767,6 +773,7 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryLastName: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required
                         />
                       </div>
                     </div>
@@ -774,7 +781,7 @@ export default function Auth() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="secondary-contact-title" className="text-gray-700 font-medium text-sm">
-                          Job Title
+                          Job Title <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="secondary-contact-title"
@@ -783,11 +790,12 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactTitle: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="secondary-contact-email" className="text-gray-700 font-medium text-sm">
-                          Email Address
+                          Email Address <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="secondary-contact-email"
@@ -797,6 +805,7 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactEmail: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required
                         />
                       </div>
                     </div>
@@ -823,6 +832,7 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                           customValue={signUpForm.studentInformationSystemOther}
                           onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystemOther: value }))}
+                          required={true}
                         />
                         <SystemFieldSelect
                           fieldName="learning_management"
@@ -832,6 +842,7 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                           customValue={signUpForm.learningManagementOther}
                           onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagementOther: value }))}
+                          required={true}
                         />
                       </div>
                     </div>
@@ -848,6 +859,7 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                           customValue={signUpForm.financialSystemOther}
                           onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystemOther: value }))}
+                          required={true}
                         />
                         <SystemFieldSelect
                           fieldName="financial_aid"
@@ -857,6 +869,7 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                           customValue={signUpForm.financialAidOther}
                           onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, financialAidOther: value }))}
+                          required={true}
                         />
                         <SystemFieldSelect
                           fieldName="purchasing_system"
@@ -866,6 +879,7 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                           customValue={signUpForm.purchasingSystemOther}
                           onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystemOther: value }))}
+                          required={true}
                         />
                       </div>
                     </div>
@@ -882,6 +896,7 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                           customValue={signUpForm.hcmHrOther}
                           onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHrOther: value }))}
+                          required={true}
                         />
                         <SystemFieldSelect
                           fieldName="payroll_system"
@@ -891,6 +906,7 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                           customValue={signUpForm.payrollSystemOther}
                           onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystemOther: value }))}
+                          required={true}
                         />
                         <SystemFieldSelect
                           fieldName="housing_management"
@@ -900,6 +916,7 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                           customValue={signUpForm.housingManagementOther}
                           onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagementOther: value }))}
+                          required={true}
                         />
                       </div>
                     </div>
@@ -916,6 +933,7 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                           customValue={signUpForm.admissionsCrmOther}
                           onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrmOther: value }))}
+                          required={true}
                         />
                         <SystemFieldSelect
                           fieldName="alumni_advancement_crm"
@@ -925,6 +943,7 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                           customValue={signUpForm.alumniAdvancementCrmOther}
                           onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrmOther: value }))}
+                          required={true}
                         />
                       </div>
                     </div>
@@ -1002,7 +1021,7 @@ export default function Auth() {
                       {signUpForm.primaryOfficeOther && (
                         <div className="mt-4 space-y-2">
                           <Label htmlFor="other-computer-details" className="text-gray-700 font-medium text-sm">
-                            Please specify other computer types
+                            Please specify other computer types <span className="text-red-500">*</span>
                           </Label>
                           <Input
                             id="other-computer-details"
@@ -1011,6 +1030,7 @@ export default function Auth() {
                             onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeOtherDetails: e.target.value }))}
                             className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                             disabled={!signUpForm.isPrivateNonProfit}
+                            required
                           />
                         </div>
                       )}
