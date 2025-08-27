@@ -14,6 +14,7 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   SidebarFooter,
+  SidebarHeader,
   useSidebar,
 } from '@/components/ui/sidebar';
 
@@ -54,9 +55,21 @@ export function AppSidebar() {
       "flex flex-col h-full",
       isCollapsed ? 'w-14' : 'w-60'
     )} collapsible="icon">
-      <div className="p-2">
-        <SidebarTrigger />
-      </div>
+      <SidebarHeader className="border-b border-sidebar-border">
+        <div className="flex items-center justify-between p-4">
+          <div className={cn("flex items-center transition-all duration-300", isCollapsed ? "justify-center" : "")}>
+            <img 
+              src="/lovable-uploads/06437c29-40c8-489a-b779-616d8fc6ab04.png" 
+              alt="HESS Consortium Logo" 
+              className={cn(
+                "object-contain transition-all duration-300 animate-fade-in",
+                isCollapsed ? "h-8 w-8" : "h-12 w-auto max-w-[180px]"
+              )}
+            />
+          </div>
+          <SidebarTrigger className="ml-auto" />
+        </div>
+      </SidebarHeader>
 
       <SidebarContent className="flex-1">
         <SidebarGroup>
