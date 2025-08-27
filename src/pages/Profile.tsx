@@ -96,7 +96,7 @@ const Profile = () => {
 
   const checkEditPermissions = async () => {
     try {
-      // Check if user is admin - admins can always edit their profile
+      // Check if user is admin - admins can edit any profile
       const { data: userRole } = await supabase
         .from('user_roles')
         .select('role')
@@ -109,7 +109,7 @@ const Profile = () => {
         return;
       }
 
-      // Check if current user is the primary contact for their organization
+      // Non-admin users can only edit their own profile if they are the primary contact
       const { data, error } = await supabase
         .from('organizations')
         .select('contact_person_id, profiles!inner(user_id)')
@@ -121,7 +121,7 @@ const Profile = () => {
         return;
       }
 
-      // User can edit if they are the primary contact
+      // User can edit if they are the primary contact for their organization
       const { data: currentProfile } = await supabase
         .from('profiles')
         .select('id')
