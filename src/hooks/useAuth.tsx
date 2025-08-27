@@ -121,21 +121,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     console.log('Sign out clicked');
     try {
-      // Clear local state immediately
+      // Sign out from Supabase first - this will trigger the auth state change
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+        // Still clear local state on error to ensure user is logged out
+        setUser(null);
+        setSession(null);
+        setIsAdmin(false);
+        setViewMode('admin');
+      } else {
+        console.log('Sign out successful');
+      }
+      
+      // Navigate to auth page after sign out
+      window.location.href = '/auth';
+    } catch (err) {
+      console.error('Sign out exception:', err);
+      // Clear local state as fallback
       setUser(null);
       setSession(null);
       setIsAdmin(false);
       setViewMode('admin');
-      
-      // Then sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Sign out error:', error);
-      } else {
-        console.log('Sign out successful');
-      }
-    } catch (err) {
-      console.error('Sign out exception:', err);
+      // Still redirect to auth page
+      window.location.href = '/auth';
     }
   };
 
