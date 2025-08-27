@@ -2,49 +2,24 @@ import { Layout } from '@/components/Layout';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
-import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, Users, FileText, DollarSign, LogOut, Loader2 } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+import { Building2, FileText, DollarSign, LogOut } from 'lucide-react';
 
 const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
-  const { stats: dashboardStats, loading: statsLoading } = useDashboardStats();
 
-  const adminStats = [
-    { 
-      title: 'Total Organizations', 
-      value: statsLoading ? '...' : dashboardStats.totalOrganizations.toLocaleString(), 
-      icon: Users, 
-      color: 'text-blue-600' 
-    },
-    { 
-      title: 'Active Memberships', 
-      value: statsLoading ? '...' : dashboardStats.activeOrganizations.toLocaleString(), 
-      icon: Building2, 
-      color: 'text-green-600' 
-    },
-    { 
-      title: 'Pending Invoices', 
-      value: statsLoading ? '...' : dashboardStats.pendingInvoices.toLocaleString(), 
-      icon: FileText, 
-      color: dashboardStats.pendingInvoices > 0 ? 'text-orange-600' : 'text-green-600' 
-    },
-    { 
-      title: 'Annual Revenue', 
-      value: statsLoading ? '...' : `$${dashboardStats.totalRevenue.toLocaleString()}`, 
-      icon: DollarSign, 
-      color: 'text-green-600' 
-    },
-  ];
+  // Redirect admin users to the Master Dashboard
+  if (isViewingAsAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const memberStats = [
     { title: 'Membership Status', value: 'Active', icon: Building2, color: 'text-green-600' },
     { title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600' },
     { title: 'Outstanding Balance', value: '$0', icon: DollarSign, color: 'text-green-600' },
   ];
-
-  const stats = isViewingAsAdmin ? adminStats : memberStats;
 
   return (
     <SidebarProvider>
@@ -55,12 +30,10 @@ const Index = () => {
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  {isViewingAsAdmin ? 'Admin Dashboard' : 'Member Dashboard'}
+                  Member Dashboard
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                  {isViewingAsAdmin 
-                    ? 'Manage member organizations and billing' 
-                    : 'View your membership status and invoices'}
+                  View your membership status and invoices
                 </p>
                 {user?.email && (
                   <p className="text-sm text-muted-foreground mt-1">
@@ -68,21 +41,19 @@ const Index = () => {
                   </p>
                 )}
               </div>
-              {!isViewingAsAdmin && (
-                <Button
-                  variant="outline"
-                  onClick={signOut}
-                  className="flex items-center gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                onClick={signOut}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {stats.map((stat) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {memberStats.map((stat) => {
                 const Icon = stat.icon;
                 return (
                   <Card key={stat.title}>
@@ -94,9 +65,6 @@ const Index = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold flex items-center gap-2">
-                        {statsLoading && isViewingAsAdmin ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : null}
                         {stat.value}
                       </div>
                     </CardContent>
@@ -104,34 +72,6 @@ const Index = () => {
                 );
               })}
             </div>
-
-            {/* Additional Stats for Admin */}
-            {isViewingAsAdmin && !statsLoading && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Organization Statistics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Total Student FTE:</span>{' '}
-                      <span className="text-muted-foreground">
-                        {dashboardStats.totalStudentFte.toLocaleString()}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-medium">Average Fee per Organization:</span>{' '}
-                      <span className="text-muted-foreground">
-                        ${dashboardStats.activeOrganizations > 0 
-                          ? Math.round(dashboardStats.totalRevenue / dashboardStats.activeOrganizations).toLocaleString()
-                          : '0'
-                        }
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Recent Activity */}
             <Card>

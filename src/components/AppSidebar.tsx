@@ -26,8 +26,7 @@ export function AppSidebar() {
   console.log('Sidebar render - isAdmin:', isAdmin, 'isViewingAsAdmin:', isViewingAsAdmin);
   
   const adminItems = [
-    { title: 'Dashboard', url: '/', icon: Home },
-    { title: 'Admin Dashboard', url: '/admin-dashboard', icon: Shield },
+    { title: 'Master Dashboard', url: '/dashboard', icon: Home },
     { title: 'Member Organizations', url: '/members', icon: Users },
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
     { title: 'Registration Forms', url: '/form-fields', icon: FormInput },

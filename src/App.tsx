@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import AdminDashboard from "./pages/AdminDashboard";
+import MasterDashboard from "./pages/MasterDashboard";
 import Members from "./pages/Members";
 import MembershipFees from "./pages/MembershipFees";
 import FormFields from "./pages/FormFields";
@@ -32,7 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/dashboard" element={<MasterDashboard />} />
             <Route path="/members" element={<Members />} />
             <Route path="/membership-fees" element={<MembershipFees />} />
             <Route path="/form-fields" element={<FormFields />} />
