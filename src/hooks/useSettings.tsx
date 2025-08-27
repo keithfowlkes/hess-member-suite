@@ -241,47 +241,28 @@ export function useSettings() {
 
   const deleteUser = async (userId: string) => {
     try {
-      console.log('Starting user deletion for userId:', userId);
-      
       // First check if user is a contact person for any organization
-      console.log('Checking if user is a contact person...');
-      const { data: userProfile, error: profileError } = await supabase
+      const { data: userProfile } = await supabase
         .from('profiles')
         .select('id, email')
         .eq('user_id', userId)
         .single();
 
-      console.log('User profile data:', userProfile);
-      if (profileError) {
-        console.log('Profile fetch error:', profileError);
-      }
-
       if (userProfile) {
-        console.log('Checking organizations with contact_person_id:', userProfile.id);
-        const { data: organizations, error: orgError } = await supabase
+        const { data: organizations } = await supabase
           .from('organizations')
           .select('id, name')
           .eq('contact_person_id', userProfile.id);
 
-        console.log('Organizations found:', organizations);
-        if (orgError) {
-          console.log('Organizations fetch error:', orgError);
-        }
-
         if (organizations && organizations.length > 0) {
-          console.log(`Removing user as contact person from ${organizations.length} organizations`);
           // Remove user as contact person from organizations
           const { error: orgUpdateError } = await supabase
             .from('organizations')
             .update({ contact_person_id: null })
             .eq('contact_person_id', userProfile.id);
 
-          if (orgUpdateError) {
-            console.log('Organization update error:', orgUpdateError);
-            throw orgUpdateError;
-          }
+          if (orgUpdateError) throw orgUpdateError;
 
-          console.log('Successfully removed as contact person');
           toast({
             title: 'Contact removed',
             description: `User was removed as contact person from ${organizations.length} organization(s)`,
@@ -291,43 +272,29 @@ export function useSettings() {
       }
 
       // Delete user roles first
-      console.log('Deleting user roles...');
-      const { error: roleDeleteError } = await supabase
+      await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId);
 
-      if (roleDeleteError) {
-        console.log('Role deletion error:', roleDeleteError);
-        throw roleDeleteError;
-      }
-
-      // Delete profile (this will cascade due to auth.users reference)
-      console.log('Deleting profile...');
+      // Delete profile (now has proper DELETE policy)
       const { error } = await supabase
         .from('profiles')
         .delete()
         .eq('user_id', userId);
       
-      if (error) {
-        console.log('Profile deletion error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       // Also delete from auth.users table
-      console.log('Deleting from auth.users...');
       try {
         const { error: authError } = await supabase.auth.admin.deleteUser(userId);
         if (authError && !authError.message?.includes('User not found')) {
           console.warn('Could not delete from auth.users:', authError.message);
-        } else {
-          console.log('Successfully deleted from auth.users');
         }
       } catch (authErr) {
         console.warn('Auth deletion warning:', authErr);
       }
 
-      console.log('User deletion completed successfully');
       toast({
         title: 'Success',
         description: 'User account deleted successfully'
@@ -336,12 +303,6 @@ export function useSettings() {
       await fetchUsers();
     } catch (error: any) {
       console.error('Delete user error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      });
       toast({
         title: 'Error deleting user',
         description: error.message || 'Failed to delete user account',
