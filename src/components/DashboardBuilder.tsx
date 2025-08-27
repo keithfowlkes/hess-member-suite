@@ -112,11 +112,19 @@ export function DashboardBuilder({ open, onOpenChange, dashboardId }: DashboardB
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
-    if (!over) return;
+    console.log('Drag end:', { activeId: active.id, overId: over?.id });
+    
+    if (!over) {
+      console.log('No drop target found');
+      setActiveId(null);
+      return;
+    }
 
     // Handle dropping from palette to canvas
-    if (active.id.toString().startsWith('palette-')) {
+    if (active.id.toString().startsWith('palette-') && over.id === 'dashboard-canvas') {
       const componentType = active.id.toString().replace('palette-', '') as DashboardComponent['type'];
+      console.log('Creating new component:', componentType);
+      
       const newComponent: DashboardComponent = {
         id: `component-${Date.now()}`,
         type: componentType,
@@ -131,8 +139,8 @@ export function DashboardBuilder({ open, onOpenChange, dashboardId }: DashboardB
       };
       setComponents(prev => [...prev, newComponent]);
     } 
-    // Handle reordering components
-    else if (active.id !== over.id) {
+    // Handle reordering components within canvas
+    else if (!active.id.toString().startsWith('palette-') && active.id !== over.id) {
       setComponents((items) => {
         const oldIndex = items.findIndex(item => item.id === active.id);
         const newIndex = items.findIndex(item => item.id === over.id);

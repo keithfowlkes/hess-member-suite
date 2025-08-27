@@ -18,14 +18,16 @@ export function DashboardCanvas({
   onUpdateComponent,
   onDeleteComponent
 }: DashboardCanvasProps) {
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: 'dashboard-canvas',
   });
 
   return (
     <div
       ref={setNodeRef}
-      className="min-h-full p-8 bg-gradient-to-br from-background to-muted/20"
+      className={`min-h-full p-8 bg-gradient-to-br from-background to-muted/20 transition-colors ${
+        isOver ? 'bg-primary/5 border-2 border-primary border-dashed' : ''
+      }`}
     >
       {components.length === 0 ? (
         <div className="flex items-center justify-center h-96 border-2 border-dashed border-muted-foreground/25 rounded-lg">
