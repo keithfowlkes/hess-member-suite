@@ -11,9 +11,7 @@ import Auth from "./pages/Auth";
 import MasterDashboard from "./pages/MasterDashboard";
 import Members from "./pages/Members";
 import MembershipFees from "./pages/MembershipFees";
-import FormFields from "./pages/FormFields";
 import Invoices from "./pages/Invoices";
-import PublicViews from "./pages/PublicViews";
 import PublicDirectory from "./pages/PublicDirectory";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
@@ -36,9 +34,7 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><MasterDashboard /></ProtectedRoute>} />
             <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
             <Route path="/membership-fees" element={<ProtectedRoute><MembershipFees /></ProtectedRoute>} />
-            <Route path="/form-fields" element={<ProtectedRoute><FormFields /></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
-            <Route path="/public-views" element={<ProtectedRoute><PublicViews /></ProtectedRoute>} />
             <Route path="/public/directory" element={<PublicDirectory />} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

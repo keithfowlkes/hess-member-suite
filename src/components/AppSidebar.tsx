@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Building2, Users, FileText, User, Settings, Home, FormInput, Eye, LogOut, ToggleLeft, ToggleRight, Shield } from 'lucide-react';
+import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -29,9 +29,7 @@ export function AppSidebar() {
     { title: 'Master Dashboard', url: '/dashboard', icon: Home },
     { title: 'Member Organizations', url: '/members', icon: Users },
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
-    { title: 'Registration Forms', url: '/form-fields', icon: FormInput },
     { title: 'Invoices', url: '/invoices', icon: FileText },
-    { title: 'Public Views', url: '/public-views', icon: Eye },
     { title: 'Organization Profile', url: '/profile', icon: User },
     { title: 'Settings', url: '/settings', icon: Settings },
   ];
