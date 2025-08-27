@@ -6,35 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  DndContext, 
-  DragOverlay, 
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragStartEvent
-} from '@dnd-kit/core';
-import { 
-  arrayMove, 
-  SortableContext, 
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy 
-} from '@dnd-kit/sortable';
-import { 
-  Save, 
-  X, 
-  BarChart3, 
-  Table, 
-  Type, 
-  TrendingUp,
-  Plus,
-  Settings,
-  Grip
-} from 'lucide-react';
+import { Save, X } from 'lucide-react';
 import { useDashboard, useCreateDashboard, useUpdateDashboard, DashboardComponent } from '@/hooks/useDashboards';
 import { DashboardCanvas } from './DashboardCanvas';
 import { ComponentPalette } from './ComponentPalette';
@@ -52,20 +24,12 @@ export function DashboardBuilder({ open, onOpenChange, dashboardId }: DashboardB
   const [isPublic, setIsPublic] = useState(false);
   const [components, setComponents] = useState<DashboardComponent[]>([]);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
 
   const { data: dashboard } = useDashboard(dashboardId || '');
   const createDashboardMutation = useCreateDashboard();
   const updateDashboardMutation = useUpdateDashboard();
 
   const isEditing = !!dashboardId;
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   useEffect(() => {
     if (dashboard) {
@@ -105,50 +69,22 @@ export function DashboardBuilder({ open, onOpenChange, dashboardId }: DashboardB
     }
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    console.log('Drag end:', { activeId: active.id, overId: over?.id });
-    
-    if (!over) {
-      console.log('No drop target found');
-      setActiveId(null);
-      return;
-    }
-
-    // Handle dropping from palette to canvas
-    if (active.id.toString().startsWith('palette-') && over.id === 'dashboard-canvas') {
-      const componentType = active.id.toString().replace('palette-', '') as DashboardComponent['type'];
-      console.log('Creating new component:', componentType);
-      
-      const newComponent: DashboardComponent = {
-        id: `component-${Date.now()}`,
-        type: componentType,
-        title: `New ${componentType.charAt(0).toUpperCase() + componentType.slice(1)}`,
-        config: getDefaultConfig(componentType),
-        position: {
-          x: 0,
-          y: components.length * 200,
-          width: 400,
-          height: 200
-        }
-      };
-      setComponents(prev => [...prev, newComponent]);
-    } 
-    // Handle reordering components within canvas
-    else if (!active.id.toString().startsWith('palette-') && active.id !== over.id) {
-      setComponents((items) => {
-        const oldIndex = items.findIndex(item => item.id === active.id);
-        const newIndex = items.findIndex(item => item.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-
-    setActiveId(null);
+  const handleAddComponent = (type: string) => {
+    const componentType = type as DashboardComponent['type'];
+    const newComponent: DashboardComponent = {
+      id: `component-${Date.now()}`,
+      type: componentType,
+      title: `New ${componentType.charAt(0).toUpperCase() + componentType.slice(1)}`,
+      config: getDefaultConfig(componentType),
+      position: {
+        x: 0,
+        y: components.length * 200,
+        width: 400,
+        height: 200
+      }
+    };
+    setComponents(prev => [...prev, newComponent]);
+    setSelectedComponentId(newComponent.id); // Auto-select the new component
   };
 
   const getDefaultConfig = (type: DashboardComponent['type']) => {
@@ -195,6 +131,20 @@ export function DashboardBuilder({ open, onOpenChange, dashboardId }: DashboardB
     if (selectedComponentId === componentId) {
       setSelectedComponentId(null);
     }
+  };
+
+  const moveComponent = (componentId: string, direction: 'up' | 'down') => {
+    setComponents(prev => {
+      const index = prev.findIndex(comp => comp.id === componentId);
+      if (index === -1) return prev;
+      
+      const newIndex = direction === 'up' ? index - 1 : index + 1;
+      if (newIndex < 0 || newIndex >= prev.length) return prev;
+      
+      const newComponents = [...prev];
+      [newComponents[index], newComponents[newIndex]] = [newComponents[newIndex], newComponents[index]];
+      return newComponents;
+    });
   };
 
   const selectedComponent = components.find(comp => comp.id === selectedComponentId);
@@ -260,42 +210,23 @@ export function DashboardBuilder({ open, onOpenChange, dashboardId }: DashboardB
               </TabsContent>
 
               <TabsContent value="components" className="p-4">
-                <ComponentPalette />
+                <ComponentPalette onAddComponent={handleAddComponent} />
               </TabsContent>
             </Tabs>
           </div>
 
           {/* Main Canvas */}
           <div className="flex-1 flex">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-            >
-              <div className="flex-1 overflow-auto bg-background">
-                <DashboardCanvas
-                  components={components}
-                  selectedComponentId={selectedComponentId}
-                  onSelectComponent={setSelectedComponentId}
-                  onUpdateComponent={updateComponent}
-                  onDeleteComponent={deleteComponent}
-                />
-              </div>
-
-              <DragOverlay>
-                {activeId ? (
-                  <div className="bg-primary/10 border-2 border-primary border-dashed rounded-lg p-4">
-                    <div className="text-sm font-medium">
-                      {activeId.toString().startsWith('palette-') 
-                        ? `New ${activeId.toString().replace('palette-', '')} Component`
-                        : 'Moving Component'
-                      }
-                    </div>
-                  </div>
-                ) : null}
-              </DragOverlay>
-            </DndContext>
+            <div className="flex-1 overflow-auto bg-background">
+              <DashboardCanvas
+                components={components}
+                selectedComponentId={selectedComponentId}
+                onSelectComponent={setSelectedComponentId}
+                onUpdateComponent={updateComponent}
+                onDeleteComponent={deleteComponent}
+                onMoveComponent={moveComponent}
+              />
+            </div>
           </div>
 
           {/* Right Sidebar - Component Editor */}

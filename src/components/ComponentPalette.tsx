@@ -1,6 +1,6 @@
-import { useDraggable } from '@dnd-kit/core';
-import { BarChart3, Table, Type, TrendingUp } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart3, Table, Type, TrendingUp, Plus } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const componentTypes = [
   {
@@ -33,53 +33,53 @@ const componentTypes = [
   }
 ];
 
-function DraggableComponent({ component }: { component: typeof componentTypes[0] }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `palette-${component.id}`,
-  });
+interface ComponentButtonProps {
+  component: typeof componentTypes[0];
+  onAdd: (type: string) => void;
+}
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
-
+function ComponentButton({ component, onAdd }: ComponentButtonProps) {
   const Icon = component.icon;
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      className={`cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
+    <Button
+      variant="outline"
+      className="w-full justify-start h-auto p-4 hover:border-primary/50"
+      onClick={() => onAdd(component.id)}
     >
-      <Card className="hover:shadow-md transition-shadow border-2 border-dashed border-transparent hover:border-primary/30">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <Icon className={`h-6 w-6 ${component.color}`} />
-            <div>
-              <div className="font-medium text-sm">{component.title}</div>
-              <div className="text-xs text-muted-foreground">{component.description}</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      <div className="flex items-center gap-3">
+        <Icon className={`h-6 w-6 ${component.color}`} />
+        <div className="text-left">
+          <div className="font-medium text-sm">{component.title}</div>
+          <div className="text-xs text-muted-foreground">{component.description}</div>
+        </div>
+        <Plus className="h-4 w-4 ml-auto text-muted-foreground" />
+      </div>
+    </Button>
   );
 }
 
-export function ComponentPalette() {
+interface ComponentPaletteProps {
+  onAddComponent: (type: string) => void;
+}
+
+export function ComponentPalette({ onAddComponent }: ComponentPaletteProps) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-medium mb-2">Drag Components to Canvas</h3>
+        <h3 className="text-sm font-medium mb-2">Add Components</h3>
         <p className="text-xs text-muted-foreground mb-4">
-          Drag and drop components from here to build your dashboard
+          Click to add components to your dashboard
         </p>
       </div>
       
       <div className="space-y-3">
         {componentTypes.map((component) => (
-          <DraggableComponent key={component.id} component={component} />
+          <ComponentButton 
+            key={component.id} 
+            component={component} 
+            onAdd={onAddComponent}
+          />
         ))}
       </div>
 
