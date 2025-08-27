@@ -112,14 +112,17 @@ export function useOrganizationProfile(profileId?: string) {
       profile?: Partial<OrganizationProfile['profile']>;
     }
   ) => {
-    if (!data) return;
+    if (!data) return false;
 
     try {
+      console.log('Updating organization profile with:', updates);
+      
       // Start a transaction-like operation
       const promises = [];
 
       // Update organization if provided
       if (updates.organization) {
+        console.log('Updating organization:', data.organization.id, updates.organization);
         promises.push(
           supabase
             .from('organizations')
@@ -130,6 +133,7 @@ export function useOrganizationProfile(profileId?: string) {
 
       // Update profile if provided
       if (updates.profile) {
+        console.log('Updating profile:', data.profile.id, updates.profile);
         promises.push(
           supabase
             .from('profiles')
@@ -143,7 +147,11 @@ export function useOrganizationProfile(profileId?: string) {
 
       // Check for errors
       for (const result of results) {
-        if (result.error) throw result.error;
+        if (result.error) {
+          console.error('Update error:', result.error);
+          throw result.error;
+        }
+        console.log('Update result:', result);
       }
 
       // Refresh data
@@ -156,6 +164,7 @@ export function useOrganizationProfile(profileId?: string) {
 
       return true;
     } catch (error: any) {
+      console.error('Error in updateOrganizationProfile:', error);
       toast({
         title: 'Error updating information',
         description: error.message,
