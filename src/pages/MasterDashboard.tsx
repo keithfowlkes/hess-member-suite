@@ -263,7 +263,17 @@ const MasterDashboard = () => {
             <Tabs defaultValue="overview" className="space-y-6">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="organizations">Organizations</TabsTrigger>
+                <TabsTrigger value="organizations" className="relative">
+                  Organizations
+                  {(pendingOrganizations.length > 0 || invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length > 0) && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                    >
+                      {pendingOrganizations.length + invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="messages">Messages</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
               </TabsList>
@@ -385,8 +395,28 @@ const MasterDashboard = () => {
               <TabsContent value="organizations" className="space-y-6">
                 <Tabs defaultValue="approvals" className="space-y-4">
                   <TabsList>
-                    <TabsTrigger value="approvals">Pending Approvals</TabsTrigger>
-                    <TabsTrigger value="invitations">Manage Invitations</TabsTrigger>
+                    <TabsTrigger value="approvals" className="relative">
+                      Pending Approvals
+                      {pendingOrganizations.length > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                        >
+                          {pendingOrganizations.length}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger value="invitations" className="relative">
+                      Manage Invitations
+                      {invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                        >
+                          {invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
                     <TabsTrigger value="reassignments">Reassignment Requests</TabsTrigger>
                     <TabsTrigger value="users">User Management</TabsTrigger>
                   </TabsList>
@@ -394,9 +424,17 @@ const MasterDashboard = () => {
                   <TabsContent value="approvals" className="space-y-4">
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl font-semibold">Organization Applications</h2>
-                      <Badge variant="secondary" className="text-sm">
-                        {pendingOrganizations.length} pending
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        {pendingOrganizations.length > 0 && (
+                          <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
+                            <AlertCircle className="h-4 w-4" />
+                            <span className="font-medium">{pendingOrganizations.length} Pending Review</span>
+                          </div>
+                        )}
+                        <Badge variant="secondary" className="text-sm">
+                          {pendingOrganizations.length} pending
+                        </Badge>
+                      </div>
                     </div>
 
                     {approvalsLoading ? (
@@ -468,10 +506,20 @@ const MasterDashboard = () => {
                   <TabsContent value="invitations" className="space-y-4">
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl font-semibold">Organization Invitations</h2>
-                      <Button onClick={() => setShowInvitationDialog(true)}>
-                        <Mail className="h-4 w-4 mr-2" />
-                        Manage Invitations
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        {invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length > 0 && (
+                          <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                            <Mail className="h-4 w-4" />
+                            <span className="font-medium">
+                              {invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length} Active
+                            </span>
+                          </div>
+                        )}
+                        <Button onClick={() => setShowInvitationDialog(true)}>
+                          <Mail className="h-4 w-4 mr-2" />
+                          Manage Invitations
+                        </Button>
+                      </div>
                     </div>
 
                     <Card>
