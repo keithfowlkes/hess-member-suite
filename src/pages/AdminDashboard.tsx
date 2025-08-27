@@ -14,17 +14,20 @@ import {
   CheckCircle, 
   XCircle,
   Eye,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
 import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
 import { InvitationManagementDialog } from '@/components/InvitationManagementDialog';
+import { ReassignmentRequestsDialog } from '@/components/ReassignmentRequestsDialog';
 
 const AdminDashboard = () => {
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showInvitationDialog, setShowInvitationDialog] = useState(false);
+  const [showReassignmentDialog, setShowReassignmentDialog] = useState(false);
 
   const { 
     pendingOrganizations, 
@@ -112,6 +115,7 @@ const AdminDashboard = () => {
               <TabsList>
                 <TabsTrigger value="approvals">Pending Approvals</TabsTrigger>
                 <TabsTrigger value="invitations">Manage Invitations</TabsTrigger>
+                <TabsTrigger value="reassignments">Reassignment Requests</TabsTrigger>
               </TabsList>
 
               <TabsContent value="approvals" className="space-y-4">
@@ -208,6 +212,23 @@ const AdminDashboard = () => {
                     </div>
                   </CardContent>
                 </Card>
+              <TabsContent value="reassignments" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">Organization Reassignment Requests</h2>
+                  <Button onClick={() => setShowReassignmentDialog(true)}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    View Requests
+                  </Button>
+                </div>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center text-muted-foreground">
+                      <RefreshCw className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Manage organization reassignment requests and approve changes.</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>
@@ -226,6 +247,11 @@ const AdminDashboard = () => {
       <InvitationManagementDialog
         open={showInvitationDialog}
         onOpenChange={setShowInvitationDialog}
+      />
+
+      <ReassignmentRequestsDialog
+        open={showReassignmentDialog}
+        onOpenChange={setShowReassignmentDialog}
       />
     </SidebarProvider>
   );

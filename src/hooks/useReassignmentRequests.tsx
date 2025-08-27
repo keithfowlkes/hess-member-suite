@@ -1,0 +1,223 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+export interface ReassignmentRequest {
+  id: string;
+  organization_id: string;
+  requested_by: string;
+  new_contact_email: string;
+  new_organization_data: any;
+  original_organization_data: any;
+  status: 'pending' | 'approved' | 'rejected' | 'reverted';
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+  approved_by?: string;
+  approved_at?: string;
+  organizations?: {
+    name: string;
+  };
+}
+
+export const useReassignmentRequests = () => {
+  return useQuery({
+    queryKey: ['reassignment-requests'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('organization_reassignment_requests')
+        .select(`
+          *,
+          organizations!organization_id (
+            name
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as ReassignmentRequest[];
+    },
+  });
+};
+
+export const useCreateReassignmentRequest = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      organization_id: string;
+      new_contact_email: string;
+      new_organization_data: any;
+      original_organization_data: any;
+    }) => {
+      const { data: result, error } = await supabase
+        .from('organization_reassignment_requests')
+        .insert({
+          ...data,
+          requested_by: 'system', // Will be updated when we have proper auth context
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
+      toast({
+        title: "Success",
+        description: "Reassignment request submitted successfully. Awaiting admin approval.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit reassignment request",
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+export const useApproveReassignmentRequest = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
+      // First get the request data
+      const { data: request, error: fetchError } = await supabase
+        .from('organization_reassignment_requests')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update the organization with new data
+      const { error: updateOrgError } = await supabase
+        .from('organizations')
+        .update(request.new_organization_data as any)
+        .eq('id', request.organization_id);
+
+      if (updateOrgError) throw updateOrgError;
+
+      // Mark request as approved
+      const { error: updateRequestError } = await supabase
+        .from('organization_reassignment_requests')
+        .update({
+          status: 'approved',
+          admin_notes: notes,
+          approved_by: (await supabase.auth.getUser()).data.user?.id,
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (updateRequestError) throw updateRequestError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      toast({
+        title: "Success",
+        description: "Reassignment request approved successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve reassignment request",
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+export const useRevertReassignmentRequest = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
+      // First get the request data
+      const { data: request, error: fetchError } = await supabase
+        .from('organization_reassignment_requests')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Revert the organization to original data
+      const { error: updateOrgError } = await supabase
+        .from('organizations')
+        .update(request.original_organization_data as any)
+        .eq('id', request.organization_id);
+
+      if (updateOrgError) throw updateOrgError;
+
+      // Mark request as reverted
+      const { error: updateRequestError } = await supabase
+        .from('organization_reassignment_requests')
+        .update({
+          status: 'reverted',
+          admin_notes: notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (updateRequestError) throw updateRequestError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      toast({
+        title: "Success",
+        description: "Organization data reverted to original successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to revert organization data",
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+export const useRejectReassignmentRequest = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
+      const { error } = await supabase
+        .from('organization_reassignment_requests')
+        .update({
+          status: 'rejected',
+          admin_notes: notes,
+          approved_by: (await supabase.auth.getUser()).data.user?.id,
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
+      toast({
+        title: "Success",
+        description: "Reassignment request rejected.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject reassignment request",
+        variant: "destructive"
+      });
+    }
+  });
+};

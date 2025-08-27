@@ -1,21 +1,33 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useOrganizations } from '@/hooks/useOrganizations';
+import { useCreateReassignmentRequest } from '@/hooks/useReassignmentRequests';
 import { supabase } from '@/integrations/supabase/client';
-// Logo import removed - using uploaded HESS logo instead
 
 export default function Auth() {
   const { user, signIn, signUp, loading } = useAuth();
   const { toast } = useToast();
+  const { data: organizations = [] } = useOrganizations();
+  const createReassignmentRequest = useCreateReassignmentRequest();
   
   const [signInForm, setSignInForm] = useState({ email: '', password: '' });
+  const [signInCaptcha, setSignInCaptcha] = useState<string | null>(null);
+  const [signUpCaptcha, setSignUpCaptcha] = useState<string | null>(null);
+  const [isReassignment, setIsReassignment] = useState(false);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<string>('');
+  const signInCaptchaRef = useRef<ReCAPTCHA>(null);
+  const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
+  
   const [signUpForm, setSignUpForm] = useState({ 
     isPrivateNonProfit: false,
     email: '', 
@@ -69,6 +81,16 @@ export default function Auth() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!signInCaptcha) {
+      toast({
+        title: "Verification required",
+        description: "Please complete the captcha verification.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     const { error } = await signIn(signInForm.email, signInForm.password);
@@ -79,6 +101,9 @@ export default function Auth() {
         description: error.message,
         variant: "destructive"
       });
+      // Reset captcha on error
+      signInCaptchaRef.current?.reset();
+      setSignInCaptcha(null);
     } else {
       toast({
         title: "Welcome back!",
@@ -90,36 +115,133 @@ export default function Auth() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
-    const { error } = await signUp(
-      signUpForm.email, 
-      signUpForm.password,
-      signUpForm
-    );
-    
-    if (error) {
+    if (!signUpCaptcha) {
       toast({
-        title: "Sign up failed", 
-        description: error.message,
+        title: "Verification required",
+        description: "Please complete the captcha verification.",
         variant: "destructive"
       });
-    } else {
-      // Send welcome email to new registrants
-      await supabase.functions.invoke('organization-emails', {
-        body: {
-          type: 'welcome',
-          to: signUpForm.email,
-          organizationName: signUpForm.organization
-        }
-      });
+      return;
+    }
+    
+    setIsSubmitting(true);
 
-      toast({
-        title: "Registration submitted!",
-        description: "Please check your email and await approval from our admin team.",
-      });
+    // If this is a reassignment request, handle differently
+    if (isReassignment && selectedOrganizationId) {
+      try {
+        // Get the current organization data
+        const { data: currentOrg, error: fetchError } = await supabase
+          .from('organizations')
+          .select('*')
+          .eq('id', selectedOrganizationId)
+          .single();
+
+        if (fetchError) throw fetchError;
+
+        // Create reassignment request with new data
+        const newOrgData = {
+          name: signUpForm.organization,
+          state_association: signUpForm.stateAssociation,
+          student_fte: signUpForm.studentFte ? parseInt(signUpForm.studentFte) : null,
+          address_line_1: signUpForm.address,
+          city: signUpForm.city,
+          state: signUpForm.state,
+          zip_code: signUpForm.zip,
+          primary_contact_title: signUpForm.primaryContactTitle,
+          secondary_first_name: signUpForm.secondaryFirstName,
+          secondary_last_name: signUpForm.secondaryLastName,
+          secondary_contact_title: signUpForm.secondaryContactTitle,
+          secondary_contact_email: signUpForm.secondaryContactEmail,
+          student_information_system: signUpForm.studentInformationSystem,
+          financial_system: signUpForm.financialSystem,
+          financial_aid: signUpForm.financialAid,
+          hcm_hr: signUpForm.hcmHr,
+          payroll_system: signUpForm.payrollSystem,
+          purchasing_system: signUpForm.purchasingSystem,
+          housing_management: signUpForm.housingManagement,
+          learning_management: signUpForm.learningManagement,
+          admissions_crm: signUpForm.admissionsCrm,
+          alumni_advancement_crm: signUpForm.alumniAdvancementCrm,
+          primary_office_apple: signUpForm.primaryOfficeApple,
+          primary_office_asus: signUpForm.primaryOfficeAsus,
+          primary_office_dell: signUpForm.primaryOfficeDell,
+          primary_office_hp: signUpForm.primaryOfficeHp,
+          primary_office_microsoft: signUpForm.primaryOfficeMicrosoft,
+          primary_office_other: signUpForm.primaryOfficeOther,
+          primary_office_other_details: signUpForm.primaryOfficeOtherDetails,
+          other_software_comments: signUpForm.otherSoftwareComments
+        };
+
+        await createReassignmentRequest.mutateAsync({
+          organization_id: selectedOrganizationId,
+          new_contact_email: signUpForm.email,
+          new_organization_data: newOrgData,
+          original_organization_data: currentOrg
+        });
+
+        // Reset captcha after success
+        signUpCaptchaRef.current?.reset();
+        setSignUpCaptcha(null);
+      } catch (error: any) {
+        toast({
+          title: "Reassignment request failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        // Reset captcha on error
+        signUpCaptchaRef.current?.reset();
+        setSignUpCaptcha(null);
+      }
+    } else {
+      // Normal registration
+      const { error } = await signUp(
+        signUpForm.email, 
+        signUpForm.password,
+        signUpForm
+      );
+      
+      if (error) {
+        toast({
+          title: "Sign up failed", 
+          description: error.message,
+          variant: "destructive"
+        });
+        // Reset captcha on error
+        signUpCaptchaRef.current?.reset();
+        setSignUpCaptcha(null);
+      } else {
+        // Send welcome email to new registrants
+        await supabase.functions.invoke('organization-emails', {
+          body: {
+            type: 'welcome',
+            to: signUpForm.email,
+            organizationName: signUpForm.organization
+          }
+        });
+
+        toast({
+          title: "Registration submitted!",
+          description: isReassignment 
+            ? "Reassignment request submitted and awaiting admin approval."
+            : "Please check your email and await approval from our admin team.",
+        });
+        
+        // Reset captcha after success
+        signUpCaptchaRef.current?.reset();
+        setSignUpCaptcha(null);
+      }
     }
     setIsSubmitting(false);
+  };
+
+  // Update organization field when organization is selected from dropdown
+  const handleOrganizationSelect = (organizationId: string) => {
+    setSelectedOrganizationId(organizationId);
+    const selectedOrg = organizations.find(org => org.id === organizationId);
+    if (selectedOrg) {
+      setSignUpForm(prev => ({ ...prev, organization: selectedOrg.name }));
+    }
   };
 
   return (
@@ -175,7 +297,15 @@ export default function Auth() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <div className="space-y-2">
+                    <Label>Security Verification</Label>
+                    <ReCAPTCHA
+                      ref={signInCaptchaRef}
+                      sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Test key - replace with real key
+                      onChange={setSignInCaptcha}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isSubmitting || !signInCaptcha}>
                     {isSubmitting ? 'Signing in...' : 'Sign In'}
                   </Button>
                 </form>
@@ -188,11 +318,40 @@ export default function Auth() {
               <CardHeader>
                 <CardTitle>New Member Registration or Reassignment</CardTitle>
                 <CardDescription>
-                  Register your organization with HESS Consortium
+                  Register your organization with HESS Consortium or request reassignment
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-6">
+                  {/* Reassignment Checkbox */}
+                  <div className="space-y-4 pb-6 border-b">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="reassignment-request"
+                        checked={isReassignment}
+                        onCheckedChange={(checked) => {
+                          setIsReassignment(checked === true);
+                          if (!checked) {
+                            setSelectedOrganizationId('');
+                            setSignUpForm(prev => ({ ...prev, organization: '' }));
+                          }
+                        }}
+                      />
+                      <Label 
+                        htmlFor="reassignment-request" 
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        This is a reassignment request for my organization
+                      </Label>
+                    </div>
+                    {isReassignment && (
+                      <p className="text-sm text-muted-foreground bg-blue-50 p-3 rounded-md border-l-4 border-blue-400">
+                        <strong>Note:</strong> Your reassignment request will be reviewed by an administrator before approval. 
+                        If approved, the existing organization information will be replaced with your new details.
+                      </p>
+                    )}
+                  </div>
+
                   {/* Institution Type Verification */}
                   <div className="space-y-4 pb-6 border-b">
                     <div className="flex items-center space-x-2">
@@ -222,15 +381,31 @@ export default function Auth() {
                     <h3 className="text-lg font-semibold">Organization Information</h3>
                     <div className="space-y-2">
                       <Label htmlFor="organization">Organization</Label>
-                      <Input
-                        id="organization"
-                        placeholder="Organization name"
-                        value={signUpForm.organization}
-                        onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
-                        disabled={!signUpForm.isPrivateNonProfit}
-                        required
-                      />
+                      {isReassignment ? (
+                        <Select value={selectedOrganizationId} onValueChange={handleOrganizationSelect}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an existing organization" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {organizations.map((org) => (
+                              <SelectItem key={org.id} value={org.id}>
+                                {org.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id="organization"
+                          placeholder="Organization name"
+                          value={signUpForm.organization}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required
+                        />
+                      )}
                     </div>
+                    
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="state-association">State Association (if applicable)</Label>
@@ -349,19 +524,21 @@ export default function Auth() {
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="Create a password"
-                        value={signUpForm.password}
-                        onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                        disabled={!signUpForm.isPrivateNonProfit}
-                        required
-                        minLength={6}
-                      />
-                    </div>
+                    {!isReassignment && (
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-password">Password</Label>
+                        <Input
+                          id="signup-password"
+                          type="password"
+                          placeholder="Create a password"
+                          value={signUpForm.password}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Secondary Contact */}
@@ -631,8 +808,30 @@ export default function Auth() {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isSubmitting || !signUpForm.isPrivateNonProfit}>
-                    {isSubmitting ? 'Creating account...' : 'Register Organization'}
+                  {/* Captcha */}
+                  <div className="space-y-2">
+                    <Label>Security Verification</Label>
+                    <ReCAPTCHA
+                      ref={signUpCaptchaRef}
+                      sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Test key - replace with real key
+                      onChange={setSignUpCaptcha}
+                    />
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={
+                      isSubmitting || 
+                      !signUpForm.isPrivateNonProfit || 
+                      !signUpCaptcha ||
+                      (isReassignment && !selectedOrganizationId)
+                    }
+                  >
+                    {isSubmitting 
+                      ? (isReassignment ? 'Submitting request...' : 'Creating account...') 
+                      : (isReassignment ? 'Submit Reassignment Request' : 'Register Organization')
+                    }
                   </Button>
                 </form>
               </CardContent>
