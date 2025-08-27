@@ -1039,9 +1039,9 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           )}
         </Tabs>
 
-        <div className="flex justify-between gap-2 pt-4 border-t">
+        <div className="flex justify-between items-center pt-4 border-t">
           <div>
-            {organization && isAdmin && (
+            {organization && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm">
