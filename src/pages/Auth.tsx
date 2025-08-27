@@ -750,7 +750,7 @@ export default function Auth() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="secondary-firstname" className="text-gray-700 font-medium text-sm">
-                          First Name <span className="text-red-500">*</span>
+                          First Name
                         </Label>
                         <Input
                           id="secondary-firstname"
@@ -759,12 +759,11 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryFirstName: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           disabled={!signUpForm.isPrivateNonProfit}
-                          required
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="secondary-lastname" className="text-gray-700 font-medium text-sm">
-                          Last Name <span className="text-red-500">*</span>
+                          Last Name
                         </Label>
                         <Input
                           id="secondary-lastname"
@@ -773,7 +772,6 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryLastName: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           disabled={!signUpForm.isPrivateNonProfit}
-                          required
                         />
                       </div>
                     </div>
@@ -781,7 +779,7 @@ export default function Auth() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="secondary-contact-title" className="text-gray-700 font-medium text-sm">
-                          Job Title <span className="text-red-500">*</span>
+                          Job Title
                         </Label>
                         <Input
                           id="secondary-contact-title"
@@ -790,12 +788,11 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactTitle: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           disabled={!signUpForm.isPrivateNonProfit}
-                          required
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="secondary-contact-email" className="text-gray-700 font-medium text-sm">
-                          Email Address <span className="text-red-500">*</span>
+                          Email Address
                         </Label>
                         <Input
                           id="secondary-contact-email"
@@ -805,7 +802,6 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactEmail: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           disabled={!signUpForm.isPrivateNonProfit}
-                          required
                         />
                       </div>
                     </div>
