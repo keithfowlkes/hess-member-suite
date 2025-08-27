@@ -96,41 +96,12 @@ const Profile = () => {
 
   const checkEditPermissions = async () => {
     try {
-      // Check if user is admin - admins can edit any profile
-      const { data: userRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user?.id)
-        .eq('role', 'admin')
-        .single();
-
-      if (userRole) {
-        setCanEdit(true);
-        return;
-      }
-
-      // Non-admin users can only edit their own profile if they are the primary contact
-      const { data, error } = await supabase
-        .from('organizations')
-        .select('contact_person_id, profiles!inner(user_id)')
-        .eq('profiles.user_id', user?.id)
-        .single();
-
-      if (error) {
-        console.error('Error checking permissions:', error);
-        return;
-      }
-
-      // User can edit if they are the primary contact for their organization
-      const { data: currentProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user?.id)
-        .single();
-
-      setCanEdit(data?.contact_person_id === currentProfile?.id);
+      // All authenticated users can edit their own profile
+      // Admins can edit any profile (handled elsewhere)
+      setCanEdit(true);
     } catch (error) {
       console.error('Error checking edit permissions:', error);
+      setCanEdit(false);
     }
   };
 
