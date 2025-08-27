@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import MasterDashboard from "./pages/MasterDashboard";
@@ -30,19 +31,19 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<MasterDashboard />} />
-            <Route path="/members" element={<Members />} />
-            <Route path="/membership-fees" element={<MembershipFees />} />
-            <Route path="/form-fields" element={<FormFields />} />
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/public-views" element={<PublicViews />} />
+            <Route path="/dashboard" element={<ProtectedRoute><MasterDashboard /></ProtectedRoute>} />
+            <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
+            <Route path="/membership-fees" element={<ProtectedRoute><MembershipFees /></ProtectedRoute>} />
+            <Route path="/form-fields" element={<ProtectedRoute><FormFields /></ProtectedRoute>} />
+            <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
+            <Route path="/public-views" element={<ProtectedRoute><PublicViews /></ProtectedRoute>} />
             <Route path="/public/directory" element={<PublicDirectory />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/:profileId" element={<ProfileEdit />} />
-          <Route path="/organization/:profileId" element={<OrganizationProfile />} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/profile/:profileId" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
+            <Route path="/organization/:profileId" element={<ProtectedRoute><OrganizationProfile /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
