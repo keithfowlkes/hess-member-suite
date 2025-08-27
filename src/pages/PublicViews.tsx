@@ -1,6 +1,7 @@
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDirectory';
+import { PublicPageManager } from '@/components/PublicPageManager';
 
 export default function PublicViews() {
   return (
@@ -16,10 +17,14 @@ export default function PublicViews() {
               </p>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
                 <h2 className="text-xl font-semibold text-foreground mb-4">Organization Directory</h2>
                 <PublicOrganizationDirectory />
+              </div>
+              
+              <div>
+                <PublicPageManager />
               </div>
             </div>
           </div>
