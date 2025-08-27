@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Building2 } from 'lucide-react';
+// Logo import removed - using uploaded HESS logo instead
 
 export default function Auth() {
   const { user, signIn, signUp, loading } = useAuth();
@@ -115,7 +115,11 @@ export default function Auth() {
       <div className="w-full max-w-6xl">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <Building2 className="h-12 w-12 text-primary" />
+            <img 
+              src="/lovable-uploads/06437c29-40c8-489a-b779-616d8fc6ab04.png" 
+              alt="HESS Consortium Logo"
+              className="h-16 w-auto"
+            />
           </div>
           <h1 className="text-3xl font-bold text-foreground">HESS Consortium</h1>
           <p className="text-muted-foreground mt-2">Member Management Portal</p>
