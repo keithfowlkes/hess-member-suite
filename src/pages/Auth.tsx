@@ -621,7 +621,7 @@ export default function Auth() {
                     
                     <div className="space-y-2">
                       <Label htmlFor="state-association" className="text-gray-700 font-medium text-sm">
-                        State Association <span className="text-red-500">*</span>
+                        State Association
                       </Label>
                       <Input
                         id="state-association"
@@ -630,7 +630,6 @@ export default function Auth() {
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
                         className="h-11 bg-gray-50 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         disabled={!signUpForm.isPrivateNonProfit}
-                        required
                       />
                     </div>
                     
