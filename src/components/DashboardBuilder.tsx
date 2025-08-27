@@ -6,11 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, X } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Save, X, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { useDashboard, useCreateDashboard, useUpdateDashboard, DashboardComponent } from '@/hooks/useDashboards';
 import { DashboardCanvas } from './DashboardCanvas';
-import { ComponentPalette } from './ComponentPalette';
 import { ComponentEditor } from './ComponentEditor';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/components/ui/use-toast';
 
 interface DashboardBuilderProps {
   open: boolean;
@@ -24,10 +27,14 @@ export function DashboardBuilder({ open, onOpenChange, dashboardId }: DashboardB
   const [isPublic, setIsPublic] = useState(false);
   const [components, setComponents] = useState<DashboardComponent[]>([]);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { data: dashboard } = useDashboard(dashboardId || '');
   const createDashboardMutation = useCreateDashboard();
   const updateDashboardMutation = useUpdateDashboard();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const isEditing = !!dashboardId;
 
@@ -69,22 +76,64 @@ export function DashboardBuilder({ open, onOpenChange, dashboardId }: DashboardB
     }
   };
 
-  const handleAddComponent = (type: string) => {
-    const componentType = type as DashboardComponent['type'];
-    const newComponent: DashboardComponent = {
-      id: `component-${Date.now()}`,
-      type: componentType,
-      title: `New ${componentType.charAt(0).toUpperCase() + componentType.slice(1)}`,
-      config: getDefaultConfig(componentType),
-      position: {
-        x: 0,
-        y: components.length * 200,
-        width: 400,
-        height: 200
+  const handleGenerateDashboard = async () => {
+    if (!aiPrompt.trim()) {
+      toast({
+        title: "Please enter a prompt",
+        description: "Describe what kind of dashboard you want to create",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    try {
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user?.id);
+      
+      const isAdmin = userRoles?.some(role => role.role === 'admin');
+      
+      const { data, error } = await supabase.functions.invoke('ai-dashboard-generator', {
+        body: { 
+          prompt: aiPrompt,
+          userRole: isAdmin ? 'admin' : 'member'
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success && data.dashboard) {
+        setTitle(data.dashboard.title);
+        setDescription(data.dashboard.description || '');
+        setComponents(data.dashboard.components);
+        setSelectedComponentId(null);
+        
+        toast({
+          title: "Dashboard Generated!",
+          description: "Your AI-powered dashboard has been created. You can now customize it further.",
+        });
+      } else {
+        throw new Error(data.error || 'Failed to generate dashboard');
       }
-    };
-    setComponents(prev => [...prev, newComponent]);
-    setSelectedComponentId(newComponent.id); // Auto-select the new component
+      
+    } catch (error) {
+      console.error('Error generating dashboard:', error);
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Failed to generate dashboard. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleRegenerateDashboard = async () => {
+    setComponents([]);
+    await handleGenerateDashboard();
   };
 
   const getDefaultConfig = (type: DashboardComponent['type']) => {
@@ -163,10 +212,108 @@ export function DashboardBuilder({ open, onOpenChange, dashboardId }: DashboardB
           <div className="w-80 border-r bg-muted/30 overflow-y-auto">
             <Tabs defaultValue="settings" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="ai-builder">AI Builder</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
-                <TabsTrigger value="components">Components</TabsTrigger>
               </TabsList>
               
+              <TabsContent value="ai-builder" className="p-4 space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">AI Dashboard Generator</h3>
+                  </div>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Describe Your Dashboard</CardTitle>
+                      <CardDescription>
+                        Tell the AI what kind of dashboard you want to create. Be specific about the data and insights you need.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label htmlFor="ai-prompt">Dashboard Description</Label>
+                        <Textarea
+                          id="ai-prompt"
+                          value={aiPrompt}
+                          onChange={(e) => setAiPrompt(e.target.value)}
+                          placeholder="E.g., 'Create a comprehensive membership overview dashboard showing organization distribution by state, membership status breakdown, revenue analytics, and recent invoice trends. Include key metrics like total active members and monthly revenue.'"
+                          rows={4}
+                          className="mt-2"
+                        />
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={handleGenerateDashboard}
+                          disabled={isGenerating || !aiPrompt.trim()}
+                          className="flex-1"
+                        >
+                          {isGenerating ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4 mr-2" />
+                              Generate Dashboard
+                            </>
+                          )}
+                        </Button>
+                        
+                        {components.length > 0 && (
+                          <Button 
+                            variant="outline"
+                            onClick={handleRegenerateDashboard}
+                            disabled={isGenerating}
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Available Data Sources</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>• Organizations ({'>'}1000 records)</div>
+                        <div>• Invoices & Revenue</div>
+                        <div>• User Profiles</div>
+                        <div>• Membership Data</div>
+                        <div>• Geographic Distribution</div>
+                        <div>• System Usage Analytics</div>
+                        <div>• Financial Metrics</div>
+                        <div>• Activity Logs</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Example Prompts</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="text-sm space-y-2">
+                        <div className="p-2 bg-muted rounded cursor-pointer" onClick={() => setAiPrompt("Create a financial overview dashboard showing monthly revenue trends, invoice status distribution, overdue payments, and top paying organizations.")}>
+                          <strong>Financial Overview:</strong> Monthly revenue, invoice status, payments
+                        </div>
+                        <div className="p-2 bg-muted rounded cursor-pointer" onClick={() => setAiPrompt("Build a membership analytics dashboard with geographic distribution, membership status breakdown, student FTE analysis, and growth trends over time.")}>
+                          <strong>Membership Analytics:</strong> Geographic distribution, status breakdown, growth
+                        </div>
+                        <div className="p-2 bg-muted rounded cursor-pointer" onClick={() => setAiPrompt("Design a system usage dashboard showing software adoption across organizations, popular technology choices, and hardware preferences by institution type.")}>
+                          <strong>System Usage:</strong> Software adoption, technology choices, preferences
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
               <TabsContent value="settings" className="p-4 space-y-4">
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -205,12 +352,13 @@ export function DashboardBuilder({ open, onOpenChange, dashboardId }: DashboardB
                   <div className="text-sm text-muted-foreground space-y-1">
                     <div>Components: {components.length}</div>
                     <div>Status: {isPublic ? 'Public' : 'Private'}</div>
+                    {components.length > 0 && (
+                      <div className="mt-2 p-2 bg-green-50 dark:bg-green-950 rounded text-green-700 dark:text-green-300 text-xs">
+                        ✨ AI Generated Dashboard
+                      </div>
+                    )}
                   </div>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="components" className="p-4">
-                <ComponentPalette onAddComponent={handleAddComponent} />
               </TabsContent>
             </Tabs>
           </div>
