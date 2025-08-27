@@ -1041,7 +1041,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
 
         <div className="flex justify-between items-center pt-4 border-t">
           <div>
-            {organization && (
+            {organization && isAdmin && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm">
