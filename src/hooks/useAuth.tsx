@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (session?.user) {
           // Check if user is admin
-          setTimeout(async () => {
+          const checkAdminRole = async () => {
             const { data } = await supabase
               .from('user_roles')
               .select('role')
@@ -43,7 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               .eq('role', 'admin')
               .single();
             setIsAdmin(!!data);
-          }, 0);
+          };
+          checkAdminRole();
         } else {
           setIsAdmin(false);
           setViewMode('admin'); // Reset view mode on sign out
