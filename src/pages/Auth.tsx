@@ -440,7 +440,7 @@ export default function Auth() {
             <div className="bg-gradient-to-br from-gray-50 to-white rounded-lg shadow-sm border border-gray-200">
               <div className="p-8 border-b border-gray-200">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">New Member Registration</h2>
-                <p className="text-gray-600">
+                <p className="text-gray-900">
                   Join the HESS Consortium community or request reassignment as primary contact
                 </p>
               </div>
@@ -450,10 +450,31 @@ export default function Auth() {
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="mb-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">Registration Type</h3>
-                      <p className="text-gray-600 text-sm">Please select your registration type and confirm eligibility.</p>
+                      <p className="text-gray-600 text-sm">Please confirm eligibility and select your registration type.</p>
                     </div>
                     
                     <div className="space-y-6">
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-start space-x-3">
+                          <Checkbox
+                            id="private-nonprofit"
+                            checked={signUpForm.isPrivateNonProfit}
+                            onCheckedChange={(checked) => 
+                              setSignUpForm(prev => ({ ...prev, isPrivateNonProfit: checked === true }))
+                            }
+                            className="mt-0.5"
+                          />
+                          <div className="flex-1">
+                            <label htmlFor="private-nonprofit" className="text-gray-800 font-medium cursor-pointer">
+                              My institution is a private, non-profit college or university <span className="text-red-500">*</span>
+                            </label>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Only private, non-profit institutions of higher education are eligible for HESS Consortium membership.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
                         <div className="flex items-start space-x-3">
                           <Checkbox
@@ -484,27 +505,6 @@ export default function Auth() {
                             </p>
                           </div>
                         )}
-                      </div>
-
-                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="flex items-start space-x-3">
-                          <Checkbox
-                            id="private-nonprofit"
-                            checked={signUpForm.isPrivateNonProfit}
-                            onCheckedChange={(checked) => 
-                              setSignUpForm(prev => ({ ...prev, isPrivateNonProfit: checked === true }))
-                            }
-                            className="mt-0.5"
-                          />
-                          <div className="flex-1">
-                            <label htmlFor="private-nonprofit" className="text-gray-800 font-medium cursor-pointer">
-                              My institution is a private, non-profit college or university <span className="text-red-500">*</span>
-                            </label>
-                            <p className="text-sm text-gray-600 mt-1">
-                              Only private, non-profit institutions of higher education are eligible for HESS Consortium membership.
-                            </p>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>
