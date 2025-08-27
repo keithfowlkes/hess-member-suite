@@ -30,22 +30,27 @@ export const useSystemFieldValues = () => {
   return useQuery({
     queryKey: ['system-field-values-from-profiles'],
     queryFn: async () => {
+      console.log('Fetching system field values from profiles...');
       const fieldValues: Record<SystemField, string[]> = {} as any;
       
-      for (const field of SYSTEM_FIELDS) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select(field)
-          .not(field, 'is', null)
-          .not(field, 'eq', '');
+      // Get all profiles data once instead of making multiple queries
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*');
 
-        if (error) throw error;
-        
+      if (error) {
+        console.error('Error fetching profiles:', error);
+        throw error;
+      }
+
+      console.log('Profiles fetched:', profiles?.length);
+      
+      for (const field of SYSTEM_FIELDS) {
         // Extract unique non-empty values with better filtering
-        const rawValues = data
-          .map(item => item[field])
+        const rawValues = profiles
+          ?.map(profile => profile[field])
           .filter(value => value && typeof value === 'string' && value.trim().length > 0)
-          .map(value => value.trim());
+          .map(value => value.trim()) || [];
         
         // Remove duplicates using case-insensitive comparison and preserve original casing
         const uniqueValues = Array.from(
@@ -53,6 +58,7 @@ export const useSystemFieldValues = () => {
         ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
         
         fieldValues[field] = uniqueValues;
+        console.log(`Field ${field} has ${uniqueValues.length} unique values:`, uniqueValues);
       }
       
       return fieldValues;
