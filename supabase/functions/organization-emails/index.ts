@@ -11,11 +11,12 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: 'invitation' | 'approval' | 'rejection' | 'transfer' | 'welcome';
+  type: 'invitation' | 'approval' | 'rejection' | 'transfer' | 'welcome' | 'member_approval';
   to: string;
   organizationName: string;
   token?: string;
   adminMessage?: string;
+  memberName?: string;
   transferDetails?: {
     currentContact: string;
     newContact: string;
@@ -35,7 +36,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { type, to, organizationName, token, adminMessage, transferDetails }: EmailRequest = await req.json();
+    const { type, to, organizationName, token, adminMessage, memberName, transferDetails }: EmailRequest = await req.json();
     console.log('Email request:', { type, to, organizationName });
 
     const appUrl = Deno.env.get('SUPABASE_URL')?.replace('//', '//app.');
@@ -112,6 +113,25 @@ const handler = async (req: Request): Promise<Response> => {
             </a>
             <p>This transfer request will expire in 7 days.</p>
             <p>If you have questions, please contact us at support@hessconsortium.org.</p>
+            <p>Best regards,<br>HESS Consortium Team</p>
+          </div>
+        `;
+        break;
+
+      case 'member_approval':
+        subject = `Welcome to HESS Consortium - ${organizationName} Approved!`;
+        html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #16a34a;">Welcome to HESS Consortium!</h1>
+            <p>Dear ${memberName || 'Member'},</p>
+            <p>Great news! Your organization <strong>${organizationName}</strong> has been approved for membership in the HESS Consortium.</p>
+            <p>You can now access the full member portal with all available features and resources.</p>
+            <a href="${appUrl}" 
+               style="background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
+              Access Member Portal
+            </a>
+            ${adminMessage ? `<p><strong>Message from admin:</strong><br>${adminMessage}</p>` : ''}
+            <p>We're excited to have you as part of our consortium!</p>
             <p>Best regards,<br>HESS Consortium Team</p>
           </div>
         `;

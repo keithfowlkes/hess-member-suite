@@ -85,7 +85,34 @@ export const useOrganizationApprovals = () => {
 
       if (updateError) throw updateError;
 
-      // Send approval email
+      // Find and approve all members of this organization
+      const { data: memberProfiles, error: memberError } = await supabase
+        .from('profiles')
+        .select('user_id, email, first_name, last_name')
+        .eq('organization', org.name);
+
+      if (memberError) {
+        console.error('Error fetching organization members:', memberError);
+      } else if (memberProfiles && memberProfiles.length > 0) {
+        // Send approval emails to all members
+        for (const member of memberProfiles) {
+          try {
+            await supabase.functions.invoke('organization-emails', {
+              body: {
+                type: 'member_approval',
+                to: member.email,
+                organizationName: org.name,
+                memberName: `${member.first_name} ${member.last_name}`,
+                adminMessage
+              }
+            });
+          } catch (emailError) {
+            console.error(`Error sending approval email to ${member.email}:`, emailError);
+          }
+        }
+      }
+
+      // Send approval email to primary contact
       if (org.profiles?.email) {
         await supabase.functions.invoke('organization-emails', {
           body: {
@@ -102,12 +129,16 @@ export const useOrganizationApprovals = () => {
         action: 'organization_approved',
         entity_type: 'organization',
         entity_id: organizationId,
-        details: { organizationName: org.name, adminMessage }
+        details: { 
+          organizationName: org.name, 
+          adminMessage,
+          membersCount: memberProfiles?.length || 0
+        }
       });
 
       toast({
         title: "Organization Approved",
-        description: `${org.name} has been approved and notified.`,
+        description: `${org.name} has been approved with ${memberProfiles?.length || 0} members notified.`,
       });
 
       await fetchPendingOrganizations();
