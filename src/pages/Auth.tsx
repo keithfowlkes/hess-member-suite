@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 // Logo import removed - using uploaded HESS logo instead
@@ -15,6 +16,7 @@ export default function Auth() {
   
   const [signInForm, setSignInForm] = useState({ email: '', password: '' });
   const [signUpForm, setSignUpForm] = useState({ 
+    isPrivateNonProfit: false,
     email: '', 
     password: '', 
     firstName: '', 
@@ -181,6 +183,30 @@ export default function Auth() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-6">
+                  {/* Institution Type Verification */}
+                  <div className="space-y-4 pb-6 border-b">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="private-nonprofit"
+                        checked={signUpForm.isPrivateNonProfit}
+                        onCheckedChange={(checked) => 
+                          setSignUpForm(prev => ({ ...prev, isPrivateNonProfit: checked === true }))
+                        }
+                      />
+                      <Label 
+                        htmlFor="private-nonprofit" 
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        I confirm that this institution is a private, non-profit college or university *
+                      </Label>
+                    </div>
+                    {!signUpForm.isPrivateNonProfit && (
+                      <p className="text-sm text-muted-foreground">
+                        Please confirm your institution type to proceed with registration.
+                      </p>
+                    )}
+                  </div>
+
                   {/* Organization Information */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Organization Information</h3>
@@ -191,6 +217,7 @@ export default function Auth() {
                         placeholder="Organization name"
                         value={signUpForm.organization}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
                         required
                       />
                     </div>
@@ -202,6 +229,7 @@ export default function Auth() {
                           placeholder="State association"
                           value={signUpForm.stateAssociation}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                       <div className="space-y-2">
@@ -212,6 +240,7 @@ export default function Auth() {
                           placeholder="Student FTE"
                           value={signUpForm.studentFte}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, studentFte: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                     </div>
@@ -222,6 +251,7 @@ export default function Auth() {
                         placeholder="Street address"
                         value={signUpForm.address}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
                       />
                     </div>
                     <div className="grid grid-cols-3 gap-4">
@@ -232,6 +262,7 @@ export default function Auth() {
                           placeholder="City"
                           value={signUpForm.city}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                       <div className="space-y-2">
@@ -241,6 +272,7 @@ export default function Auth() {
                           placeholder="State"
                           value={signUpForm.state}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                       <div className="space-y-2">
@@ -250,6 +282,7 @@ export default function Auth() {
                           placeholder="ZIP code"
                           value={signUpForm.zip}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                     </div>
@@ -266,6 +299,7 @@ export default function Auth() {
                           placeholder="First name"
                           value={signUpForm.firstName}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                           required
                         />
                       </div>
@@ -276,6 +310,7 @@ export default function Auth() {
                           placeholder="Last name"
                           value={signUpForm.lastName}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                           required
                         />
                       </div>
@@ -288,6 +323,7 @@ export default function Auth() {
                           placeholder="Job title"
                           value={signUpForm.primaryContactTitle}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactTitle: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                       <div className="space-y-2">
@@ -298,6 +334,7 @@ export default function Auth() {
                           placeholder="Enter your email"
                           value={signUpForm.email}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, email: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                           required
                         />
                       </div>
@@ -310,6 +347,7 @@ export default function Auth() {
                         placeholder="Create a password"
                         value={signUpForm.password}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
                         required
                         minLength={6}
                       />
@@ -327,6 +365,7 @@ export default function Auth() {
                           placeholder="First name"
                           value={signUpForm.secondaryFirstName}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryFirstName: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                       <div className="space-y-2">
@@ -336,6 +375,7 @@ export default function Auth() {
                           placeholder="Last name"
                           value={signUpForm.secondaryLastName}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryLastName: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                     </div>
@@ -347,6 +387,7 @@ export default function Auth() {
                           placeholder="Job title"
                           value={signUpForm.secondaryContactTitle}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactTitle: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                       <div className="space-y-2">
@@ -357,6 +398,7 @@ export default function Auth() {
                           placeholder="Secondary contact email"
                           value={signUpForm.secondaryContactEmail}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactEmail: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                     </div>
@@ -373,6 +415,7 @@ export default function Auth() {
                           placeholder="Student information system"
                           value={signUpForm.studentInformationSystem}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                       <div className="space-y-2">
@@ -382,6 +425,7 @@ export default function Auth() {
                           placeholder="Financial system"
                           value={signUpForm.financialSystem}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, financialSystem: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                     </div>
@@ -393,6 +437,7 @@ export default function Auth() {
                           placeholder="Financial aid system"
                           value={signUpForm.financialAid}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, financialAid: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                       <div className="space-y-2">
@@ -402,6 +447,7 @@ export default function Auth() {
                           placeholder="HCM/HR system"
                           value={signUpForm.hcmHr}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, hcmHr: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                     </div>
@@ -413,6 +459,7 @@ export default function Auth() {
                           placeholder="Payroll system"
                           value={signUpForm.payrollSystem}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, payrollSystem: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                       <div className="space-y-2">
@@ -422,6 +469,7 @@ export default function Auth() {
                           placeholder="Purchasing system"
                           value={signUpForm.purchasingSystem}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, purchasingSystem: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                     </div>
@@ -433,6 +481,7 @@ export default function Auth() {
                           placeholder="Housing management system"
                           value={signUpForm.housingManagement}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, housingManagement: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                       <div className="space-y-2">
@@ -442,6 +491,7 @@ export default function Auth() {
                           placeholder="Learning management system"
                           value={signUpForm.learningManagement}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, learningManagement: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                     </div>
@@ -453,6 +503,7 @@ export default function Auth() {
                           placeholder="Admissions CRM system"
                           value={signUpForm.admissionsCrm}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, admissionsCrm: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                       <div className="space-y-2">
@@ -462,6 +513,7 @@ export default function Auth() {
                           placeholder="Alumni/Advancement CRM"
                           value={signUpForm.alumniAdvancementCrm}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                     </div>
@@ -477,6 +529,7 @@ export default function Auth() {
                           id="apple"
                           checked={signUpForm.primaryOfficeApple}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeApple: e.target.checked }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                           className="rounded"
                         />
                         <Label htmlFor="apple">Apple</Label>
@@ -487,6 +540,7 @@ export default function Auth() {
                           id="asus"
                           checked={signUpForm.primaryOfficeAsus}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeAsus: e.target.checked }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                           className="rounded"
                         />
                         <Label htmlFor="asus">Asus</Label>
@@ -497,6 +551,7 @@ export default function Auth() {
                           id="dell"
                           checked={signUpForm.primaryOfficeDell}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeDell: e.target.checked }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                           className="rounded"
                         />
                         <Label htmlFor="dell">Dell</Label>
@@ -507,6 +562,7 @@ export default function Auth() {
                           id="hp"
                           checked={signUpForm.primaryOfficeHp}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeHp: e.target.checked }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                           className="rounded"
                         />
                         <Label htmlFor="hp">HP</Label>
@@ -517,6 +573,7 @@ export default function Auth() {
                           id="microsoft"
                           checked={signUpForm.primaryOfficeMicrosoft}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeMicrosoft: e.target.checked }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                           className="rounded"
                         />
                         <Label htmlFor="microsoft">Microsoft</Label>
@@ -527,6 +584,7 @@ export default function Auth() {
                           id="other"
                           checked={signUpForm.primaryOfficeOther}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeOther: e.target.checked }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                           className="rounded"
                         />
                         <Label htmlFor="other">Other</Label>
@@ -542,6 +600,7 @@ export default function Auth() {
                           placeholder="Please specify other computer types..."
                           value={signUpForm.primaryOfficeOtherDetails}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeOtherDetails: e.target.value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
                     )}
@@ -556,12 +615,13 @@ export default function Auth() {
                         placeholder="Please share any additional information about your software and operations..."
                         value={signUpForm.otherSoftwareComments}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, otherSoftwareComments: e.target.value }))}
-                        className="w-full min-h-[100px] p-3 border border-input rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                        className="w-full min-h-[100px] p-3 border border-input rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full" disabled={isSubmitting || !signUpForm.isPrivateNonProfit}>
                     {isSubmitting ? 'Creating account...' : 'Register Organization'}
                   </Button>
                 </form>
