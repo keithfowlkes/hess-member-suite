@@ -377,9 +377,9 @@ export default function Auth() {
       <div className="w-full max-w-4xl mx-auto">
 
         <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="signin" className="text-base py-3">Sign In</TabsTrigger>
-            <TabsTrigger value="signup" className="text-base py-3">New Member Registration or Reassignment</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-6 bg-white">
+            <TabsTrigger value="signin" className="text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Sign In</TabsTrigger>
+            <TabsTrigger value="signup" className="text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">New Member Registration</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
