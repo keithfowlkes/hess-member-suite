@@ -39,13 +39,17 @@ export default function Auth() {
     label, 
     value, 
     onChange, 
-    disabled 
+    disabled,
+    customValue,
+    onCustomValueChange
   }: {
     fieldName: SystemField;
     label: string;
     value: string;
     onChange: (value: string) => void;
     disabled: boolean;
+    customValue: string;
+    onCustomValueChange: (value: string) => void;
   }) => {
     const options = useFieldOptions(fieldName);
     
@@ -71,6 +75,17 @@ export default function Auth() {
             ))}
           </SelectContent>
         </Select>
+        {value === 'Other' && (
+          <div className="mt-2">
+            <Input
+              placeholder={`Please specify ${label.toLowerCase()}`}
+              value={customValue}
+              onChange={(e) => onCustomValueChange(e.target.value)}
+              className="bg-gray-50 border-gray-300"
+              disabled={disabled}
+            />
+          </div>
+        )}
       </div>
     );
   };
@@ -94,15 +109,25 @@ export default function Auth() {
     secondaryContactTitle: '',
     secondaryContactEmail: '',
     studentInformationSystem: '',
+    studentInformationSystemOther: '',
     financialSystem: '',
+    financialSystemOther: '',
     financialAid: '',
+    financialAidOther: '',
     hcmHr: '',
+    hcmHrOther: '',
     payrollSystem: '',
+    payrollSystemOther: '',
     purchasingSystem: '',
+    purchasingSystemOther: '',
     housingManagement: '',
+    housingManagementOther: '',
     learningManagement: '',
+    learningManagementOther: '',
     admissionsCrm: '',
+    admissionsCrmOther: '',
     alumniAdvancementCrm: '',
+    alumniAdvancementCrmOther: '',
     primaryOfficeApple: false,
     primaryOfficeAsus: false,
     primaryOfficeDell: false,
@@ -200,16 +225,36 @@ export default function Auth() {
           secondary_last_name: signUpForm.secondaryLastName,
           secondary_contact_title: signUpForm.secondaryContactTitle,
           secondary_contact_email: signUpForm.secondaryContactEmail,
-          student_information_system: signUpForm.studentInformationSystem,
-          financial_system: signUpForm.financialSystem,
-          financial_aid: signUpForm.financialAid,
-          hcm_hr: signUpForm.hcmHr,
-          payroll_system: signUpForm.payrollSystem,
-          purchasing_system: signUpForm.purchasingSystem,
-          housing_management: signUpForm.housingManagement,
-          learning_management: signUpForm.learningManagement,
-          admissions_crm: signUpForm.admissionsCrm,
-          alumni_advancement_crm: signUpForm.alumniAdvancementCrm,
+          student_information_system: signUpForm.studentInformationSystem === 'Other' 
+            ? signUpForm.studentInformationSystemOther 
+            : signUpForm.studentInformationSystem,
+          financial_system: signUpForm.financialSystem === 'Other' 
+            ? signUpForm.financialSystemOther 
+            : signUpForm.financialSystem,
+          financial_aid: signUpForm.financialAid === 'Other' 
+            ? signUpForm.financialAidOther 
+            : signUpForm.financialAid,
+          hcm_hr: signUpForm.hcmHr === 'Other' 
+            ? signUpForm.hcmHrOther 
+            : signUpForm.hcmHr,
+          payroll_system: signUpForm.payrollSystem === 'Other' 
+            ? signUpForm.payrollSystemOther 
+            : signUpForm.payrollSystem,
+          purchasing_system: signUpForm.purchasingSystem === 'Other' 
+            ? signUpForm.purchasingSystemOther 
+            : signUpForm.purchasingSystem,
+          housing_management: signUpForm.housingManagement === 'Other' 
+            ? signUpForm.housingManagementOther 
+            : signUpForm.housingManagement,
+          learning_management: signUpForm.learningManagement === 'Other' 
+            ? signUpForm.learningManagementOther 
+            : signUpForm.learningManagement,
+          admissions_crm: signUpForm.admissionsCrm === 'Other' 
+            ? signUpForm.admissionsCrmOther 
+            : signUpForm.admissionsCrm,
+          alumni_advancement_crm: signUpForm.alumniAdvancementCrm === 'Other' 
+            ? signUpForm.alumniAdvancementCrmOther 
+            : signUpForm.alumniAdvancementCrm,
           primary_office_apple: signUpForm.primaryOfficeApple,
           primary_office_asus: signUpForm.primaryOfficeAsus,
           primary_office_dell: signUpForm.primaryOfficeDell,
@@ -241,11 +286,45 @@ export default function Auth() {
         setSignUpCaptcha(null);
       }
     } else {
-      // Normal registration
+      // Normal registration - prepare form data with custom "Other" values
+      const formDataWithCustomValues = {
+        ...signUpForm,
+        studentInformationSystem: signUpForm.studentInformationSystem === 'Other' 
+          ? signUpForm.studentInformationSystemOther 
+          : signUpForm.studentInformationSystem,
+        financialSystem: signUpForm.financialSystem === 'Other' 
+          ? signUpForm.financialSystemOther 
+          : signUpForm.financialSystem,
+        financialAid: signUpForm.financialAid === 'Other' 
+          ? signUpForm.financialAidOther 
+          : signUpForm.financialAid,
+        hcmHr: signUpForm.hcmHr === 'Other' 
+          ? signUpForm.hcmHrOther 
+          : signUpForm.hcmHr,
+        payrollSystem: signUpForm.payrollSystem === 'Other' 
+          ? signUpForm.payrollSystemOther 
+          : signUpForm.payrollSystem,
+        purchasingSystem: signUpForm.purchasingSystem === 'Other' 
+          ? signUpForm.purchasingSystemOther 
+          : signUpForm.purchasingSystem,
+        housingManagement: signUpForm.housingManagement === 'Other' 
+          ? signUpForm.housingManagementOther 
+          : signUpForm.housingManagement,
+        learningManagement: signUpForm.learningManagement === 'Other' 
+          ? signUpForm.learningManagementOther 
+          : signUpForm.learningManagement,
+        admissionsCrm: signUpForm.admissionsCrm === 'Other' 
+          ? signUpForm.admissionsCrmOther 
+          : signUpForm.admissionsCrm,
+        alumniAdvancementCrm: signUpForm.alumniAdvancementCrm === 'Other' 
+          ? signUpForm.alumniAdvancementCrmOther 
+          : signUpForm.alumniAdvancementCrm,
+      };
+
       const { error } = await signUp(
         signUpForm.email, 
         signUpForm.password,
-        signUpForm
+        formDataWithCustomValues
       );
       
       if (error) {
@@ -698,6 +777,8 @@ export default function Auth() {
                         value={signUpForm.studentInformationSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: value }))}
                         disabled={!signUpForm.isPrivateNonProfit}
+                        customValue={signUpForm.studentInformationSystemOther}
+                        onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystemOther: value }))}
                       />
                       <SystemFieldSelect
                         fieldName="financial_system"
@@ -705,6 +786,8 @@ export default function Auth() {
                         value={signUpForm.financialSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystem: value }))}
                         disabled={!signUpForm.isPrivateNonProfit}
+                        customValue={signUpForm.financialSystemOther}
+                        onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystemOther: value }))}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -714,6 +797,8 @@ export default function Auth() {
                         value={signUpForm.financialAid}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, financialAid: value }))}
                         disabled={!signUpForm.isPrivateNonProfit}
+                        customValue={signUpForm.financialAidOther}
+                        onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, financialAidOther: value }))}
                       />
                       <SystemFieldSelect
                         fieldName="hcm_hr"
@@ -721,6 +806,8 @@ export default function Auth() {
                         value={signUpForm.hcmHr}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHr: value }))}
                         disabled={!signUpForm.isPrivateNonProfit}
+                        customValue={signUpForm.hcmHrOther}
+                        onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHrOther: value }))}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -730,6 +817,8 @@ export default function Auth() {
                         value={signUpForm.payrollSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystem: value }))}
                         disabled={!signUpForm.isPrivateNonProfit}
+                        customValue={signUpForm.payrollSystemOther}
+                        onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystemOther: value }))}
                       />
                       <SystemFieldSelect
                         fieldName="purchasing_system"
@@ -737,6 +826,8 @@ export default function Auth() {
                         value={signUpForm.purchasingSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystem: value }))}
                         disabled={!signUpForm.isPrivateNonProfit}
+                        customValue={signUpForm.purchasingSystemOther}
+                        onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystemOther: value }))}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -746,6 +837,8 @@ export default function Auth() {
                         value={signUpForm.housingManagement}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagement: value }))}
                         disabled={!signUpForm.isPrivateNonProfit}
+                        customValue={signUpForm.housingManagementOther}
+                        onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagementOther: value }))}
                       />
                       <SystemFieldSelect
                         fieldName="learning_management"
@@ -753,6 +846,8 @@ export default function Auth() {
                         value={signUpForm.learningManagement}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagement: value }))}
                         disabled={!signUpForm.isPrivateNonProfit}
+                        customValue={signUpForm.learningManagementOther}
+                        onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagementOther: value }))}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -762,6 +857,8 @@ export default function Auth() {
                         value={signUpForm.admissionsCrm}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrm: value }))}
                         disabled={!signUpForm.isPrivateNonProfit}
+                        customValue={signUpForm.admissionsCrmOther}
+                        onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrmOther: value }))}
                       />
                       <SystemFieldSelect
                         fieldName="alumni_advancement_crm"
@@ -769,6 +866,8 @@ export default function Auth() {
                         value={signUpForm.alumniAdvancementCrm}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
                         disabled={!signUpForm.isPrivateNonProfit}
+                        customValue={signUpForm.alumniAdvancementCrmOther}
+                        onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrmOther: value }))}
                       />
                     </div>
                   </div>
