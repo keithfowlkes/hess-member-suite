@@ -61,6 +61,11 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				'auth-form': 'hsl(var(--auth-form-background))',
+				'auth-button': {
+					DEFAULT: 'hsl(var(--auth-button))',
+					foreground: 'hsl(var(--auth-button-foreground))'
 				}
 			},
 			borderRadius: {

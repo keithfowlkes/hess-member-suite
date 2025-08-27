@@ -260,7 +260,7 @@ export default function Auth() {
           </TabsList>
           
           <TabsContent value="signin">
-            <div className="bg-white rounded-lg shadow-sm p-8">
+            <div className="bg-auth-form rounded-lg shadow-sm p-8">
               <div className="border-b border-gray-200 pb-4 mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Sign In</h2>
                 <p className="text-gray-600 mt-1">
@@ -306,7 +306,7 @@ export default function Auth() {
                     onChange={setSignInCaptcha}
                   />
                 </div>
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3" disabled={isSubmitting || !signInCaptcha}>
+                <Button type="submit" className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" disabled={isSubmitting || !signInCaptcha}>
                   {isSubmitting ? 'Signing in...' : 'Sign In'}
                 </Button>
               </form>
@@ -314,7 +314,7 @@ export default function Auth() {
           </TabsContent>
           
           <TabsContent value="signup">
-            <div className="bg-white rounded-lg shadow-sm p-8">
+            <div className="bg-auth-form rounded-lg shadow-sm p-8">
               <div className="border-b border-gray-200 pb-4 mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">New Member Registration or Reassignment</h2>
                 <p className="text-gray-600 mt-1">
@@ -879,7 +879,7 @@ export default function Auth() {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3" 
+                  className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" 
                   disabled={
                     isSubmitting || 
                     !signUpForm.isPrivateNonProfit || 

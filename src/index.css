@@ -51,6 +51,11 @@ All colors MUST be HSL.
     --sidebar-border: 54 12% 65%;
     --sidebar-ring: 43 90% 58%;
 
+    /* Auth form colors */
+    --auth-form-background: 54 25% 90%;
+    --auth-button: 54 19% 58%;
+    --auth-button-foreground: 0 0% 100%;
+
     /* Modern gradients */
     --gradient-primary: linear-gradient(135deg, hsl(196, 30%, 25%), hsl(196, 35%, 35%));
     --gradient-secondary: linear-gradient(135deg, hsl(43, 90%, 58%), hsl(43, 85%, 65%));
