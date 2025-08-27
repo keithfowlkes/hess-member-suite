@@ -261,10 +261,9 @@ const MasterDashboard = () => {
 
             {/* Main Tabs */}
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="organizations">Organizations</TabsTrigger>
-                <TabsTrigger value="users">User Management</TabsTrigger>
                 <TabsTrigger value="messages">Messages</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
               </TabsList>
@@ -389,6 +388,7 @@ const MasterDashboard = () => {
                     <TabsTrigger value="approvals">Pending Approvals</TabsTrigger>
                     <TabsTrigger value="invitations">Manage Invitations</TabsTrigger>
                     <TabsTrigger value="reassignments">Reassignment Requests</TabsTrigger>
+                    <TabsTrigger value="users">User Management</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="approvals" className="space-y-4">
@@ -505,121 +505,108 @@ const MasterDashboard = () => {
                       </CardContent>
                     </Card>
                   </TabsContent>
-                </Tabs>
-              </TabsContent>
 
-              {/* User Management Tab */}
-              <TabsContent value="users" className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-2xl font-semibold">User Management</h2>
-                    <p className="text-muted-foreground">Manage user roles and permissions</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge variant="outline">{users.length} total users</Badge>
-                    <Badge variant="outline">{users.filter(u => u.user_roles?.[0]?.role === 'admin').length} admins</Badge>
-                  </div>
-                </div>
+                  <TabsContent value="users" className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold">User Management</h2>
+                      <Badge variant="secondary" className="text-sm">
+                        {users.length} total users
+                      </Badge>
+                    </div>
 
-                <Card>
-                  <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="pl-6">User</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead className="pr-6">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {users.map((user) => {
-                          const userRole = user.user_roles?.[0]?.role || 'member';
-                          return (
-                            <TableRow key={user.id}>
-                              <TableCell className="font-medium pl-6">
-                                <div>
-                                  <div>{user.first_name} {user.last_name}</div>
-                                  {user.organization && (
-                                    <div className="text-sm text-muted-foreground">{user.organization}</div>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>{user.email}</TableCell>
-                              <TableCell>
-                                <Badge 
-                                  variant={userRole === 'admin' ? 'default' : 'secondary'}
-                                  className={userRole === 'admin' ? 'bg-primary' : ''}
-                                >
-                                  {userRole}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="pr-6">
-                                <div className="flex justify-end space-x-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handlePasswordReset(user.email)}
-                                    title="Send Password Reset Email"
-                                  >
-                                    <KeyRound className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleOpenChangePassword(user.user_id, `${user.first_name} ${user.last_name}`)}
-                                    title="Change Password"
-                                    disabled={user.email === 'keith.fowlkes@hessconsortium.org'}
-                                  >
-                                    <Lock className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleRoleUpdate(user.user_id, userRole)}
-                                    disabled={updatingUser === user.user_id || user.email === 'keith.fowlkes@hessconsortium.org'}
-                                  >
-                                    {updatingUser === user.user_id ? 'Updating...' : 
-                                     userRole === 'admin' ? 'Make Member' : 'Make Admin'}
-                                  </Button>
-                                  
-                                  {user.email !== 'keith.fowlkes@hessconsortium.org' && (
+                    <Card>
+                      <CardContent className="p-6">
+                        <Table>
+                           <TableHeader>
+                             <TableRow>
+                               <TableHead>Email</TableHead>
+                               <TableHead>Role</TableHead>
+                               <TableHead>Created</TableHead>
+                               <TableHead className="text-right">Actions</TableHead>
+                             </TableRow>
+                           </TableHeader>
+                          <TableBody>
+                            {users.map((user) => (
+                              <TableRow key={user.id}>
+                                <TableCell className="font-medium">{user.email}</TableCell>
+                                <TableCell>
+                                  <Badge variant={user.user_roles?.[0]?.role === 'admin' ? 'default' : 'secondary'}>
+                                    {user.user_roles?.[0]?.role || 'member'}
+                                  </Badge>
+                                </TableCell>
+                                 <TableCell>
+                                   {new Date(user.created_at).toLocaleDateString()}
+                                 </TableCell>
+                                 <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleRoleUpdate(user.id, user.user_roles?.[0]?.role || 'member')}
+                                      disabled={updatingUser === user.id}
+                                    >
+                                      {updatingUser === user.id ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <>
+                                          <KeyRound className="h-3 w-3 mr-1" />
+                                          {user.user_roles?.[0]?.role === 'admin' ? 'Make Member' : 'Make Admin'}
+                                        </>
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handlePasswordReset(user.email)}
+                                    >
+                                      <RefreshCw className="h-3 w-3 mr-1" />
+                                      Reset Password
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleOpenChangePassword(user.id, user.email)}
+                                    >
+                                      <Lock className="h-3 w-3 mr-1" />
+                                      Change Password
+                                    </Button>
                                     <AlertDialog>
                                       <AlertDialogTrigger asChild>
-                                        <Button size="sm" variant="destructive">
-                                          <UserMinus className="h-4 w-4" />
+                                        <Button variant="outline" size="sm">
+                                          <UserMinus className="h-3 w-3 mr-1" />
+                                          Delete
                                         </Button>
                                       </AlertDialogTrigger>
                                       <AlertDialogContent>
                                         <AlertDialogHeader>
                                           <AlertDialogTitle>Delete User</AlertDialogTitle>
                                           <AlertDialogDescription>
-                                            Are you sure you want to delete {user.first_name} {user.last_name}? 
-                                            This action cannot be undone and will permanently remove their account and all associated data.
+                                            Are you sure you want to delete {user.email}? This action cannot be undone.
                                           </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                                           <AlertDialogAction
-                                            onClick={() => handleDeleteUser(user.user_id)}
-                                            className="bg-destructive hover:bg-destructive/90"
+                                            onClick={() => handleDeleteUser(user.id)}
+                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                           >
-                                            Delete User
+                                            Delete
                                           </AlertDialogAction>
                                         </AlertDialogFooter>
                                       </AlertDialogContent>
                                     </AlertDialog>
-                                  )}
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </TabsContent>
+
 
               {/* Messages Tab */}
               <TabsContent value="messages" className="space-y-6">
