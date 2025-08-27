@@ -632,6 +632,30 @@ export type Database = {
         }
         Relationships: []
       }
+      system_field_options: {
+        Row: {
+          created_at: string
+          field_name: string
+          id: string
+          option_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          field_name: string
+          id?: string
+          option_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          field_name?: string
+          id?: string
+          option_value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       system_settings: {
         Row: {
           created_at: string

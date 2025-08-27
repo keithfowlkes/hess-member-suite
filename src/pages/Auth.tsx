@@ -1,19 +1,19 @@
-import { useState, useRef, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
-import ReCAPTCHA from 'react-google-recaptcha';
+import React, { useState, useRef, useEffect } from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import ReCAPTCHA from 'react-google-recaptcha';
+import { useSystemSetting } from '@/hooks/useSystemSettings';
+import { useFieldOptions, type SystemField } from '@/hooks/useSystemFieldOptions';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useCreateReassignmentRequest } from '@/hooks/useReassignmentRequests';
-import { useSystemSetting } from '@/hooks/useSystemSettings';
-import { supabase } from '@/integrations/supabase/client';
 
 export default function Auth() {
   const { user, signIn, signUp, loading } = useAuth();
@@ -32,6 +32,48 @@ export default function Auth() {
   
   // Get reCAPTCHA site key from database or fallback to test key
   const recaptchaSiteKey = recaptchaSetting?.setting_value || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
+
+  // System field select component
+  const SystemFieldSelect = ({ 
+    fieldName, 
+    label, 
+    value, 
+    onChange, 
+    disabled 
+  }: {
+    fieldName: SystemField;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    disabled: boolean;
+  }) => {
+    const options = useFieldOptions(fieldName);
+    
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={fieldName}>{label}</Label>
+        <Select 
+          value={value} 
+          onValueChange={onChange} 
+          disabled={disabled}
+        >
+          <SelectTrigger className="bg-gray-50 border-gray-300">
+            <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+          </SelectTrigger>
+          <SelectContent className="max-h-60 overflow-y-auto bg-white border border-gray-300 shadow-lg z-50">
+            <SelectItem value="">
+              <span className="text-gray-500">None specified</span>
+            </SelectItem>
+            {options.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
   
   const [signUpForm, setSignUpForm] = useState({ 
     isPrivateNonProfit: false,
@@ -650,114 +692,84 @@ export default function Auth() {
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Systems Information</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="student-info-system">Student Information System</Label>
-                        <Input
-                          id="student-info-system"
-                          placeholder="Student information system"
-                          value={signUpForm.studentInformationSystem}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="financial-system">Financial System</Label>
-                        <Input
-                          id="financial-system"
-                          placeholder="Financial system"
-                          value={signUpForm.financialSystem}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, financialSystem: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
+                      <SystemFieldSelect
+                        fieldName="student_information_system"
+                        label="Student Information System"
+                        value={signUpForm.studentInformationSystem}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
+                      <SystemFieldSelect
+                        fieldName="financial_system"
+                        label="Financial System"
+                        value={signUpForm.financialSystem}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystem: value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="financial-aid">Financial Aid</Label>
-                        <Input
-                          id="financial-aid"
-                          placeholder="Financial aid system"
-                          value={signUpForm.financialAid}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, financialAid: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="hcm-hr">HCM (HR)</Label>
-                        <Input
-                          id="hcm-hr"
-                          placeholder="HCM/HR system"
-                          value={signUpForm.hcmHr}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, hcmHr: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
+                      <SystemFieldSelect
+                        fieldName="financial_aid"
+                        label="Financial Aid"
+                        value={signUpForm.financialAid}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, financialAid: value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
+                      <SystemFieldSelect
+                        fieldName="hcm_hr"
+                        label="HCM (HR)"
+                        value={signUpForm.hcmHr}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHr: value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="payroll-system">Payroll System</Label>
-                        <Input
-                          id="payroll-system"
-                          placeholder="Payroll system"
-                          value={signUpForm.payrollSystem}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, payrollSystem: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="purchasing-system">Purchasing System</Label>
-                        <Input
-                          id="purchasing-system"
-                          placeholder="Purchasing system"
-                          value={signUpForm.purchasingSystem}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, purchasingSystem: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
+                      <SystemFieldSelect
+                        fieldName="payroll_system"
+                        label="Payroll System"
+                        value={signUpForm.payrollSystem}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystem: value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
+                      <SystemFieldSelect
+                        fieldName="purchasing_system"
+                        label="Purchasing System"
+                        value={signUpForm.purchasingSystem}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystem: value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="housing-management">Housing Management</Label>
-                        <Input
-                          id="housing-management"
-                          placeholder="Housing management system"
-                          value={signUpForm.housingManagement}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, housingManagement: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="learning-management">Learning Management (LMS)</Label>
-                        <Input
-                          id="learning-management"
-                          placeholder="Learning management system"
-                          value={signUpForm.learningManagement}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, learningManagement: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
+                      <SystemFieldSelect
+                        fieldName="housing_management"
+                        label="Housing Management"
+                        value={signUpForm.housingManagement}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagement: value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
+                      <SystemFieldSelect
+                        fieldName="learning_management"
+                        label="Learning Management (LMS)"
+                        value={signUpForm.learningManagement}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagement: value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="admissions-crm">Admissions CRM</Label>
-                        <Input
-                          id="admissions-crm"
-                          placeholder="Admissions CRM system"
-                          value={signUpForm.admissionsCrm}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, admissionsCrm: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="alumni-advancement-crm">Alumni / Advancement CRM</Label>
-                        <Input
-                          id="alumni-advancement-crm"
-                          placeholder="Alumni/Advancement CRM"
-                          value={signUpForm.alumniAdvancementCrm}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: e.target.value }))}
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
+                      <SystemFieldSelect
+                        fieldName="admissions_crm"
+                        label="Admissions CRM"
+                        value={signUpForm.admissionsCrm}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrm: value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
+                      <SystemFieldSelect
+                        fieldName="alumni_advancement_crm"
+                        label="Alumni / Advancement CRM"
+                        value={signUpForm.alumniAdvancementCrm}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
                     </div>
                   </div>
 
