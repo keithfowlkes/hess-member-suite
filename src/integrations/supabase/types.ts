@@ -164,13 +164,20 @@ export type Database = {
         Row: {
           address_line_1: string | null
           address_line_2: string | null
+          admissions_crm: string | null
+          alumni_advancement_crm: string | null
           annual_fee_amount: number | null
           city: string | null
           contact_person_id: string | null
           country: string | null
           created_at: string
           email: string | null
+          financial_aid: string | null
+          financial_system: string | null
+          hcm_hr: string | null
+          housing_management: string | null
           id: string
+          learning_management: string | null
           membership_end_date: string | null
           membership_start_date: string | null
           membership_status:
@@ -178,9 +185,25 @@ export type Database = {
             | null
           name: string
           notes: string | null
+          other_software_comments: string | null
+          payroll_system: string | null
           phone: string | null
+          primary_contact_title: string | null
+          primary_office_apple: boolean | null
+          primary_office_asus: boolean | null
+          primary_office_dell: boolean | null
+          primary_office_hp: boolean | null
+          primary_office_microsoft: boolean | null
+          primary_office_other: boolean | null
+          primary_office_other_details: string | null
+          purchasing_system: string | null
+          secondary_contact_email: string | null
+          secondary_contact_title: string | null
+          secondary_first_name: string | null
+          secondary_last_name: string | null
           state: string | null
           student_fte: number | null
+          student_information_system: string | null
           updated_at: string
           website: string | null
           zip_code: string | null
@@ -188,13 +211,20 @@ export type Database = {
         Insert: {
           address_line_1?: string | null
           address_line_2?: string | null
+          admissions_crm?: string | null
+          alumni_advancement_crm?: string | null
           annual_fee_amount?: number | null
           city?: string | null
           contact_person_id?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
+          financial_aid?: string | null
+          financial_system?: string | null
+          hcm_hr?: string | null
+          housing_management?: string | null
           id?: string
+          learning_management?: string | null
           membership_end_date?: string | null
           membership_start_date?: string | null
           membership_status?:
@@ -202,9 +232,25 @@ export type Database = {
             | null
           name: string
           notes?: string | null
+          other_software_comments?: string | null
+          payroll_system?: string | null
           phone?: string | null
+          primary_contact_title?: string | null
+          primary_office_apple?: boolean | null
+          primary_office_asus?: boolean | null
+          primary_office_dell?: boolean | null
+          primary_office_hp?: boolean | null
+          primary_office_microsoft?: boolean | null
+          primary_office_other?: boolean | null
+          primary_office_other_details?: string | null
+          purchasing_system?: string | null
+          secondary_contact_email?: string | null
+          secondary_contact_title?: string | null
+          secondary_first_name?: string | null
+          secondary_last_name?: string | null
           state?: string | null
           student_fte?: number | null
+          student_information_system?: string | null
           updated_at?: string
           website?: string | null
           zip_code?: string | null
@@ -212,13 +258,20 @@ export type Database = {
         Update: {
           address_line_1?: string | null
           address_line_2?: string | null
+          admissions_crm?: string | null
+          alumni_advancement_crm?: string | null
           annual_fee_amount?: number | null
           city?: string | null
           contact_person_id?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
+          financial_aid?: string | null
+          financial_system?: string | null
+          hcm_hr?: string | null
+          housing_management?: string | null
           id?: string
+          learning_management?: string | null
           membership_end_date?: string | null
           membership_start_date?: string | null
           membership_status?:
@@ -226,9 +279,25 @@ export type Database = {
             | null
           name?: string
           notes?: string | null
+          other_software_comments?: string | null
+          payroll_system?: string | null
           phone?: string | null
+          primary_contact_title?: string | null
+          primary_office_apple?: boolean | null
+          primary_office_asus?: boolean | null
+          primary_office_dell?: boolean | null
+          primary_office_hp?: boolean | null
+          primary_office_microsoft?: boolean | null
+          primary_office_other?: boolean | null
+          primary_office_other_details?: string | null
+          purchasing_system?: string | null
+          secondary_contact_email?: string | null
+          secondary_contact_title?: string | null
+          secondary_first_name?: string | null
+          secondary_last_name?: string | null
           state?: string | null
           student_fte?: number | null
+          student_information_system?: string | null
           updated_at?: string
           website?: string | null
           zip_code?: string | null
@@ -420,6 +489,10 @@ export type Database = {
     }
     Functions: {
       get_user_organization: {
+        Args: { _user_id: string }
+        Returns: string
+      }
+      get_user_organization_by_contact: {
         Args: { _user_id: string }
         Returns: string
       }
