@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 export interface SystemFieldOption {
   id: string;
@@ -66,8 +67,34 @@ export const useSystemFieldValues = () => {
   });
 };
 
-// Get managed system field options (from database table)
+// Get managed system field options (from database table) with real-time updates
 export const useSystemFieldOptions = () => {
+  const queryClient = useQueryClient();
+  
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('system-field-options-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'system_field_options'
+        },
+        (payload) => {
+          console.log('System field options changed:', payload);
+          // Invalidate queries to refresh data
+          queryClient.invalidateQueries({ queryKey: ['system-field-options'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['system-field-options'],
     queryFn: async () => {
