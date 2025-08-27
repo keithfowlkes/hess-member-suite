@@ -42,7 +42,6 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useSettings } from '@/hooks/useSettings';
 import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
 import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
-import { useSystemSetting, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
 
 // Components
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
@@ -69,9 +68,7 @@ import {
   BarChart3,
   KeyRound,
   Lock,
-  Settings as SettingsIcon,
-  Key,
-  Save
+  Settings as SettingsIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -88,8 +85,6 @@ const MasterDashboard = () => {
     rejectOrganization 
   } = useOrganizationApprovals();
   const { invitations, loading: invitationsLoading } = useOrganizationInvitations();
-  const { data: recaptchaSetting } = useSystemSetting('recaptcha_site_key');
-  const updateSystemSetting = useUpdateSystemSetting();
 
   // State management
   const [selectedOrganization, setSelectedOrganization] = useState(null);
@@ -110,9 +105,6 @@ const MasterDashboard = () => {
   // Messages state
   const [passwordResetMessage, setPasswordResetMessage] = useState('');
   const [savingMessage, setSavingMessage] = useState(false);
-  
-  // Security settings state
-  const [recaptchaKey, setRecaptchaKey] = useState('');
 
   // Stats for the overview section
   const mainStats = [
@@ -217,14 +209,6 @@ const MasterDashboard = () => {
     setSavingMessage(false);
   };
 
-  const handleSaveRecaptcha = async () => {
-    await updateSystemSetting.mutateAsync({
-      settingKey: 'recaptcha_site_key',
-      settingValue: recaptchaKey,
-      description: 'Google reCAPTCHA site key for form verification'
-    });
-  };
-
   // Initialize password reset message when settings load
   useEffect(() => {
     const passwordSetting = settings.find(s => s.setting_key === 'password_reset_message');
@@ -232,13 +216,6 @@ const MasterDashboard = () => {
       setPasswordResetMessage(passwordSetting.setting_value);
     }
   }, [settings]);
-
-  // Initialize recaptcha key when settings load
-  useEffect(() => {
-    if (recaptchaSetting?.setting_value) {
-      setRecaptchaKey(recaptchaSetting.setting_value);
-    }
-  }, [recaptchaSetting]);
 
   if (statsLoading || settingsLoading) {
     return (
@@ -379,56 +356,26 @@ const MasterDashboard = () => {
                   {/* Security Settings */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Shield className="w-4 h-4" />
-                        Security Settings
-                      </CardTitle>
+                      <CardTitle>Security Settings</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="recaptcha-key">reCAPTCHA Site Key</Label>
-                        <Input
-                          id="recaptcha-key"
-                          type="text"
-                          placeholder="Enter your Google reCAPTCHA site key"
-                          value={recaptchaKey}
-                          onChange={(e) => setRecaptchaKey(e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Get your key from{' '}
-                          <a 
-                            href="https://www.google.com/recaptcha/admin" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            Google reCAPTCHA Console
-                          </a>
-                        </p>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Row Level Security</p>
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          Enabled
+                        </Badge>
                       </div>
-
-                      <Button 
-                        onClick={handleSaveRecaptcha}
-                        disabled={updateSystemSetting.isPending || !recaptchaKey.trim()}
-                        size="sm"
-                      >
-                        <Save className="w-4 h-4 mr-2" />
-                        {updateSystemSetting.isPending ? 'Saving...' : 'Save reCAPTCHA'}
-                      </Button>
-
-                      <div className="pt-2 border-t">
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <div className="flex justify-between">
-                            <span>Status:</span>
-                            <span className={recaptchaSetting?.setting_value ? 'text-green-600' : 'text-orange-600'}>
-                              {recaptchaSetting?.setting_value ? 'Configured' : 'Not configured'}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>RLS:</span>
-                            <span className="text-green-600">Enabled</span>
-                          </div>
-                        </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Email Verification</p>
+                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                          Disabled (Development)
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">API Access</p>
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          Authenticated Only
+                        </Badge>
                       </div>
                     </CardContent>
                   </Card>
