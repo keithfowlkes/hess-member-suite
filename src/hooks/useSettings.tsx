@@ -241,6 +241,36 @@ export function useSettings() {
 
   const deleteUser = async (userId: string) => {
     try {
+      // First check if user is a contact person for any organization
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('user_id', userId)
+        .single();
+
+      if (userProfile) {
+        const { data: organizations } = await supabase
+          .from('organizations')
+          .select('id, name')
+          .eq('contact_person_id', userProfile.id);
+
+        if (organizations && organizations.length > 0) {
+          // Remove user as contact person from organizations
+          const { error: orgUpdateError } = await supabase
+            .from('organizations')
+            .update({ contact_person_id: null })
+            .eq('contact_person_id', userProfile.id);
+
+          if (orgUpdateError) throw orgUpdateError;
+
+          toast({
+            title: 'Contact removed',
+            description: `User was removed as contact person from ${organizations.length} organization(s)`,
+            variant: 'default'
+          });
+        }
+      }
+
       // Delete user roles first
       await supabase
         .from('user_roles')
@@ -255,16 +285,27 @@ export function useSettings() {
       
       if (error) throw error;
 
+      // Also delete from auth.users table
+      try {
+        const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+        if (authError && !authError.message?.includes('User not found')) {
+          console.warn('Could not delete from auth.users:', authError.message);
+        }
+      } catch (authErr) {
+        console.warn('Auth deletion warning:', authErr);
+      }
+
       toast({
         title: 'Success',
-        description: 'User profile deleted successfully'
+        description: 'User account deleted successfully'
       });
 
       await fetchUsers();
     } catch (error: any) {
+      console.error('Delete user error:', error);
       toast({
         title: 'Error deleting user',
-        description: error.message,
+        description: error.message || 'Failed to delete user account',
         variant: 'destructive'
       });
     }
