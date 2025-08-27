@@ -24,6 +24,8 @@ export interface Organization {
   created_at: string;
   updated_at: string;
   profiles?: {
+    id?: string;
+    user_id?: string;
     first_name: string;
     last_name: string;
     email: string;
@@ -90,7 +92,7 @@ export function useMembers() {
         .select(`
           *,
           profiles:contact_person_id (
-            first_name, last_name, email, phone, organization, state_association,
+            id, user_id, first_name, last_name, email, phone, organization, state_association,
             address, city, state, zip, primary_contact_title,
             secondary_first_name, secondary_last_name, secondary_contact_title,
             secondary_contact_email, student_information_system, financial_system,
@@ -205,12 +207,40 @@ export function useMembers() {
     }
   };
 
-  return {
-    organizations,
-    loading,
-    fetchOrganizations,
-    createOrganization,
-    updateOrganization,
-    markAllOrganizationsActive
+  const deleteOrganization = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Refetch organizations after deletion
+      await fetchOrganizations();
+      
+      toast({
+        title: "Success",
+        description: "Organization deleted successfully.",
+      });
+    } catch (error: any) {
+      console.error('Error deleting organization:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete organization",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
+  return { 
+    organizations, 
+    loading, 
+    fetchOrganizations, 
+    createOrganization, 
+    updateOrganization, 
+    markAllOrganizationsActive,
+    deleteOrganization
   };
 }

@@ -11,6 +11,7 @@ import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Uplo
 import { OrganizationDialog } from '@/components/OrganizationDialog';
 import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
 import { ImportMembersDialog } from '@/components/ImportMembersDialog';
+import { OrganizationViewModal } from '@/components/OrganizationViewModal';
 
 export default function Members() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function Members() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewModalOpen, setViewModalOpen] = useState(false);
 
   const filteredOrganizations = organizations.filter(org =>
     org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -148,7 +150,7 @@ export default function Members() {
                 className="cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => {
                   setSelectedOrganization(organization);
-                  setDialogOpen(true);
+                  setViewModalOpen(true);
                 }}
               >
                 <CardHeader>
@@ -236,7 +238,7 @@ export default function Members() {
                   className="px-6 py-4 hover:bg-muted/30 cursor-pointer transition-colors"
                   onClick={() => {
                     setSelectedOrganization(organization);
-                    setDialogOpen(true);
+                    setViewModalOpen(true);
                   }}
                 >
                   <div className="grid grid-cols-12 gap-4 items-center">
@@ -331,6 +333,15 @@ export default function Members() {
       <ImportMembersDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
+      />
+
+      <OrganizationViewModal
+        organization={selectedOrganization}
+        isOpen={viewModalOpen}
+        onClose={() => {
+          setViewModalOpen(false);
+          setSelectedOrganization(null);
+        }}
       />
         </main>
       </div>
