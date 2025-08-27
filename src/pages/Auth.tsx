@@ -441,10 +441,10 @@ export default function Auth() {
           </TabsContent>
           
           <TabsContent value="signup">
-            <div className="bg-gradient-to-br from-gray-50 to-white rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-auth-form rounded-lg shadow-sm border border-gray-200">
               <div className="p-8 border-b border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">New Member Registration</h2>
-                <p className="text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">New Member Registration</h2>
+                <p className="text-gray-600">
                   Join the HESS Consortium community or request reassignment as primary contact
                 </p>
               </div>
@@ -453,7 +453,7 @@ export default function Auth() {
                   {/* Eligibility Section */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Registration Type</h3>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Registration Type</h3>
                       <p className="text-gray-600 text-sm">Please confirm eligibility and select your registration type.</p>
                     </div>
                     
@@ -516,7 +516,7 @@ export default function Auth() {
                 {/* Account Information */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Account Information</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Account Information</h3>
                     <p className="text-gray-600 text-sm">Your login credentials and contact information.</p>
                   </div>
                   
@@ -565,7 +565,7 @@ export default function Auth() {
                 {/* Institution Information */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Institution Information</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Institution Information</h3>
                     <p className="text-gray-600 text-sm">Details about your college or university.</p>
                   </div>
                   
@@ -741,7 +741,7 @@ export default function Auth() {
                 {/* Secondary Contact */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Secondary Contact</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Secondary Contact</h3>
                     <p className="text-gray-600 text-sm">Optional backup contact information.</p>
                   </div>
                   
@@ -810,7 +810,7 @@ export default function Auth() {
                 {/* Technology Systems */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Technology Systems</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Technology Systems</h3>
                     <p className="text-gray-600 text-sm">Select the systems your institution currently uses.</p>
                   </div>
                   
@@ -948,7 +948,7 @@ export default function Auth() {
                 {/* Hardware & Additional Information */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Hardware & Additional Information</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Hardware & Additional Information</h3>
                     <p className="text-gray-600 text-sm">Information about your computer hardware and any additional details.</p>
                   </div>
                   
@@ -1054,7 +1054,7 @@ export default function Auth() {
                 {/* Security Verification */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Security Verification</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Security Verification</h3>
                     <p className="text-gray-600 text-sm">Complete the verification to submit your registration.</p>
                   </div>
                   
