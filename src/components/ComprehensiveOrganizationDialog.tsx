@@ -260,41 +260,34 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
     try {
       if (organization) {
         console.log('Updating existing organization...');
-        // First update the organization record
-        console.log('Updating organization with data:', orgData);
-        console.log('Organization ID:', organization.id);
         
         const profileData = profileForm.getValues();
         
-        const { data: updatedOrg, error: orgError } = await supabase
-          .from('organizations')
-          .update({
-            name: orgData.name,
-            email: orgData.email || null,
-            phone: orgData.phone || null,
-            website: orgData.website || null,
-            address_line_1: orgData.address_line_1 || null,
-            address_line_2: orgData.address_line_2 || null,
-            city: orgData.city || null,
-            state: orgData.state || null,
-            zip_code: orgData.zip_code || null,
-            country: orgData.country,
-            membership_status: orgData.membership_status,
-            student_fte: profileData.student_fte || null,
-            notes: orgData.notes || null,
-          })
-          .eq('id', organization.id)
-          .select()
-          .single();
+        // Use the updateOrganization hook method instead of direct Supabase calls
+        const orgUpdateData = {
+          name: orgData.name,
+          email: orgData.email || null,
+          phone: orgData.phone || null,
+          website: orgData.website || null,
+          address_line_1: orgData.address_line_1 || null,
+          address_line_2: orgData.address_line_2 || null,
+          city: orgData.city || null,
+          state: orgData.state || null,
+          zip_code: orgData.zip_code || null,
+          country: orgData.country,
+          membership_status: orgData.membership_status,
+          membership_start_date: orgData.membership_start_date?.toISOString().split('T')[0] || null,
+          membership_end_date: orgData.membership_end_date?.toISOString().split('T')[0] || null,
+          student_fte: profileData.student_fte || null,
+          notes: orgData.notes || null,
+        };
 
-        if (orgError) {
-          console.error('Organization update error:', orgError);
-          throw orgError;
-        }
+        console.log('Updating organization with data:', orgUpdateData);
+        
+        // This automatically calls fetchOrganizations() after update
+        await updateOrganization(organization.id, orgUpdateData);
 
-        console.log('Organization updated successfully:', updatedOrg);
-
-        // Then update the profile if it exists (excluding student_fte since it's now in organizations)
+        // Then update the profile if it exists
         if (organization.contact_person_id) {
           const profileUpdateData = {
             first_name: profileData.first_name || '',
@@ -348,26 +341,23 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
 
           console.log('Profile updated successfully, result:', updatedProfile);
           
-          // Refresh the data to show updated Student FTE
-          console.log('Refreshing organizations data...');
+          // Refresh data once more after profile update to ensure UI is current
           await fetchOrganizations();
-          console.log('Data refreshed');
 
           toast({
             title: 'Success',
             description: 'Organization and profile updated successfully'
           });
           
-          // Don't close dialog immediately - wait a bit for UI to update
-          setTimeout(() => {
-            console.log('Closing dialog after delay');
-            onOpenChange(false);
-          }, 500);
-          
         } else {
-          console.log('No profile to update');
-          onOpenChange(false);
+          toast({
+            title: 'Success', 
+            description: 'Organization updated successfully'
+          });
         }
+        
+        // Close dialog immediately since data is already refreshed
+        onOpenChange(false);
       } else {
         // Create new organization
         const createData: CreateOrganizationData = {

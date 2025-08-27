@@ -318,7 +318,13 @@ export default function Members() {
 
       <ComprehensiveOrganizationDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            // Clear selected organization when dialog closes
+            setSelectedOrganization(null);
+          }
+        }}
         organization={selectedOrganization}
       />
 
