@@ -32,15 +32,14 @@ export function AppSidebar() {
     { title: 'Registration Forms', url: '/form-fields', icon: FormInput },
     { title: 'Invoices', url: '/invoices', icon: FileText },
     { title: 'Public Views', url: '/public-views', icon: Eye },
-    { title: 'Profile', url: '/profile', icon: User },
+    { title: 'Organization Profile', url: '/profile', icon: User },
     { title: 'Settings', url: '/settings', icon: Settings },
   ];
 
   const memberItems = [
     { title: 'Dashboard', url: '/', icon: Home },
     { title: 'My Invoices', url: '/invoices', icon: FileText },
-    { title: 'Profile', url: '/profile', icon: User },
-    { title: 'Organization', url: '/organization', icon: Building2 },
+    { title: 'Organization Profile', url: '/profile', icon: User },
   ];
 
   const items = isViewingAsAdmin ? adminItems : memberItems;
