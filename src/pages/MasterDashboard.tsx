@@ -68,7 +68,8 @@ import {
   BarChart3,
   KeyRound,
   Lock,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Search
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -91,6 +92,10 @@ const MasterDashboard = () => {
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showInvitationDialog, setShowInvitationDialog] = useState(false);
   const [showReassignmentDialog, setShowReassignmentDialog] = useState(false);
+  
+  // Search functionality
+  const [organizationSearchTerm, setOrganizationSearchTerm] = useState('');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
   
   // User management state
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
@@ -216,6 +221,27 @@ const MasterDashboard = () => {
       setPasswordResetMessage(passwordSetting.setting_value);
     }
   }, [settings]);
+
+  // Filter functions for search
+  const filteredPendingOrganizations = pendingOrganizations.filter(org => {
+    const searchLower = organizationSearchTerm.toLowerCase();
+    return (
+      org.name.toLowerCase().includes(searchLower) ||
+      org.profiles?.first_name?.toLowerCase().includes(searchLower) ||
+      org.profiles?.last_name?.toLowerCase().includes(searchLower) ||
+      org.profiles?.email?.toLowerCase().includes(searchLower) ||
+      org.city?.toLowerCase().includes(searchLower) ||
+      org.state?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const filteredUsers = users.filter(user => {
+    const searchLower = userSearchTerm.toLowerCase();
+    return (
+      user.email.toLowerCase().includes(searchLower) ||
+      user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower)
+    );
+  });
 
   if (statsLoading || settingsLoading) {
     return (
@@ -432,9 +458,20 @@ const MasterDashboard = () => {
                           </div>
                         )}
                         <Badge variant="secondary" className="text-sm">
-                          {pendingOrganizations.length} pending
+                          {filteredPendingOrganizations.length} of {pendingOrganizations.length} shown
                         </Badge>
                       </div>
+                    </div>
+
+                    {/* Search Bar for Organizations */}
+                    <div className="relative max-w-md">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Search organizations, contacts, or locations..."
+                        value={organizationSearchTerm}
+                        onChange={(e) => setOrganizationSearchTerm(e.target.value)}
+                        className="pl-10 bg-white"
+                      />
                     </div>
 
                     {approvalsLoading ? (
@@ -443,18 +480,22 @@ const MasterDashboard = () => {
                           <div className="text-center">Loading pending organizations...</div>
                         </CardContent>
                       </Card>
-                    ) : pendingOrganizations.length === 0 ? (
+                    ) : filteredPendingOrganizations.length === 0 ? (
                       <Card>
                         <CardContent className="p-6">
                           <div className="text-center text-muted-foreground">
                             <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No pending organization applications.</p>
+                            {organizationSearchTerm ? (
+                              <p>No organizations match your search "{organizationSearchTerm}".</p>
+                            ) : (
+                              <p>No pending organization applications.</p>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
                     ) : (
                       <div className="grid gap-4">
-                        {pendingOrganizations.map((org) => (
+                        {filteredPendingOrganizations.map((org) => (
                           <Card key={org.id} className="hover:shadow-md transition-shadow">
                             <CardContent className="p-6">
                               <div className="flex items-center justify-between">
@@ -558,23 +599,44 @@ const MasterDashboard = () => {
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl font-semibold">User Management</h2>
                       <Badge variant="secondary" className="text-sm">
-                        {users.length} total users
+                        {filteredUsers.length} of {users.length} users shown
                       </Badge>
+                    </div>
+
+                    {/* Search Bar for Users */}
+                    <div className="relative max-w-md">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Search users by email or role..."
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                        className="pl-10 bg-white"
+                      />
                     </div>
 
                     <Card>
                       <CardContent className="p-6">
-                        <Table>
-                           <TableHeader>
-                             <TableRow>
-                               <TableHead>Email</TableHead>
-                               <TableHead>Role</TableHead>
-                               <TableHead>Created</TableHead>
-                               <TableHead className="text-right">Actions</TableHead>
-                             </TableRow>
-                           </TableHeader>
-                          <TableBody>
-                            {users.map((user) => (
+                        {filteredUsers.length === 0 ? (
+                          <div className="text-center text-muted-foreground py-8">
+                            <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            {userSearchTerm ? (
+                              <p>No users match your search "{userSearchTerm}".</p>
+                            ) : (
+                              <p>No users found.</p>
+                            )}
+                          </div>
+                        ) : (
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Role</TableHead>
+                                <TableHead>Created</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {filteredUsers.map((user) => (
                               <TableRow key={user.id}>
                                 <TableCell className="font-medium">{user.email}</TableCell>
                                 <TableCell>
@@ -646,9 +708,10 @@ const MasterDashboard = () => {
                                   </div>
                                 </TableCell>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        )}
                       </CardContent>
                     </Card>
                   </TabsContent>
