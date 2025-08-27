@@ -66,15 +66,15 @@ export default function Auth() {
           disabled={disabled}
           required={required}
         >
-          <SelectTrigger className="h-11 bg-gray-50 border-gray-300">
+          <SelectTrigger className="h-11 bg-white border-gray-300 shadow-sm">
             <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
           </SelectTrigger>
-          <SelectContent className="max-h-60 overflow-y-auto bg-white border border-gray-300 shadow-lg z-50">
-            <SelectItem value="none">
+          <SelectContent className="max-h-60 overflow-y-auto bg-white border border-gray-300 shadow-lg z-[9999] pointer-events-auto">
+            <SelectItem value="none" className="bg-white hover:bg-gray-100">
               <span className="text-gray-500">None specified</span>
             </SelectItem>
             {options.map((option) => (
-              <SelectItem key={option} value={option}>
+              <SelectItem key={option} value={option} className="bg-white hover:bg-gray-100">
                 {option}
               </SelectItem>
             ))}
