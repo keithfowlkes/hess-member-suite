@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { useSystemAnalytics, SystemUsage } from '@/hooks/useSystemAnalytics';
+import { InstitutionsModal } from '@/components/InstitutionsModal';
 import { PieChart as PieChartIcon, TrendingUp, BarChart3 } from 'lucide-react';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff'];
@@ -24,7 +25,18 @@ const SYSTEM_OPTIONS = [
 export function SystemAnalyticsDashboard() {
   const [chartType, setChartType] = useState<'pie' | 'line'>('pie');
   const [selectedSystem, setSelectedSystem] = useState('all');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedSystemField, setSelectedSystemField] = useState<string | null>(null);
+  const [selectedSystemName, setSelectedSystemName] = useState<string | null>(null);
+  const [selectedSystemDisplayName, setSelectedSystemDisplayName] = useState<string | null>(null);
   const { data: analytics, isLoading } = useSystemAnalytics();
+
+  const handleSystemClick = (systemField: string, systemName: string, systemDisplayName: string) => {
+    setSelectedSystemField(systemField);
+    setSelectedSystemName(systemName);
+    setSelectedSystemDisplayName(systemDisplayName);
+    setModalOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -48,6 +60,21 @@ export function SystemAnalyticsDashboard() {
 
   const renderSystemChart = (title: string, data: SystemUsage[], key: string) => {
     if (data.length === 0) return null;
+
+    // Map the key to the actual database field name
+    const systemFieldMap: Record<string, string> = {
+      'studentInformationSystems': 'student_information_system',
+      'financialSystems': 'financial_system',
+      'learningManagementSystems': 'learning_management',
+      'financialAidSystems': 'financial_aid',
+      'hcmSystems': 'hcm_hr',
+      'payrollSystems': 'payroll_system',
+      'housingManagementSystems': 'housing_management',
+      'admissionsCrms': 'admissions_crm',
+      'alumniAdvancementCrms': 'alumni_advancement_crm',
+    };
+
+    const systemField = systemFieldMap[key] || key;
 
     return (
       <Card key={key} className="min-w-[320px] bg-gradient-to-br from-card to-card/50 border-2 hover:shadow-lg transition-all duration-300">
@@ -114,9 +141,13 @@ export function SystemAnalyticsDashboard() {
                     className="w-2 h-2 rounded-full flex-shrink-0" 
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   />
-                  <span className="text-muted-foreground truncate max-w-[120px]" title={item.name}>
+                  <button
+                    onClick={() => handleSystemClick(systemField, item.name, title)}
+                    className="text-muted-foreground hover:text-primary transition-colors truncate max-w-[120px] text-left cursor-pointer"
+                    title={`Click to view institutions using ${item.name}`}
+                  >
                     {item.name}
-                  </span>
+                  </button>
                 </div>
                 <span className="font-medium text-foreground">{item.count}</span>
               </div>
@@ -216,6 +247,14 @@ export function SystemAnalyticsDashboard() {
           </div>
         </div>
       </CardContent>
+      
+      <InstitutionsModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        systemField={selectedSystemField}
+        systemName={selectedSystemName}
+        systemDisplayName={selectedSystemDisplayName}
+      />
     </Card>
   );
 }
