@@ -16,6 +16,7 @@ import PublicDirectory from "./pages/PublicDirectory";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
+import OrganizationProfile from "./pages/OrganizationProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,7 +39,8 @@ const App = () => (
             <Route path="/public/directory" element={<PublicDirectory />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/:profileId" element={<ProfileEdit />} />
+          <Route path="/profile/:profileId" element={<ProfileEdit />} />
+          <Route path="/organization/:profileId" element={<OrganizationProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

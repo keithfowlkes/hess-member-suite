@@ -174,7 +174,7 @@ export default function Members() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/profile/${organization.contact_person_id}`);
+                              navigate(`/organization/${organization.contact_person_id}`);
                             }}
                             className="text-primary hover:text-primary/80 hover:underline font-medium"
                           >
@@ -257,7 +257,7 @@ export default function Members() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/profile/${organization.contact_person_id}`);
+                              navigate(`/organization/${organization.contact_person_id}`);
                             }}
                             className="font-medium text-primary hover:text-primary/80 hover:underline"
                           >
