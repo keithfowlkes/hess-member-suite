@@ -42,13 +42,13 @@ All colors MUST be HSL.
     --radius: 0.75rem;
 
     /* Sidebar colors with custom beige theme */
-    --sidebar-background: 52 27% 73%;
+    --sidebar-background: 54 20% 78%;
     --sidebar-foreground: 216 19% 27%;
     --sidebar-primary: 43 90% 58%;
     --sidebar-primary-foreground: 216 19% 27%;
-    --sidebar-accent: 52 20% 65%;
+    --sidebar-accent: 54 15% 70%;
     --sidebar-accent-foreground: 216 19% 27%;
-    --sidebar-border: 52 15% 60%;
+    --sidebar-border: 54 12% 65%;
     --sidebar-ring: 43 90% 58%;
 
     /* Modern gradients */
@@ -94,13 +94,13 @@ All colors MUST be HSL.
     --input: 216 20% 15%;
     --ring: 43 90% 58%;
     
-    --sidebar-background: 52 27% 73%;
+    --sidebar-background: 54 20% 78%;
     --sidebar-foreground: 216 19% 27%;
     --sidebar-primary: 43 90% 58%;
     --sidebar-primary-foreground: 216 19% 27%;
-    --sidebar-accent: 52 20% 65%;
+    --sidebar-accent: 54 15% 70%;
     --sidebar-accent-foreground: 216 19% 27%;
-    --sidebar-border: 52 15% 60%;
+    --sidebar-border: 54 12% 65%;
     --sidebar-ring: 43 90% 58%;
   }
 }
