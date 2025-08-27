@@ -38,6 +38,7 @@ serve(async (req) => {
 
     // Check API key
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log('Environment variables available:', Object.keys(Deno.env.toObject()));
     console.log('API Key check:', {
       exists: !!openAIApiKey,
       startsWithSk: openAIApiKey?.startsWith('sk-'),
