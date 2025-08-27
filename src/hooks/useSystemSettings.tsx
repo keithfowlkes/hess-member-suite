@@ -30,13 +30,20 @@ export const useSystemSetting = (settingKey: string) => {
   return useQuery({
     queryKey: ['system-setting', settingKey],
     queryFn: async () => {
+      console.log('Fetching system setting:', settingKey);
+      
       const { data, error } = await supabase
         .from('system_settings')
         .select('*')
         .eq('setting_key', settingKey)
         .maybeSingle();
 
-      if (error) throw error;
+      console.log('System setting result:', { data, error, settingKey });
+      
+      if (error) {
+        console.error('System setting error:', error);
+        throw error;
+      }
       return data as SystemSetting | null;
     },
   });
