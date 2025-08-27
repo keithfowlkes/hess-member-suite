@@ -106,12 +106,12 @@ export function SystemAnalyticsDashboard() {
               </ResponsiveContainer>
             )}
           </div>
-          <div className="mt-3 space-y-1">
-            {data.slice(0, 3).map((item, index) => (
+          <div className="mt-3 space-y-1 max-h-32 overflow-y-auto">
+            {data.map((item, index) => (
               <div key={item.name} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <div 
-                    className="w-2 h-2 rounded-full" 
+                    className="w-2 h-2 rounded-full flex-shrink-0" 
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   />
                   <span className="text-muted-foreground truncate max-w-[120px]" title={item.name}>
@@ -121,11 +121,6 @@ export function SystemAnalyticsDashboard() {
                 <span className="font-medium text-foreground">{item.count}</span>
               </div>
             ))}
-            {data.length > 3 && (
-              <div className="text-xs text-muted-foreground text-center pt-1">
-                +{data.length - 3} more systems
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
