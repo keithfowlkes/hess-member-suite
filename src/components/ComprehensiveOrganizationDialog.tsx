@@ -9,6 +9,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   Form,
   FormControl,
   FormField,
@@ -31,7 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useMembers, Organization, CreateOrganizationData } from '@/hooks/useMembers';
-import { CalendarIcon, User, Building2, Mail, Phone, MapPin, Database, Monitor } from 'lucide-react';
+import { CalendarIcon, User, Building2, Mail, Phone, MapPin, Database, Monitor, Trash2, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -42,6 +53,7 @@ import {
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 const organizationSchema = z.object({
   name: z.string().min(2, 'Organization name must be at least 2 characters'),
@@ -107,9 +119,29 @@ interface OrganizationDialogProps {
 }
 
 export function ComprehensiveOrganizationDialog({ open, onOpenChange, organization }: OrganizationDialogProps) {
-  const { createOrganization, updateOrganization, fetchOrganizations } = useMembers();
+  const { createOrganization, updateOrganization, fetchOrganizations, deleteOrganization } = useMembers();
+  const { isAdmin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  const handleDelete = async () => {
+    if (!organization) return;
+    
+    try {
+      await deleteOrganization(organization.id);
+      onOpenChange(false);
+      toast({
+        title: "Organization Deleted",
+        description: "Organization has been removed from membership.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete organization",
+        variant: "destructive"
+      });
+    }
+  };
 
   const orgForm = useForm<OrganizationFormData>({
     resolver: zodResolver(organizationSchema),
@@ -1007,13 +1039,48 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           )}
         </Tabs>
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={onSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : organization ? 'Update' : 'Create'}
-          </Button>
+        <div className="flex justify-between gap-2 pt-4 border-t">
+          <div>
+            {organization && isAdmin && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete Organization
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-destructive" />
+                      <AlertDialogTitle>Delete Organization</AlertDialogTitle>
+                    </div>
+                    <AlertDialogDescription>
+                      Are you sure you want to remove "{organization.name}" from organizational membership? 
+                      This action cannot be undone and will permanently delete all organization data.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete Organization
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={onSubmit} disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : organization ? 'Update' : 'Create'}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

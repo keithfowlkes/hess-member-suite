@@ -180,37 +180,6 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                       <Edit3 className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
-                    {isAdmin && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="destructive">
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <div className="flex items-center gap-2">
-                              <AlertTriangle className="h-5 w-5 text-destructive" />
-                              <AlertDialogTitle>Delete Organization</AlertDialogTitle>
-                            </div>
-                            <AlertDialogDescription>
-                              Are you sure you want to remove "{organization.name}" from organizational membership? 
-                              This action cannot be undone and will permanently delete all organization data.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={handleDelete}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Delete Organization
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    )}
                   </>
                 )}
               </div>
