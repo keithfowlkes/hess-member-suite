@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Plus, Search, BarChart3, Edit, Trash2, Eye, Calendar, User } from 'lucide-react';
 import { useDashboards, useDeleteDashboard } from '@/hooks/useDashboards';
 import { DashboardBuilder } from '@/components/DashboardBuilder';
+import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
 import { format } from 'date-fns';
 import {
   AlertDialog,
@@ -67,6 +68,9 @@ export default function Dashboards() {
         <AppSidebar />
         <main className="flex-1 p-8">
           <div className="space-y-6">
+            {/* System Analytics Dashboard */}
+            <SystemAnalyticsDashboard />
+            
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Dashboards</h1>
