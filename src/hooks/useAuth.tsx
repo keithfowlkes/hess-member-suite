@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         
         if (!mounted) return;
@@ -37,33 +37,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Check admin role asynchronously to prevent deadlock
         if (session?.user) {
-          // Check if user is admin
-          try {
-            const { data } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', session.user.id)
-              .eq('role', 'admin')
-              .single();
+          setTimeout(async () => {
+            if (!mounted) return;
             
-            if (mounted) {
-              setIsAdmin(!!data);
-              setLoading(false); // Set loading false after admin check completes
+            try {
+              const { data } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', session.user.id)
+                .eq('role', 'admin')
+                .single();
+              
+              if (mounted) {
+                setIsAdmin(!!data);
+              }
+            } catch (error) {
+              console.error('Error checking admin role:', error);
+              if (mounted) {
+                setIsAdmin(false);
+              }
             }
-          } catch (error) {
-            console.error('Error checking admin role:', error);
-            if (mounted) {
-              setIsAdmin(false);
-              setLoading(false);
-            }
-          }
+          }, 0);
         } else {
           if (mounted) {
             setIsAdmin(false);
             setViewMode('admin'); // Reset view mode on sign out
-            setLoading(false);
           }
+        }
+        
+        // Always set loading to false after processing session
+        if (mounted) {
+          setLoading(false);
         }
       }
     );
