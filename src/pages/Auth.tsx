@@ -27,6 +27,8 @@ export default function Auth() {
   const [signUpCaptcha, setSignUpCaptcha] = useState<string | null>(null);
   const [isReassignment, setIsReassignment] = useState(false);
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<string>('');
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
   const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
   
@@ -188,6 +190,32 @@ export default function Auth() {
         description: "You have been signed in successfully.",
       });
     }
+    setIsSubmitting(false);
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/auth?reset=true`
+    });
+    
+    if (error) {
+      toast({
+        title: "Password reset failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Reset email sent",
+        description: "Please check your email for password reset instructions.",
+      });
+      setShowPasswordReset(false);
+      setResetEmail('');
+    }
+    
     setIsSubmitting(false);
   };
 
@@ -389,54 +417,109 @@ export default function Auth() {
           <TabsContent value="signin">
             <div className="bg-auth-form rounded-lg shadow-sm p-8">
               <div className="border-b border-gray-200 pb-4 mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Sign In</h2>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {showPasswordReset ? 'Reset Password' : 'Sign In'}
+                </h2>
                 <p className="text-gray-600 mt-1">
-                  Sign in to your HESS Consortium account
+                  {showPasswordReset 
+                    ? 'Enter your email to receive password reset instructions'
+                    : 'Sign in to your HESS Consortium account'
+                  }
                 </p>
               </div>
-              <form onSubmit={handleSignIn} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {showPasswordReset ? (
+                <form onSubmit={handlePasswordReset} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email" className="text-gray-700 font-medium">
+                    <Label htmlFor="reset-email" className="text-gray-700 font-medium">
                       Email <span className="text-red-500">*</span>
                     </Label>
                     <Input
-                      id="signin-email"
+                      id="reset-email"
                       type="email"
                       placeholder="Enter your email"
-                      value={signInForm.email}
-                      onChange={(e) => setSignInForm(prev => ({ ...prev, email: e.target.value }))}
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
                       className="bg-gray-50 border-gray-300"
                       required
                     />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => {
+                        setShowPasswordReset(false);
+                        setResetEmail('');
+                      }}
+                      disabled={isSubmitting}
+                    >
+                      Back to Sign In
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      className="flex-1 bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground" 
+                      disabled={isSubmitting || !resetEmail}
+                    >
+                      {isSubmitting ? 'Sending...' : 'Send Reset Email'}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleSignIn} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-email" className="text-gray-700 font-medium">
+                        Email <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="signin-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={signInForm.email}
+                        onChange={(e) => setSignInForm(prev => ({ ...prev, email: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-password" className="text-gray-700 font-medium">
+                        Password <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="signin-password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={signInForm.password}
+                        onChange={(e) => setSignInForm(prev => ({ ...prev, password: e.target.value }))}
+                        className="bg-gray-50 border-gray-300"
+                        required
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password" className="text-gray-700 font-medium">
-                      Password <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={signInForm.password}
-                      onChange={(e) => setSignInForm(prev => ({ ...prev, password: e.target.value }))}
-                      className="bg-gray-50 border-gray-300"
-                      required
+                    <Label className="text-gray-700 font-medium">Security Verification</Label>
+                    <ReCAPTCHA
+                      ref={signInCaptchaRef}
+                      sitekey={recaptchaSiteKey}
+                      onChange={setSignInCaptcha}
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium">Security Verification</Label>
-                  <ReCAPTCHA
-                    ref={signInCaptchaRef}
-                    sitekey={recaptchaSiteKey}
-                    onChange={setSignInCaptcha}
-                  />
-                </div>
-                <Button type="submit" className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" disabled={isSubmitting || !signInCaptcha}>
-                  {isSubmitting ? 'Signing in...' : 'Sign In'}
-                </Button>
-              </form>
+                  <Button type="submit" className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" disabled={isSubmitting || !signInCaptcha}>
+                    {isSubmitting ? 'Signing in...' : 'Sign In'}
+                  </Button>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordReset(true)}
+                      className="text-primary hover:text-primary/80 text-sm underline"
+                    >
+                      Forgot your password?
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </TabsContent>
           
