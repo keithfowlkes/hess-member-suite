@@ -36,7 +36,10 @@ import {
   Search,
   Building2,
   ChevronDown,
-  CheckCircle
+  CheckCircle,
+  Mail,
+  Printer,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -90,6 +93,10 @@ export default function MembershipFees() {
     emailId?: string;
   } | null>(null);
 
+  // Overdue modal states
+  const [overdueModalOpen, setOverdueModalOpen] = useState(false);
+  const [sendingReminders, setSendingReminders] = useState<Set<string>>(new Set());
+
   // Setup default invoice template with HESS logo on component mount
   React.useEffect(() => {
     setupDefaultInvoiceTemplate();
@@ -137,7 +144,10 @@ export default function MembershipFees() {
       if (!org.membership_end_date) return false;
       return new Date(org.membership_end_date) < new Date() && org.membership_status !== 'active';
     }).length;
-    const averageFee = total > 0 ? totalRevenue / total : 0;
+    
+    // Calculate average fee only for organizations with fee amounts set
+    const orgsWithFees = organizations.filter(org => org.annual_fee_amount && org.annual_fee_amount > 0);
+    const averageFee = orgsWithFees.length > 0 ? totalRevenue / orgsWithFees.length : 0;
 
     return {
       totalOrganizations: total,
@@ -150,6 +160,21 @@ export default function MembershipFees() {
   };
 
   const stats = calculateStats();
+
+  // Get overdue organizations
+  const overdueOrganizations = organizations.filter(org => {
+    if (!org.membership_end_date) return false;
+    return new Date(org.membership_end_date) < new Date() && org.membership_status !== 'active';
+  });
+
+  // Get organizations with their payment status
+  const getPaymentStatus = (organizationId: string) => {
+    const orgInvoices = invoices.filter(inv => inv.organization_id === organizationId);
+    if (orgInvoices.length === 0) return 'pending';
+    
+    const latestInvoice = orgInvoices.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+    return latestInvoice.status === 'paid' ? 'paid' : 'pending';
+  };
 
   // Filter invoices for search
   const filteredInvoices = invoices.filter(invoice =>
@@ -484,6 +509,109 @@ export default function MembershipFees() {
     }
   };
 
+  // Send overdue reminder
+  const handleSendOverdueReminder = async (organization: any) => {
+    setSendingReminders(prev => new Set([...prev, organization.id]));
+    
+    try {
+      // Find the latest invoice for this organization
+      const orgInvoices = invoices.filter(inv => inv.organization_id === organization.id);
+      const latestInvoice = orgInvoices.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+
+      const { data, error } = await supabase.functions.invoke('organization-emails', {
+        body: {
+          type: 'overdue_reminder',
+          to: organization.email,
+          organizationName: organization.name,
+          invoiceData: latestInvoice ? {
+            invoice_number: latestInvoice.invoice_number,
+            amount: latestInvoice.amount,
+            due_date: latestInvoice.due_date
+          } : null
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Reminder sent',
+        description: `Overdue payment reminder sent to ${organization.name}`,
+      });
+    } catch (error: any) {
+      console.error('Error sending reminder:', error);
+      toast({
+        title: 'Failed to send reminder',
+        description: error.message || 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSendingReminders(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(organization.id);
+        return newSet;
+      });
+    }
+  };
+
+  // Print overdue list
+  const handlePrintOverdueList = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Overdue Organizations Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+            th { background-color: #f5f5f5; font-weight: bold; }
+            .overdue { color: #dc2626; font-weight: bold; }
+            .footer { margin-top: 30px; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <h1>Overdue Organizations Report</h1>
+          <p>Generated on: ${format(new Date(), 'PPP')}</p>
+          <p>Total overdue organizations: ${overdueOrganizations.length}</p>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Organization Name</th>
+                <th>Email</th>
+                <th>Membership End Date</th>
+                <th>Annual Fee</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${overdueOrganizations.map(org => `
+                <tr>
+                  <td>${org.name}</td>
+                  <td>${org.email || 'N/A'}</td>
+                  <td class="overdue">${org.membership_end_date ? format(new Date(org.membership_end_date), 'MMM dd, yyyy') : 'N/A'}</td>
+                  <td>$${org.annual_fee_amount?.toLocaleString() || '0'}</td>
+                  <td class="overdue">${org.membership_status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="footer">
+            <p>HESS Consortium - Membership Fee Management System</p>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
   const generatePDFReport = () => {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.width;
@@ -666,7 +794,10 @@ export default function MembershipFees() {
               </Card>
               
               {/* Overdue Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-red-50 via-white to-rose-50 border-red-100/50 hover:shadow-md hover:shadow-red-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card 
+                className="relative overflow-hidden bg-gradient-to-br from-red-50 via-white to-rose-50 border-red-100/50 hover:shadow-md hover:shadow-red-100/20 transition-all duration-300 hover:scale-105 group cursor-pointer"
+                onClick={() => setOverdueModalOpen(true)}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-500/10"></div>
                 <CardContent className="relative p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -674,7 +805,7 @@ export default function MembershipFees() {
                       <FileText className="h-4 w-4 text-white" />
                     </div>
                     <div className="text-xs font-medium text-red-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      Needs Action
+                      Click to View
                     </div>
                   </div>
                   <div>
@@ -980,26 +1111,42 @@ export default function MembershipFees() {
                     </div>
                     
                     <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-4">
+                      <div className="grid grid-cols-12 gap-2 p-2 font-medium text-sm text-muted-foreground border-b">
+                        <div className="col-span-1"></div>
+                        <div className="col-span-4">Organization</div>
+                        <div className="col-span-2">Status</div>
+                        <div className="col-span-2">Fee</div>
+                        <div className="col-span-3">Payment Status</div>
+                      </div>
                       {organizations.map((org) => (
-                        <div key={org.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`org-${org.id}`}
-                            checked={selectedOrganizations.has(org.id)}
-                            onCheckedChange={(checked) => handleSelectOrganization(org.id, checked as boolean)}
-                          />
-                          <Label htmlFor={`org-${org.id}`} className="text-sm flex-1">
-                            <div className="flex justify-between items-center">
-                              <span>{org.name}</span>
-                              <div className="flex items-center space-x-2">
-                                <Badge className={getStatusColor(org.membership_status)}>
-                                  {org.membership_status}
-                                </Badge>
-                                <span className="text-muted-foreground">
-                                  ${org.annual_fee_amount || 1000}
-                                </span>
-                              </div>
-                            </div>
-                          </Label>
+                        <div key={org.id} className="grid grid-cols-12 gap-2 items-center p-2 hover:bg-gray-50 rounded">
+                          <div className="col-span-1">
+                            <Checkbox
+                              id={`org-${org.id}`}
+                              checked={selectedOrganizations.has(org.id)}
+                              onCheckedChange={(checked) => handleSelectOrganization(org.id, checked as boolean)}
+                            />
+                          </div>
+                          <div className="col-span-4">
+                            <Label htmlFor={`org-${org.id}`} className="text-sm cursor-pointer">
+                              {org.name}
+                            </Label>
+                          </div>
+                          <div className="col-span-2">
+                            <Badge className={getStatusColor(org.membership_status)}>
+                              {org.membership_status}
+                            </Badge>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-sm">
+                              ${org.annual_fee_amount?.toLocaleString() || '1,000'}
+                            </span>
+                          </div>
+                          <div className="col-span-3">
+                            <Badge className={getStatusColor(getPaymentStatus(org.id))}>
+                              {getPaymentStatus(org.id)}
+                            </Badge>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1147,6 +1294,106 @@ export default function MembershipFees() {
                   >
                     Close
                   </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Overdue Organizations Modal */}
+          {overdueModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
+              <div className="bg-white rounded-lg shadow-lg w-[90vw] max-w-4xl max-h-[80vh] overflow-hidden">
+                <div className="flex items-center justify-between p-6 border-b">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-red-600" />
+                    <h2 className="text-xl font-semibold">Overdue Organizations ({overdueOrganizations.length})</h2>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrintOverdueList}
+                    >
+                      <Printer className="h-4 w-4 mr-2" />
+                      Print List
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setOverdueModalOpen(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="p-6 overflow-y-auto max-h-[60vh]">
+                  {overdueOrganizations.length === 0 ? (
+                    <div className="text-center py-8">
+                      <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-green-700">No overdue organizations!</h3>
+                      <p className="text-muted-foreground">All organizations are up to date with their memberships.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {overdueOrganizations.map((org) => (
+                        <Card key={org.id} className="border-red-100">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="font-semibold text-lg">{org.name}</h3>
+                                  <Badge className="bg-red-100 text-red-700 border-red-200">
+                                    OVERDUE
+                                  </Badge>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                                  <div>
+                                    <strong>Email:</strong> {org.email || 'N/A'}
+                                  </div>
+                                  <div>
+                                    <strong>Annual Fee:</strong> ${org.annual_fee_amount?.toLocaleString() || '0'}
+                                  </div>
+                                  <div>
+                                    <strong>Membership End:</strong>{' '}
+                                    <span className="text-red-600 font-medium">
+                                      {org.membership_end_date ? format(new Date(org.membership_end_date), 'MMM dd, yyyy') : 'N/A'}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <strong>Status:</strong>{' '}
+                                    <span className="text-red-600 font-medium capitalize">
+                                      {org.membership_status}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="flex flex-col gap-2 ml-4">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleSendOverdueReminder(org)}
+                                  disabled={sendingReminders.has(org.id) || !org.email}
+                                >
+                                  {sendingReminders.has(org.id) ? (
+                                    "Sending..."
+                                  ) : (
+                                    <>
+                                      <Mail className="h-4 w-4 mr-2" />
+                                      Send Reminder
+                                    </>
+                                  )}
+                                </Button>
+                                {!org.email && (
+                                  <p className="text-xs text-red-600">No email address</p>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
