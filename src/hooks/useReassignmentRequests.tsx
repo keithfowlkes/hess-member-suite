@@ -128,6 +128,9 @@ export const useCreateReassignmentRequest = () => {
       new_contact_email: string;
       new_organization_data: any;
     }) => {
+      console.log('Creating reassignment request with data:', data);
+      console.log('Current user auth state:', await supabase.auth.getUser());
+      
       const { data: result, error } = await supabase
         .from('organization_reassignment_requests')
         .insert({
@@ -140,6 +143,9 @@ export const useCreateReassignmentRequest = () => {
         .select()
         .single();
 
+      console.log('Insert result:', result);
+      console.log('Insert error:', error);
+      
       if (error) throw error;
       return result;
     },
