@@ -698,39 +698,103 @@ const MasterDashboard = () => {
                                     </div>
                                   </div>
 
-                                  {/* New Organization Data */}
-                                  {request.new_organization_data && (
-                                    <div className="space-y-2 mb-4">
-                                      <h4 className="font-medium text-sm">Updated Organization Information</h4>
-                                      <div className="bg-muted/30 rounded-md p-4 space-y-3 text-sm">
-                                        {Object.entries(request.new_organization_data as Record<string, any>)
-                                          .filter(([key, value]) => value !== null && value !== undefined && value !== '')
-                                          .map(([key, value]) => {
-                                            const displayKey = key
-                                              .replace(/_/g, ' ')
-                                              .replace(/\b\w/g, l => l.toUpperCase());
-                                            
-                                            let displayValue = value;
-                                            if (typeof value === 'boolean') {
-                                              displayValue = value ? 'Yes' : 'No';
-                                            } else if (Array.isArray(value)) {
-                                              displayValue = value.join(', ');
-                                            } else if (typeof value === 'object') {
-                                              displayValue = JSON.stringify(value, null, 2);
-                                            }
-                                            
-                                            return (
-                                              <div key={key} className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50 last:border-0">
-                                                <span className="font-medium text-foreground col-span-1">{displayKey}:</span>
-                                                <span className="text-muted-foreground col-span-2 break-words">
-                                                  {String(displayValue)}
-                                                </span>
-                                              </div>
-                                            );
-                                          })}
-                                      </div>
-                                    </div>
-                                  )}
+                                   {/* Organization Information Comparison */}
+                                   {request.new_organization_data && (
+                                     <div className="space-y-4 mb-4">
+                                       <h4 className="font-medium text-sm">Organization Information Comparison</h4>
+                                       
+                                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                         {/* Current Organization Information */}
+                                         <div className="space-y-2">
+                                           <h5 className="font-medium text-xs text-muted-foreground uppercase tracking-wider">Current Information</h5>
+                                           <div className="bg-muted/20 rounded-md p-3 space-y-2 text-sm">
+                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30 last:border-0">
+                                               <span className="font-medium text-foreground">Organization:</span>
+                                               <span className="text-muted-foreground break-words">
+                                                 {request.organizations?.name || 'Not set'}
+                                               </span>
+                                             </div>
+                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30 last:border-0">
+                                               <span className="font-medium text-foreground">Contact:</span>
+                                               <span className="text-muted-foreground break-words">
+                                                 {request.organizations?.profiles?.first_name && request.organizations?.profiles?.last_name
+                                                   ? `${request.organizations.profiles.first_name} ${request.organizations.profiles.last_name}`
+                                                   : 'Not set'
+                                                 }
+                                               </span>
+                                             </div>
+                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30 last:border-0">
+                                               <span className="font-medium text-foreground">Email:</span>
+                                               <span className="text-muted-foreground break-words">
+                                                 {request.organizations?.profiles?.email || 'Not set'}
+                                               </span>
+                                             </div>
+                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30 last:border-0">
+                                               <span className="font-medium text-foreground">Location:</span>
+                                               <span className="text-muted-foreground break-words">
+                                                 {(request.organizations as any)?.city && (request.organizations as any)?.state
+                                                   ? `${(request.organizations as any).city}, ${(request.organizations as any).state}`
+                                                   : 'Not set'
+                                                 }
+                                               </span>
+                                             </div>
+                                             <div className="grid grid-cols-2 gap-2 py-1">
+                                               <span className="font-medium text-foreground">Student FTE:</span>
+                                               <span className="text-muted-foreground break-words">
+                                                 {(request.organizations as any)?.student_fte?.toLocaleString() || 'Not set'}
+                                               </span>
+                                             </div>
+                                           </div>
+                                         </div>
+
+                                         {/* Updated Organization Information */}
+                                         <div className="space-y-2">
+                                           <h5 className="font-medium text-xs text-muted-foreground uppercase tracking-wider">Updated Information</h5>
+                                           <div className="bg-blue-50/50 border border-blue-200/50 rounded-md p-3 space-y-2 text-sm">
+                                             {Object.entries(request.new_organization_data as Record<string, any>)
+                                               .filter(([key, value]) => value !== null && value !== undefined && value !== '')
+                                               .map(([key, value]) => {
+                                                 const displayKey = key
+                                                   .replace(/_/g, ' ')
+                                                   .replace(/\b\w/g, l => l.toUpperCase());
+                                                 
+                                                 let displayValue = value;
+                                                 if (typeof value === 'boolean') {
+                                                   displayValue = value ? 'Yes' : 'No';
+                                                 } else if (Array.isArray(value)) {
+                                                   displayValue = value.join(', ');
+                                                 } else if (typeof value === 'object') {
+                                                   displayValue = JSON.stringify(value, null, 2);
+                                                 }
+                                                 
+                                                 return (
+                                                   <div key={key} className="grid grid-cols-2 gap-2 py-1 border-b border-blue-200/30 last:border-0">
+                                                     <span className="font-medium text-foreground">{displayKey}:</span>
+                                                     <span className="text-muted-foreground break-words">
+                                                       {String(displayValue)}
+                                                     </span>
+                                                   </div>
+                                                 );
+                                               })}
+                                           </div>
+                                         </div>
+                                       </div>
+                                       
+                                       {/* Summary Note */}
+                                       <div className="bg-amber-50/50 border border-amber-200 rounded-md p-3">
+                                         <div className="flex items-start gap-2">
+                                           <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                                           <div className="text-sm">
+                                             <p className="font-medium text-amber-800">Approval Impact</p>
+                                             <p className="text-amber-700 mt-1">
+                                               Approving this request will completely replace all current organization information with the updated data shown above.
+                                               The current contact will lose access and the new contact will become the primary administrator.
+                                             </p>
+                                           </div>
+                                         </div>
+                                       </div>
+                                     </div>
+                                   )}
 
                                   {/* Actions */}
                                   {request.status === 'pending' && (
