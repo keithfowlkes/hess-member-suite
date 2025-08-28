@@ -703,308 +703,106 @@ const MasterDashboard = () => {
                                      <div className="space-y-4 mb-4">
                                        <h4 className="font-medium text-sm">Organization Information Comparison</h4>
                                        
-                                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                         {/* Current Organization Information */}
-                                         <div className="space-y-2">
-                                           <h5 className="font-medium text-xs text-muted-foreground uppercase tracking-wider">Current Information</h5>
-                                           <div className="bg-muted/20 rounded-md p-3 space-y-2 text-sm">
-                                             {/* Organization Details */}
-                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                               <span className="font-medium text-foreground">Name:</span>
-                                               <span className="text-muted-foreground break-words">
-                                                 {request.organizations?.name || 'Not set'}
-                                               </span>
-                                             </div>
-                                             
-                                             {/* Address Information */}
-                                             {((request.organizations as any)?.address_line_1 || (request.organizations as any)?.city || (request.organizations as any)?.state) && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Address Line 1:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any)?.address_line_1 || 'Not set'}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.address_line_2 && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Address Line 2:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).address_line_2}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                               <span className="font-medium text-foreground">City:</span>
-                                               <span className="text-muted-foreground break-words">
-                                                 {(request.organizations as any)?.city || 'Not set'}
-                                               </span>
-                                             </div>
-                                             
-                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                               <span className="font-medium text-foreground">State:</span>
-                                               <span className="text-muted-foreground break-words">
-                                                 {(request.organizations as any)?.state || 'Not set'}
-                                               </span>
-                                             </div>
-                                             
-                                             {(request.organizations as any)?.zip_code && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Zip Code:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).zip_code}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {/* Contact Information */}
-                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                               <span className="font-medium text-foreground">Primary Contact:</span>
-                                               <span className="text-muted-foreground break-words">
-                                                 {request.organizations?.profiles?.first_name && request.organizations?.profiles?.last_name
-                                                   ? `${request.organizations.profiles.first_name} ${request.organizations.profiles.last_name}`
-                                                   : 'Not set'
-                                                 }
-                                               </span>
-                                             </div>
-                                             
-                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                               <span className="font-medium text-foreground">Primary Contact Email:</span>
-                                               <span className="text-muted-foreground break-words">
-                                                 {request.organizations?.profiles?.email || 'Not set'}
-                                               </span>
-                                             </div>
-                                             
-                                             {(request.organizations as any)?.primary_contact_title && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Primary Contact Title:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).primary_contact_title}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.phone && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Phone:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).phone}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.email && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Organization Email:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).email}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.website && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Website:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).website}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {/* Secondary Contact */}
-                                             {((request.organizations as any)?.secondary_first_name || (request.organizations as any)?.secondary_last_name) && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Secondary Contact:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {`${(request.organizations as any)?.secondary_first_name || ''} ${(request.organizations as any)?.secondary_last_name || ''}`.trim() || 'Not set'}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.secondary_contact_email && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Secondary Contact Email:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).secondary_contact_email}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.secondary_contact_title && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Secondary Contact Title:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).secondary_contact_title}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {/* Organization Details */}
-                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                               <span className="font-medium text-foreground">Student FTE:</span>
-                                               <span className="text-muted-foreground break-words">
-                                                 {(request.organizations as any)?.student_fte?.toLocaleString() || 'Not set'}
-                                               </span>
-                                             </div>
-                                             
-                                             {(request.organizations as any)?.membership_status && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Membership Status:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).membership_status}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {/* Software Systems */}
-                                             {(request.organizations as any)?.student_information_system && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Student Information System:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).student_information_system}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.financial_system && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Financial System:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).financial_system}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.financial_aid && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Financial Aid:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).financial_aid}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.learning_management && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Learning Management:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).learning_management}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.hcm_hr && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">HCM HR:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).hcm_hr}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.payroll_system && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Payroll System:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).payroll_system}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.purchasing_system && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Purchasing System:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).purchasing_system}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.housing_management && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Housing Management:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).housing_management}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.admissions_crm && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Admissions CRM:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).admissions_crm}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.alumni_advancement_crm && (
-                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
-                                                 <span className="font-medium text-foreground">Alumni Advancement CRM:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).alumni_advancement_crm}
-                                                 </span>
-                                               </div>
-                                             )}
-                                             
-                                             {(request.organizations as any)?.notes && (
-                                               <div className="grid grid-cols-2 gap-2 py-1">
-                                                 <span className="font-medium text-foreground">Notes:</span>
-                                                 <span className="text-muted-foreground break-words">
-                                                   {(request.organizations as any).notes}
-                                                 </span>
-                                               </div>
-                                             )}
+                                       {(() => {
+                                         const currentOrg = request.organizations as any;
+                                         const newOrgData = request.new_organization_data as Record<string, any>;
+                                         
+                                         // Define field mappings for consistent display
+                                         const fieldMappings = [
+                                           { key: 'name', label: 'Organization Name', current: currentOrg?.name, new: newOrgData?.name },
+                                           { 
+                                             key: 'address', 
+                                             label: 'Address', 
+                                             current: [currentOrg?.address_line_1, currentOrg?.address_line_2].filter(Boolean).join(', '),
+                                             new: [newOrgData?.address_line_1, newOrgData?.address_line_2].filter(Boolean).join(', ')
+                                           },
+                                           { key: 'city', label: 'City', current: currentOrg?.city, new: newOrgData?.city },
+                                           { key: 'state', label: 'State', current: currentOrg?.state, new: newOrgData?.state },
+                                           { key: 'zip_code', label: 'ZIP Code', current: currentOrg?.zip_code, new: newOrgData?.zip_code },
+                                           { key: 'country', label: 'Country', current: currentOrg?.country, new: newOrgData?.country },
+                                           { 
+                                             key: 'primary_contact', 
+                                             label: 'Primary Contact', 
+                                             current: currentOrg?.contact_person_id && currentOrg?.profiles
+                                               ? `${currentOrg.profiles.first_name} ${currentOrg.profiles.last_name}` 
+                                               : 'Not set',
+                                             new: newOrgData?.primary_contact_name || 'Not specified'
+                                           },
+                                           { key: 'primary_contact_title', label: 'Primary Contact Title', current: currentOrg?.primary_contact_title, new: newOrgData?.primary_contact_title },
+                                           { key: 'phone', label: 'Phone', current: currentOrg?.phone, new: newOrgData?.phone },
+                                           { key: 'email', label: 'Email', current: currentOrg?.email, new: newOrgData?.email },
+                                           { key: 'website', label: 'Website', current: currentOrg?.website, new: newOrgData?.website },
+                                           { 
+                                             key: 'secondary_contact', 
+                                             label: 'Secondary Contact', 
+                                             current: `${currentOrg?.secondary_first_name || ''} ${currentOrg?.secondary_last_name || ''}`.trim() || 'Not set',
+                                             new: `${newOrgData?.secondary_first_name || ''} ${newOrgData?.secondary_last_name || ''}`.trim() || 'Not set'
+                                           },
+                                           { key: 'secondary_contact_email', label: 'Secondary Contact Email', current: currentOrg?.secondary_contact_email, new: newOrgData?.secondary_contact_email },
+                                           { key: 'secondary_contact_title', label: 'Secondary Contact Title', current: currentOrg?.secondary_contact_title, new: newOrgData?.secondary_contact_title },
+                                           { key: 'student_fte', label: 'Student FTE', current: currentOrg?.student_fte?.toLocaleString(), new: newOrgData?.student_fte?.toLocaleString() },
+                                           { key: 'membership_status', label: 'Membership Status', current: currentOrg?.membership_status, new: newOrgData?.membership_status },
+                                           { key: 'student_information_system', label: 'Student Information System', current: currentOrg?.student_information_system, new: newOrgData?.student_information_system },
+                                           { key: 'financial_system', label: 'Financial System', current: currentOrg?.financial_system, new: newOrgData?.financial_system },
+                                           { key: 'financial_aid', label: 'Financial Aid', current: currentOrg?.financial_aid, new: newOrgData?.financial_aid },
+                                           { key: 'learning_management', label: 'Learning Management', current: currentOrg?.learning_management, new: newOrgData?.learning_management },
+                                           { key: 'hcm_hr', label: 'HCM HR', current: currentOrg?.hcm_hr, new: newOrgData?.hcm_hr },
+                                           { key: 'payroll_system', label: 'Payroll System', current: currentOrg?.payroll_system, new: newOrgData?.payroll_system },
+                                           { key: 'purchasing_system', label: 'Purchasing System', current: currentOrg?.purchasing_system, new: newOrgData?.purchasing_system },
+                                           { key: 'housing_management', label: 'Housing Management', current: currentOrg?.housing_management, new: newOrgData?.housing_management },
+                                           { key: 'admissions_crm', label: 'Admissions CRM', current: currentOrg?.admissions_crm, new: newOrgData?.admissions_crm },
+                                           { key: 'alumni_advancement_crm', label: 'Alumni Advancement CRM', current: currentOrg?.alumni_advancement_crm, new: newOrgData?.alumni_advancement_crm },
+                                           { key: 'notes', label: 'Notes', current: currentOrg?.notes, new: newOrgData?.notes }
+                                         ];
+                                         
+                                         // Filter to show only fields that have values or changes
+                                         const relevantFields = fieldMappings.filter(field => 
+                                           field.current || field.new
+                                         );
+                                         
+                                         return (
+                                           <div className="border border-border rounded-lg overflow-hidden">
+                                             <Table>
+                                               <TableHeader>
+                                                 <TableRow className="bg-muted/50">
+                                                   <TableHead className="font-semibold">Field</TableHead>
+                                                   <TableHead className="font-semibold">Current Value</TableHead>
+                                                   <TableHead className="font-semibold">Updated Value</TableHead>
+                                                 </TableRow>
+                                               </TableHeader>
+                                               <TableBody>
+                                                 {relevantFields.map((field) => {
+                                                   const currentValue = field.current || 'Not set';
+                                                   const newValue = field.new || 'Not set';
+                                                   const hasChanged = currentValue !== newValue;
+                                                   
+                                                   return (
+                                                     <TableRow 
+                                                       key={field.key} 
+                                                       className={hasChanged ? "bg-amber-50/50" : ""}
+                                                     >
+                                                       <TableCell className="font-medium text-foreground">
+                                                         {field.label}
+                                                         {hasChanged && (
+                                                           <Badge variant="outline" className="ml-2 text-xs bg-amber-100 text-amber-800 border-amber-300">
+                                                             Changed
+                                                           </Badge>
+                                                         )}
+                                                       </TableCell>
+                                                       <TableCell className="text-muted-foreground break-words max-w-xs">
+                                                         {currentValue}
+                                                       </TableCell>
+                                                       <TableCell className={`break-words max-w-xs ${hasChanged ? 'text-blue-700 font-medium' : 'text-muted-foreground'}`}>
+                                                         {newValue}
+                                                       </TableCell>
+                                                     </TableRow>
+                                                   );
+                                                 })}
+                                               </TableBody>
+                                             </Table>
                                            </div>
-                                         </div>
-
-                                         {/* Updated Organization Information */}
-                                         <div className="space-y-2">
-                                           <h5 className="font-medium text-xs text-muted-foreground uppercase tracking-wider">Updated Information</h5>
-                                           <div className="bg-blue-50/50 border border-blue-200/50 rounded-md p-3 space-y-2 text-sm">
-                                             {Object.entries(request.new_organization_data as Record<string, any>)
-                                               .filter(([key, value]) => value !== null && value !== undefined && value !== '')
-                                               .map(([key, value]) => {
-                                                 const displayKey = key
-                                                   .replace(/_/g, ' ')
-                                                   .replace(/\b\w/g, l => l.toUpperCase());
-                                                 
-                                                 let displayValue = value;
-                                                 if (typeof value === 'boolean') {
-                                                   displayValue = value ? 'Yes' : 'No';
-                                                 } else if (Array.isArray(value)) {
-                                                   displayValue = value.join(', ');
-                                                 } else if (typeof value === 'object') {
-                                                   displayValue = JSON.stringify(value, null, 2);
-                                                 }
-                                                 
-                                                 return (
-                                                   <div key={key} className="grid grid-cols-2 gap-2 py-1 border-b border-blue-200/30 last:border-0">
-                                                     <span className="font-medium text-foreground">{displayKey}:</span>
-                                                     <span className="text-muted-foreground break-words">
-                                                       {String(displayValue)}
-                                                     </span>
-                                                   </div>
-                                                 );
-                                               })}
-                                           </div>
-                                         </div>
-                                       </div>
-                                       
-                                       {/* Summary Note */}
-                                       <div className="bg-amber-50/50 border border-amber-200 rounded-md p-3">
-                                         <div className="flex items-start gap-2">
-                                           <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                                           <div className="text-sm">
-                                             <p className="font-medium text-amber-800">Approval Impact</p>
-                                             <p className="text-amber-700 mt-1">
-                                               Approving this request will completely replace all current organization information with the updated data shown above.
-                                               The current contact will lose access and the new contact will become the primary administrator.
-                                             </p>
-                                           </div>
-                                         </div>
-                                       </div>
+                                         );
+                                       })()}
                                      </div>
                                    )}
 
