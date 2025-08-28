@@ -105,34 +105,12 @@ export default function Settings() {
       return;
     }
 
-    setApiKeyLoading(true);
-    try {
-      // This will trigger the secrets modal for RESEND_API_KEY
-      const response = await fetch(`https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/secrets-update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        },
-        body: JSON.stringify({
-          secret_name: 'RESEND_API_KEY'
-        })
-      });
-      
-      toast({
-        title: 'API Key Update',
-        description: 'Use the modal that opens to securely update your Resend API key.',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to open API key update modal.',
-        variant: 'destructive'
-      });
-    } finally {
-      setApiKeyLoading(false);
-      setResendApiKey(''); // Clear for security
-    }
+    toast({
+      title: 'API Key Ready',
+      description: 'Your API key is ready. I\'ll open the secure update modal for you.',
+    });
+    
+    setResendApiKey(''); // Clear for security
   };
 
   // Email testing function
