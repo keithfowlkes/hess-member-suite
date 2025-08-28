@@ -17,6 +17,12 @@ export interface ReassignmentRequest {
   approved_at?: string;
   organizations?: {
     name: string;
+    contact_person_id?: string;
+    profiles?: {
+      first_name?: string;
+      last_name?: string;
+      email?: string;
+    };
   };
 }
 
@@ -29,7 +35,13 @@ export const useReassignmentRequests = () => {
         .select(`
           *,
           organizations!organization_id (
-            name
+            name,
+            contact_person_id,
+            profiles!contact_person_id (
+              first_name,
+              last_name,
+              email
+            )
           )
         `)
         .order('created_at', { ascending: false });
@@ -216,6 +228,36 @@ export const useRejectReassignmentRequest = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to reject reassignment request",
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+export const useDeleteReassignmentRequest = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('organization_reassignment_requests')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
+      toast({
+        title: "Success",
+        description: "Reassignment request deleted.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete reassignment request",
         variant: "destructive"
       });
     }
