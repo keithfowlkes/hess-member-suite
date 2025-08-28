@@ -2,3 +2,6 @@ project_id = "tyovnvuluyosjnabrzjc"
 
 [functions.import-members]
 verify_jwt = true
+
+[functions.test-email]
+verify_jwt = true
