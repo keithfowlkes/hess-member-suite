@@ -43,7 +43,45 @@ export const useReassignmentRequests = () => {
           try {
             const { data: orgData } = await supabase
               .from('organizations')
-              .select('name, contact_person_id')
+              .select(`
+                name, 
+                contact_person_id,
+                address_line_1,
+                address_line_2,
+                city,
+                state,
+                zip_code,
+                phone,
+                email,
+                website,
+                primary_contact_title,
+                secondary_first_name,
+                secondary_last_name, 
+                secondary_contact_title,
+                secondary_contact_email,
+                student_information_system,
+                financial_system,
+                financial_aid,
+                hcm_hr,
+                payroll_system,
+                purchasing_system,
+                housing_management,
+                learning_management,
+                admissions_crm,
+                alumni_advancement_crm,
+                student_fte,
+                membership_status,
+                annual_fee_amount,
+                notes,
+                other_software_comments,
+                primary_office_apple,
+                primary_office_asus,
+                primary_office_dell,
+                primary_office_hp,
+                primary_office_microsoft,
+                primary_office_other,
+                primary_office_other_details
+              `)
               .eq('id', request.organization_id)
               .maybeSingle();
 

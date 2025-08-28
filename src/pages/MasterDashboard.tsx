@@ -708,14 +708,59 @@ const MasterDashboard = () => {
                                          <div className="space-y-2">
                                            <h5 className="font-medium text-xs text-muted-foreground uppercase tracking-wider">Current Information</h5>
                                            <div className="bg-muted/20 rounded-md p-3 space-y-2 text-sm">
-                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30 last:border-0">
-                                               <span className="font-medium text-foreground">Organization:</span>
+                                             {/* Organization Details */}
+                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                               <span className="font-medium text-foreground">Name:</span>
                                                <span className="text-muted-foreground break-words">
                                                  {request.organizations?.name || 'Not set'}
                                                </span>
                                              </div>
-                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30 last:border-0">
-                                               <span className="font-medium text-foreground">Contact:</span>
+                                             
+                                             {/* Address Information */}
+                                             {((request.organizations as any)?.address_line_1 || (request.organizations as any)?.city || (request.organizations as any)?.state) && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Address Line 1:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any)?.address_line_1 || 'Not set'}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.address_line_2 && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Address Line 2:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).address_line_2}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                               <span className="font-medium text-foreground">City:</span>
+                                               <span className="text-muted-foreground break-words">
+                                                 {(request.organizations as any)?.city || 'Not set'}
+                                               </span>
+                                             </div>
+                                             
+                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                               <span className="font-medium text-foreground">State:</span>
+                                               <span className="text-muted-foreground break-words">
+                                                 {(request.organizations as any)?.state || 'Not set'}
+                                               </span>
+                                             </div>
+                                             
+                                             {(request.organizations as any)?.zip_code && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Zip Code:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).zip_code}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {/* Contact Information */}
+                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                               <span className="font-medium text-foreground">Primary Contact:</span>
                                                <span className="text-muted-foreground break-words">
                                                  {request.organizations?.profiles?.first_name && request.organizations?.profiles?.last_name
                                                    ? `${request.organizations.profiles.first_name} ${request.organizations.profiles.last_name}`
@@ -723,27 +768,194 @@ const MasterDashboard = () => {
                                                  }
                                                </span>
                                              </div>
-                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30 last:border-0">
-                                               <span className="font-medium text-foreground">Email:</span>
+                                             
+                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                               <span className="font-medium text-foreground">Primary Contact Email:</span>
                                                <span className="text-muted-foreground break-words">
                                                  {request.organizations?.profiles?.email || 'Not set'}
                                                </span>
                                              </div>
-                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30 last:border-0">
-                                               <span className="font-medium text-foreground">Location:</span>
-                                               <span className="text-muted-foreground break-words">
-                                                 {(request.organizations as any)?.city && (request.organizations as any)?.state
-                                                   ? `${(request.organizations as any).city}, ${(request.organizations as any).state}`
-                                                   : 'Not set'
-                                                 }
-                                               </span>
-                                             </div>
-                                             <div className="grid grid-cols-2 gap-2 py-1">
+                                             
+                                             {(request.organizations as any)?.primary_contact_title && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Primary Contact Title:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).primary_contact_title}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.phone && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Phone:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).phone}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.email && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Organization Email:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).email}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.website && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Website:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).website}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {/* Secondary Contact */}
+                                             {((request.organizations as any)?.secondary_first_name || (request.organizations as any)?.secondary_last_name) && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Secondary Contact:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {`${(request.organizations as any)?.secondary_first_name || ''} ${(request.organizations as any)?.secondary_last_name || ''}`.trim() || 'Not set'}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.secondary_contact_email && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Secondary Contact Email:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).secondary_contact_email}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.secondary_contact_title && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Secondary Contact Title:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).secondary_contact_title}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {/* Organization Details */}
+                                             <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
                                                <span className="font-medium text-foreground">Student FTE:</span>
                                                <span className="text-muted-foreground break-words">
                                                  {(request.organizations as any)?.student_fte?.toLocaleString() || 'Not set'}
                                                </span>
                                              </div>
+                                             
+                                             {(request.organizations as any)?.membership_status && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Membership Status:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).membership_status}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {/* Software Systems */}
+                                             {(request.organizations as any)?.student_information_system && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Student Information System:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).student_information_system}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.financial_system && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Financial System:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).financial_system}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.financial_aid && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Financial Aid:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).financial_aid}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.learning_management && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Learning Management:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).learning_management}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.hcm_hr && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">HCM HR:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).hcm_hr}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.payroll_system && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Payroll System:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).payroll_system}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.purchasing_system && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Purchasing System:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).purchasing_system}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.housing_management && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Housing Management:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).housing_management}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.admissions_crm && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Admissions CRM:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).admissions_crm}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.alumni_advancement_crm && (
+                                               <div className="grid grid-cols-2 gap-2 py-1 border-b border-muted/30">
+                                                 <span className="font-medium text-foreground">Alumni Advancement CRM:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).alumni_advancement_crm}
+                                                 </span>
+                                               </div>
+                                             )}
+                                             
+                                             {(request.organizations as any)?.notes && (
+                                               <div className="grid grid-cols-2 gap-2 py-1">
+                                                 <span className="font-medium text-foreground">Notes:</span>
+                                                 <span className="text-muted-foreground break-words">
+                                                   {(request.organizations as any).notes}
+                                                 </span>
+                                               </div>
+                                             )}
                                            </div>
                                          </div>
 
