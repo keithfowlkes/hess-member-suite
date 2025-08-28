@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { useOrganizationProfile, OrganizationProfile } from '@/hooks/useOrganizationProfile';
+import { useFieldOptions, type SystemField } from '@/hooks/useSystemFieldOptions';
 import { Loader2, Edit, Save, X, ArrowLeft, Building2, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -20,6 +21,48 @@ const OrganizationProfilePage = () => {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
+  
+  // System field select component
+  const SystemFieldSelect = ({ 
+    fieldName, 
+    label, 
+    value, 
+    onChange, 
+    disabled 
+  }: {
+    fieldName: SystemField;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    disabled: boolean;
+  }) => {
+    const options = useFieldOptions(fieldName);
+    
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={fieldName}>{label}</Label>
+        <Select 
+          value={value || "none"} 
+          onValueChange={(val) => onChange(val === "none" ? "" : val)} 
+          disabled={disabled}
+        >
+          <SelectTrigger className="bg-background border-input">
+            <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+          </SelectTrigger>
+          <SelectContent className="max-h-60 overflow-y-auto bg-background border border-input shadow-lg z-[9999]">
+            <SelectItem value="none" className="hover:bg-accent">
+              <span className="text-muted-foreground">None specified</span>
+            </SelectItem>
+            {options.map((option) => (
+              <SelectItem key={option} value={option} className="hover:bg-accent">
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
   const { data, loading, updateOrganizationProfile, getUserOrganization } = useOrganizationProfile(profileId);
   
   const [isEditing, setIsEditing] = useState(false);
@@ -493,96 +536,76 @@ const OrganizationProfilePage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="student_information_system">Student Information System</Label>
-                    <Input
-                      id="student_information_system"
-                      value={editedData?.organization.student_information_system || ''}
-                      onChange={(e) => updateOrganizationField('student_information_system', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="financial_system">Financial System</Label>
-                    <Input
-                      id="financial_system"
-                      value={editedData?.organization.financial_system || ''}
-                      onChange={(e) => updateOrganizationField('financial_system', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="financial_aid">Financial Aid</Label>
-                    <Input
-                      id="financial_aid"
-                      value={editedData?.organization.financial_aid || ''}
-                      onChange={(e) => updateOrganizationField('financial_aid', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="hcm_hr">HCM/HR</Label>
-                    <Input
-                      id="hcm_hr"
-                      value={editedData?.organization.hcm_hr || ''}
-                      onChange={(e) => updateOrganizationField('hcm_hr', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="payroll_system">Payroll System</Label>
-                    <Input
-                      id="payroll_system"
-                      value={editedData?.organization.payroll_system || ''}
-                      onChange={(e) => updateOrganizationField('payroll_system', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="purchasing_system">Purchasing System</Label>
-                    <Input
-                      id="purchasing_system"
-                      value={editedData?.organization.purchasing_system || ''}
-                      onChange={(e) => updateOrganizationField('purchasing_system', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="housing_management">Housing Management</Label>
-                    <Input
-                      id="housing_management"
-                      value={editedData?.organization.housing_management || ''}
-                      onChange={(e) => updateOrganizationField('housing_management', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="learning_management">Learning Management</Label>
-                    <Input
-                      id="learning_management"
-                      value={editedData?.organization.learning_management || ''}
-                      onChange={(e) => updateOrganizationField('learning_management', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="admissions_crm">Admissions CRM</Label>
-                    <Input
-                      id="admissions_crm"
-                      value={editedData?.organization.admissions_crm || ''}
-                      onChange={(e) => updateOrganizationField('admissions_crm', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="alumni_advancement_crm">Alumni/Advancement CRM</Label>
-                    <Input
-                      id="alumni_advancement_crm"
-                      value={editedData?.organization.alumni_advancement_crm || ''}
-                      onChange={(e) => updateOrganizationField('alumni_advancement_crm', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
+                  <SystemFieldSelect
+                    fieldName="student_information_system"
+                    label="Student Information System"
+                    value={editedData?.organization.student_information_system || ''}
+                    onChange={(value) => updateOrganizationField('student_information_system', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="financial_system"
+                    label="Financial System"
+                    value={editedData?.organization.financial_system || ''}
+                    onChange={(value) => updateOrganizationField('financial_system', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="financial_aid"
+                    label="Financial Aid System"
+                    value={editedData?.organization.financial_aid || ''}
+                    onChange={(value) => updateOrganizationField('financial_aid', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="hcm_hr"
+                    label="Human Capital Management"
+                    value={editedData?.organization.hcm_hr || ''}
+                    onChange={(value) => updateOrganizationField('hcm_hr', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="payroll_system"
+                    label="Payroll System"
+                    value={editedData?.organization.payroll_system || ''}
+                    onChange={(value) => updateOrganizationField('payroll_system', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="purchasing_system"
+                    label="Purchasing System"
+                    value={editedData?.organization.purchasing_system || ''}
+                    onChange={(value) => updateOrganizationField('purchasing_system', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="housing_management"
+                    label="Housing Management System"
+                    value={editedData?.organization.housing_management || ''}
+                    onChange={(value) => updateOrganizationField('housing_management', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="learning_management"
+                    label="Learning Management System"
+                    value={editedData?.organization.learning_management || ''}
+                    onChange={(value) => updateOrganizationField('learning_management', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="admissions_crm"
+                    label="Admissions CRM"
+                    value={editedData?.organization.admissions_crm || ''}
+                    onChange={(value) => updateOrganizationField('admissions_crm', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="alumni_advancement_crm"
+                    label="Alumni/Advancement CRM"
+                    value={editedData?.organization.alumni_advancement_crm || ''}
+                    onChange={(value) => updateOrganizationField('alumni_advancement_crm', value)}
+                    disabled={!isEditing}
+                  />
                 </div>
 
                 {/* Primary Office Software */}

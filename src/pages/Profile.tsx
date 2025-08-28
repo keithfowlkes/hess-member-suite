@@ -9,9 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Edit, Save, X } from 'lucide-react';
+import { useFieldOptions, type SystemField } from '@/hooks/useSystemFieldOptions';
 
 interface ProfileData {
   id: string;
@@ -60,6 +62,48 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
   const [editedProfile, setEditedProfile] = useState<ProfileData | null>(null);
+
+  // System field select component
+  const SystemFieldSelect = ({ 
+    fieldName, 
+    label, 
+    value, 
+    onChange, 
+    disabled 
+  }: {
+    fieldName: SystemField;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    disabled: boolean;
+  }) => {
+    const options = useFieldOptions(fieldName);
+    
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={fieldName}>{label}</Label>
+        <Select 
+          value={value || "none"} 
+          onValueChange={(val) => onChange(val === "none" ? "" : val)} 
+          disabled={disabled}
+        >
+          <SelectTrigger className="bg-background border-input">
+            <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+          </SelectTrigger>
+          <SelectContent className="max-h-60 overflow-y-auto bg-background border border-input shadow-lg z-[9999]">
+            <SelectItem value="none" className="hover:bg-accent">
+              <span className="text-muted-foreground">None specified</span>
+            </SelectItem>
+            {options.map((option) => (
+              <SelectItem key={option} value={option} className="hover:bg-accent">
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (user) {
@@ -424,96 +468,76 @@ const Profile = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="student_information_system">Student Information System</Label>
-                    <Input
-                      id="student_information_system"
-                      value={editedProfile?.student_information_system || ''}
-                      onChange={(e) => updateField('student_information_system', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="financial_system">Financial System</Label>
-                    <Input
-                      id="financial_system"
-                      value={editedProfile?.financial_system || ''}
-                      onChange={(e) => updateField('financial_system', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="financial_aid">Financial Aid</Label>
-                    <Input
-                      id="financial_aid"
-                      value={editedProfile?.financial_aid || ''}
-                      onChange={(e) => updateField('financial_aid', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="hcm_hr">HCM/HR System</Label>
-                    <Input
-                      id="hcm_hr"
-                      value={editedProfile?.hcm_hr || ''}
-                      onChange={(e) => updateField('hcm_hr', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="payroll_system">Payroll System</Label>
-                    <Input
-                      id="payroll_system"
-                      value={editedProfile?.payroll_system || ''}
-                      onChange={(e) => updateField('payroll_system', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="purchasing_system">Purchasing System</Label>
-                    <Input
-                      id="purchasing_system"
-                      value={editedProfile?.purchasing_system || ''}
-                      onChange={(e) => updateField('purchasing_system', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="housing_management">Housing Management</Label>
-                    <Input
-                      id="housing_management"
-                      value={editedProfile?.housing_management || ''}
-                      onChange={(e) => updateField('housing_management', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="learning_management">Learning Management</Label>
-                    <Input
-                      id="learning_management"
-                      value={editedProfile?.learning_management || ''}
-                      onChange={(e) => updateField('learning_management', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="admissions_crm">Admissions CRM</Label>
-                    <Input
-                      id="admissions_crm"
-                      value={editedProfile?.admissions_crm || ''}
-                      onChange={(e) => updateField('admissions_crm', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="alumni_advancement_crm">Alumni/Advancement CRM</Label>
-                    <Input
-                      id="alumni_advancement_crm"
-                      value={editedProfile?.alumni_advancement_crm || ''}
-                      onChange={(e) => updateField('alumni_advancement_crm', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
+                  <SystemFieldSelect
+                    fieldName="student_information_system"
+                    label="Student Information System"
+                    value={editedProfile?.student_information_system || ''}
+                    onChange={(value) => updateField('student_information_system', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="financial_system"
+                    label="Financial System"
+                    value={editedProfile?.financial_system || ''}
+                    onChange={(value) => updateField('financial_system', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="financial_aid"
+                    label="Financial Aid System"
+                    value={editedProfile?.financial_aid || ''}
+                    onChange={(value) => updateField('financial_aid', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="hcm_hr"
+                    label="Human Capital Management"
+                    value={editedProfile?.hcm_hr || ''}
+                    onChange={(value) => updateField('hcm_hr', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="payroll_system"
+                    label="Payroll System"
+                    value={editedProfile?.payroll_system || ''}
+                    onChange={(value) => updateField('payroll_system', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="purchasing_system"
+                    label="Purchasing System"
+                    value={editedProfile?.purchasing_system || ''}
+                    onChange={(value) => updateField('purchasing_system', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="housing_management"
+                    label="Housing Management System"
+                    value={editedProfile?.housing_management || ''}
+                    onChange={(value) => updateField('housing_management', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="learning_management"
+                    label="Learning Management System"
+                    value={editedProfile?.learning_management || ''}
+                    onChange={(value) => updateField('learning_management', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="admissions_crm"
+                    label="Admissions CRM"
+                    value={editedProfile?.admissions_crm || ''}
+                    onChange={(value) => updateField('admissions_crm', value)}
+                    disabled={!isEditing}
+                  />
+                  <SystemFieldSelect
+                    fieldName="alumni_advancement_crm"
+                    label="Alumni/Advancement CRM"
+                    value={editedProfile?.alumni_advancement_crm || ''}
+                    onChange={(value) => updateField('alumni_advancement_crm', value)}
+                    disabled={!isEditing}
+                  />
                 </div>
               </CardContent>
             </Card>
