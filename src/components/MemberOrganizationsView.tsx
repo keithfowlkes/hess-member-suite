@@ -73,33 +73,33 @@ export function MemberOrganizationsView() {
 
       {/* Organizations Display */}
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOrganizations.map((organization) => (
             <Card 
               key={organization.id} 
               className="transition-shadow hover:shadow-md"
             >
-              <CardHeader className="pb-3">
+              <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Building2 className="h-6 w-6 text-primary" />
+                  <div className="flex items-center space-x-3">
+                    <Building2 className="h-8 w-8 text-primary" />
                     <div>
-                      <CardTitle className="text-sm font-medium">{organization.name}</CardTitle>
-                      <Badge className={`mt-1 text-xs ${getStatusColor(organization.membership_status)}`}>
+                      <CardTitle className="text-lg">{organization.name}</CardTitle>
+                      <Badge className={`mt-1 ${getStatusColor(organization.membership_status)}`}>
                         {organization.membership_status}
                       </Badge>
                     </div>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-2 text-xs">
+              <CardContent>
+                <div className="space-y-2 text-sm">
                   {organization.profiles && (
                     <div className="space-y-1">
                       <div className="text-xs text-muted-foreground">Primary Contact</div>
                       <div className="flex items-center text-foreground">
-                        <User className="h-3 w-3 mr-1" />
-                        <span className="font-medium text-xs">
+                        <User className="h-4 w-4 mr-2" />
+                        <span className="font-medium">
                           {organization.profiles.first_name} {organization.profiles.last_name}
                         </span>
                       </div>
@@ -107,14 +107,20 @@ export function MemberOrganizationsView() {
                   )}
                   {organization.email && (
                     <div className="flex items-center text-muted-foreground">
-                      <Mail className="h-3 w-3 mr-1" />
-                      <span className="text-xs truncate">{organization.email}</span>
+                      <Mail className="h-4 w-4 mr-2" />
+                      <span className="truncate">{organization.email}</span>
+                    </div>
+                  )}
+                  {organization.phone && (
+                    <div className="flex items-center text-muted-foreground">
+                      <Phone className="h-4 w-4 mr-2" />
+                      <span>{organization.phone}</span>
                     </div>
                   )}
                   {(organization.city || organization.state) && (
                     <div className="flex items-center text-muted-foreground">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      <span className="text-xs">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      <span>
                         {organization.city}{organization.city && organization.state && ', '}{organization.state}
                       </span>
                     </div>
