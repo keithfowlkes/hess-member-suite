@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Dialog,
   DialogContent,
@@ -78,7 +80,8 @@ import {
   Lock,
   Settings as SettingsIcon,
   Search,
-  MoreVertical
+  MoreVertical,
+  ChevronDown
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -622,77 +625,111 @@ const MasterDashboard = () => {
                         </CardContent>
                       </Card>
                     ) : (
-                      <Card>
-                        <CardContent className="p-6">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Organization</TableHead>
-                                <TableHead>Current Contact</TableHead>
-                                <TableHead>New Contact</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Created</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {reassignmentRequests.map((request) => (
-                                <TableRow key={request.id}>
-                                  <TableCell className="font-medium">
-                                    {request.organizations?.name || 'Unknown'}
-                                  </TableCell>
-                                  <TableCell>
-                                    {request.organizations?.profiles?.first_name && request.organizations?.profiles?.last_name
-                                      ? `${request.organizations.profiles.first_name} ${request.organizations.profiles.last_name}`
-                                      : request.organizations?.profiles?.email || 'No current contact'
-                                    }
-                                    <div className="text-xs text-muted-foreground">
-                                      {request.organizations?.profiles?.email}
+                      <div className="space-y-2">
+                        {reassignmentRequests.map((request) => (
+                          <Collapsible key={request.id}>
+                            <Card>
+                              <CollapsibleTrigger asChild>
+                                <CardContent className="p-4 hover:bg-muted/50 cursor-pointer">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                                      <div className="min-w-0 flex-1">
+                                        <div className="font-medium truncate">
+                                          {request.organizations?.name || 'Unknown Organization'}
+                                        </div>
+                                        <div className="text-sm text-muted-foreground truncate">
+                                          {request.new_contact_email}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2 flex-shrink-0">
+                                        <Badge variant={request.status === 'pending' ? 'outline' : 'default'}>
+                                          {request.status}
+                                        </Badge>
+                                        <span className="text-sm text-muted-foreground">
+                                          {new Date(request.created_at).toLocaleDateString()}
+                                        </span>
+                                      </div>
                                     </div>
-                                  </TableCell>
-                                  <TableCell>{request.new_contact_email}</TableCell>
-                                  <TableCell>
-                                    <Badge variant={request.status === 'pending' ? 'outline' : 'default'}>
-                                      {request.status}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell>
-                                    {new Date(request.created_at).toLocaleDateString()}
-                                  </TableCell>
-                                  <TableCell className="text-right">
+                                    <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                                  </div>
+                                </CardContent>
+                              </CollapsibleTrigger>
+                              
+                              <CollapsibleContent>
+                                <CardContent className="pt-0 px-4 pb-4">
+                                  <Separator className="mb-4" />
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    {/* Current Information */}
+                                    <div className="space-y-2">
+                                      <h4 className="font-medium text-sm">Current Contact</h4>
+                                      <div className="text-sm text-muted-foreground space-y-1">
+                                        {request.organizations?.profiles?.first_name && request.organizations?.profiles?.last_name ? (
+                                          <div>{request.organizations.profiles.first_name} {request.organizations.profiles.last_name}</div>
+                                        ) : (
+                                          <div>No name on file</div>
+                                        )}
+                                        <div>{request.organizations?.profiles?.email || 'No email on file'}</div>
+                                      </div>
+                                    </div>
+
+                                    {/* New Contact Information */}
+                                    <div className="space-y-2">
+                                      <h4 className="font-medium text-sm">Requested New Contact</h4>
+                                      <div className="text-sm text-muted-foreground">
+                                        {request.new_contact_email}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* New Organization Data */}
+                                  {request.new_organization_data && (
+                                    <div className="space-y-2 mb-4">
+                                      <h4 className="font-medium text-sm">Updated Organization Information</h4>
+                                      <div className="bg-muted/30 rounded-md p-3 space-y-2 text-sm">
+                                        {Object.entries(request.new_organization_data as Record<string, any>).map(([key, value]) => (
+                                          <div key={key} className="flex justify-between">
+                                            <span className="font-medium capitalize">{key.replace(/_/g, ' ')}:</span>
+                                            <span className="text-muted-foreground text-right max-w-[60%] break-words">
+                                              {typeof value === 'string' || typeof value === 'number' ? String(value) : JSON.stringify(value)}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Actions */}
+                                  {request.status === 'pending' && (
                                     <div className="flex gap-2 justify-end">
-                                      {request.status === 'pending' && (
-                                        <>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => approveReassignment.mutate({ id: request.id })}
-                                            disabled={approveReassignment.isPending}
-                                            className="flex items-center gap-1"
-                                          >
-                                            <CheckCircle className="h-3 w-3" />
-                                            Approve
-                                          </Button>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => deleteReassignment.mutate(request.id)}
-                                            disabled={deleteReassignment.isPending}
-                                            className="flex items-center gap-1 text-destructive hover:text-destructive"
-                                          >
-                                            <XCircle className="h-3 w-3" />
-                                            Delete
-                                          </Button>
-                                        </>
-                                      )}
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => approveReassignment.mutate({ id: request.id })}
+                                        disabled={approveReassignment.isPending}
+                                        className="flex items-center gap-1"
+                                      >
+                                        <CheckCircle className="h-3 w-3" />
+                                        Approve
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => deleteReassignment.mutate(request.id)}
+                                        disabled={deleteReassignment.isPending}
+                                        className="flex items-center gap-1 text-destructive hover:text-destructive"
+                                      >
+                                        <XCircle className="h-3 w-3" />
+                                        Delete
+                                      </Button>
                                     </div>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </CardContent>
-                      </Card>
+                                  )}
+                                </CardContent>
+                              </CollapsibleContent>
+                            </Card>
+                          </Collapsible>
+                        ))}
+                      </div>
                     )}
                   </TabsContent>
 
