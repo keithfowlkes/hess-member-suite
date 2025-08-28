@@ -32,22 +32,36 @@ export const useReassignmentRequests = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('organization_reassignment_requests')
-        .select(`
-          *,
-          organizations!organization_id (
-            name,
-            contact_person_id,
-            profiles!contact_person_id (
-              first_name,
-              last_name,
-              email
-            )
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as ReassignmentRequest[];
+
+      // Manually fetch organization names for each request
+      const requestsWithOrgData = await Promise.all(
+        data.map(async (request) => {
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select(`
+              name,
+              contact_person_id,
+              profiles!contact_person_id (
+                first_name,
+                last_name,
+                email
+              )
+            `)
+            .eq('id', request.organization_id)
+            .maybeSingle();
+
+          return {
+            ...request,
+            organizations: orgData
+          };
+        })
+      );
+
+      return requestsWithOrgData as ReassignmentRequest[];
     },
   });
 };
