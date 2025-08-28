@@ -278,7 +278,7 @@ export type Database = {
           new_organization_data: Json
           organization_id: string
           original_organization_data: Json
-          requested_by: string
+          requested_by: string | null
           status: string
           updated_at: string
         }
@@ -292,7 +292,7 @@ export type Database = {
           new_organization_data: Json
           organization_id: string
           original_organization_data: Json
-          requested_by: string
+          requested_by?: string | null
           status?: string
           updated_at?: string
         }
@@ -306,7 +306,7 @@ export type Database = {
           new_organization_data?: Json
           organization_id?: string
           original_organization_data?: Json
-          requested_by?: string
+          requested_by?: string | null
           status?: string
           updated_at?: string
         }
