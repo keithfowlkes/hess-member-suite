@@ -92,6 +92,30 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
         annual_fee_amount: editData.annual_fee_amount,
         notes: editData.notes,
         student_fte: editData.student_fte,
+        // Include profile fields for contact, systems, and hardware
+        primary_contact_title: editData.profiles?.primary_contact_title,
+        secondary_first_name: editData.profiles?.secondary_first_name,
+        secondary_last_name: editData.profiles?.secondary_last_name,
+        secondary_contact_title: editData.profiles?.secondary_contact_title,
+        secondary_contact_email: editData.profiles?.secondary_contact_email,
+        student_information_system: editData.profiles?.student_information_system,
+        financial_system: editData.profiles?.financial_system,
+        financial_aid: editData.profiles?.financial_aid,
+        hcm_hr: editData.profiles?.hcm_hr,
+        payroll_system: editData.profiles?.payroll_system,
+        purchasing_system: editData.profiles?.purchasing_system,
+        housing_management: editData.profiles?.housing_management,
+        learning_management: editData.profiles?.learning_management,
+        admissions_crm: editData.profiles?.admissions_crm,
+        alumni_advancement_crm: editData.profiles?.alumni_advancement_crm,
+        primary_office_apple: editData.profiles?.primary_office_apple,
+        primary_office_asus: editData.profiles?.primary_office_asus,
+        primary_office_dell: editData.profiles?.primary_office_dell,
+        primary_office_hp: editData.profiles?.primary_office_hp,
+        primary_office_microsoft: editData.profiles?.primary_office_microsoft,
+        primary_office_other: editData.profiles?.primary_office_other,
+        primary_office_other_details: editData.profiles?.primary_office_other_details,
+        other_software_comments: editData.profiles?.other_software_comments,
       };
       
       await updateOrganization(editData.id, orgUpdateData);
@@ -418,30 +442,44 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {profile?.first_name ? (
+                  {profile?.first_name || isEditing ? (
                     <>
-                      <div>
+                      <div className="space-y-2">
                         <Label>Name</Label>
-                        <p className="text-sm font-medium">{profile.first_name} {profile.last_name}</p>
+                        <p className="text-sm font-medium">{profile?.first_name} {profile?.last_name}</p>
                       </div>
-                      {profile.primary_contact_title && (
-                        <div>
-                          <Label>Title</Label>
-                          <p className="text-sm">{profile.primary_contact_title}</p>
-                        </div>
-                      )}
-                      {profile.email && (
+                      
+                      <div className="space-y-2">
+                        <Label>Title</Label>
+                        {isEditing ? (
+                          <Input
+                            value={profile?.primary_contact_title || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { ...editData!.profiles!, primary_contact_title: e.target.value }
+                            })}
+                            placeholder="Primary Contact Title"
+                          />
+                        ) : (
+                          <p className="text-sm">{profile?.primary_contact_title || 'Not provided'}</p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Email</Label>
                         <div className="flex items-center gap-2">
                           <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{profile.email}</span>
+                          <span className="text-sm">{profile?.email}</span>
                         </div>
-                      )}
-                      {profile.phone && (
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Phone</Label>
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{profile.phone}</span>
+                          <span className="text-sm">{profile?.phone || 'Not provided'}</span>
                         </div>
-                      )}
+                      </div>
                     </>
                   ) : (
                     <p className="text-sm text-muted-foreground">No primary contact information available</p>
@@ -449,36 +487,85 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                 </CardContent>
               </Card>
 
-              {(profile?.secondary_first_name || profile?.secondary_contact_email) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <UserPlus className="h-4 w-4" />
-                      Secondary Contact
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {profile.secondary_first_name && (
-                      <div>
-                        <Label>Name</Label>
-                        <p className="text-sm">{profile.secondary_first_name} {profile.secondary_last_name}</p>
-                      </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    Secondary Contact
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    <Label>First Name</Label>
+                    {isEditing ? (
+                      <Input
+                        value={profile?.secondary_first_name || ''}
+                        onChange={(e) => setEditData({
+                          ...editData!,
+                          profiles: { ...editData!.profiles!, secondary_first_name: e.target.value }
+                        })}
+                        placeholder="Secondary Contact First Name"
+                      />
+                    ) : (
+                      <p className="text-sm">{profile?.secondary_first_name || 'Not provided'}</p>
                     )}
-                    {profile.secondary_contact_title && (
-                      <div>
-                        <Label>Title</Label>
-                        <p className="text-sm">{profile.secondary_contact_title}</p>
-                      </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Last Name</Label>
+                    {isEditing ? (
+                      <Input
+                        value={profile?.secondary_last_name || ''}
+                        onChange={(e) => setEditData({
+                          ...editData!,
+                          profiles: { ...editData!.profiles!, secondary_last_name: e.target.value }
+                        })}
+                        placeholder="Secondary Contact Last Name"
+                      />
+                    ) : (
+                      <p className="text-sm">{profile?.secondary_last_name || 'Not provided'}</p>
                     )}
-                    {profile.secondary_contact_email && (
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Title</Label>
+                    {isEditing ? (
+                      <Input
+                        value={profile?.secondary_contact_title || ''}
+                        onChange={(e) => setEditData({
+                          ...editData!,
+                          profiles: { ...editData!.profiles!, secondary_contact_title: e.target.value }
+                        })}
+                        placeholder="Secondary Contact Title"
+                      />
+                    ) : (
+                      <p className="text-sm">{profile?.secondary_contact_title || 'Not provided'}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    {isEditing ? (
+                      <Input
+                        type="email"
+                        value={profile?.secondary_contact_email || ''}
+                        onChange={(e) => setEditData({
+                          ...editData!,
+                          profiles: { ...editData!.profiles!, secondary_contact_email: e.target.value }
+                        })}
+                        placeholder="secondary@organization.edu"
+                      />
+                    ) : profile?.secondary_contact_email ? (
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm">{profile.secondary_contact_email}</span>
                       </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Not provided</p>
                     )}
-                  </CardContent>
-                </Card>
-              )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
@@ -501,12 +588,26 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                 return (
                   <Card key={key}>
                     <CardContent className="pt-4">
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">{label}</p>
-                          <p className="text-sm text-muted-foreground">{value || 'Not specified'}</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          <Label className="text-sm font-medium">{label}</Label>
                         </div>
+                        {isEditing ? (
+                          <Input
+                            value={value || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { 
+                                ...editData!.profiles!, 
+                                [key]: e.target.value
+                              }
+                            })}
+                            placeholder={`Enter ${label.toLowerCase()}`}
+                          />
+                        ) : (
+                          <p className="text-sm text-muted-foreground ml-6">{value || 'Not specified'}</p>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -514,16 +615,26 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
               })}
             </div>
 
-            {profile?.other_software_comments && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Additional Software Comments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm whitespace-pre-wrap">{profile.other_software_comments}</p>
-                </CardContent>
-              </Card>
-            )}
+            <Card>
+              <CardHeader>
+                <CardTitle>Additional Software Comments</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isEditing ? (
+                  <Textarea
+                    value={profile?.other_software_comments || ''}
+                    onChange={(e) => setEditData({
+                      ...editData!,
+                      profiles: { ...editData!.profiles!, other_software_comments: e.target.value }
+                    })}
+                    rows={3}
+                    placeholder="Add any additional software comments..."
+                  />
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap">{profile?.other_software_comments || 'No additional comments'}</p>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="hardware" className="space-y-4">
@@ -547,19 +658,42 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                     const isSelected = profile?.[key as keyof typeof profile] as boolean;
                     return (
                       <div key={key} className="flex items-center space-x-2">
-                        <div className={`w-3 h-3 rounded border ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`} />
+                        {isEditing ? (
+                          <Switch
+                            checked={isSelected || false}
+                            onCheckedChange={(checked) => setEditData({
+                              ...editData!,
+                              profiles: { 
+                                ...editData!.profiles!, 
+                                [key]: checked
+                              }
+                            })}
+                          />
+                        ) : (
+                          <div className={`w-3 h-3 rounded border ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`} />
+                        )}
                         <span className="text-sm">{label}</span>
                       </div>
                     );
                   })}
                 </div>
                 
-                {profile?.primary_office_other_details && (
-                  <div className="mt-4">
-                    <Label>Other Hardware Details</Label>
-                    <p className="text-sm text-muted-foreground mt-1">{profile.primary_office_other_details}</p>
-                  </div>
-                )}
+                <div className="mt-4 space-y-2">
+                  <Label>Other Hardware Details</Label>
+                  {isEditing ? (
+                    <Textarea
+                      value={profile?.primary_office_other_details || ''}
+                      onChange={(e) => setEditData({
+                        ...editData!,
+                        profiles: { ...editData!.profiles!, primary_office_other_details: e.target.value }
+                      })}
+                      rows={2}
+                      placeholder="Specify other hardware details..."
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{profile?.primary_office_other_details || 'No additional details'}</p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
