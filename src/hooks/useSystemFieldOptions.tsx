@@ -71,27 +71,39 @@ export const useSystemFieldValues = () => {
 export const useSystemFieldOptions = () => {
   const queryClient = useQueryClient();
   
-  // Set up real-time subscription
+  // Set up real-time subscription with error handling
   useEffect(() => {
-    const channel = supabase
-      .channel('system-field-options-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'system_field_options'
-        },
-        (payload) => {
-          console.log('System field options changed:', payload);
-          // Invalidate queries to refresh data
-          queryClient.invalidateQueries({ queryKey: ['system-field-options'] });
-        }
-      )
-      .subscribe();
+    let channel: any = null;
+    
+    try {
+      channel = supabase
+        .channel('system-field-options-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'system_field_options'
+          },
+          (payload) => {
+            console.log('System field options changed:', payload);
+            // Invalidate queries to refresh data
+            queryClient.invalidateQueries({ queryKey: ['system-field-options'] });
+          }
+        )
+        .subscribe();
+    } catch (error) {
+      console.warn('Real-time subscription failed, continuing without real-time updates:', error);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        try {
+          supabase.removeChannel(channel);
+        } catch (error) {
+          console.warn('Error removing channel:', error);
+        }
+      }
     };
   }, [queryClient]);
 
