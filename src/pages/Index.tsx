@@ -5,10 +5,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Navigate } from 'react-router-dom';
-import { Building2, FileText, DollarSign, LogOut } from 'lucide-react';
+import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User } from 'lucide-react';
+import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
+import { useOrganizationProfile } from '@/hooks/useOrganizationProfile';
+import { useState, useEffect } from 'react';
 
 const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
+  const [userOrganization, setUserOrganization] = useState<any>(null);
+  const { getUserOrganization } = useOrganizationProfile();
 
   // Redirect admin users to the Master Dashboard
   if (isViewingAsAdmin) {
@@ -20,6 +25,17 @@ const Index = () => {
     { title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600' },
     { title: 'Outstanding Balance', value: '$0', icon: DollarSign, color: 'text-green-600' },
   ];
+
+  // Fetch user's organization data
+  useEffect(() => {
+    const fetchUserOrganization = async () => {
+      if (user?.id) {
+        const org = await getUserOrganization(user.id);
+        setUserOrganization(org);
+      }
+    };
+    fetchUserOrganization();
+  }, [user, getUserOrganization]);
 
   return (
     <SidebarProvider>
@@ -73,37 +89,103 @@ const Index = () => {
               })}
             </div>
 
-            {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Membership renewed</p>
-                      <p className="text-xs text-muted-foreground">2 hours ago</p>
+            {/* Recent Activity and Member Institution Info */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Membership renewed</p>
+                        <p className="text-xs text-muted-foreground">2 hours ago</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Invoice generated</p>
+                        <p className="text-xs text-muted-foreground">1 day ago</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Profile updated</p>
+                        <p className="text-xs text-muted-foreground">3 days ago</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Invoice generated</p>
-                      <p className="text-xs text-muted-foreground">1 day ago</p>
+                </CardContent>
+              </Card>
+
+              {/* Member Institution Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    Institution Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {userOrganization ? (
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold text-foreground">{userOrganization.name}</h3>
+                      </div>
+                      
+                      {(userOrganization.address_line_1 || userOrganization.city || userOrganization.state) && (
+                        <div className="flex items-start gap-2 text-sm">
+                          <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                          <div className="text-muted-foreground">
+                            {userOrganization.address_line_1 && (
+                              <div>{userOrganization.address_line_1}</div>
+                            )}
+                            {userOrganization.address_line_2 && (
+                              <div>{userOrganization.address_line_2}</div>
+                            )}
+                            {(userOrganization.city || userOrganization.state) && (
+                              <div>
+                                {userOrganization.city}
+                                {userOrganization.city && userOrganization.state && ', '}
+                                {userOrganization.state} {userOrganization.zip_code}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {userOrganization.email && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">{userOrganization.email}</span>
+                        </div>
+                      )}
+
+                      {user?.email && (
+                        <div className="pt-2 border-t">
+                          <div className="flex items-center gap-2 text-sm">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium text-foreground">Primary Contact</div>
+                              <div className="text-muted-foreground">{user.email}</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Profile updated</p>
-                      <p className="text-xs text-muted-foreground">3 days ago</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">Loading institution information...</div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* System Usage Analytics */}
+            <SystemAnalyticsDashboard />
           </div>
         </main>
       </div>
