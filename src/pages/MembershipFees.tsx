@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useMembers } from '@/hooks/useMembers';
+import { useInvoices } from '@/hooks/useInvoices';
 import { useToast } from '@/hooks/use-toast';
 import { 
   DollarSign, 
@@ -16,7 +18,9 @@ import {
   TrendingUp, 
   FileText,
   Settings,
-  Download
+  Download,
+  Send,
+  CheckSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -34,10 +38,13 @@ interface FeesStats {
 
 export default function MembershipFees() {
   const { organizations, loading, updateOrganization } = useMembers();
+  const { createInvoice } = useInvoices();
   const { toast } = useToast();
   const [bulkFeeAmount, setBulkFeeAmount] = useState<string>('');
   const [bulkRenewalDate, setBulkRenewalDate] = useState<Date>();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedOrganizations, setSelectedOrganizations] = useState<Set<string>>(new Set());
+  const [isSendingInvoices, setIsSendingInvoices] = useState(false);
 
   // Calculate fee statistics
   const calculateStats = (): FeesStats => {
@@ -115,6 +122,97 @@ export default function MembershipFees() {
       });
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedOrganizations(new Set(organizations.map(org => org.id)));
+    } else {
+      setSelectedOrganizations(new Set());
+    }
+  };
+
+  const handleSelectOrganization = (organizationId: string, checked: boolean) => {
+    const newSelected = new Set(selectedOrganizations);
+    if (checked) {
+      newSelected.add(organizationId);
+    } else {
+      newSelected.delete(organizationId);
+    }
+    setSelectedOrganizations(newSelected);
+  };
+
+  const handleSendSelectedInvoices = async () => {
+    if (selectedOrganizations.size === 0) {
+      toast({
+        title: "No organizations selected",
+        description: "Please select organizations to send invoices to.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSendingInvoices(true);
+    try {
+      const today = new Date();
+      const dueDate = new Date();
+      dueDate.setDate(today.getDate() + 30); // 30 days from now
+
+      const periodStart = new Date();
+      const periodEnd = new Date();
+      periodEnd.setFullYear(periodEnd.getFullYear() + 1); // 1 year period
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const organizationId of selectedOrganizations) {
+        try {
+          const organization = organizations.find(org => org.id === organizationId);
+          if (!organization) continue;
+
+          await createInvoice({
+            organization_id: organizationId,
+            amount: organization.annual_fee_amount || 1000,
+            due_date: format(dueDate, 'yyyy-MM-dd'),
+            period_start_date: format(periodStart, 'yyyy-MM-dd'),
+            period_end_date: format(periodEnd, 'yyyy-MM-dd'),
+            notes: `Annual membership fee for ${organization.name}`
+          });
+
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to create invoice for organization ${organizationId}:`, error);
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast({
+          title: "Invoices created successfully",
+          description: `${successCount} invoice${successCount !== 1 ? 's' : ''} created successfully${errorCount > 0 ? `, ${errorCount} failed` : ''}.`
+        });
+      }
+
+      if (errorCount > 0 && successCount === 0) {
+        toast({
+          title: "Failed to create invoices",
+          description: "All invoice creation attempts failed. Please try again.",
+          variant: "destructive"
+        });
+      }
+
+      // Clear selection after sending
+      setSelectedOrganizations(new Set());
+    } catch (error) {
+      console.error('Error creating invoices:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create invoices. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSendingInvoices(false);
     }
   };
 
@@ -333,17 +431,41 @@ export default function MembershipFees() {
             {/* Organization Fees Overview */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Organization Fees Overview
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Organization Fees Overview
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {selectedOrganizations.size} selected
+                    </span>
+                    <Button
+                      onClick={handleSendSelectedInvoices}
+                      disabled={selectedOrganizations.size === 0 || isSendingInvoices}
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Send className="h-4 w-4" />
+                      {isSendingInvoices ? 'Creating Invoices...' : `Send Invoices (${selectedOrganizations.size})`}
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="border rounded-lg overflow-hidden">
                   <div className="bg-muted/50 px-6 py-3 border-b">
                     <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
+                      <div className="col-span-1 flex items-center">
+                        <Checkbox
+                          checked={selectedOrganizations.size === organizations.length && organizations.length > 0}
+                          onCheckedChange={handleSelectAll}
+                          className="mr-2"
+                        />
+                        <CheckSquare className="h-4 w-4" />
+                      </div>
                       <div className="col-span-3">Organization</div>
-                      <div className="col-span-2">Status</div>
+                      <div className="col-span-1">Status</div>
                       <div className="col-span-2">Annual Fee</div>
                       <div className="col-span-2">Start Date</div>
                       <div className="col-span-2">End Date</div>
@@ -359,10 +481,16 @@ export default function MembershipFees() {
                       return (
                         <div key={organization.id} className="px-6 py-4 hover:bg-muted/30 transition-colors">
                           <div className="grid grid-cols-12 gap-4 items-center">
+                            <div className="col-span-1">
+                              <Checkbox
+                                checked={selectedOrganizations.has(organization.id)}
+                                onCheckedChange={(checked) => handleSelectOrganization(organization.id, !!checked)}
+                              />
+                            </div>
                             <div className="col-span-3">
                               <div className="font-medium text-foreground">{organization.name}</div>
                             </div>
-                            <div className="col-span-2">
+                            <div className="col-span-1">
                               <span className={cn(
                                 "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
                                 organization.membership_status === 'active' && "bg-green-100 text-green-800",
