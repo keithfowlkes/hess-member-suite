@@ -1,14 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
-import hessLogo from '@/assets/hess-logo.png';
+import hessLogoOfficial from '@/assets/hess-logo-official.png';
 
 export async function setupDefaultInvoiceTemplate() {
   try {
     // Convert the imported logo to a blob for upload
-    const response = await fetch(hessLogo);
+    const response = await fetch(hessLogoOfficial);
     const logoBlob = await response.blob();
     
     // Upload the logo to Supabase storage
-    const fileName = `hess-logo-${Date.now()}.png`;
+    const fileName = `hess-logo-official-${Date.now()}.png`;
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('invoice-logos')
       .upload(fileName, logoBlob, {
