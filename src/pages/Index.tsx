@@ -15,17 +15,6 @@ const Index = () => {
   const [userOrganization, setUserOrganization] = useState<any>(null);
   const { getUserOrganization } = useOrganizationProfile();
 
-  // Redirect admin users to the Master Dashboard
-  if (isViewingAsAdmin) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  const memberStats = [
-    { title: 'Membership Status', value: 'Active', icon: Building2, color: 'text-green-600' },
-    { title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600' },
-    { title: 'Outstanding Balance', value: '$0', icon: DollarSign, color: 'text-green-600' },
-  ];
-
   // Fetch user's organization data
   useEffect(() => {
     const fetchUserOrganization = async () => {
@@ -36,6 +25,17 @@ const Index = () => {
     };
     fetchUserOrganization();
   }, [user, getUserOrganization]);
+
+  // Redirect admin users to the Master Dashboard
+  if (isViewingAsAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  const memberStats = [
+    { title: 'Membership Status', value: 'Active', icon: Building2, color: 'text-green-600' },
+    { title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600' },
+    { title: 'Outstanding Balance', value: '$0', icon: DollarSign, color: 'text-green-600' },
+  ];
 
   return (
     <SidebarProvider>
