@@ -47,7 +47,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Attempting to send test email to: ${to}`);
 
     const emailResponse = await resend.emails.send({
-      from: "HESS Consortium <info@hessconsortium.app>",
+      from: "HESS Consortium <onboarding@resend.dev>",
       to: [to],
       subject: subject,
       html: `
@@ -60,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="background-color: #e8f4f8; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #333; margin-top: 0;">System Information</h3>
             <ul style="color: #666; line-height: 1.6;">
-              <li><strong>Sent from:</strong> info@hessconsortium.app</li>
+              <li><strong>Sent from:</strong> onboarding@resend.dev</li>
               <li><strong>Email service:</strong> Resend</li>
               <li><strong>Timestamp:</strong> ${new Date().toISOString()}</li>
               <li><strong>Test ID:</strong> ${crypto.randomUUID()}</li>
