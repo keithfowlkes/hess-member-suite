@@ -626,23 +626,40 @@ export default function Settings() {
                            </p>
                          </div>
 
-                         <Button 
-                           onClick={handleUpdateResendApiKey}
-                           disabled={apiKeyLoading || !resendApiKey.trim()}
-                           size="sm"
-                         >
-                           {apiKeyLoading ? (
-                             <>
-                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                               Updating...
-                             </>
-                           ) : (
-                             <>
-                               <Save className="w-4 h-4 mr-2" />
-                               Update API Key
-                             </>
-                           )}
-                         </Button>
+                         <AlertDialog>
+                           <AlertDialogTrigger asChild>
+                             <Button 
+                               disabled={apiKeyLoading || !resendApiKey.trim()}
+                               size="sm"
+                             >
+                               {apiKeyLoading ? (
+                                 <>
+                                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                   Updating...
+                                 </>
+                               ) : (
+                                 <>
+                                   <Save className="w-4 h-4 mr-2" />
+                                   Update API Key
+                                 </>
+                               )}
+                             </Button>
+                           </AlertDialogTrigger>
+                           <AlertDialogContent>
+                             <AlertDialogHeader>
+                               <AlertDialogTitle>Update Resend API Key</AlertDialogTitle>
+                               <AlertDialogDescription>
+                                 Are you sure you want to update the Resend API key? This will replace the current API key and may affect email functionality if the new key is invalid.
+                               </AlertDialogDescription>
+                             </AlertDialogHeader>
+                             <AlertDialogFooter>
+                               <AlertDialogCancel>Cancel</AlertDialogCancel>
+                               <AlertDialogAction onClick={handleUpdateResendApiKey}>
+                                 Yes, Update API Key
+                               </AlertDialogAction>
+                             </AlertDialogFooter>
+                           </AlertDialogContent>
+                         </AlertDialog>
                        </div>
 
                         <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
