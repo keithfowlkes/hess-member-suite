@@ -53,7 +53,13 @@ const Index = () => {
                 </p>
                 {user?.email && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Logged in as: <span className="font-medium text-foreground">{user.email}</span>
+                    Logged in as: 
+                    <a 
+                      href={`mailto:${user.email}`}
+                      className="font-medium text-primary hover:underline ml-1"
+                    >
+                      {user.email}
+                    </a>
                   </p>
                 )}
               </div>
@@ -161,7 +167,12 @@ const Index = () => {
                       {userOrganization.email && (
                         <div className="flex items-center gap-2 text-sm">
                           <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">{userOrganization.email}</span>
+                          <a 
+                            href={`mailto:${userOrganization.email}`}
+                            className="text-primary hover:underline"
+                          >
+                            {userOrganization.email}
+                          </a>
                         </div>
                       )}
 

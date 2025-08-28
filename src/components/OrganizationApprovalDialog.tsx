@@ -106,7 +106,12 @@ export const OrganizationApprovalDialog = ({
                 {organization.email && (
                   <div className="flex items-center gap-2 text-sm">
                     <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>{organization.email}</span>
+                    <a 
+                      href={`mailto:${organization.email}`}
+                      className="text-primary hover:underline"
+                    >
+                      {organization.email}
+                    </a>
                   </div>
                 )}
                 {organization.student_fte && (
@@ -128,7 +133,13 @@ export const OrganizationApprovalDialog = ({
                       <span className="font-medium">Name:</span> {organization.profiles.first_name} {organization.profiles.last_name}
                     </div>
                     <div>
-                      <span className="font-medium">Email:</span> {organization.profiles.email}
+                  <span className="font-medium">Email:</span> 
+                  <a 
+                    href={`mailto:${organization.profiles.email}`}
+                    className="text-primary hover:underline"
+                  >
+                    {organization.profiles.email}
+                  </a>
                     </div>
                     {organization.profiles.primary_contact_title && (
                       <div>

@@ -435,7 +435,12 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                     ) : currentData.email ? (
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{currentData.email}</span>
+                        <a 
+                          href={`mailto:${currentData.email}`}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          {currentData.email}
+                        </a>
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">Not provided</p>
@@ -503,7 +508,12 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                         <Label>Email</Label>
                         <div className="flex items-center gap-2">
                           <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{profile?.email}</span>
+                          <a 
+                            href={`mailto:${profile?.email}`}
+                            className="text-sm text-primary hover:underline"
+                          >
+                            {profile?.email}
+                          </a>
                         </div>
                       </div>
 
@@ -592,7 +602,12 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                     ) : profile?.secondary_contact_email ? (
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{profile.secondary_contact_email}</span>
+                        <a 
+                          href={`mailto:${profile.secondary_contact_email}`}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          {profile.secondary_contact_email}
+                        </a>
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">Not provided</p>

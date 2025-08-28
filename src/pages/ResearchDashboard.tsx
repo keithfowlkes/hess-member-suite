@@ -152,7 +152,12 @@ export default function ResearchDashboard() {
                         {organization.email && (
                           <div className="flex items-center text-muted-foreground">
                             <Mail className="h-4 w-4 mr-2" />
-                            {organization.email}
+                            <a 
+                              href={`mailto:${organization.email}`}
+                              className="text-primary hover:underline"
+                            >
+                              {organization.email}
+                            </a>
                           </div>
                         )}
                         {organization.phone && (
@@ -229,7 +234,12 @@ export default function ResearchDashboard() {
                         </div>
                         <div className="col-span-2">
                           {organization.email ? (
-                            <div className="text-sm text-muted-foreground">{organization.email}</div>
+                            <a 
+                              href={`mailto:${organization.email}`}
+                              className="text-sm text-primary hover:underline"
+                            >
+                              {organization.email}
+                            </a>
                           ) : (
                             <span className="text-muted-foreground text-sm">—</span>
                           )}

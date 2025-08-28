@@ -293,7 +293,13 @@ const MasterDashboard = () => {
                 </p>
                 {user?.email && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Logged in as: <span className="font-medium text-foreground">{user.email}</span>
+                    Logged in as: 
+                    <a 
+                      href={`mailto:${user.email}`}
+                      className="font-medium text-primary hover:underline ml-1"
+                    >
+                      {user.email}
+                    </a>
                   </p>
                 )}
               </div>

@@ -317,7 +317,14 @@ export function ImportMembersDialog({ open, onOpenChange }: ImportMembersDialogP
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {importResult.failed.map((item, index) => (
                       <div key={index} className="flex justify-between items-center p-2 bg-red-50 rounded">
-                        <span className="text-sm">{item.email}</span>
+                        <span className="text-sm">
+                          <a 
+                            href={`mailto:${item.email}`}
+                            className="text-primary hover:underline"
+                          >
+                            {item.email}
+                          </a>
+                        </span>
                         <span className="text-xs text-red-600">{item.error}</span>
                       </div>
                     ))}

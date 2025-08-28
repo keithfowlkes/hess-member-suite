@@ -309,7 +309,12 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                   {profile?.email && (
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{profile.email}</span>
+                      <a 
+                        href={`mailto:${profile.email}`}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        {profile.email}
+                      </a>
                     </div>
                   )}
                   {profile?.phone && (
@@ -345,7 +350,12 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                     {profile.secondary_contact_email && (
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{profile.secondary_contact_email}</span>
+                        <a 
+                          href={`mailto:${profile.secondary_contact_email}`}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          {profile.secondary_contact_email}
+                        </a>
                       </div>
                     )}
                   </CardContent>
