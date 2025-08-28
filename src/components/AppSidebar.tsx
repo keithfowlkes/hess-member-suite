@@ -87,14 +87,6 @@ export function AppSidebar() {
         <SidebarGroup>
           <div className="flex items-center justify-between px-3 py-2">
             <SidebarGroupLabel>{isViewingAsAdmin ? 'Admin Panel' : 'Member Portal'}</SidebarGroupLabel>
-            {isViewingAsAdmin && totalPendingActions > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="h-5 w-5 p-0 flex items-center justify-center text-xs"
-              >
-                {totalPendingActions}
-              </Badge>
-            )}
           </div>
           <SidebarGroupContent>
             <SidebarMenu>

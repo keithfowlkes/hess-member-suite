@@ -115,15 +115,116 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Current Organization Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">New Organization Data</CardTitle>
+                  <CardTitle className="text-base">Current Organization Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50">
+                      <span className="font-medium text-sm">Organization Name:</span>
+                      <span className="text-sm text-muted-foreground col-span-2">
+                        {selectedRequest.organizations?.name || 'Not set'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50">
+                      <span className="font-medium text-sm">Primary Contact:</span>
+                      <span className="text-sm text-muted-foreground col-span-2">
+                        {selectedRequest.organizations?.profiles?.first_name && selectedRequest.organizations?.profiles?.last_name
+                          ? `${selectedRequest.organizations.profiles.first_name} ${selectedRequest.organizations.profiles.last_name}`
+                          : 'Not set'
+                        }
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50">
+                      <span className="font-medium text-sm">Contact Email:</span>
+                      <span className="text-sm text-muted-foreground col-span-2">
+                        {selectedRequest.organizations?.profiles?.email || 'Not set'}
+                      </span>
+                    </div>
+                     <div className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50">
+                       <span className="font-medium text-sm">Location:</span>
+                       <span className="text-sm text-muted-foreground col-span-2">
+                         {(selectedRequest.organizations as any)?.city && (selectedRequest.organizations as any)?.state
+                           ? `${(selectedRequest.organizations as any).city}, ${(selectedRequest.organizations as any).state}`
+                           : 'Not set'
+                         }
+                       </span>
+                     </div>
+                     <div className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50">
+                       <span className="font-medium text-sm">Student FTE:</span>
+                       <span className="text-sm text-muted-foreground col-span-2">
+                         {(selectedRequest.organizations as any)?.student_fte?.toLocaleString() || 'Not set'}
+                       </span>
+                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* New Organization Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Updated Organization Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {selectedRequest.new_organization_data ? (
+                    <div className="space-y-2">
+                      {Object.entries(selectedRequest.new_organization_data as Record<string, any>)
+                        .filter(([key, value]) => value !== null && value !== undefined && value !== '')
+                        .map(([key, value]) => {
+                          const displayKey = key
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, l => l.toUpperCase());
+                          
+                          let displayValue = value;
+                          if (typeof value === 'boolean') {
+                            displayValue = value ? 'Yes' : 'No';
+                          } else if (Array.isArray(value)) {
+                            displayValue = value.join(', ');
+                          } else if (typeof value === 'object') {
+                            displayValue = JSON.stringify(value, null, 2);
+                          }
+                          
+                          return (
+                            <div key={key} className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50 last:border-0">
+                              <span className="font-medium text-sm">{displayKey}:</span>
+                              <span className="text-sm text-muted-foreground col-span-2 break-words">
+                                {String(displayValue)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No updated organization data provided</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Contact Change Summary */}
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-base">Contact Reassignment Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <pre className="text-sm bg-muted p-3 rounded-md overflow-auto">
-                    {JSON.stringify(selectedRequest.new_organization_data, null, 2)}
-                  </pre>
+                  <div className="bg-muted/30 rounded-md p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium">Current Contact:</span>
+                        <div className="text-muted-foreground mt-1">
+                          {selectedRequest.organizations?.profiles?.email || 'No current contact'}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium">Requested New Contact:</span>
+                        <div className="text-muted-foreground mt-1">
+                          {selectedRequest.new_contact_email}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
