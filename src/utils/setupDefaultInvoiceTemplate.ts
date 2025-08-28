@@ -1,35 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
-import hessLogoOfficial from '@/assets/hess-logo-official.png';
 
 export async function setupDefaultInvoiceTemplate() {
   try {
-    // Convert the imported logo to a blob for upload
-    const response = await fetch(hessLogoOfficial);
-    const logoBlob = await response.blob();
-    
-    // Upload the logo to Supabase storage
-    const fileName = `hess-logo-official-${Date.now()}.png`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('invoice-logos')
-      .upload(fileName, logoBlob, {
-        contentType: 'image/png',
-        upsert: true
-      });
+    // Use the uploaded HESS logo directly
+    const logoUrl = '/lovable-uploads/4a98a7dc-4bad-4f5b-94d4-fa028adbc2f6.png';
 
-    if (uploadError) {
-      console.error('Error uploading logo:', uploadError);
-      return;
-    }
-
-    // Get the public URL for the uploaded logo
-    const { data: { publicUrl } } = supabase.storage
-      .from('invoice-logos')
-      .getPublicUrl(fileName);
-
-    // Update the default template with the logo URL
+    // Update the default template with the official logo URL
     const { error: updateError } = await supabase
       .from('invoice_templates')
-      .update({ logo_url: publicUrl })
+      .update({ logo_url: logoUrl })
       .eq('name', 'HESS Consortium Default Template');
 
     if (updateError) {
@@ -37,8 +16,8 @@ export async function setupDefaultInvoiceTemplate() {
       return;
     }
 
-    console.log('Default HESS invoice template setup completed with logo');
-    return publicUrl;
+    console.log('Default HESS invoice template setup completed with official logo');
+    return logoUrl;
   } catch (error) {
     console.error('Error setting up default invoice template:', error);
   }

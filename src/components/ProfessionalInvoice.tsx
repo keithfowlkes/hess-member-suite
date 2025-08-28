@@ -70,7 +70,7 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
             align-items: flex-start;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
-            border-bottom: 3px solid #2563eb;
+            border-bottom: 3px solid #6b7280;
           }
           
           .logo-section img {
@@ -81,7 +81,7 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
           .invoice-title h1 {
             font-size: 2.5rem;
             font-weight: bold;
-            color: #2563eb;
+            color: #6b7280;
             margin: 0;
           }
           
@@ -101,7 +101,7 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
           .detail-section h3 {
             font-size: 1.1rem;
             font-weight: 600;
-            color: #2563eb;
+            color: #6b7280;
             margin-bottom: 0.5rem;
             border-bottom: 1px solid #e5e7eb;
             padding-bottom: 0.25rem;
@@ -115,7 +115,7 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
           }
           
           .invoice-table th {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            background: linear-gradient(135deg, #6b7280, #4b5563);
             color: white;
             padding: 1rem;
             text-align: left;
@@ -145,14 +145,14 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
           }
           
           .payment-info {
-            background: #f0f9ff;
+            background: #f9fafb;
             padding: 1.5rem;
-            border-left: 4px solid #2563eb;
+            border-left: 4px solid #6b7280;
             margin-bottom: 1rem;
           }
           
           .payment-info h3 {
-            color: #2563eb;
+            color: #6b7280;
             margin-bottom: 0.5rem;
           }
           
