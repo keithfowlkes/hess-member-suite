@@ -71,6 +71,8 @@ export default function MembershipFees() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
   const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [previewOrganization, setPreviewOrganization] = useState(null);
   
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -951,12 +953,31 @@ export default function MembershipFees() {
                       <p className="text-sm text-muted-foreground">
                         {selectedOrganizations.size} organization{selectedOrganizations.size !== 1 ? 's' : ''} selected
                       </p>
-                      <Button 
-                        onClick={handleSendSelectedInvoices}
-                        disabled={selectedOrganizations.size === 0 || isSendingInvoices}
-                      >
-                        {isSendingInvoices ? "Creating Invoices..." : "Create Selected Invoices"}
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            if (selectedOrganizations.size > 0) {
+                              const firstOrgId = Array.from(selectedOrganizations)[0];
+                              const org = organizations.find(o => o.id === firstOrgId);
+                              if (org) {
+                                setPreviewOrganization(org);
+                                setPreviewDialogOpen(true);
+                              }
+                            }
+                          }}
+                          disabled={selectedOrganizations.size === 0}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Preview Invoice
+                        </Button>
+                        <Button 
+                          onClick={handleSendSelectedInvoices}
+                          disabled={selectedOrganizations.size === 0 || isSendingInvoices}
+                        >
+                          {isSendingInvoices ? "Creating Invoices..." : "Create Selected Invoices"}
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -1041,6 +1062,40 @@ export default function MembershipFees() {
             open={templateEditorOpen}
             onOpenChange={setTemplateEditorOpen}  
           />
+
+          {/* Preview Dialog */}
+          {previewOrganization && (
+            <div className={cn(
+              "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+              previewDialogOpen ? "flex" : "hidden"
+            )}>
+              <div className="fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-4xl max-h-[90vh] overflow-auto translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">Invoice Preview - {previewOrganization.name}</h2>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setPreviewDialogOpen(false)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+                <div className="border rounded-lg p-4 bg-white">
+                  <ProfessionalInvoice 
+                    invoice={createSampleInvoice(previewOrganization)} 
+                  />
+                </div>
+                <div className="flex justify-end space-x-2 mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setPreviewDialogOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </SidebarProvider>
