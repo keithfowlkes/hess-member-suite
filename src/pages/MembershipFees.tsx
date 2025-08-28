@@ -11,6 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useMembers } from '@/hooks/useMembers';
 import { useInvoices } from '@/hooks/useInvoices';
@@ -1266,38 +1267,24 @@ export default function MembershipFees() {
           />
 
           {/* Preview Dialog */}
-          {previewOrganization && (
-            <div className={cn(
-              "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-              previewDialogOpen ? "flex" : "hidden"
-            )}>
-              <div className="fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-4xl max-h-[90vh] overflow-auto translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">Invoice Preview - {previewOrganization.name}</h2>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setPreviewDialogOpen(false)}
-                  >
-                    ✕
-                  </Button>
+          <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  Invoice Preview {previewOrganization ? `- ${previewOrganization.name}` : ''}
+                </DialogTitle>
+              </DialogHeader>
+              {previewOrganization && (
+                <div className="mt-4">
+                  <div className="border rounded-lg p-4 bg-white">
+                    <ProfessionalInvoice 
+                      invoice={createSampleInvoice(previewOrganization)} 
+                    />
+                  </div>
                 </div>
-                <div className="border rounded-lg p-4 bg-white">
-                  <ProfessionalInvoice 
-                    invoice={createSampleInvoice(previewOrganization)} 
-                  />
-                </div>
-                <div className="flex justify-end space-x-2 mt-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setPreviewDialogOpen(false)}
-                  >
-                    Close
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Overdue Organizations Modal */}
           {overdueModalOpen && (
