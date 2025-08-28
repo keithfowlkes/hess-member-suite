@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import OrganizationProfile from "./pages/OrganizationProfile";
 import Dashboards from "./pages/Dashboards";
+import ResearchDashboard from "./pages/ResearchDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><MasterDashboard /></ProtectedRoute>} />
             <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
             <Route path="/dashboards" element={<ProtectedRoute><Dashboards /></ProtectedRoute>} />
+            <Route path="/research-dashboard" element={<ProtectedRoute><ResearchDashboard /></ProtectedRoute>} />
             <Route path="/membership-fees" element={<ProtectedRoute><MembershipFees /></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
             <Route path="/public/directory" element={<PublicDirectory />} />
