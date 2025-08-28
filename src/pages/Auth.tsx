@@ -20,7 +20,7 @@ export default function Auth() {
   const { toast } = useToast();
   const { data: organizations = [] } = useOrganizations();
   const createReassignmentRequest = useCreateReassignmentRequest();
-  const { data: recaptchaSetting } = useSystemSetting('recaptcha_site_key');
+  const { data: recaptchaSetting, isLoading: isLoadingRecaptcha } = useSystemSetting('recaptcha_site_key');
   
   const [signInForm, setSignInForm] = useState({ email: '', password: '' });
   const [signInCaptcha, setSignInCaptcha] = useState<string | null>(null);
@@ -32,8 +32,8 @@ export default function Auth() {
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
   const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
   
-  // Get reCAPTCHA site key from database or fallback to test key
-  const recaptchaSiteKey = recaptchaSetting?.setting_value || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
+  // Get reCAPTCHA site key from database - wait for loading to complete
+  const recaptchaSiteKey = isLoadingRecaptcha ? null : (recaptchaSetting?.setting_value || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI");
 
   // System field select component
   const SystemFieldSelect = ({ 
@@ -499,11 +499,17 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-gray-700 font-medium">Security Verification</Label>
-                    <ReCAPTCHA
-                      ref={signInCaptchaRef}
-                      sitekey={recaptchaSiteKey}
-                      onChange={setSignInCaptcha}
-                    />
+                    {recaptchaSiteKey ? (
+                      <ReCAPTCHA
+                        ref={signInCaptchaRef}
+                        sitekey={recaptchaSiteKey}
+                        onChange={setSignInCaptcha}
+                      />
+                    ) : (
+                      <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
+                        <span className="text-gray-500 text-sm">Loading verification...</span>
+                      </div>
+                    )}
                   </div>
                   <Button type="submit" className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" disabled={isSubmitting || !signInCaptcha}>
                     {isSubmitting ? 'Signing in...' : 'Sign In'}
@@ -1141,12 +1147,18 @@ export default function Auth() {
                   </div>
                   
                   <div className="space-y-4">
-                    <ReCAPTCHA
-                      ref={signUpCaptchaRef}
-                      sitekey={recaptchaSiteKey}
-                      onChange={setSignUpCaptcha}
-                    />
-                    {!recaptchaSetting?.setting_value && (
+                    {recaptchaSiteKey ? (
+                      <ReCAPTCHA
+                        ref={signUpCaptchaRef}
+                        sitekey={recaptchaSiteKey}
+                        onChange={setSignUpCaptcha}
+                      />
+                    ) : (
+                      <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
+                        <span className="text-gray-500 text-sm">Loading verification...</span>
+                      </div>
+                    )}
+                    {!isLoadingRecaptcha && !recaptchaSetting?.setting_value && (
                       <p className="text-xs text-gray-500">
                         Using test reCAPTCHA key. Admin should configure production key in System Settings.
                       </p>
