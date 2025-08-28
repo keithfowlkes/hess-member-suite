@@ -15,6 +15,7 @@ import { useInvoices } from '@/hooks/useInvoices';
 import { useToast } from '@/hooks/use-toast';
 import { setupDefaultInvoiceTemplate } from '@/utils/setupDefaultInvoiceTemplate';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   DollarSign, 
   Calendar as CalendarIcon, 
@@ -51,6 +52,20 @@ export default function MembershipFees() {
   const [selectedOrganizations, setSelectedOrganizations] = useState<Set<string>>(new Set());
   const [isSendingInvoices, setIsSendingInvoices] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Test email states
+  const [testEmailData, setTestEmailData] = useState({
+    to: '',
+    subject: 'HESS Consortium - Test Invoice',
+    message: 'Please find attached your test membership invoice from the HESS Consortium.'
+  });
+  const [isTestEmailLoading, setIsTestEmailLoading] = useState(false);
+  const [testEmailResult, setTestEmailResult] = useState<{
+    success: boolean;
+    message: string;
+    timestamp?: string;
+    emailId?: string;
+  } | null>(null);
 
   // Setup default invoice template with HESS logo on component mount
   React.useEffect(() => {
@@ -256,6 +271,163 @@ export default function MembershipFees() {
       });
     } finally {
       setIsSendingInvoices(false);
+    }
+  };
+
+  // Test email function
+  const handleSendTestInvoice = async () => {
+    if (!testEmailData.to.trim()) {
+      toast({
+        title: 'Email Required',
+        description: 'Please enter an email address to send the test invoice to.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsTestEmailLoading(true);
+    setTestEmailResult(null);
+
+    try {
+      // Create dummy organization and invoice data
+      const dummyOrg = {
+        id: 'test-org-123',
+        name: 'Test University',
+        email: testEmailData.to.trim(),
+        annual_fee_amount: 1000,
+        membership_status: 'active' as const,
+        membership_start_date: format(new Date(), 'yyyy-MM-dd'),
+        membership_end_date: format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
+      };
+
+      const dummyInvoice = createSampleInvoice(dummyOrg);
+
+      // Generate HTML content for the invoice
+      const invoiceHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #6b7280; padding-bottom: 20px;">
+            <h1 style="color: #6b7280; margin: 0; font-size: 2.5rem;">INVOICE</h1>
+            <p style="color: #666; margin: 10px 0;">#${dummyInvoice.invoice_number}</p>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+            <div>
+              <h3 style="color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Bill To:</h3>
+              <p><strong>${dummyOrg.name}</strong></p>
+              <p>Organization Address</p>
+              <p>${dummyOrg.email}</p>
+            </div>
+            <div>
+              <h3 style="color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Invoice Details:</h3>
+              <p><strong>Invoice Date:</strong> ${format(new Date(dummyInvoice.invoice_date), 'MMM dd, yyyy')}</p>
+              <p><strong>Due Date:</strong> ${format(new Date(dummyInvoice.due_date), 'MMM dd, yyyy')}</p>
+              <p><strong>Period:</strong> ${format(new Date(dummyInvoice.period_start_date), 'MMM dd, yyyy')} - ${format(new Date(dummyInvoice.period_end_date), 'MMM dd, yyyy')}</p>
+            </div>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; margin: 30px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <thead>
+              <tr style="background: linear-gradient(135deg, #6b7280, #4b5563);">
+                <th style="color: white; padding: 15px; text-align: left; font-weight: 600;">Description</th>
+                <th style="color: white; padding: 15px; text-align: left; font-weight: 600;">Period</th>
+                <th style="color: white; padding: 15px; text-align: right; font-weight: 600;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
+                  <strong>Annual Membership Fee</strong>
+                </td>
+                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
+                  ${format(new Date(dummyInvoice.period_start_date), 'MMM dd, yyyy')} - ${format(new Date(dummyInvoice.period_end_date), 'MMM dd, yyyy')}
+                </td>
+                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">
+                  $${dummyInvoice.amount.toLocaleString()}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr style="background: #f8fafc; font-weight: bold; font-size: 1.1rem;">
+                <td colspan="2" style="padding: 15px;"><strong>Total Due:</strong></td>
+                <td style="padding: 15px; text-align: right;">
+                  <strong>$${dummyInvoice.amount.toLocaleString()}</strong>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div style="background: #f9fafb; padding: 20px; border-left: 4px solid #6b7280; margin: 30px 0;">
+            <h3 style="color: #6b7280; margin-bottom: 10px;">Payment Information</h3>
+            <p>Please remit payment within 30 days of the invoice date.</p>
+            <p><strong>Contact:</strong> billing@hessconsortium.org</p>
+          </div>
+
+          <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 8px; margin-top: 30px;">
+            <p style="color: #666; margin: 0;">Thank you for your membership in the HESS Consortium!</p>
+          </div>
+        </div>
+      `;
+
+      const emailContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #333;">Test Invoice from HESS Consortium</h2>
+          <p>${testEmailData.message}</p>
+          <div style="margin: 20px 0; padding: 15px; background-color: #f9f9f9; border-radius: 8px;">
+            <p><strong>This is a test email.</strong> Below is a sample invoice for demonstration purposes.</p>
+          </div>
+          ${invoiceHtml}
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;" />
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            This is a test email from the HESS Consortium system.
+          </p>
+        </div>
+      `;
+
+      const { data, error } = await supabase.functions.invoke('test-email', {
+        body: {
+          to: testEmailData.to.trim(),
+          subject: testEmailData.subject.trim() || 'HESS Consortium - Test Invoice',
+          message: emailContent
+        }
+      });
+
+      if (error) {
+        console.error('Test invoice email error:', error);
+        setTestEmailResult({
+          success: false,
+          message: error.message || 'Failed to send test invoice'
+        });
+        toast({
+          title: 'Test Invoice Failed',
+          description: error.message || 'Failed to send test invoice',
+          variant: 'destructive',
+        });
+      } else {
+        setTestEmailResult({
+          success: true,
+          message: data.message || 'Test invoice sent successfully',
+          timestamp: data.timestamp,
+          emailId: data.emailId
+        });
+
+        toast({
+          title: 'Test Invoice Sent',
+          description: `Test invoice sent to ${testEmailData.to}`,
+        });
+      }
+    } catch (error: any) {
+      console.error('Test invoice email error:', error);
+      setTestEmailResult({
+        success: false,
+        message: error.message || 'An unexpected error occurred'
+      });
+      toast({
+        title: 'Test Invoice Failed',
+        description: error.message || 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTestEmailLoading(false);
     }
   };
 
@@ -473,7 +645,7 @@ export default function MembershipFees() {
 
             {/* Tabs for Overview and Invoice Preview */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   Organization Fees Overview
@@ -481,6 +653,10 @@ export default function MembershipFees() {
                 <TabsTrigger value="preview" className="flex items-center gap-2">
                   <Eye className="h-4 w-4" />
                   Invoice Preview ({selectedOrganizations.size})
+                </TabsTrigger>
+                <TabsTrigger value="test-invoice" className="flex items-center gap-2">
+                  <Send className="h-4 w-4" />
+                  Test Invoice Email
                 </TabsTrigger>
               </TabsList>
 
@@ -678,6 +854,115 @@ export default function MembershipFees() {
                               <Send className="h-4 w-4" />
                               {isSendingInvoices ? 'Creating Invoices...' : `Send All Invoices (${selectedOrganizations.size})`}
                             </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="test-invoice" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Send className="h-5 w-5" />
+                      Send Test Invoice
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Send a test invoice email with dummy organization data to verify email functionality
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="test-invoice-email">Test Recipient Email</Label>
+                        <Input
+                          id="test-invoice-email"
+                          type="email"
+                          placeholder="Enter email address to test"
+                          value={testEmailData.to}
+                          onChange={(e) => setTestEmailData(prev => ({ ...prev, to: e.target.value }))}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="test-invoice-subject">Email Subject</Label>
+                        <Input
+                          id="test-invoice-subject"
+                          placeholder="Test invoice email subject"
+                          value={testEmailData.subject}
+                          onChange={(e) => setTestEmailData(prev => ({ ...prev, subject: e.target.value }))}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="test-invoice-message">Email Message</Label>
+                        <textarea
+                          id="test-invoice-message"
+                          className="w-full min-h-[100px] px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
+                          placeholder="Test invoice email message"
+                          value={testEmailData.message}
+                          onChange={(e) => setTestEmailData(prev => ({ ...prev, message: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-4 border-t">
+                      <div className="text-sm text-muted-foreground">
+                        This will send a test invoice with dummy data from "Test University"
+                      </div>
+                      <Button
+                        onClick={handleSendTestInvoice}
+                        disabled={isTestEmailLoading || !testEmailData.to.trim()}
+                        className="flex items-center gap-2"
+                      >
+                        {isTestEmailLoading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Sending Test Invoice...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4" />
+                            Send Test Invoice
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Test Email Result */}
+                    {testEmailResult && (
+                      <div className={cn(
+                        "p-4 rounded-lg border",
+                        testEmailResult.success 
+                          ? "bg-green-50 border-green-200" 
+                          : "bg-red-50 border-red-200"
+                      )}>
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1">
+                            <h4 className={cn(
+                              "font-medium",
+                              testEmailResult.success ? 'text-green-900' : 'text-red-900'
+                            )}>
+                              {testEmailResult.success ? 'Test Invoice Sent Successfully' : 'Test Invoice Failed'}
+                            </h4>
+                            <p className={cn(
+                              "text-sm mt-1",
+                              testEmailResult.success ? 'text-green-800' : 'text-red-800'
+                            )}>
+                              {testEmailResult.message}
+                            </p>
+                            {testEmailResult.success && testEmailResult.timestamp && (
+                              <p className="text-xs text-green-700 mt-2">
+                                Sent at: {new Date(testEmailResult.timestamp).toLocaleString()}
+                              </p>
+                            )}
+                            {testEmailResult.success && testEmailResult.emailId && (
+                              <p className="text-xs text-green-700">
+                                Email ID: {testEmailResult.emailId}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
