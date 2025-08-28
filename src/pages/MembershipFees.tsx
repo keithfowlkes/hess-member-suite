@@ -98,6 +98,11 @@ export default function MembershipFees() {
   const [overdueModalOpen, setOverdueModalOpen] = useState(false);
   const [sendingReminders, setSendingReminders] = useState<Set<string>>(new Set());
 
+  // Prorated fee states
+  const [standardRenewalDate, setStandardRenewalDate] = useState<Date>(new Date(new Date().getFullYear(), 11, 31)); // Dec 31st by default
+  const [proratedOrganizations, setProratedOrganizations] = useState<any[]>([]);
+  const [updatingProrated, setUpdatingProrated] = useState<Set<string>>(new Set());
+
   // Setup default invoice template with HESS logo on component mount
   React.useEffect(() => {
     setupDefaultInvoiceTemplate();
@@ -133,6 +138,131 @@ export default function MembershipFees() {
         membership_status: organization.membership_status
       }
     };
+  };
+
+  // Calculate prorated fee based on membership start date
+  const calculateProratedFee = (membershipStartDate: string, annualFee: number, renewalDate: Date): number => {
+    const startDate = new Date(membershipStartDate);
+    const endDate = new Date(renewalDate);
+    
+    // If start date is after renewal date, use next year's renewal date
+    if (startDate > endDate) {
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    }
+    
+    const totalDays = 365; // Standard year
+    const remainingDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Calculate prorated amount (minimum 25% of annual fee)
+    const proratedAmount = Math.max((remainingDays / totalDays) * annualFee, annualFee * 0.25);
+    
+    return Math.round(proratedAmount);
+  };
+
+  // Get organizations that need prorated calculation
+  const getOrganizationsNeedingProration = () => {
+    const currentYear = new Date().getFullYear();
+    const renewalYear = standardRenewalDate.getFullYear();
+    
+    return organizations.filter(org => {
+      if (!org.membership_start_date || !org.annual_fee_amount) return false;
+      
+      const startDate = new Date(org.membership_start_date);
+      const startYear = startDate.getFullYear();
+      
+      // Check if they joined mid-year (after January 1st)
+      const yearStart = new Date(startYear, 0, 1);
+      const isNewMember = startDate > yearStart;
+      
+      // Check if they joined in current renewal period
+      const isCurrentPeriod = startYear === currentYear || startYear === renewalYear;
+      
+      return isNewMember && isCurrentPeriod;
+    }).map(org => {
+      const calculatedProrated = calculateProratedFee(
+        org.membership_start_date!, 
+        org.annual_fee_amount!, 
+        standardRenewalDate
+      );
+      
+      return {
+        ...org,
+        calculatedProratedFee: calculatedProrated,
+        remainingDays: Math.ceil((standardRenewalDate.getTime() - new Date(org.membership_start_date!).getTime()) / (1000 * 60 * 60 * 24))
+      };
+    });
+  };
+
+  // Update prorated fee for an organization
+  const updateProratedFee = async (organizationId: string, proratedAmount: number) => {
+    setUpdatingProrated(prev => new Set([...prev, organizationId]));
+    
+    try {
+      // Store prorated amount in state for now (could be saved to a separate table later)
+      setProratedOrganizations(prev => {
+        const existing = prev.find(p => p.id === organizationId);
+        if (existing) {
+          return prev.map(p => p.id === organizationId ? { ...p, proratedAmount } : p);
+        } else {
+          return [...prev, { id: organizationId, proratedAmount }];
+        }
+      });
+      
+      toast({
+        title: "Success",
+        description: "Prorated fee updated successfully."
+      });
+    } catch (error) {
+      console.error('Error updating prorated fee:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update prorated fee.",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdatingProrated(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(organizationId);
+        return newSet;
+      });
+    }
+  };
+
+  // Bulk apply calculated prorated fees
+  const applyBulkProratedFees = async () => {
+    const orgsNeedingProration = getOrganizationsNeedingProration();
+    if (orgsNeedingProration.length === 0) return;
+    
+    setIsUpdating(true);
+    try {
+      // Store all prorated amounts in state
+      const proratedData = orgsNeedingProration.map(org => ({
+        id: org.id,
+        proratedAmount: org.calculatedProratedFee
+      }));
+      
+      setProratedOrganizations(proratedData);
+      
+      toast({
+        title: "Success",
+        description: `Applied prorated fees to ${orgsNeedingProration.length} organizations.`
+      });
+    } catch (error) {
+      console.error('Error applying bulk prorated fees:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to apply prorated fees.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Get prorated amount for an organization
+  const getProratedAmount = (organizationId: string): number | null => {
+    const proratedOrg = proratedOrganizations.find(p => p.id === organizationId);
+    return proratedOrg?.proratedAmount || null;
   };
 
   // Calculate fee statistics
@@ -298,13 +428,20 @@ export default function MembershipFees() {
           const organization = organizations.find(org => org.id === organizationId);
           if (!organization) continue;
 
+          // Check if there's a prorated amount set for this organization
+          const proratedAmount = getProratedAmount(organizationId);
+          const invoiceAmount = proratedAmount || organization.annual_fee_amount || 1000;
+
           await createInvoice({
             organization_id: organizationId,
-            amount: organization.annual_fee_amount || 1000,
+            amount: invoiceAmount,
+            prorated_amount: proratedAmount,
             due_date: format(dueDate, 'yyyy-MM-dd'),
             period_start_date: format(periodStart, 'yyyy-MM-dd'),
             period_end_date: format(periodEnd, 'yyyy-MM-dd'),
-            notes: `Annual membership fee for ${organization.name}`
+            notes: proratedAmount 
+              ? `Prorated membership fee for ${organization.name} (${Math.round((proratedAmount / (organization.annual_fee_amount || 1000)) * 100)}% of annual fee)`
+              : `Annual membership fee for ${organization.name}`
           });
 
           successCount++;
@@ -837,10 +974,11 @@ export default function MembershipFees() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="invoices">Invoices</TabsTrigger>
                 <TabsTrigger value="management">Fee Management</TabsTrigger>
+                <TabsTrigger value="prorated">Prorated Fees</TabsTrigger>
                 <TabsTrigger value="testing">Testing</TabsTrigger>
               </TabsList>
 
@@ -1184,6 +1322,207 @@ export default function MembershipFees() {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="prorated">
+                <div className="space-y-6">
+                  {/* Standard Renewal Date Setting */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CalendarIcon className="h-5 w-5" />
+                        Standard Renewal Date Configuration
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Standard Annual Renewal Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal max-w-sm",
+                                !standardRenewalDate && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {standardRenewalDate ? format(standardRenewalDate, "PPP") : "Select renewal date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={standardRenewalDate}
+                              onSelect={(date) => date && setStandardRenewalDate(date)}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <p className="text-sm text-muted-foreground">
+                          This date is used to calculate prorated fees for organizations that join mid-year.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Organizations Needing Prorated Fees */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Organizations Needing Prorated Fees
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {(() => {
+                        const orgsNeedingProration = getOrganizationsNeedingProration();
+                        
+                        if (orgsNeedingProration.length === 0) {
+                          return (
+                            <div className="text-center py-12">
+                              <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                              <h3 className="text-lg font-medium text-muted-foreground">No organizations need proration</h3>
+                              <p className="text-muted-foreground">
+                                All organizations have full-year memberships or no start dates set.
+                              </p>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <>
+                            <div className="flex justify-between items-center">
+                              <p className="text-sm text-muted-foreground">
+                                {orgsNeedingProration.length} organization{orgsNeedingProration.length !== 1 ? 's' : ''} need prorated fee calculation
+                              </p>
+                              <Button 
+                                onClick={applyBulkProratedFees}
+                                disabled={isUpdating}
+                                variant="outline"
+                              >
+                                {isUpdating ? "Applying..." : "Apply All Calculated Fees"}
+                              </Button>
+                            </div>
+                            
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-12 gap-2 p-3 font-medium text-sm text-muted-foreground border-b">
+                                <div className="col-span-3">Organization</div>
+                                <div className="col-span-2">Start Date</div>
+                                <div className="col-span-2">Days Remaining</div>
+                                <div className="col-span-2">Annual Fee</div>
+                                <div className="col-span-2">Calculated Prorated</div>
+                                <div className="col-span-1">Actions</div>
+                              </div>
+                              
+                              {orgsNeedingProration.map((org) => {
+                                const customProrated = getProratedAmount(org.id);
+                                return (
+                                  <div key={org.id} className="grid grid-cols-12 gap-2 items-center p-3 border rounded-lg hover:bg-gray-50">
+                                    <div className="col-span-3">
+                                      <div>
+                                        <p className="font-medium">{org.name}</p>
+                                        <Badge className={getStatusColor(org.membership_status)}>
+                                          {org.membership_status}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <span className="text-sm">
+                                        {format(new Date(org.membership_start_date!), 'MMM dd, yyyy')}
+                                      </span>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <span className="text-sm">
+                                        {org.remainingDays} days
+                                      </span>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <span className="text-sm font-medium">
+                                        ${org.annual_fee_amount?.toLocaleString()}
+                                      </span>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <div className="space-y-1">
+                                        <div className="text-sm font-medium text-green-600">
+                                          ${(customProrated || org.calculatedProratedFee).toLocaleString()}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                          {Math.round(((customProrated || org.calculatedProratedFee) / org.annual_fee_amount!) * 100)}% of annual
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="col-span-1">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button 
+                                            variant="ghost" 
+                                            size="sm"
+                                            disabled={updatingProrated.has(org.id)}
+                                          >
+                                            <ChevronDown className="h-4 w-4" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuItem 
+                                            onClick={() => {
+                                              const newAmount = prompt(
+                                                `Enter custom prorated amount for ${org.name}:`,
+                                                (customProrated || org.calculatedProratedFee).toString()
+                                              );
+                                              if (newAmount && !isNaN(Number(newAmount))) {
+                                                updateProratedFee(org.id, Number(newAmount));
+                                              }
+                                            }}
+                                          >
+                                            Set Custom Amount
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem 
+                                            onClick={() => updateProratedFee(org.id, org.calculatedProratedFee)}
+                                          >
+                                            Use Calculated Amount
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
+
+                  {/* Prorated Fee Information */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" />
+                        How Prorated Fees Work
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3 text-sm text-muted-foreground">
+                        <p>
+                          <strong>Prorated fees</strong> are calculated for organizations that join after the membership year has started.
+                        </p>
+                        <ul className="list-disc list-inside space-y-1 ml-4">
+                          <li>Fees are calculated based on the remaining days until the standard renewal date</li>
+                          <li>Organizations pay for the portion of the year they'll be members</li>
+                          <li>Minimum fee is 25% of the annual amount</li>
+                          <li>Custom amounts can be set for special circumstances</li>
+                        </ul>
+                        <p>
+                          <strong>Example:</strong> If an organization joins 6 months into the membership year, 
+                          they would pay approximately 50% of the annual fee.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
 
               <TabsContent value="testing">
