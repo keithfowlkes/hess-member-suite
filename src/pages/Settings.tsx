@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -17,6 +18,7 @@ import { useFormFields, FormField } from '@/hooks/useFormFields';
 import { useToast } from '@/hooks/use-toast';
 import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDirectory';
 import { SystemFieldOptionsManager } from '@/components/SystemFieldOptionsManager';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
   Building2, 
@@ -34,7 +36,11 @@ import {
   Plus,
   Edit,
   Trash2,
-  Loader2
+  Loader2,
+  Mail,
+  Send,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 
 const availableSections = [
@@ -63,6 +69,20 @@ export default function Settings() {
   const [editingField, setEditingField] = useState<FormField | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
+  // Email testing states
+  const [emailTestData, setEmailTestData] = useState({
+    to: '',
+    subject: 'HESS Consortium - Email System Test',
+    message: 'This is a test email from the HESS Consortium email system. If you receive this message, the email system is working correctly.'
+  });
+  const [emailTestLoading, setEmailTestLoading] = useState(false);
+  const [emailTestResult, setEmailTestResult] = useState<{
+    success: boolean;
+    message: string;
+    timestamp?: string;
+    emailId?: string;
+  } | null>(null);
 
   const handleSaveRecaptcha = async () => {
     await updateSystemSetting.mutateAsync({
@@ -70,6 +90,68 @@ export default function Settings() {
       settingValue: recaptchaKey,
       description: 'Google reCAPTCHA site key for form verification'
     });
+  };
+
+  // Email testing function
+  const handleSendTestEmail = async () => {
+    if (!emailTestData.to.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a recipient email address.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setEmailTestLoading(true);
+    setEmailTestResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('test-email', {
+        body: {
+          to: emailTestData.to.trim(),
+          subject: emailTestData.subject.trim() || 'HESS Consortium - Email System Test',
+          message: emailTestData.message.trim() || 'This is a test email from the HESS Consortium email system.'
+        }
+      });
+
+      if (error) {
+        console.error('Email test error:', error);
+        setEmailTestResult({
+          success: false,
+          message: error.message || 'Failed to send test email'
+        });
+        toast({
+          title: 'Email Test Failed',
+          description: error.message || 'Failed to send test email',
+          variant: 'destructive'
+        });
+      } else {
+        setEmailTestResult({
+          success: true,
+          message: data.message || 'Test email sent successfully',
+          timestamp: data.timestamp,
+          emailId: data.emailId
+        });
+        toast({
+          title: 'Email Test Successful',
+          description: `Test email sent to ${emailTestData.to}`,
+        });
+      }
+    } catch (error: any) {
+      console.error('Email test error:', error);
+      setEmailTestResult({
+        success: false,
+        message: error.message || 'An unexpected error occurred'
+      });
+      toast({
+        title: 'Email Test Failed',
+        description: error.message || 'An unexpected error occurred',
+        variant: 'destructive'
+      });
+    } finally {
+      setEmailTestLoading(false);
+    }
   };
 
   // Form field handlers
@@ -388,6 +470,117 @@ export default function Settings() {
                     </CardContent>
                   </Card>
 
+                  {/* Email System Testing */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Mail className="w-5 h-5" />
+                        Email System Testing
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="test-email">Test Recipient Email</Label>
+                        <Input
+                          id="test-email"
+                          type="email"
+                          placeholder="Enter email address to test"
+                          value={emailTestData.to}
+                          onChange={(e) => setEmailTestData(prev => ({ ...prev, to: e.target.value }))}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="test-subject">Email Subject</Label>
+                        <Input
+                          id="test-subject"
+                          placeholder="Test email subject"
+                          value={emailTestData.subject}
+                          onChange={(e) => setEmailTestData(prev => ({ ...prev, subject: e.target.value }))}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="test-message">Test Message</Label>
+                        <Textarea
+                          id="test-message"
+                          placeholder="Enter test message content"
+                          value={emailTestData.message}
+                          onChange={(e) => setEmailTestData(prev => ({ ...prev, message: e.target.value }))}
+                          rows={3}
+                        />
+                      </div>
+
+                      <Button 
+                        onClick={handleSendTestEmail}
+                        disabled={emailTestLoading || !emailTestData.to.trim()}
+                        className="w-full"
+                      >
+                        {emailTestLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Sending Test Email...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Send Test Email
+                          </>
+                        )}
+                      </Button>
+
+                      {/* Email Test Result */}
+                      {emailTestResult && (
+                        <div className={`p-4 rounded-lg border-l-4 ${
+                          emailTestResult.success 
+                            ? 'bg-green-50 border-green-400' 
+                            : 'bg-red-50 border-red-400'
+                        }`}>
+                          <div className="flex items-start gap-3">
+                            {emailTestResult.success ? (
+                              <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                            ) : (
+                              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                            )}
+                            <div className="flex-1">
+                              <h4 className={`font-medium ${
+                                emailTestResult.success ? 'text-green-900' : 'text-red-900'
+                              }`}>
+                                {emailTestResult.success ? 'Test Email Sent Successfully' : 'Email Test Failed'}
+                              </h4>
+                              <p className={`text-sm mt-1 ${
+                                emailTestResult.success ? 'text-green-800' : 'text-red-800'
+                              }`}>
+                                {emailTestResult.message}
+                              </p>
+                              {emailTestResult.success && emailTestResult.timestamp && (
+                                <p className="text-xs text-green-700 mt-2">
+                                  Sent at: {new Date(emailTestResult.timestamp).toLocaleString()}
+                                </p>
+                              )}
+                              {emailTestResult.success && emailTestResult.emailId && (
+                                <p className="text-xs text-green-700">
+                                  Email ID: {emailTestResult.emailId}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
+                        <h4 className="font-medium text-blue-900 mb-2">Email Configuration:</h4>
+                        <ul className="text-sm text-blue-800 space-y-1">
+                          <li><strong>From:</strong> info@hessconsortium.app</li>
+                          <li><strong>Service:</strong> Resend</li>
+                          <li><strong>Domain:</strong> hessconsortium.app</li>
+                        </ul>
+                        <p className="text-xs text-blue-700 mt-2">
+                          Make sure the domain is verified in your Resend account for successful delivery.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
             </Tabs>
