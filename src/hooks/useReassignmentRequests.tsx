@@ -63,11 +63,14 @@ export const useCreateReassignmentRequest = () => {
       new_organization_data: any;
       original_organization_data: any;
     }) => {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { data: result, error } = await supabase
         .from('organization_reassignment_requests')
         .insert({
           ...data,
-          requested_by: 'system', // Will be updated when we have proper auth context
+          requested_by: user?.id || null,
         })
         .select()
         .single();
