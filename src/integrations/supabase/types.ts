@@ -277,7 +277,7 @@ export type Database = {
           new_contact_email: string
           new_organization_data: Json
           organization_id: string
-          original_organization_data: Json
+          original_organization_data: Json | null
           requested_by: string | null
           status: string
           updated_at: string
@@ -291,7 +291,7 @@ export type Database = {
           new_contact_email: string
           new_organization_data: Json
           organization_id: string
-          original_organization_data: Json
+          original_organization_data?: Json | null
           requested_by?: string | null
           status?: string
           updated_at?: string
@@ -305,7 +305,7 @@ export type Database = {
           new_contact_email?: string
           new_organization_data?: Json
           organization_id?: string
-          original_organization_data?: Json
+          original_organization_data?: Json | null
           requested_by?: string | null
           status?: string
           updated_at?: string

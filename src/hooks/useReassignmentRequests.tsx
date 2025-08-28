@@ -68,7 +68,7 @@ export const useCreateReassignmentRequest = () => {
           organization_id: data.organization_id,
           new_contact_email: data.new_contact_email,
           new_organization_data: data.new_organization_data,
-          original_organization_data: {}, // Not needed with simpler approach
+          original_organization_data: null, // Not needed with simpler approach
           requested_by: null, // Not needed - will be handled on approval
         })
         .select()
