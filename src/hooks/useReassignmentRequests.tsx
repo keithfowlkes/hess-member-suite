@@ -37,31 +37,45 @@ export const useReassignmentRequests = () => {
 
       if (error) throw error;
 
-      // Manually fetch organization names for each request
-      const requestsWithOrgData = await Promise.all(
-        data.map(async (request) => {
-          const { data: orgData } = await supabase
-            .from('organizations')
-            .select(`
-              name,
-              contact_person_id,
-              profiles!contact_person_id (
-                first_name,
-                last_name,
-                email
-              )
-            `)
-            .eq('id', request.organization_id)
-            .maybeSingle();
+      // For each request, try to fetch organization data separately
+      const enrichedRequests = await Promise.all(
+        (data || []).map(async (request) => {
+          try {
+            const { data: orgData } = await supabase
+              .from('organizations')
+              .select('name, contact_person_id')
+              .eq('id', request.organization_id)
+              .maybeSingle();
 
-          return {
-            ...request,
-            organizations: orgData
-          };
+            let profileData = null;
+            if (orgData?.contact_person_id) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('first_name, last_name, email')
+                .eq('id', orgData.contact_person_id)
+                .maybeSingle();
+              profileData = profile;
+            }
+
+            return {
+              ...request,
+              organizations: orgData ? {
+                ...orgData,
+                profiles: profileData
+              } : null
+            };
+          } catch (error) {
+            console.error('Error fetching org data for request:', request.id, error);
+            // Return request without org data if fetch fails
+            return {
+              ...request,
+              organizations: null
+            };
+          }
         })
       );
 
-      return requestsWithOrgData as ReassignmentRequest[];
+      return enrichedRequests as ReassignmentRequest[];
     },
   });
 };
