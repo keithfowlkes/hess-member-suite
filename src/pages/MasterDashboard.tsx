@@ -99,6 +99,12 @@ const MasterDashboard = () => {
   } = useOrganizationApprovals();
   const { invitations, loading: invitationsLoading } = useOrganizationInvitations();
   const { data: reassignmentRequests = [], isLoading: reassignmentLoading, refetch: refetchRequests } = useReassignmentRequests();
+  
+  // Calculate pending counts
+  const pendingApprovalsCount = pendingOrganizations.length;
+  const activeInvitationsCount = invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length;
+  const reassignmentRequestsCount = reassignmentRequests.length;
+  const totalOrganizationActions = pendingApprovalsCount + activeInvitationsCount + reassignmentRequestsCount;
   const approveReassignment = useApproveReassignmentRequest();
   const rejectReassignment = useRejectReassignmentRequest();
   const deleteReassignment = useDeleteReassignmentRequest();
@@ -307,12 +313,12 @@ const MasterDashboard = () => {
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="organizations" className="relative">
                   Organizations
-                  {(pendingOrganizations.length > 0 || invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length > 0) && (
+                  {totalOrganizationActions > 0 && (
                     <Badge 
                       variant="destructive" 
                       className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
                     >
-                      {pendingOrganizations.length + invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length}
+                      {totalOrganizationActions}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -439,34 +445,34 @@ const MasterDashboard = () => {
                   <TabsList>
                     <TabsTrigger value="approvals" className="relative">
                       Pending Approvals
-                      {pendingOrganizations.length > 0 && (
+                      {pendingApprovalsCount > 0 && (
                         <Badge 
                           variant="destructive" 
-                          className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                          className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
                         >
-                          {pendingOrganizations.length}
+                          {pendingApprovalsCount}
                         </Badge>
                       )}
                     </TabsTrigger>
                     <TabsTrigger value="invitations" className="relative">
                       Manage Invitations
-                      {invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length > 0 && (
+                      {activeInvitationsCount > 0 && (
                         <Badge 
                           variant="destructive" 
-                          className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                          className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
                         >
-                          {invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length}
+                          {activeInvitationsCount}
                         </Badge>
                       )}
                     </TabsTrigger>
                     <TabsTrigger value="reassignments" className="relative">
                       Reassignment Requests
-                      {reassignmentRequests.length > 0 && (
+                      {reassignmentRequestsCount > 0 && (
                         <Badge 
                           variant="destructive" 
                           className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
                         >
-                          {reassignmentRequests.length}
+                          {reassignmentRequestsCount}
                         </Badge>
                       )}
                     </TabsTrigger>
@@ -574,11 +580,11 @@ const MasterDashboard = () => {
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl font-semibold">Organization Invitations</h2>
                       <div className="flex items-center gap-2">
-                        {invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length > 0 && (
+                        {activeInvitationsCount > 0 && (
                           <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                             <Mail className="h-4 w-4" />
                             <span className="font-medium">
-                              {invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length} Active
+                              {activeInvitationsCount} Active
                             </span>
                           </div>
                         )}
