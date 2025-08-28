@@ -77,7 +77,7 @@ export function SystemAnalyticsDashboard() {
     const systemField = systemFieldMap[key] || key;
 
     return (
-      <Card key={key} className="min-w-[320px] bg-gradient-to-br from-card to-card/50 border-2 hover:shadow-lg transition-all duration-300">
+      <Card key={key} className="w-full bg-gradient-to-br from-card to-card/50 border-2 hover:shadow-lg transition-all duration-300">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
           <div className="text-2xl font-bold text-foreground">
@@ -239,8 +239,8 @@ export function SystemAnalyticsDashboard() {
       </CardHeader>
       
       <CardContent>
-        <div className="overflow-x-auto">
-          <div className="flex gap-6 pb-4" style={{ minWidth: 'max-content' }}>
+        <div className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {systemsToShow.map(({ key, title, data }) => 
               renderSystemChart(title, data, key)
             )}

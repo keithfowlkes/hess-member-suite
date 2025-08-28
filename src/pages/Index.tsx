@@ -185,7 +185,9 @@ const Index = () => {
             </div>
 
             {/* System Usage Analytics */}
-            <SystemAnalyticsDashboard />
+            <div className="w-full overflow-hidden">
+              <SystemAnalyticsDashboard />
+            </div>
           </div>
         </main>
       </div>
