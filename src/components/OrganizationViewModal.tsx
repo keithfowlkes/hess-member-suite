@@ -63,8 +63,8 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
 
   if (!organization) return null;
 
-  // Check if current user can edit this organization
-  const canEdit = isAdmin || (user && organization.profiles?.user_id === user.id);
+  // Check if current user can edit this organization (admin only)
+  const canEdit = isAdmin;
 
   const handleEdit = () => {
     setEditData({ ...organization });
