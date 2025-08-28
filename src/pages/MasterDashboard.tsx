@@ -49,6 +49,7 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useSettings } from '@/hooks/useSettings';
 import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
 import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
+import { useReassignmentRequests, useApproveReassignmentRequest, useRejectReassignmentRequest, useDeleteReassignmentRequest } from '@/hooks/useReassignmentRequests';
 
 // Components
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
@@ -94,6 +95,10 @@ const MasterDashboard = () => {
     rejectOrganization 
   } = useOrganizationApprovals();
   const { invitations, loading: invitationsLoading } = useOrganizationInvitations();
+  const { data: reassignmentRequests = [], isLoading: reassignmentLoading, refetch: refetchRequests } = useReassignmentRequests();
+  const approveReassignment = useApproveReassignmentRequest();
+  const rejectReassignment = useRejectReassignmentRequest();
+  const deleteReassignment = useDeleteReassignmentRequest();
 
   // State management
   const [selectedOrganization, setSelectedOrganization] = useState(null);
@@ -587,20 +592,108 @@ const MasterDashboard = () => {
                   <TabsContent value="reassignments" className="space-y-4">
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl font-semibold">Organization Reassignment Requests</h2>
-                      <Button onClick={() => setShowReassignmentDialog(true)}>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        View Requests
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        {reassignmentRequests.length > 0 && (
+                          <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
+                            <AlertCircle className="h-4 w-4" />
+                            <span className="font-medium">{reassignmentRequests.length} Pending</span>
+                          </div>
+                        )}
+                        <Button onClick={() => refetchRequests()}>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Refresh List
+                        </Button>
+                      </div>
                     </div>
 
-                    <Card>
-                      <CardContent className="p-6">
-                        <div className="text-center text-muted-foreground">
-                          <RefreshCw className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>Manage organization reassignment requests and approve changes.</p>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    {reassignmentLoading ? (
+                      <Card>
+                        <CardContent className="p-6">
+                          <div className="text-center">Loading reassignment requests...</div>
+                        </CardContent>
+                      </Card>
+                    ) : reassignmentRequests.length === 0 ? (
+                      <Card>
+                        <CardContent className="p-6">
+                          <div className="text-center text-muted-foreground">
+                            <RefreshCw className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>No pending reassignment requests.</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card>
+                        <CardContent className="p-6">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Organization</TableHead>
+                                <TableHead>Current Contact</TableHead>
+                                <TableHead>New Contact</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Created</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {reassignmentRequests.map((request) => (
+                                <TableRow key={request.id}>
+                                  <TableCell className="font-medium">
+                                    {request.organizations?.name || 'Unknown'}
+                                  </TableCell>
+                                  <TableCell>
+                                    {request.organizations?.profiles?.first_name && request.organizations?.profiles?.last_name
+                                      ? `${request.organizations.profiles.first_name} ${request.organizations.profiles.last_name}`
+                                      : request.organizations?.profiles?.email || 'No current contact'
+                                    }
+                                    <div className="text-xs text-muted-foreground">
+                                      {request.organizations?.profiles?.email}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>{request.new_contact_email}</TableCell>
+                                  <TableCell>
+                                    <Badge variant={request.status === 'pending' ? 'outline' : 'default'}>
+                                      {request.status}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    {new Date(request.created_at).toLocaleDateString()}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <div className="flex gap-2 justify-end">
+                                      {request.status === 'pending' && (
+                                        <>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => approveReassignment.mutate({ id: request.id })}
+                                            disabled={approveReassignment.isPending}
+                                            className="flex items-center gap-1"
+                                          >
+                                            <CheckCircle className="h-3 w-3" />
+                                            Approve
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => deleteReassignment.mutate(request.id)}
+                                            disabled={deleteReassignment.isPending}
+                                            className="flex items-center gap-1 text-destructive hover:text-destructive"
+                                          >
+                                            <XCircle className="h-3 w-3" />
+                                            Delete
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </CardContent>
+                      </Card>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="users" className="space-y-4">
