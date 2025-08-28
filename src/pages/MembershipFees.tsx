@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import * as React from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useMembers } from '@/hooks/useMembers';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useToast } from '@/hooks/use-toast';
+import { setupDefaultInvoiceTemplate } from '@/utils/setupDefaultInvoiceTemplate';
 import { 
   DollarSign, 
   Calendar as CalendarIcon, 
@@ -45,6 +47,11 @@ export default function MembershipFees() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedOrganizations, setSelectedOrganizations] = useState<Set<string>>(new Set());
   const [isSendingInvoices, setIsSendingInvoices] = useState(false);
+
+  // Setup default invoice template with HESS logo on component mount
+  React.useEffect(() => {
+    setupDefaultInvoiceTemplate();
+  }, []);
 
   // Calculate fee statistics
   const calculateStats = (): FeesStats => {
