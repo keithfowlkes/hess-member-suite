@@ -39,30 +39,6 @@ export function MemberOrganizationsView() {
 
   return (
     <div className="space-y-6">
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{organizations.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Student FTE</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {organizations.reduce((total, org) => {
-                const fte = org.student_fte || 0;
-                return total + fte;
-              }, 0).toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Search and View Toggle */}
       <div className="flex gap-4 items-center">
@@ -97,33 +73,33 @@ export function MemberOrganizationsView() {
 
       {/* Organizations Display */}
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {filteredOrganizations.map((organization) => (
             <Card 
               key={organization.id} 
               className="transition-shadow hover:shadow-md"
             >
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Building2 className="h-8 w-8 text-primary" />
+                  <div className="flex items-center space-x-2">
+                    <Building2 className="h-6 w-6 text-primary" />
                     <div>
-                      <CardTitle className="text-lg">{organization.name}</CardTitle>
-                      <Badge className={`mt-1 ${getStatusColor(organization.membership_status)}`}>
+                      <CardTitle className="text-sm font-medium">{organization.name}</CardTitle>
+                      <Badge className={`mt-1 text-xs ${getStatusColor(organization.membership_status)}`}>
                         {organization.membership_status}
                       </Badge>
                     </div>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
+              <CardContent className="pt-0">
+                <div className="space-y-2 text-xs">
                   {organization.profiles && (
                     <div className="space-y-1">
                       <div className="text-xs text-muted-foreground">Primary Contact</div>
                       <div className="flex items-center text-foreground">
-                        <User className="h-4 w-4 mr-2" />
-                        <span className="font-medium">
+                        <User className="h-3 w-3 mr-1" />
+                        <span className="font-medium text-xs">
                           {organization.profiles.first_name} {organization.profiles.last_name}
                         </span>
                       </div>
@@ -131,20 +107,16 @@ export function MemberOrganizationsView() {
                   )}
                   {organization.email && (
                     <div className="flex items-center text-muted-foreground">
-                      <Mail className="h-4 w-4 mr-2" />
-                      {organization.email}
-                    </div>
-                  )}
-                  {organization.phone && (
-                    <div className="flex items-center text-muted-foreground">
-                      <Phone className="h-4 w-4 mr-2" />
-                      {organization.phone}
+                      <Mail className="h-3 w-3 mr-1" />
+                      <span className="text-xs truncate">{organization.email}</span>
                     </div>
                   )}
                   {(organization.city || organization.state) && (
                     <div className="flex items-center text-muted-foreground">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      {organization.city}{organization.city && organization.state && ', '}{organization.state}
+                      <MapPin className="h-3 w-3 mr-1" />
+                      <span className="text-xs">
+                        {organization.city}{organization.city && organization.state && ', '}{organization.state}
+                      </span>
                     </div>
                   )}
                   <div className="pt-2 border-t space-y-1">
