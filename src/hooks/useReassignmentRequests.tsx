@@ -141,7 +141,7 @@ export const useCreateReassignmentRequest = () => {
           requested_by: null, // Not needed - will be handled on approval
         })
         .select()
-        .single();
+        .maybeSingle(); // Changed from .single() to .maybeSingle()
 
       console.log('Insert result:', result);
       console.log('Insert error:', error);
