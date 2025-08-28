@@ -499,56 +499,8 @@ export default function Settings() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {/* Resend API Key Management */}
-                      <div className="space-y-4 pb-4 border-b border-border">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Key className="w-4 h-4" />
-                          <h4 className="font-medium">Resend API Key</h4>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="resend-api-key">Enter Resend API Key</Label>
-                          <Input
-                            id="resend-api-key"
-                            type="password"
-                            placeholder="re_xxxxxxxxxx"
-                            value={resendApiKey}
-                            onChange={(e) => setResendApiKey(e.target.value)}
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Get your API key from{' '}
-                            <a 
-                              href="https://resend.com/api-keys" 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline"
-                            >
-                              Resend Dashboard
-                            </a>
-                          </p>
-                        </div>
-
-                        <Button 
-                          onClick={handleUpdateResendApiKey}
-                          disabled={apiKeyLoading || !resendApiKey.trim()}
-                          size="sm"
-                        >
-                          {apiKeyLoading ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Updating...
-                            </>
-                          ) : (
-                            <>
-                              <Save className="w-4 h-4 mr-2" />
-                              Update API Key
-                            </>
-                          )}
-                        </Button>
-                      </div>
-
                       {/* Email Testing Section */}
-                      <div className="space-y-4">
+                      <div className="space-y-4 pb-4 border-b border-border">
                         <h4 className="font-medium flex items-center gap-2">
                           <Send className="w-4 h-4" />
                           Send Test Email
@@ -642,9 +594,57 @@ export default function Settings() {
                            </div>
                          </div>
                        )}
-                      </div>
+                       </div>
 
-                       <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
+                       {/* Resend API Key Management */}
+                       <div className="space-y-4 pt-4 border-t border-border">
+                         <div className="flex items-center gap-2 mb-2">
+                           <Key className="w-4 h-4" />
+                           <h4 className="font-medium">Resend API Key</h4>
+                         </div>
+                         
+                         <div className="space-y-2">
+                           <Label htmlFor="resend-api-key">Enter Resend API Key</Label>
+                           <Input
+                             id="resend-api-key"
+                             type="password"
+                             placeholder="re_xxxxxxxxxx"
+                             value={resendApiKey}
+                             onChange={(e) => setResendApiKey(e.target.value)}
+                           />
+                           <p className="text-xs text-muted-foreground">
+                             Get your API key from{' '}
+                             <a 
+                               href="https://resend.com/api-keys" 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               className="text-primary hover:underline"
+                             >
+                               Resend Dashboard
+                             </a>
+                           </p>
+                         </div>
+
+                         <Button 
+                           onClick={handleUpdateResendApiKey}
+                           disabled={apiKeyLoading || !resendApiKey.trim()}
+                           size="sm"
+                         >
+                           {apiKeyLoading ? (
+                             <>
+                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                               Updating...
+                             </>
+                           ) : (
+                             <>
+                               <Save className="w-4 h-4 mr-2" />
+                               Update API Key
+                             </>
+                           )}
+                         </Button>
+                       </div>
+
+                        <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
                         <h4 className="font-medium text-blue-900 mb-2">Email Configuration:</h4>
                         <ul className="text-sm text-blue-800 space-y-1">
                           <li><strong>From:</strong> info@hessconsortium.app</li>
