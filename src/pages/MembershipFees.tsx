@@ -6,15 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useMembers } from '@/hooks/useMembers';
 import { useInvoices } from '@/hooks/useInvoices';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { setupDefaultInvoiceTemplate } from '@/utils/setupDefaultInvoiceTemplate';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
+import { InvoiceDialog } from '@/components/InvoiceDialog';
+import { InvoiceTemplateEditor } from '@/components/InvoiceTemplateEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   DollarSign, 
@@ -26,7 +31,12 @@ import {
   Download,
   Send,
   CheckSquare,
-  Eye
+  Eye,
+  Plus,
+  Search,
+  Building2,
+  ChevronDown,
+  CheckCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -43,14 +53,25 @@ interface FeesStats {
 }
 
 export default function MembershipFees() {
-  const { organizations, loading, updateOrganization } = useMembers();
-  const { createInvoice } = useInvoices();
+  const { organizations, loading, updateOrganization, markAllOrganizationsActive } = useMembers();
+  const { invoices, createInvoice, markAsPaid, sendInvoice, markAllInvoicesAsPaid } = useInvoices();
+  const { isAdmin } = useAuth();
   const { toast } = useToast();
+  
+  // Fee management states
   const [bulkFeeAmount, setBulkFeeAmount] = useState<string>('');
   const [bulkRenewalDate, setBulkRenewalDate] = useState<Date>();
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedOrganizations, setSelectedOrganizations] = useState<Set<string>>(new Set());
   const [isSendingInvoices, setIsSendingInvoices] = useState(false);
+  
+  // Invoice management states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
+  
   const [activeTab, setActiveTab] = useState("overview");
 
   // Test email states
@@ -127,6 +148,26 @@ export default function MembershipFees() {
   };
 
   const stats = calculateStats();
+
+  // Filter invoices for search
+  const filteredInvoices = invoices.filter(invoice =>
+    invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    invoice.organizations?.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'paid': return 'bg-green-500/10 text-green-700 border-green-200';
+      case 'active': return 'bg-green-500/10 text-green-700 border-green-200';
+      case 'sent': return 'bg-blue-500/10 text-blue-700 border-blue-200';
+      case 'overdue': return 'bg-red-500/10 text-red-700 border-red-200';
+      case 'cancelled': return 'bg-gray-500/10 text-gray-700 border-gray-200';
+      case 'draft': return 'bg-yellow-500/10 text-yellow-700 border-yellow-200';
+      case 'pending': return 'bg-yellow-500/10 text-yellow-700 border-yellow-200';
+      case 'expired': return 'bg-red-500/10 text-red-700 border-red-200';
+      default: return 'bg-gray-500/10 text-gray-700 border-gray-200';
+    }
+  };
 
   const handleBulkUpdate = async () => {
     if (!bulkFeeAmount && !bulkRenewalDate) {
@@ -272,6 +313,16 @@ export default function MembershipFees() {
     } finally {
       setIsSendingInvoices(false);
     }
+  };
+
+  const handleMarkAsPaid = async (invoiceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await markAsPaid(invoiceId);
+  };
+
+  const handleSendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await sendInvoice(invoiceId);
   };
 
   // Test email function
@@ -474,26 +525,18 @@ export default function MembershipFees() {
       org.membership_status,
       `$${org.annual_fee_amount || 0}`,
       org.membership_start_date || 'Not set',
-      org.membership_end_date || 'Not set',
-      org.profiles ? `${org.profiles.first_name} ${org.profiles.last_name}` : 'No contact'
+      org.membership_end_date || 'Not set'
     ]);
     
     (pdf as any).autoTable({
-      head: [['Organization', 'Status', 'Annual Fee', 'Start Date', 'End Date', 'Contact']],
+      head: [['Organization', 'Status', 'Annual Fee', 'Start Date', 'End Date']],
       body: organizationData,
       startY: finalY + 10,
       theme: 'striped',
-      headStyles: { fillColor: [66, 139, 202] },
-      styles: { fontSize: 8 }
+      headStyles: { fillColor: [66, 139, 202] }
     });
     
-    // Save the PDF
-    pdf.save(`membership-fees-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-    
-    toast({
-      title: "Success",
-      description: "PDF report generated and downloaded successfully."
-    });
+    pdf.save('membership-fees-report.pdf');
   };
 
   if (loading) {
@@ -515,456 +558,470 @@ export default function MembershipFees() {
         <AppSidebar />
         <main className="flex-1 p-8">
           <div className="space-y-6">
+            {/* Header */}
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Membership Fees Management</h1>
+                <h1 className="text-3xl font-bold text-foreground">Membership Fees & Invoices</h1>
                 <p className="text-muted-foreground mt-2">
-                  Manage annual fees, renewal dates, and generate reports for member organizations
+                  Manage membership fees, generate invoices, and track payment status
                 </p>
               </div>
-              <Button onClick={generatePDFReport} variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Download PDF Report
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={generatePDFReport}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Report
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setTemplateEditorOpen(true)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Invoice Templates
+                </Button>
+              </div>
             </div>
 
-            {/* Dashboard Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Organizations</CardTitle>
+                  <CardTitle className="text-sm font-medium">Organizations</CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats.totalOrganizations}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.paidFees} active memberships
-                  </p>
                 </CardContent>
               </Card>
-
+              
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Annual Revenue</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">
-                    ${stats.averageFeeAmount.toLocaleString()} average per organization
-                  </p>
                 </CardContent>
               </Card>
-
+              
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pending Fees</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">Active</CardTitle>
+                  <CheckSquare className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{stats.paidFees}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-yellow-600" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-yellow-600">{stats.pendingFees}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.overdueRenewals} overdue renewals
-                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+                  <FileText className="h-4 w-4 text-red-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">{stats.overdueRenewals}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Average Fee</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">${stats.averageFeeAmount.toLocaleString()}</div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Bulk Update Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Bulk Update Fees & Renewal Dates
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Update annual fees and renewal dates for all member organizations at once
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="bulk-fee">Annual Fee Amount ($)</Label>
-                    <Input
-                      id="bulk-fee"
-                      type="number"
-                      placeholder="e.g., 1000"
-                      value={bulkFeeAmount}
-                      onChange={(e) => setBulkFeeAmount(e.target.value)}
-                      step="0.01"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Leave empty to keep current individual fees
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Renewal Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !bulkRenewalDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {bulkRenewalDate ? format(bulkRenewalDate, "PPP") : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={bulkRenewalDate}
-                          onSelect={setBulkRenewalDate}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <p className="text-xs text-muted-foreground">
-                      Leave empty to keep current individual renewal dates
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <p className="text-sm text-muted-foreground">
-                    This will update {organizations.length} organization{organizations.length !== 1 ? 's' : ''}
-                  </p>
-                  <Button 
-                    onClick={handleBulkUpdate} 
-                    disabled={isUpdating || (!bulkFeeAmount && !bulkRenewalDate)}
-                  >
-                    {isUpdating ? 'Updating...' : 'Apply Bulk Update'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Tabs for Overview and Invoice Preview */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="overview" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Organization Fees Overview
-                </TabsTrigger>
-                <TabsTrigger value="preview" className="flex items-center gap-2">
-                  <Eye className="h-4 w-4" />
-                  Invoice Preview ({selectedOrganizations.size})
-                </TabsTrigger>
-                <TabsTrigger value="test-invoice" className="flex items-center gap-2">
-                  <Send className="h-4 w-4" />
-                  Test Invoice Email
-                </TabsTrigger>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="invoices">Invoices</TabsTrigger>
+                <TabsTrigger value="management">Fee Management</TabsTrigger>
+                <TabsTrigger value="testing">Testing</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="mt-6">
-                {/* Organization Fees Overview */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Organization Fees Overview
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      {selectedOrganizations.size} selected
-                    </span>
-                    <Button
-                      onClick={handleSendSelectedInvoices}
-                      disabled={selectedOrganizations.size === 0 || isSendingInvoices}
-                      size="sm"
-                      className="flex items-center gap-2"
-                    >
-                      <Send className="h-4 w-4" />
-                      {isSendingInvoices ? 'Creating Invoices...' : `Send Invoices (${selectedOrganizations.size})`}
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="bg-muted/50 px-6 py-3 border-b">
-                    <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
-                      <div className="col-span-1 flex items-center">
-                        <Checkbox
-                          checked={selectedOrganizations.size === organizations.length && organizations.length > 0}
-                          onCheckedChange={handleSelectAll}
-                          className="mr-2"
+              <TabsContent value="overview">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Fee Update Section */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Settings className="h-5 w-5" />
+                        Bulk Fee Updates
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="bulk-fee">Annual Fee Amount ($)</Label>
+                        <Input
+                          id="bulk-fee"
+                          type="number"
+                          placeholder="e.g., 1000"
+                          value={bulkFeeAmount}
+                          onChange={(e) => setBulkFeeAmount(e.target.value)}
                         />
-                        <CheckSquare className="h-4 w-4" />
                       </div>
-                      <div className="col-span-3">Organization</div>
-                      <div className="col-span-1">Status</div>
-                      <div className="col-span-2">Annual Fee</div>
-                      <div className="col-span-2">Start Date</div>
-                      <div className="col-span-2">End Date</div>
-                      <div className="col-span-1">Days Left</div>
-                    </div>
-                  </div>
-                  <div className="divide-y max-h-96 overflow-y-auto">
-                    {organizations.map((organization) => {
-                      const endDate = organization.membership_end_date ? new Date(organization.membership_end_date) : null;
-                      const today = new Date();
-                      const daysLeft = endDate ? Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 3600 * 24)) : null;
                       
-                      return (
-                        <div key={organization.id} className="px-6 py-4 hover:bg-muted/30 transition-colors">
-                          <div className="grid grid-cols-12 gap-4 items-center">
-                            <div className="col-span-1">
-                              <Checkbox
-                                checked={selectedOrganizations.has(organization.id)}
-                                onCheckedChange={(checked) => handleSelectOrganization(organization.id, !!checked)}
-                              />
-                            </div>
-                            <div className="col-span-3">
-                              <div className="font-medium text-foreground">{organization.name}</div>
-                            </div>
-                            <div className="col-span-1">
-                              <span className={cn(
-                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-                                organization.membership_status === 'active' && "bg-green-100 text-green-800",
-                                organization.membership_status === 'pending' && "bg-yellow-100 text-yellow-800",
-                                organization.membership_status === 'expired' && "bg-red-100 text-red-800",
-                                organization.membership_status === 'cancelled' && "bg-gray-100 text-gray-800"
-                              )}>
-                                {organization.membership_status}
-                              </span>
-                            </div>
-                            <div className="col-span-2">
-                              <div className="font-medium">${organization.annual_fee_amount || 0}</div>
-                            </div>
-                            <div className="col-span-2">
-                              <div className="text-sm text-muted-foreground">
-                                {organization.membership_start_date 
-                                  ? format(new Date(organization.membership_start_date), 'MMM dd, yyyy')
-                                  : 'Not set'
-                                }
-                              </div>
-                            </div>
-                            <div className="col-span-2">
-                              <div className="text-sm text-muted-foreground">
-                                {organization.membership_end_date 
-                                  ? format(new Date(organization.membership_end_date), 'MMM dd, yyyy')
-                                  : 'Not set'
-                                }
-                              </div>
-                            </div>
-                            <div className="col-span-1">
-                              {daysLeft !== null ? (
-                                <span className={cn(
-                                  "text-sm font-medium",
-                                  daysLeft < 0 && "text-red-600",
-                                  daysLeft >= 0 && daysLeft <= 30 && "text-yellow-600",
-                                  daysLeft > 30 && "text-green-600"
-                                )}>
-                                  {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d`}
-                                </span>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">—</span>
+                      <div className="space-y-2">
+                        <Label>Renewal Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !bulkRenewalDate && "text-muted-foreground"
                               )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-              </TabsContent>
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {bulkRenewalDate ? format(bulkRenewalDate, "PPP") : "Select renewal date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={bulkRenewalDate}
+                              onSelect={setBulkRenewalDate}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      
+                      <Button 
+                        onClick={handleBulkUpdate} 
+                        disabled={isUpdating || (!bulkFeeAmount && !bulkRenewalDate)}
+                        className="w-full"
+                      >
+                        {isUpdating ? "Updating..." : "Update All Organizations"}
+                      </Button>
+                    </CardContent>
+                  </Card>
 
-              <TabsContent value="preview" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Eye className="h-5 w-5" />
-                      Invoice Preview
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Preview invoices for selected organizations before sending
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedOrganizations.size === 0 ? (
-                      <div className="text-center py-12">
-                        <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-                          No Organizations Selected
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Select organizations from the Overview tab to preview their invoices
-                        </p>
-                        <Button 
-                          onClick={() => setActiveTab("overview")} 
+                  {/* Quick Actions */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5" />
+                        Quick Actions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 gap-3">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full">
+                              <Plus className="h-4 w-4 mr-2" />
+                              Create Invoice
+                              <ChevronDown className="h-4 w-4 ml-2" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-full">
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedInvoice(null);
+                                setBulkMode(false);
+                                setDialogOpen(true);
+                              }}
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              Individual Invoice
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedInvoice(null);
+                                setBulkMode(true);
+                                setDialogOpen(true);
+                              }}
+                            >
+                              <Users className="h-4 w-4 mr-2" />
+                              Bulk for All Organizations
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Button
                           variant="outline"
+                          onClick={markAllOrganizationsActive}
+                          className="w-full"
                         >
-                          Go to Overview
+                          <Building2 className="h-4 w-4 mr-2" />
+                          Mark All Organizations Active
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          onClick={markAllInvoicesAsPaid}
+                          className="w-full"
+                        >
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          Mark All Invoices Paid
                         </Button>
                       </div>
-                    ) : (
-                      <div className="space-y-8">
-                        {Array.from(selectedOrganizations).map((orgId) => {
-                          const organization = organizations.find(org => org.id === orgId);
-                          if (!organization) return null;
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
 
-                          const sampleInvoice = createSampleInvoice(organization);
-                          
-                          return (
-                            <div key={orgId} className="border rounded-lg p-6 bg-muted/20">
-                              <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold">
-                                  Invoice Preview: {organization.name}
-                                </h3>
-                                <div className="text-sm text-muted-foreground">
-                                  Amount: ${organization.annual_fee_amount || 1000}
+              <TabsContent value="invoices">
+                <div className="space-y-6">
+                  {/* Search and Filters */}
+                  <div className="flex gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Search invoices..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Invoices List */}
+                  <div className="space-y-4">
+                    {filteredInvoices.map((invoice) => (
+                      <Card 
+                        key={invoice.id} 
+                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => {
+                          setSelectedInvoice(invoice);
+                          setBulkMode(false);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <FileText className="h-8 w-8 text-primary" />
+                              <div>
+                                <div className="flex items-center space-x-2">
+                                  <h3 className="font-semibold text-lg">{invoice.invoice_number}</h3>
+                                  <Badge className={getStatusColor(invoice.status)}>
+                                    {invoice.status}
+                                  </Badge>
                                 </div>
-                              </div>
-                              
-                              {/* Invoice Preview */}
-                              <div className="bg-white border rounded-lg overflow-hidden">
-                                <div className="max-h-[600px] overflow-y-auto">
-                                  <ProfessionalInvoice invoice={sampleInvoice} />
+                                <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                                  {invoice.organizations && (
+                                    <div className="flex items-center">
+                                      <Building2 className="h-4 w-4 mr-1" />
+                                      {invoice.organizations.name}
+                                    </div>
+                                  )}
+                                  <div className="flex items-center">
+                                    <CalendarIcon className="h-4 w-4 mr-1" />
+                                    Due: {format(new Date(invoice.due_date), 'MMM dd, yyyy')}
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
-                        
-                        {/* Action Buttons */}
-                        <div className="flex items-center justify-between pt-6 border-t">
-                          <div className="text-sm text-muted-foreground">
-                            {selectedOrganizations.size} invoice{selectedOrganizations.size !== 1 ? 's' : ''} ready to send
+                            
+                            <div className="flex items-center space-x-4">
+                              <div className="text-right">
+                                <div className="flex items-center text-2xl font-bold">
+                                  <DollarSign className="h-5 w-5" />
+                                  {invoice.prorated_amount ? invoice.prorated_amount.toLocaleString() : invoice.amount.toLocaleString()}
+                                </div>
+                                {invoice.prorated_amount && (
+                                  <div className="text-sm text-muted-foreground line-through">
+                                    ${invoice.amount.toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex space-x-2">
+                                {invoice.status === 'draft' && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={(e) => handleSendInvoice(invoice.id, e)}
+                                  >
+                                    <Send className="h-4 w-4 mr-1" />
+                                    Send
+                                  </Button>
+                                )}
+                                {(invoice.status === 'sent' || invoice.status === 'overdue') && (
+                                  <Button
+                                    size="sm"
+                                    onClick={(e) => handleMarkAsPaid(invoice.id, e)}
+                                  >
+                                    <DollarSign className="h-4 w-4 mr-1" />
+                                    Mark Paid
+                                  </Button>
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedInvoice(invoice);
+                                    setBulkMode(false);
+                                    setDialogOpen(true);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => setActiveTab("overview")}
-                              variant="outline"
-                            >
-                              Back to Overview
-                            </Button>
-                            <Button
-                              onClick={handleSendSelectedInvoices}
-                              disabled={isSendingInvoices}
-                              className="flex items-center gap-2"
-                            >
-                              <Send className="h-4 w-4" />
-                              {isSendingInvoices ? 'Creating Invoices...' : `Send All Invoices (${selectedOrganizations.size})`}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                          
+                          {invoice.notes && (
+                            <div className="mt-3 pt-3 border-t">
+                              <p className="text-sm text-muted-foreground">{invoice.notes}</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {filteredInvoices.length === 0 && (
+                    <div className="text-center py-12">
+                      <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-muted-foreground">No invoices found</h3>
+                      <p className="text-muted-foreground">
+                        Try adjusting your search or create a new invoice.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </TabsContent>
 
-              <TabsContent value="test-invoice" className="mt-6">
+              <TabsContent value="management">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Send className="h-5 w-5" />
-                      Send Test Invoice
+                      Generate Invoices for Selected Organizations
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Send a test invoice email with dummy organization data to verify email functionality
-                    </p>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="test-invoice-email">Test Recipient Email</Label>
-                        <Input
-                          id="test-invoice-email"
-                          type="email"
-                          placeholder="Enter email address to test"
-                          value={testEmailData.to}
-                          onChange={(e) => setTestEmailData(prev => ({ ...prev, to: e.target.value }))}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="test-invoice-subject">Email Subject</Label>
-                        <Input
-                          id="test-invoice-subject"
-                          placeholder="Test invoice email subject"
-                          value={testEmailData.subject}
-                          onChange={(e) => setTestEmailData(prev => ({ ...prev, subject: e.target.value }))}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="test-invoice-message">Email Message</Label>
-                        <textarea
-                          id="test-invoice-message"
-                          className="w-full min-h-[100px] px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
-                          placeholder="Test invoice email message"
-                          value={testEmailData.message}
-                          onChange={(e) => setTestEmailData(prev => ({ ...prev, message: e.target.value }))}
-                        />
-                      </div>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="selectAll"
+                        checked={selectedOrganizations.size === organizations.length && organizations.length > 0}
+                        onCheckedChange={handleSelectAll}
+                      />
+                      <Label htmlFor="selectAll" className="text-sm font-medium">
+                        Select All Organizations ({organizations.length})
+                      </Label>
                     </div>
-
+                    
+                    <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-4">
+                      {organizations.map((org) => (
+                        <div key={org.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`org-${org.id}`}
+                            checked={selectedOrganizations.has(org.id)}
+                            onCheckedChange={(checked) => handleSelectOrganization(org.id, checked as boolean)}
+                          />
+                          <Label htmlFor={`org-${org.id}`} className="text-sm flex-1">
+                            <div className="flex justify-between items-center">
+                              <span>{org.name}</span>
+                              <div className="flex items-center space-x-2">
+                                <Badge className={getStatusColor(org.membership_status)}>
+                                  {org.membership_status}
+                                </Badge>
+                                <span className="text-muted-foreground">
+                                  ${org.annual_fee_amount || 1000}
+                                </span>
+                              </div>
+                            </div>
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    
                     <div className="flex justify-between items-center pt-4 border-t">
-                      <div className="text-sm text-muted-foreground">
-                        This will send a test invoice with dummy data from "Test University"
-                      </div>
-                      <Button
-                        onClick={handleSendTestInvoice}
-                        disabled={isTestEmailLoading || !testEmailData.to.trim()}
-                        className="flex items-center gap-2"
+                      <p className="text-sm text-muted-foreground">
+                        {selectedOrganizations.size} organization{selectedOrganizations.size !== 1 ? 's' : ''} selected
+                      </p>
+                      <Button 
+                        onClick={handleSendSelectedInvoices}
+                        disabled={selectedOrganizations.size === 0 || isSendingInvoices}
                       >
-                        {isTestEmailLoading ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            Sending Test Invoice...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="h-4 w-4" />
-                            Send Test Invoice
-                          </>
-                        )}
+                        {isSendingInvoices ? "Creating Invoices..." : "Create Selected Invoices"}
                       </Button>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                    {/* Test Email Result */}
+              <TabsContent value="testing">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Send className="h-5 w-5" />
+                      Test Invoice Email
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="test-email">Test Email Address</Label>
+                      <Input
+                        id="test-email"
+                        type="email"
+                        placeholder="test@example.com"
+                        value={testEmailData.to}
+                        onChange={(e) => setTestEmailData(prev => ({ ...prev, to: e.target.value }))}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="test-subject">Subject</Label>
+                      <Input
+                        id="test-subject"
+                        value={testEmailData.subject}
+                        onChange={(e) => setTestEmailData(prev => ({ ...prev, subject: e.target.value }))}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="test-message">Message</Label>
+                      <Input
+                        id="test-message"
+                        value={testEmailData.message}
+                        onChange={(e) => setTestEmailData(prev => ({ ...prev, message: e.target.value }))}
+                      />
+                    </div>
+                    
+                    <Button 
+                      onClick={handleSendTestInvoice}
+                      disabled={isTestEmailLoading || !testEmailData.to}
+                      className="w-full"
+                    >
+                      {isTestEmailLoading ? "Sending..." : "Send Test Invoice"}
+                    </Button>
+                    
                     {testEmailResult && (
                       <div className={cn(
-                        "p-4 rounded-lg border",
+                        "p-4 rounded-md",
                         testEmailResult.success 
-                          ? "bg-green-50 border-green-200" 
-                          : "bg-red-50 border-red-200"
+                          ? "bg-green-50 text-green-700 border border-green-200" 
+                          : "bg-red-50 text-red-700 border border-red-200"
                       )}>
-                        <div className="flex items-start gap-3">
-                          <div className="flex-1">
-                            <h4 className={cn(
-                              "font-medium",
-                              testEmailResult.success ? 'text-green-900' : 'text-red-900'
-                            )}>
-                              {testEmailResult.success ? 'Test Invoice Sent Successfully' : 'Test Invoice Failed'}
-                            </h4>
-                            <p className={cn(
-                              "text-sm mt-1",
-                              testEmailResult.success ? 'text-green-800' : 'text-red-800'
-                            )}>
-                              {testEmailResult.message}
-                            </p>
-                            {testEmailResult.success && testEmailResult.timestamp && (
-                              <p className="text-xs text-green-700 mt-2">
-                                Sent at: {new Date(testEmailResult.timestamp).toLocaleString()}
-                              </p>
-                            )}
-                            {testEmailResult.success && testEmailResult.emailId && (
-                              <p className="text-xs text-green-700">
-                                Email ID: {testEmailResult.emailId}
-                              </p>
-                            )}
-                          </div>
-                        </div>
+                        <p className="font-medium">
+                          {testEmailResult.success ? "✅ Success" : "❌ Error"}
+                        </p>
+                        <p className="text-sm">{testEmailResult.message}</p>
+                        {testEmailResult.timestamp && (
+                          <p className="text-xs mt-1">Sent at: {testEmailResult.timestamp}</p>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -972,6 +1029,18 @@ export default function MembershipFees() {
               </TabsContent>
             </Tabs>
           </div>
+
+          <InvoiceDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            invoice={selectedInvoice}
+            bulkMode={bulkMode}
+          />
+
+          <InvoiceTemplateEditor
+            open={templateEditorOpen}
+            onOpenChange={setTemplateEditorOpen}  
+          />
         </main>
       </div>
     </SidebarProvider>

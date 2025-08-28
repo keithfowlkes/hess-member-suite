@@ -43,7 +43,6 @@ export function AppSidebar() {
     { title: 'Member Organizations', url: '/members', icon: Users },
     { title: 'Dashboards', url: '/dashboards', icon: BarChart3 },
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
-    { title: 'Invoices', url: '/invoices', icon: FileText },
     { title: 'Organization Profile', url: '/profile', icon: User },
     { title: 'Settings', url: '/settings', icon: Settings },
   ];

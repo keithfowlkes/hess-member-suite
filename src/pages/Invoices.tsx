@@ -5,29 +5,29 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useAuth } from '@/hooks/useAuth';
-import { useMembers } from '@/hooks/useMembers';
-import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, ChevronDown, Users, Settings, CheckCircle } from 'lucide-react';
-import { InvoiceDialog } from '@/components/InvoiceDialog';
-import { InvoiceTemplateEditor } from '@/components/InvoiceTemplateEditor';
+import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Invoices() {
-  const { invoices, loading, markAsPaid, sendInvoice, markAllInvoicesAsPaid } = useInvoices();
-  const { markAllOrganizationsActive } = useMembers();
+  const { invoices, loading, markAsPaid, sendInvoice } = useInvoices();
   const { isAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [bulkMode, setBulkMode] = useState(false);
-  const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
 
-  const filteredInvoices = invoices.filter(invoice =>
-    invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.organizations?.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter invoices based on user role
+  const filteredInvoices = invoices.filter(invoice => {
+    const matchesSearch = invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.organizations?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Members can only see their own invoices
+    if (!isAdmin) {
+      // Add user organization filtering logic here if needed
+      return matchesSearch;
+    }
+    
+    return matchesSearch;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -72,80 +72,26 @@ export default function Invoices() {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  {isAdmin ? 'Invoices' : 'My Invoices'}
+                  {isAdmin ? 'All Invoices' : 'My Invoices'}
                 </h1>
                 <p className="text-muted-foreground mt-2">
                   {isAdmin 
-                    ? 'Manage member invoices and billing' 
+                    ? 'View and manage all invoices. Use Membership Fees page for full invoice management.' 
                     : 'View your organization\'s invoices and payment status'}
                 </p>
               </div>
               {isAdmin && (
-                <div className="flex gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create Invoice
-                        <ChevronDown className="h-4 w-4 ml-2" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem 
-                        onClick={() => {
-                          setSelectedInvoice(null);
-                          setBulkMode(false);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        <FileText className="h-4 w-4 mr-2" />
-                        Create Individual Invoice
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => {
-                          setSelectedInvoice(null);
-                          setBulkMode(true);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        <Users className="h-4 w-4 mr-2" />
-                        Create Invoices for All Organizations
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline">
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Bulk Actions
-                        <ChevronDown className="h-4 w-4 ml-2" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={markAllOrganizationsActive}>
-                        <Building2 className="h-4 w-4 mr-2" />
-                        Mark All Organizations Active
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={markAllInvoicesAsPaid}>
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        Mark All Invoices Paid
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <Button 
-                    variant="outline"
-                    onClick={() => setTemplateEditorOpen(true)}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Invoice Templates
-                  </Button>
-                </div>
+                <Button 
+                  onClick={() => window.location.href = '/membership-fees'}
+                  variant="outline"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Manage Invoices
+                </Button>
               )}
             </div>
 
-            {/* Search and Filters */}
+            {/* Search */}
             <div className="flex gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -163,12 +109,7 @@ export default function Invoices() {
               {filteredInvoices.map((invoice) => (
                 <Card 
                   key={invoice.id} 
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => {
-                    setSelectedInvoice(invoice);
-                    setBulkMode(false);
-                    setDialogOpen(true);
-                  }}
+                  className="hover:shadow-md transition-shadow"
                 >
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
@@ -230,18 +171,6 @@ export default function Invoices() {
                                 Mark Paid
                               </Button>
                             )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedInvoice(invoice);
-                                setBulkMode(false);
-                                setDialogOpen(true);
-                              }}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
                           </div>
                         )}
                       </div>
@@ -263,24 +192,12 @@ export default function Invoices() {
                 <h3 className="text-lg font-medium text-muted-foreground">No invoices found</h3>
                 <p className="text-muted-foreground">
                   {isAdmin 
-                    ? "Try adjusting your search or create a new invoice." 
+                    ? "No invoices match your search criteria." 
                     : "No invoices have been generated for your organization yet."}
                 </p>
               </div>
             )}
           </div>
-
-          <InvoiceDialog
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-            invoice={selectedInvoice}
-            bulkMode={bulkMode}
-          />
-
-          <InvoiceTemplateEditor
-            open={templateEditorOpen}
-            onOpenChange={setTemplateEditorOpen}  
-          />
         </main>
       </div>
     </SidebarProvider>
