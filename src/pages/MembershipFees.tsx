@@ -588,117 +588,117 @@ export default function MembershipFees() {
 
             {/* Stats Overview */}
             {/* Redesigned Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
               {/* Organizations Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 border-blue-100/50 hover:shadow-lg hover:shadow-blue-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 border-blue-100/50 hover:shadow-md hover:shadow-blue-100/20 transition-all duration-300 hover:scale-105 group">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/10"></div>
-                <CardContent className="relative p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
-                      <Users className="h-6 w-6 text-white" />
+                <CardContent className="relative p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-md">
+                      <Users className="h-4 w-4 text-white" />
                     </div>
-                    <div className="text-sm font-medium text-blue-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="text-xs font-medium text-blue-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       Total Count
                     </div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-gray-900 mb-1">{stats.totalOrganizations}</div>
-                    <div className="text-sm font-medium text-blue-600">Organizations</div>
+                    <div className="text-xl font-bold text-gray-900 mb-1">{stats.totalOrganizations}</div>
+                    <div className="text-xs font-medium text-blue-600">Organizations</div>
                   </div>
                 </CardContent>
               </Card>
               
               {/* Revenue Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-green-50 border-emerald-100/50 hover:shadow-lg hover:shadow-emerald-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-green-50 border-emerald-100/50 hover:shadow-md hover:shadow-emerald-100/20 transition-all duration-300 hover:scale-105 group">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/10"></div>
-                <CardContent className="relative p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg">
-                      <DollarSign className="h-6 w-6 text-white" />
+                <CardContent className="relative p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg shadow-md">
+                      <DollarSign className="h-4 w-4 text-white" />
                     </div>
-                    <div className="text-sm font-medium text-emerald-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="text-xs font-medium text-emerald-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       Annual Total
                     </div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-gray-900 mb-1">${stats.totalRevenue.toLocaleString()}</div>
-                    <div className="text-sm font-medium text-emerald-600">Total Revenue</div>
+                    <div className="text-xl font-bold text-gray-900 mb-1">${stats.totalRevenue.toLocaleString()}</div>
+                    <div className="text-xs font-medium text-emerald-600">Total Revenue</div>
                   </div>
                 </CardContent>
               </Card>
               
               {/* Active Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 via-white to-emerald-50 border-green-100/50 hover:shadow-lg hover:shadow-green-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 via-white to-emerald-50 border-green-100/50 hover:shadow-md hover:shadow-green-100/20 transition-all duration-300 hover:scale-105 group">
                 <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/10"></div>
-                <CardContent className="relative p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
-                      <CheckSquare className="h-6 w-6 text-white" />
+                <CardContent className="relative p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-md">
+                      <CheckSquare className="h-4 w-4 text-white" />
                     </div>
-                    <div className="text-sm font-medium text-green-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="text-xs font-medium text-green-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       Paid Members
                     </div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-green-700 mb-1">{stats.paidFees}</div>
-                    <div className="text-sm font-medium text-green-600">Active</div>
+                    <div className="text-xl font-bold text-green-700 mb-1">{stats.paidFees}</div>
+                    <div className="text-xs font-medium text-green-600">Active</div>
                   </div>
                 </CardContent>
               </Card>
               
               {/* Pending Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-yellow-50 border-amber-100/50 hover:shadow-lg hover:shadow-amber-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-yellow-50 border-amber-100/50 hover:shadow-md hover:shadow-amber-100/20 transition-all duration-300 hover:scale-105 group">
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/10"></div>
-                <CardContent className="relative p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-3 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-xl shadow-lg">
-                      <TrendingUp className="h-6 w-6 text-white" />
+                <CardContent className="relative p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-lg shadow-md">
+                      <TrendingUp className="h-4 w-4 text-white" />
                     </div>
-                    <div className="text-sm font-medium text-amber-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="text-xs font-medium text-amber-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       In Review
                     </div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-amber-700 mb-1">{stats.pendingFees}</div>
-                    <div className="text-sm font-medium text-amber-600">Pending</div>
+                    <div className="text-xl font-bold text-amber-700 mb-1">{stats.pendingFees}</div>
+                    <div className="text-xs font-medium text-amber-600">Pending</div>
                   </div>
                 </CardContent>
               </Card>
               
               {/* Overdue Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-red-50 via-white to-rose-50 border-red-100/50 hover:shadow-lg hover:shadow-red-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card className="relative overflow-hidden bg-gradient-to-br from-red-50 via-white to-rose-50 border-red-100/50 hover:shadow-md hover:shadow-red-100/20 transition-all duration-300 hover:scale-105 group">
                 <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-rose-500/10"></div>
-                <CardContent className="relative p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-3 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl shadow-lg">
-                      <FileText className="h-6 w-6 text-white" />
+                <CardContent className="relative p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 bg-gradient-to-br from-red-500 to-rose-600 rounded-lg shadow-md">
+                      <FileText className="h-4 w-4 text-white" />
                     </div>
-                    <div className="text-sm font-medium text-red-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="text-xs font-medium text-red-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       Needs Action
                     </div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-red-700 mb-1">{stats.overdueRenewals}</div>
-                    <div className="text-sm font-medium text-red-600">Overdue</div>
+                    <div className="text-xl font-bold text-red-700 mb-1">{stats.overdueRenewals}</div>
+                    <div className="text-xs font-medium text-red-600">Overdue</div>
                   </div>
                 </CardContent>
               </Card>
               
               {/* Average Fee Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-violet-50 border-purple-100/50 hover:shadow-lg hover:shadow-purple-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-violet-50 border-purple-100/50 hover:shadow-md hover:shadow-purple-100/20 transition-all duration-300 hover:scale-105 group">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-violet-500/10"></div>
-                <CardContent className="relative p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-3 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl shadow-lg">
-                      <DollarSign className="h-6 w-6 text-white" />
+                <CardContent className="relative p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg shadow-md">
+                      <DollarSign className="h-4 w-4 text-white" />
                     </div>
-                    <div className="text-sm font-medium text-purple-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="text-xs font-medium text-purple-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       Per Member
                     </div>
                   </div>
                   <div>
-                    <div className="text-3xl font-bold text-gray-900 mb-1">${stats.averageFeeAmount.toLocaleString()}</div>
-                    <div className="text-sm font-medium text-purple-600">Average Fee</div>
+                    <div className="text-xl font-bold text-gray-900 mb-1">${stats.averageFeeAmount.toLocaleString()}</div>
+                    <div className="text-xs font-medium text-purple-600">Average Fee</div>
                   </div>
                 </CardContent>
               </Card>
