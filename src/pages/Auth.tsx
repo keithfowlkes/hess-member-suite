@@ -34,7 +34,7 @@ export default function Auth() {
   const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
   
   // Get reCAPTCHA settings from database - wait for loading to complete
-  const recaptchaSiteKey = isLoadingRecaptcha ? null : (recaptchaSetting?.setting_value || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI");
+  const recaptchaSiteKey = isLoadingRecaptcha ? null : recaptchaSetting?.setting_value;
   const recaptchaEnabled = isLoadingRecaptchaEnabled ? true : (recaptchaEnabledSetting?.setting_value !== 'false');
 
   // System field select component
@@ -519,8 +519,8 @@ export default function Auth() {
                           onChange={setSignInCaptcha}
                         />
                       ) : (
-                        <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
-                          <span className="text-gray-500 text-sm">Loading verification...</span>
+                        <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                          No reCAPTCHA site key configured. Please contact administrator.
                         </div>
                       )
                     ) : (
@@ -1179,8 +1179,8 @@ export default function Auth() {
                           </div>
                         )}
                         {!isLoadingRecaptcha && !recaptchaSetting?.setting_value && (
-                          <p className="text-xs text-gray-500">
-                            Using test reCAPTCHA key. Admin should configure production key in System Settings.
+                          <p className="text-xs text-red-500">
+                            No reCAPTCHA site key configured. Admin should configure it in System Settings.
                           </p>
                         )}
                       </>
