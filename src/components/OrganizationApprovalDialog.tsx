@@ -4,8 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, User, Building2, Mail, Phone, MapPin } from 'lucide-react';
+import { CheckCircle, XCircle, User, Building2, Mail, Phone, MapPin, DollarSign, Calendar, Globe, Monitor } from 'lucide-react';
 import { PendingOrganization } from '@/hooks/useOrganizationApprovals';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 interface OrganizationApprovalDialogProps {
   open: boolean;
@@ -24,8 +27,32 @@ export const OrganizationApprovalDialog = ({
 }: OrganizationApprovalDialogProps) => {
   const [adminMessage, setAdminMessage] = useState('');
   const [isApproving, setIsApproving] = useState(false);
+  const [isApprovingWithInvoice, setIsApprovingWithInvoice] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const { toast } = useToast();
+
+  // Calculate prorated fee based on membership start date
+  const calculateProratedFee = (annualFee: number): number => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const renewalDate = new Date(currentYear + 1, 5, 30); // June 30th next year
+    const startDate = today;
+    
+    const totalDays = Math.ceil((renewalDate.getTime() - new Date(currentYear, 5, 30).getTime()) / (1000 * 60 * 60 * 24));
+    const remainingDays = Math.ceil((renewalDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Calculate prorated amount (minimum 25% of annual fee)
+    const proratedAmount = Math.max((remainingDays / totalDays) * annualFee, annualFee * 0.25);
+    
+    return Math.round(proratedAmount);
+  };
+
+  const getProratedFee = () => {
+    if (!organization) return 0;
+    const annualFee = organization.annual_fee_amount || 1000;
+    return calculateProratedFee(annualFee);
+  };
 
   const handleApprove = async () => {
     if (!organization) return;
@@ -37,6 +64,57 @@ export const OrganizationApprovalDialog = ({
       setAdminMessage('');
     } finally {
       setIsApproving(false);
+    }
+  };
+
+  const handleApproveWithInvoice = async () => {
+    if (!organization) return;
+    
+    setIsApprovingWithInvoice(true);
+    try {
+      // First approve the organization
+      await onApprove(organization.id, adminMessage || undefined);
+      
+      // Then create prorated invoice
+      const proratedAmount = getProratedFee();
+      const today = new Date();
+      const dueDate = new Date();
+      dueDate.setDate(today.getDate() + 30);
+      const periodEnd = new Date(today.getFullYear() + 1, 5, 30);
+      
+      const invoiceNumber = `INV-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${Date.now().toString().slice(-4)}`;
+      
+      const { error: invoiceError } = await supabase
+        .from('invoices')
+        .insert({
+          organization_id: organization.id,
+          invoice_number: invoiceNumber,
+          amount: proratedAmount,
+          prorated_amount: proratedAmount,
+          due_date: format(dueDate, 'yyyy-MM-dd'),
+          period_start_date: format(today, 'yyyy-MM-dd'),
+          period_end_date: format(periodEnd, 'yyyy-MM-dd'),
+          notes: `Prorated membership fee for ${organization.name} (${Math.round((proratedAmount / (organization.annual_fee_amount || 1000)) * 100)}% of annual fee)`
+        });
+
+      if (invoiceError) throw invoiceError;
+
+      toast({
+        title: "Success",
+        description: `Organization approved and prorated invoice ($${proratedAmount.toLocaleString()}) created.`,
+      });
+
+      onOpenChange(false);
+      setAdminMessage('');
+    } catch (error: any) {
+      console.error('Error approving with invoice:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create invoice after approval",
+        variant: "destructive"
+      });
+    } finally {
+      setIsApprovingWithInvoice(false);
     }
   };
 
@@ -66,93 +144,187 @@ export const OrganizationApprovalDialog = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Organization Information */}
+        <div className="space-y-4">
+          {/* Organization Header */}
           <div className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{organization.name}</h3>
-              <Badge variant="outline" className="flex items-center gap-1">
-                {organization.profiles?.is_private_nonprofit ? (
-                  <>
-                    <CheckCircle className="h-3 w-3 text-green-600" />
-                    Private Non-Profit
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="h-3 w-3 text-red-600" />
-                    Not Confirmed as Private Non-Profit
-                  </>
-                )}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="flex items-center gap-1">
+                  {organization.profiles?.is_private_nonprofit ? (
+                    <>
+                      <CheckCircle className="h-3 w-3 text-green-600" />
+                      Private Non-Profit
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-3 w-3 text-red-600" />
+                      Not Approved
+                    </>
+                  )}
+                </Badge>
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <DollarSign className="h-3 w-3" />
+                  Prorated Fee: ${getProratedFee().toLocaleString()}
+                </Badge>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Basic Information */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {organization.address_line_1}
-                    {organization.city && `, ${organization.city}`}
-                    {organization.state && `, ${organization.state}`}
-                    {organization.zip_code && ` ${organization.zip_code}`}
-                  </span>
-                </div>
-                {organization.phone && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{organization.phone}</span>
+                <h4 className="font-medium text-sm text-muted-foreground">Organization Details</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    <span className="text-xs">
+                      {organization.address_line_1}
+                      {organization.address_line_2 && `, ${organization.address_line_2}`}
+                      {organization.city && `, ${organization.city}`}
+                      {organization.state && `, ${organization.state}`}
+                      {organization.zip_code && ` ${organization.zip_code}`}
+                    </span>
                   </div>
-                )}
-                {organization.email && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <a 
-                      href={`mailto:${organization.email}`}
-                      className="text-primary hover:underline"
-                    >
-                      {organization.email}
+                  {organization.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <span className="text-xs">{organization.phone}</span>
+                    </div>
+                  )}
+                  {organization.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <a href={`mailto:${organization.email}`} className="text-xs text-primary hover:underline">
+                        {organization.email}
+                      </a>
+                    </div>
+                  )}
+                  {organization.website && (
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <a href={organization.website} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                        {organization.website}
+                      </a>
+                    </div>
+                  )}
+                  {organization.student_fte && (
+                    <div className="text-xs">
+                      <span className="font-medium">Student FTE:</span> {organization.student_fte.toLocaleString()}
+                    </div>
+                  )}
+                  <div className="text-xs">
+                    <span className="font-medium">Annual Fee:</span> ${(organization.annual_fee_amount || 1000).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-muted-foreground">Contact Information</h4>
+                {organization.profiles && (
+                  <div className="space-y-1 text-xs">
+                    <div className="font-medium">Primary Contact</div>
+                    <div>{organization.profiles.first_name} {organization.profiles.last_name}</div>
+                    {organization.profiles.primary_contact_title && (
+                      <div className="text-muted-foreground">{organization.profiles.primary_contact_title}</div>
+                    )}
+                    <a href={`mailto:${organization.profiles.email}`} className="text-primary hover:underline block">
+                      {organization.profiles.email}
                     </a>
                   </div>
                 )}
-                {organization.student_fte && (
-                  <div className="text-sm">
-                    <span className="font-medium">Student FTE:</span> {organization.student_fte.toLocaleString()}
+                {(organization.secondary_first_name || organization.secondary_last_name) && (
+                  <div className="space-y-1 text-xs pt-2">
+                    <div className="font-medium">Secondary Contact</div>
+                    <div>{organization.secondary_first_name} {organization.secondary_last_name}</div>
+                    {organization.secondary_contact_title && (
+                      <div className="text-muted-foreground">{organization.secondary_contact_title}</div>
+                    )}
+                    {organization.secondary_contact_email && (
+                      <a href={`mailto:${organization.secondary_contact_email}`} className="text-primary hover:underline block">
+                        {organization.secondary_contact_email}
+                      </a>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Primary Contact */}
-              {organization.profiles && (
-                <div className="space-y-2">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Primary Contact
-                  </h4>
-                  <div className="text-sm space-y-1">
-                    <div>
-                      <span className="font-medium">Name:</span> {organization.profiles.first_name} {organization.profiles.last_name}
-                    </div>
-                    <div>
-                  <span className="font-medium">Email:</span> 
-                  <a 
-                    href={`mailto:${organization.profiles.email}`}
-                    className="text-primary hover:underline"
-                  >
-                    {organization.profiles.email}
-                  </a>
-                    </div>
-                    {organization.profiles.primary_contact_title && (
-                      <div>
-                        <span className="font-medium">Title:</span> {organization.profiles.primary_contact_title}
+              {/* Software Systems */}
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
+                  <Monitor className="h-3 w-3" />
+                  Software Systems
+                </h4>
+                <div className="space-y-1 text-xs">
+                  {organization.student_information_system && (
+                    <div><span className="font-medium">SIS:</span> {organization.student_information_system}</div>
+                  )}
+                  {organization.financial_system && (
+                    <div><span className="font-medium">Financial:</span> {organization.financial_system}</div>
+                  )}
+                  {organization.financial_aid && (
+                    <div><span className="font-medium">Financial Aid:</span> {organization.financial_aid}</div>
+                  )}
+                  {organization.hcm_hr && (
+                    <div><span className="font-medium">HCM/HR:</span> {organization.hcm_hr}</div>
+                  )}
+                  {organization.payroll_system && (
+                    <div><span className="font-medium">Payroll:</span> {organization.payroll_system}</div>
+                  )}
+                  {organization.purchasing_system && (
+                    <div><span className="font-medium">Purchasing:</span> {organization.purchasing_system}</div>
+                  )}
+                  {organization.housing_management && (
+                    <div><span className="font-medium">Housing:</span> {organization.housing_management}</div>
+                  )}
+                  {organization.learning_management && (
+                    <div><span className="font-medium">LMS:</span> {organization.learning_management}</div>
+                  )}
+                  {organization.admissions_crm && (
+                    <div><span className="font-medium">Admissions CRM:</span> {organization.admissions_crm}</div>
+                  )}
+                  {organization.alumni_advancement_crm && (
+                    <div><span className="font-medium">Alumni CRM:</span> {organization.alumni_advancement_crm}</div>
+                  )}
+                  
+                  {/* Office Software */}
+                  {(organization.primary_office_apple || organization.primary_office_asus || organization.primary_office_dell || organization.primary_office_hp || organization.primary_office_microsoft || organization.primary_office_other) && (
+                    <div className="pt-1">
+                      <div className="font-medium">Primary Office Software:</div>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {organization.primary_office_apple && <Badge variant="outline" className="text-xs px-1 py-0">Apple</Badge>}
+                        {organization.primary_office_asus && <Badge variant="outline" className="text-xs px-1 py-0">ASUS</Badge>}
+                        {organization.primary_office_dell && <Badge variant="outline" className="text-xs px-1 py-0">Dell</Badge>}
+                        {organization.primary_office_hp && <Badge variant="outline" className="text-xs px-1 py-0">HP</Badge>}
+                        {organization.primary_office_microsoft && <Badge variant="outline" className="text-xs px-1 py-0">Microsoft</Badge>}
+                        {organization.primary_office_other && <Badge variant="outline" className="text-xs px-1 py-0">Other</Badge>}
                       </div>
-                    )}
-                  </div>
+                      {organization.primary_office_other_details && (
+                        <div className="text-muted-foreground text-xs mt-1">{organization.primary_office_other_details}</div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {organization.other_software_comments && (
+                    <div className="pt-1 text-xs">
+                      <div className="font-medium">Additional Comments:</div>
+                      <div className="text-muted-foreground">{organization.other_software_comments}</div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
-            <div className="mt-4 text-xs text-muted-foreground">
-              Application submitted: {new Date(organization.created_at).toLocaleDateString()}
+            {organization.notes && (
+              <div className="mt-4 p-3 bg-muted rounded text-sm">
+                <div className="font-medium mb-1">Notes:</div>
+                <div className="text-muted-foreground">{organization.notes}</div>
+              </div>
+            )}
+
+            <div className="mt-4 text-xs text-muted-foreground flex justify-between items-center">
+              <span>Application submitted: {new Date(organization.created_at).toLocaleDateString()}</span>
+              <span>Membership Status: {organization.membership_status}</span>
             </div>
           </div>
 
@@ -177,11 +349,20 @@ export const OrganizationApprovalDialog = ({
                 <>
                   <Button
                     onClick={handleApprove}
-                    disabled={isApproving}
+                    disabled={isApproving || isApprovingWithInvoice}
                     className="flex items-center gap-2"
                   >
                     <CheckCircle className="h-4 w-4" />
                     {isApproving ? 'Approving...' : 'Approve Organization'}
+                  </Button>
+                  <Button
+                    onClick={handleApproveWithInvoice}
+                    disabled={isApproving || isApprovingWithInvoice}
+                    variant="default"
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <DollarSign className="h-4 w-4" />
+                    {isApprovingWithInvoice ? 'Creating Invoice...' : `Approve & Send Prorated Invoice ($${getProratedFee().toLocaleString()})`}
                   </Button>
                   <Button
                     onClick={() => setShowRejectForm(true)}
