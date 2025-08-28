@@ -21,6 +21,7 @@ export default function Auth() {
   const { data: organizations = [] } = useOrganizations();
   const createReassignmentRequest = useCreateReassignmentRequest();
   const { data: recaptchaSetting, isLoading: isLoadingRecaptcha } = useSystemSetting('recaptcha_site_key');
+  const { data: recaptchaEnabledSetting, isLoading: isLoadingRecaptchaEnabled } = useSystemSetting('recaptcha_enabled');
   
   const [signInForm, setSignInForm] = useState({ email: '', password: '' });
   const [signInCaptcha, setSignInCaptcha] = useState<string | null>(null);
@@ -32,8 +33,9 @@ export default function Auth() {
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
   const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
   
-  // Get reCAPTCHA site key from database - wait for loading to complete
+  // Get reCAPTCHA settings from database - wait for loading to complete
   const recaptchaSiteKey = isLoadingRecaptcha ? null : (recaptchaSetting?.setting_value || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI");
+  const recaptchaEnabled = isLoadingRecaptchaEnabled ? true : (recaptchaEnabledSetting?.setting_value !== 'false');
 
   // System field select component
   const SystemFieldSelect = ({ 
@@ -162,7 +164,7 @@ export default function Auth() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!signInCaptcha) {
+    if (recaptchaEnabled && !signInCaptcha) {
       toast({
         title: "Verification required",
         description: "Please complete the captcha verification.",
@@ -182,8 +184,10 @@ export default function Auth() {
         variant: "destructive"
       });
       // Reset captcha on error
-      signInCaptchaRef.current?.reset();
-      setSignInCaptcha(null);
+      if (recaptchaEnabled) {
+        signInCaptchaRef.current?.reset();
+        setSignInCaptcha(null);
+      }
     } else {
       toast({
         title: "Welcome back!",
@@ -222,7 +226,7 @@ export default function Auth() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!signUpCaptcha) {
+    if (recaptchaEnabled && !signUpCaptcha) {
       toast({
         title: "Verification required",
         description: "Please complete the captcha verification.",
@@ -306,8 +310,10 @@ export default function Auth() {
         });
 
         // Reset captcha after success
-        signUpCaptchaRef.current?.reset();
-        setSignUpCaptcha(null);
+        if (recaptchaEnabled) {
+          signUpCaptchaRef.current?.reset();
+          setSignUpCaptcha(null);
+        }
       } catch (error: any) {
         toast({
           title: "Reassignment request failed",
@@ -315,8 +321,10 @@ export default function Auth() {
           variant: "destructive"
         });
         // Reset captcha on error
-        signUpCaptchaRef.current?.reset();
-        setSignUpCaptcha(null);
+        if (recaptchaEnabled) {
+          signUpCaptchaRef.current?.reset();
+          setSignUpCaptcha(null);
+        }
       }
     } else {
       // Normal registration - prepare form data with custom "Other" values
@@ -367,8 +375,10 @@ export default function Auth() {
           variant: "destructive"
         });
         // Reset captcha on error
-        signUpCaptchaRef.current?.reset();
-        setSignUpCaptcha(null);
+        if (recaptchaEnabled) {
+          signUpCaptchaRef.current?.reset();
+          setSignUpCaptcha(null);
+        }
       } else {
         // Send welcome email to new registrants
         await supabase.functions.invoke('organization-emails', {
@@ -387,8 +397,10 @@ export default function Auth() {
         });
         
         // Reset captcha after success
-        signUpCaptchaRef.current?.reset();
-        setSignUpCaptcha(null);
+        if (recaptchaEnabled) {
+          signUpCaptchaRef.current?.reset();
+          setSignUpCaptcha(null);
+        }
       }
     }
     setIsSubmitting(false);
@@ -499,15 +511,21 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-gray-700 font-medium">Security Verification</Label>
-                    {recaptchaSiteKey ? (
-                      <ReCAPTCHA
-                        ref={signInCaptchaRef}
-                        sitekey={recaptchaSiteKey}
-                        onChange={setSignInCaptcha}
-                      />
+                    {recaptchaEnabled ? (
+                      recaptchaSiteKey ? (
+                        <ReCAPTCHA
+                          ref={signInCaptchaRef}
+                          sitekey={recaptchaSiteKey}
+                          onChange={setSignInCaptcha}
+                        />
+                      ) : (
+                        <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
+                          <span className="text-gray-500 text-sm">Loading verification...</span>
+                        </div>
+                      )
                     ) : (
-                      <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
-                        <span className="text-gray-500 text-sm">Loading verification...</span>
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+                        reCAPTCHA verification is disabled by administrator
                       </div>
                     )}
                   </div>
@@ -1147,21 +1165,29 @@ export default function Auth() {
                   </div>
                   
                   <div className="space-y-4">
-                    {recaptchaSiteKey ? (
-                      <ReCAPTCHA
-                        ref={signUpCaptchaRef}
-                        sitekey={recaptchaSiteKey}
-                        onChange={setSignUpCaptcha}
-                      />
+                    {recaptchaEnabled ? (
+                      <>
+                        {recaptchaSiteKey ? (
+                          <ReCAPTCHA
+                            ref={signUpCaptchaRef}
+                            sitekey={recaptchaSiteKey}
+                            onChange={setSignUpCaptcha}
+                          />
+                        ) : (
+                          <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
+                            <span className="text-gray-500 text-sm">Loading verification...</span>
+                          </div>
+                        )}
+                        {!isLoadingRecaptcha && !recaptchaSetting?.setting_value && (
+                          <p className="text-xs text-gray-500">
+                            Using test reCAPTCHA key. Admin should configure production key in System Settings.
+                          </p>
+                        )}
+                      </>
                     ) : (
-                      <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
-                        <span className="text-gray-500 text-sm">Loading verification...</span>
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+                        reCAPTCHA verification is disabled by administrator
                       </div>
-                    )}
-                    {!isLoadingRecaptcha && !recaptchaSetting?.setting_value && (
-                      <p className="text-xs text-gray-500">
-                        Using test reCAPTCHA key. Admin should configure production key in System Settings.
-                      </p>
                     )}
                   </div>
                 </div>

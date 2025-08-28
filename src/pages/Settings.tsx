@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -85,12 +86,24 @@ export default function Settings() {
   } | null>(null);
   const [resendApiKey, setResendApiKey] = useState('');
   const [apiKeyLoading, setApiKeyLoading] = useState(false);
+  
+  // reCaptcha enable/disable state
+  const { data: recaptchaEnabledSetting } = useSystemSetting('recaptcha_enabled');
+  const [recaptchaEnabled, setRecaptchaEnabled] = useState(true);
 
   const handleSaveRecaptcha = async () => {
     await updateSystemSetting.mutateAsync({
       settingKey: 'recaptcha_site_key',
       settingValue: recaptchaKey,
       description: 'Google reCAPTCHA site key for form verification'
+    });
+  };
+
+  const handleSaveRecaptchaEnabled = async () => {
+    await updateSystemSetting.mutateAsync({
+      settingKey: 'recaptcha_enabled',
+      settingValue: recaptchaEnabled ? 'true' : 'false',
+      description: 'Enable or disable reCAPTCHA validation on forms'
     });
   };
 
@@ -260,6 +273,12 @@ export default function Settings() {
       setRecaptchaKey(recaptchaSetting.setting_value);
     }
   }, [recaptchaSetting]);
+
+  useEffect(() => {
+    if (recaptchaEnabledSetting?.setting_value !== undefined) {
+      setRecaptchaEnabled(recaptchaEnabledSetting.setting_value === 'true');
+    }
+  }, [recaptchaEnabledSetting]);
 
   if (loading || formFieldsLoading) {
     return (
@@ -454,9 +473,49 @@ export default function Settings() {
                       </ol>
                     </div>
 
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <Button 
+                        onClick={handleSaveRecaptcha}
+                        disabled={updateSystemSetting.isPending || !recaptchaKey.trim()}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        {updateSystemSetting.isPending ? 'Saving...' : 'Save Site Key'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* reCAPTCHA Enable/Disable */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      reCAPTCHA Validation
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="recaptcha-enabled" className="text-base font-medium">
+                          Enable reCAPTCHA
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Require reCAPTCHA verification on sign-in and registration forms
+                        </p>
+                      </div>
+                      <Switch
+                        id="recaptcha-enabled"
+                        checked={recaptchaEnabled}
+                        onCheckedChange={setRecaptchaEnabled}
+                      />
+                    </div>
+
                     <Button 
-                      onClick={handleSaveRecaptcha}
-                      disabled={updateSystemSetting.isPending || !recaptchaKey.trim()}
+                      onClick={handleSaveRecaptchaEnabled}
+                      disabled={updateSystemSetting.isPending}
+                      className="w-full sm:w-auto"
                     >
                       <Save className="w-4 h-4 mr-2" />
                       {updateSystemSetting.isPending ? 'Saving...' : 'Save reCAPTCHA Settings'}
