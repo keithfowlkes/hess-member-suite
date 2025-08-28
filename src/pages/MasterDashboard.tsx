@@ -459,7 +459,17 @@ const MasterDashboard = () => {
                         </Badge>
                       )}
                     </TabsTrigger>
-                    <TabsTrigger value="reassignments">Reassignment Requests</TabsTrigger>
+                    <TabsTrigger value="reassignments" className="relative">
+                      Reassignment Requests
+                      {reassignmentRequests.length > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                        >
+                          {reassignmentRequests.length}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
                     <TabsTrigger value="users">User Management</TabsTrigger>
                   </TabsList>
 
@@ -686,15 +696,32 @@ const MasterDashboard = () => {
                                   {request.new_organization_data && (
                                     <div className="space-y-2 mb-4">
                                       <h4 className="font-medium text-sm">Updated Organization Information</h4>
-                                      <div className="bg-muted/30 rounded-md p-3 space-y-2 text-sm">
-                                        {Object.entries(request.new_organization_data as Record<string, any>).map(([key, value]) => (
-                                          <div key={key} className="flex justify-between">
-                                            <span className="font-medium capitalize">{key.replace(/_/g, ' ')}:</span>
-                                            <span className="text-muted-foreground text-right max-w-[60%] break-words">
-                                              {typeof value === 'string' || typeof value === 'number' ? String(value) : JSON.stringify(value)}
-                                            </span>
-                                          </div>
-                                        ))}
+                                      <div className="bg-muted/30 rounded-md p-4 space-y-3 text-sm">
+                                        {Object.entries(request.new_organization_data as Record<string, any>)
+                                          .filter(([key, value]) => value !== null && value !== undefined && value !== '')
+                                          .map(([key, value]) => {
+                                            const displayKey = key
+                                              .replace(/_/g, ' ')
+                                              .replace(/\b\w/g, l => l.toUpperCase());
+                                            
+                                            let displayValue = value;
+                                            if (typeof value === 'boolean') {
+                                              displayValue = value ? 'Yes' : 'No';
+                                            } else if (Array.isArray(value)) {
+                                              displayValue = value.join(', ');
+                                            } else if (typeof value === 'object') {
+                                              displayValue = JSON.stringify(value, null, 2);
+                                            }
+                                            
+                                            return (
+                                              <div key={key} className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50 last:border-0">
+                                                <span className="font-medium text-foreground col-span-1">{displayKey}:</span>
+                                                <span className="text-muted-foreground col-span-2 break-words">
+                                                  {String(displayValue)}
+                                                </span>
+                                              </div>
+                                            );
+                                          })}
                                       </div>
                                     </div>
                                   )}

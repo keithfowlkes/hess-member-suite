@@ -1,7 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
+import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
+import { useReassignmentRequests } from '@/hooks/useReassignmentRequests';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -22,6 +26,15 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const { isAdmin, isViewingAsAdmin, toggleViewMode, signOut } = useAuth();
   const location = useLocation();
+  
+  // Fetch pending action counts for admin
+  const { pendingOrganizations } = useOrganizationApprovals();
+  const { invitations } = useOrganizationInvitations();
+  const { data: reassignmentRequests = [] } = useReassignmentRequests();
+  
+  // Calculate total pending actions
+  const activeInvitations = invitations?.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()) || [];
+  const totalPendingActions = (pendingOrganizations?.length || 0) + activeInvitations.length + reassignmentRequests.length;
   
   console.log('Sidebar render - isAdmin:', isAdmin, 'isViewingAsAdmin:', isViewingAsAdmin);
   
@@ -72,11 +85,23 @@ export function AppSidebar() {
 
       <SidebarContent className="flex-1">
         <SidebarGroup>
-          <SidebarGroupLabel>{isViewingAsAdmin ? 'Admin Panel' : 'Member Portal'}</SidebarGroupLabel>
+          <div className="flex items-center justify-between px-3 py-2">
+            <SidebarGroupLabel>{isViewingAsAdmin ? 'Admin Panel' : 'Member Portal'}</SidebarGroupLabel>
+            {isViewingAsAdmin && totalPendingActions > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="h-5 w-5 p-0 flex items-center justify-center text-xs"
+              >
+                {totalPendingActions}
+              </Badge>
+            )}
+          </div>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
                 const Icon = item.icon;
+                const showMasterDashboardBadge = isViewingAsAdmin && item.title === 'Master Dashboard' && totalPendingActions > 0;
+                
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
@@ -86,7 +111,19 @@ export function AppSidebar() {
                         className={({ isActive }) => getNavCls({ isActive })}
                       >
                         <Icon className="h-4 w-4" />
-                        {!isCollapsed && <span>{item.title}</span>}
+                        {!isCollapsed && (
+                          <div className="flex items-center justify-between w-full">
+                            <span>{item.title}</span>
+                            {showMasterDashboardBadge && (
+                              <Badge 
+                                variant="destructive" 
+                                className="h-4 w-4 p-0 flex items-center justify-center text-xs ml-auto"
+                              >
+                                {totalPendingActions}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
