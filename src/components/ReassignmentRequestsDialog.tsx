@@ -33,11 +33,10 @@ import {
   useReassignmentRequests, 
   useApproveReassignmentRequest, 
   useRejectReassignmentRequest,
-  useRevertReassignmentRequest,
   useDeleteReassignmentRequest,
   type ReassignmentRequest 
 } from '@/hooks/useReassignmentRequests';
-import { CheckCircle, XCircle, RotateCcw, Eye, Trash2, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, Trash2, AlertTriangle } from 'lucide-react';
 
 interface ReassignmentRequestsDialogProps {
   open: boolean;
@@ -48,7 +47,6 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
   const { data: requests = [], isLoading } = useReassignmentRequests();
   const approveRequest = useApproveReassignmentRequest();
   const rejectRequest = useRejectReassignmentRequest();
-  const revertRequest = useRevertReassignmentRequest();
   const deleteRequest = useDeleteReassignmentRequest();
 
   const [selectedRequest, setSelectedRequest] = useState<ReassignmentRequest | null>(null);
@@ -85,16 +83,6 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
     setActionNotes('');
   };
 
-  const handleRevert = async () => {
-    if (!selectedRequest) return;
-    await revertRequest.mutateAsync({
-      id: selectedRequest.id,
-      notes: actionNotes
-    });
-    setSelectedRequest(null);
-    setActionNotes('');
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -103,8 +91,6 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
         return <Badge variant="default">Approved</Badge>;
       case 'rejected':
         return <Badge variant="destructive">Rejected</Badge>;
-      case 'reverted':
-        return <Badge variant="secondary">Reverted</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -129,18 +115,7 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Original Organization Data</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <pre className="text-sm bg-muted p-3 rounded-md overflow-auto">
-                    {JSON.stringify(selectedRequest.original_organization_data, null, 2)}
-                  </pre>
-                </CardContent>
-              </Card>
-
+            <div className="grid grid-cols-1 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">New Organization Data</CardTitle>
@@ -172,7 +147,7 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
                     disabled={approveRequest.isPending}
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Approve Request
+                    Approve & Replace Organization
                   </Button>
                   <Button
                     variant="destructive"
@@ -184,30 +159,6 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
                     Reject Request
                   </Button>
                 </div>
-              </div>
-            )}
-
-            {selectedRequest.status === 'approved' && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="revert-notes">Revert Notes (optional)</Label>
-                  <Textarea
-                    id="revert-notes"
-                    placeholder="Add any notes about reverting this change..."
-                    value={actionNotes}
-                    onChange={(e) => setActionNotes(e.target.value)}
-                  />
-                </div>
-
-                <Button
-                  variant="secondary"
-                  onClick={handleRevert}
-                  className="w-full"
-                  disabled={revertRequest.isPending}
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Revert to Original Data
-                </Button>
               </div>
             )}
 
@@ -337,9 +288,10 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
                         </strong>{' '}
                         to <strong>{selectedRequest?.new_contact_email}</strong>
                       </li>
-                      <li>• All organization information will be updated with the new submitted data</li>
+                      <li>• All organization information will be completely replaced with the new submitted data</li>
                       <li>• The current primary contact will lose access to manage this organization</li>
-                      <li>• This action cannot be easily undone</li>
+                      <li>• The reassignment request will be deleted after approval</li>
+                      <li><strong>• This action cannot be undone</strong></li>
                     </ul>
                   </div>
                   

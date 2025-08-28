@@ -61,16 +61,15 @@ export const useCreateReassignmentRequest = () => {
       organization_id: string;
       new_contact_email: string;
       new_organization_data: any;
-      original_organization_data: any;
     }) => {
-      // Get current user ID
-      const { data: { user } } = await supabase.auth.getUser();
-      
       const { data: result, error } = await supabase
         .from('organization_reassignment_requests')
         .insert({
-          ...data,
-          requested_by: user?.id || null,
+          organization_id: data.organization_id,
+          new_contact_email: data.new_contact_email,
+          new_organization_data: data.new_organization_data,
+          original_organization_data: {}, // Not needed with simpler approach
+          requested_by: null, // Not needed - will be handled on approval
         })
         .select()
         .single();
@@ -101,7 +100,7 @@ export const useApproveReassignmentRequest = () => {
 
   return useMutation({
     mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
-      // First get the request data
+      // Get the request data
       const { data: request, error: fetchError } = await supabase
         .from('organization_reassignment_requests')
         .select('*')
@@ -110,26 +109,38 @@ export const useApproveReassignmentRequest = () => {
 
       if (fetchError) throw fetchError;
 
-      // Update the organization with new data
+      // Find or create profile for new contact
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', request.new_contact_email)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+
+      let contactPersonId = existingProfile?.id;
+
+      // If no existing profile, we'll need the new user to complete registration
+      // For now, just update the organization data without changing contact person
+      
+      // Replace the organization with new data
       const { error: updateOrgError } = await supabase
         .from('organizations')
-        .update(request.new_organization_data as any)
+        .update({
+          ...request.new_organization_data as any,
+          contact_person_id: contactPersonId || null, // Will be updated when user registers
+        })
         .eq('id', request.organization_id);
 
       if (updateOrgError) throw updateOrgError;
 
-      // Mark request as approved
-      const { error: updateRequestError } = await supabase
+      // Delete the reassignment request (simpler approach - no audit trail needed)
+      const { error: deleteRequestError } = await supabase
         .from('organization_reassignment_requests')
-        .update({
-          status: 'approved',
-          admin_notes: notes,
-          approved_by: (await supabase.auth.getUser()).data.user?.id,
-          approved_at: new Date().toISOString()
-        })
+        .delete()
         .eq('id', id);
 
-      if (updateRequestError) throw updateRequestError;
+      if (deleteRequestError) throw deleteRequestError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
@@ -149,58 +160,7 @@ export const useApproveReassignmentRequest = () => {
   });
 };
 
-export const useRevertReassignmentRequest = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
-      // First get the request data
-      const { data: request, error: fetchError } = await supabase
-        .from('organization_reassignment_requests')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Revert the organization to original data
-      const { error: updateOrgError } = await supabase
-        .from('organizations')
-        .update(request.original_organization_data as any)
-        .eq('id', request.organization_id);
-
-      if (updateOrgError) throw updateOrgError;
-
-      // Mark request as reverted
-      const { error: updateRequestError } = await supabase
-        .from('organization_reassignment_requests')
-        .update({
-          status: 'reverted',
-          admin_notes: notes,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
-
-      if (updateRequestError) throw updateRequestError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['organizations'] });
-      toast({
-        title: "Success",
-        description: "Organization data reverted to original successfully.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to revert organization data",
-        variant: "destructive"
-      });
-    }
-  });
-};
+// Removed revert functionality - simpler approach doesn't need it
 
 export const useRejectReassignmentRequest = () => {
   const { toast } = useToast();
@@ -208,14 +168,10 @@ export const useRejectReassignmentRequest = () => {
 
   return useMutation({
     mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
+      // Simply delete the request - no need to track rejection
       const { error } = await supabase
         .from('organization_reassignment_requests')
-        .update({
-          status: 'rejected',
-          admin_notes: notes,
-          approved_by: (await supabase.auth.getUser()).data.user?.id,
-          approved_at: new Date().toISOString()
-        })
+        .delete()
         .eq('id', id);
 
       if (error) throw error;
@@ -224,7 +180,7 @@ export const useRejectReassignmentRequest = () => {
       queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
       toast({
         title: "Success",
-        description: "Reassignment request rejected.",
+        description: "Reassignment request rejected and removed.",
       });
     },
     onError: (error: any) => {

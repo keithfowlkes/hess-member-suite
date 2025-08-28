@@ -303,7 +303,6 @@ export default function Auth() {
           organization_id: selectedOrganizationId,
           new_contact_email: signUpForm.email,
           new_organization_data: newOrgData,
-          original_organization_data: currentOrg
         });
 
         // Reset captcha after success
