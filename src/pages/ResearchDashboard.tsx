@@ -33,7 +33,7 @@ export default function ResearchDashboard() {
                 <div className="p-2 rounded-lg bg-primary/10">
                   <BarChart3 className="h-8 w-8 text-primary" />
                 </div>
-                Research Dashboard
+                HESS Member Information
               </h1>
               <p className="text-muted-foreground mt-2">
                 Explore member organization data and system usage analytics
