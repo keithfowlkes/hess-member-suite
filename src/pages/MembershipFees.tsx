@@ -9,10 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMembers } from '@/hooks/useMembers';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useToast } from '@/hooks/use-toast';
 import { setupDefaultInvoiceTemplate } from '@/utils/setupDefaultInvoiceTemplate';
+import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { 
   DollarSign, 
   Calendar as CalendarIcon, 
@@ -22,7 +24,8 @@ import {
   Settings,
   Download,
   Send,
-  CheckSquare
+  CheckSquare,
+  Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -47,11 +50,44 @@ export default function MembershipFees() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedOrganizations, setSelectedOrganizations] = useState<Set<string>>(new Set());
   const [isSendingInvoices, setIsSendingInvoices] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Setup default invoice template with HESS logo on component mount
   React.useEffect(() => {
     setupDefaultInvoiceTemplate();
   }, []);
+
+  // Create sample invoice data for preview
+  const createSampleInvoice = (organization: any) => {
+    const today = new Date();
+    const dueDate = new Date();
+    dueDate.setDate(today.getDate() + 30);
+    
+    const periodStart = new Date();
+    const periodEnd = new Date();
+    periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+
+    return {
+      id: `preview-${organization.id}`,
+      organization_id: organization.id,
+      invoice_number: `INV-PREVIEW-${Date.now()}`,
+      amount: organization.annual_fee_amount || 1000,
+      invoice_date: format(today, 'yyyy-MM-dd'),
+      due_date: format(dueDate, 'yyyy-MM-dd'),
+      period_start_date: format(periodStart, 'yyyy-MM-dd'),
+      period_end_date: format(periodEnd, 'yyyy-MM-dd'),
+      status: 'draft' as const,
+      notes: `Annual membership fee for ${organization.name}`,
+      created_at: today.toISOString(),
+      updated_at: today.toISOString(),
+      organizations: {
+        id: organization.id,
+        name: organization.name,
+        email: organization.email,
+        membership_status: organization.membership_status
+      }
+    };
+  };
 
   // Calculate fee statistics
   const calculateStats = (): FeesStats => {
@@ -435,7 +471,21 @@ export default function MembershipFees() {
               </CardContent>
             </Card>
 
-            {/* Organization Fees Overview */}
+            {/* Tabs for Overview and Invoice Preview */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Organization Fees Overview
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="flex items-center gap-2">
+                  <Eye className="h-4 w-4" />
+                  Invoice Preview ({selectedOrganizations.size})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="mt-6">
+                {/* Organization Fees Overview */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -549,6 +599,93 @@ export default function MembershipFees() {
                 </div>
               </CardContent>
             </Card>
+              </TabsContent>
+
+              <TabsContent value="preview" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Eye className="h-5 w-5" />
+                      Invoice Preview
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Preview invoices for selected organizations before sending
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedOrganizations.size === 0 ? (
+                      <div className="text-center py-12">
+                        <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                          No Organizations Selected
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Select organizations from the Overview tab to preview their invoices
+                        </p>
+                        <Button 
+                          onClick={() => setActiveTab("overview")} 
+                          variant="outline"
+                        >
+                          Go to Overview
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-8">
+                        {Array.from(selectedOrganizations).map((orgId) => {
+                          const organization = organizations.find(org => org.id === orgId);
+                          if (!organization) return null;
+
+                          const sampleInvoice = createSampleInvoice(organization);
+                          
+                          return (
+                            <div key={orgId} className="border rounded-lg p-6 bg-muted/20">
+                              <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold">
+                                  Invoice Preview: {organization.name}
+                                </h3>
+                                <div className="text-sm text-muted-foreground">
+                                  Amount: ${organization.annual_fee_amount || 1000}
+                                </div>
+                              </div>
+                              
+                              {/* Invoice Preview */}
+                              <div className="bg-white border rounded-lg overflow-hidden">
+                                <div className="max-h-[600px] overflow-y-auto">
+                                  <ProfessionalInvoice invoice={sampleInvoice} />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-between pt-6 border-t">
+                          <div className="text-sm text-muted-foreground">
+                            {selectedOrganizations.size} invoice{selectedOrganizations.size !== 1 ? 's' : ''} ready to send
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => setActiveTab("overview")}
+                              variant="outline"
+                            >
+                              Back to Overview
+                            </Button>
+                            <Button
+                              onClick={handleSendSelectedInvoices}
+                              disabled={isSendingInvoices}
+                              className="flex items-center gap-2"
+                            >
+                              <Send className="h-4 w-4" />
+                              {isSendingInvoices ? 'Creating Invoices...' : `Send All Invoices (${selectedOrganizations.size})`}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </main>
       </div>
