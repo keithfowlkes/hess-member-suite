@@ -526,7 +526,7 @@ export default function Auth() {
                       </div>
                     )}
                   </div>
-                  <Button type="submit" className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" disabled={isSubmitting || !signInCaptcha}>
+                  <Button type="submit" className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" disabled={isSubmitting || (recaptchaEnabled && !signInCaptcha)}>
                     {isSubmitting ? 'Signing in...' : 'Sign In'}
                   </Button>
                   <div className="text-center">
@@ -1195,7 +1195,7 @@ export default function Auth() {
                   disabled={
                     isSubmitting || 
                     !signUpForm.isPrivateNonProfit || 
-                    !signUpCaptcha ||
+                    (recaptchaEnabled && !signUpCaptcha) ||
                     (isReassignment && !selectedOrganizationId)
                   }
                 >
