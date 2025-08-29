@@ -13,6 +13,7 @@ export const useOrganizationTotals = () => {
       const { data, error } = await supabase
         .from('organizations')
         .select('student_fte')
+        .eq('membership_status', 'active') // Only count active organizations
         .neq('name', 'Administrator'); // Exclude admin organization
 
       if (error) throw error;
