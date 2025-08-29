@@ -540,9 +540,9 @@ const MasterDashboard = () => {
                                 <div className="space-y-2">
                                   <div className="flex items-center gap-3">
                                     <h3 className="text-lg font-semibold">{org.name}</h3>
-                                    <Badge variant={org.profiles?.is_private_nonprofit ? "default" : "destructive"}>
-                                      {org.profiles?.is_private_nonprofit ? "Private Non-Profit" : "Not Confirmed"}
-                                    </Badge>
+                                     <Badge variant={org.profiles?.is_private_nonprofit ? "default" : "destructive"}>
+                                       {org.profiles?.is_private_nonprofit ? "Private Non-Profit" : "Not Approved"}
+                                     </Badge>
                                   </div>
                                   
                                   <div className="text-sm text-muted-foreground space-y-1">

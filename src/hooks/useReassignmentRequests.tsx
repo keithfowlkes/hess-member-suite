@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 export interface ReassignmentRequest {
   id: string;
@@ -27,7 +28,9 @@ export interface ReassignmentRequest {
 }
 
 export const useReassignmentRequests = () => {
-  return useQuery({
+  const { toast } = useToast();
+  
+  const query = useQuery({
     queryKey: ['reassignment-requests'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -116,6 +119,52 @@ export const useReassignmentRequests = () => {
       return enrichedRequests as ReassignmentRequest[];
     },
   });
+
+  // Subscribe to realtime updates for new reassignment requests
+  useEffect(() => {
+    const channel = supabase
+      .channel('reassignment-requests')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'organization_reassignment_requests'
+        },
+        (payload) => {
+          console.log('New reassignment request:', payload);
+          // Refetch to get the complete data
+          query.refetch();
+          
+          // Show notification
+          toast({
+            title: "New Reassignment Request",
+            description: `A new organization reassignment request has been submitted and is awaiting approval.`,
+            duration: 5000,
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'organization_reassignment_requests'
+        },
+        (payload) => {
+          console.log('Reassignment request updated:', payload);
+          // Refetch to ensure we have the latest data
+          query.refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [query.refetch, toast]);
+
+  return query;
 };
 
 export const useCreateReassignmentRequest = () => {

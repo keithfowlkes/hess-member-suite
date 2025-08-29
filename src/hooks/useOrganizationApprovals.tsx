@@ -238,6 +238,49 @@ export const useOrganizationApprovals = () => {
 
   useEffect(() => {
     fetchPendingOrganizations();
+    
+    // Subscribe to realtime updates for new pending organizations
+    const channel = supabase
+      .channel('organization-approvals')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'organizations',
+          filter: 'membership_status=eq.pending'
+        },
+        (payload) => {
+          console.log('New pending organization:', payload);
+          // Refetch to get the complete data with profiles
+          fetchPendingOrganizations();
+          
+          // Show notification
+          toast({
+            title: "New Registration",
+            description: `A new organization registration has been submitted and is awaiting approval.`,
+            duration: 5000,
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'organizations'
+        },
+        (payload) => {
+          console.log('Organization updated:', payload);
+          // Refetch to ensure we have the latest data
+          fetchPendingOrganizations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
