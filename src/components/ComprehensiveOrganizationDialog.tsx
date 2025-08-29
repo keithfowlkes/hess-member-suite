@@ -119,7 +119,7 @@ interface OrganizationDialogProps {
 }
 
 export function ComprehensiveOrganizationDialog({ open, onOpenChange, organization }: OrganizationDialogProps) {
-  const { createOrganization, updateOrganization, fetchOrganizations, deleteOrganization } = useMembers();
+  const { createOrganization, updateOrganization, refresh, deleteOrganization } = useMembers();
   const { isAdmin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -376,7 +376,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           console.log('Profile updated successfully, result:', updatedProfile);
           
           // Refresh data once more after profile update to ensure UI is current
-          await fetchOrganizations();
+          await refresh();
 
           toast({
             title: 'Success',

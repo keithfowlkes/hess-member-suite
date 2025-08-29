@@ -1,18 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useMembers } from '@/hooks/useMembers';
-import { Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List } from 'lucide-react';
+import { Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, RefreshCw, ChevronDown } from 'lucide-react';
 
 export default function ResearchDashboard() {
-  const { organizations, loading } = useMembers();
+  const { 
+    organizations, 
+    loading, 
+    initialLoading, 
+    hasMore, 
+    loadMore, 
+    refresh, 
+    total,
+    currentPage,
+    totalPages 
+  } = useMembers(20);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  // Local filtering for loaded organizations
   const filteredOrganizations = organizations.filter(org =>
     org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     org.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -31,13 +44,126 @@ export default function ResearchDashboard() {
     }
   };
 
-  if (loading) {
+  // Auto-load more when scrolling near bottom
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!loading && hasMore && (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 1000) {
+        loadMore();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loading, hasMore, loadMore]);
+
+  const renderSkeletons = (count: number) => (
+    <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "border rounded-lg overflow-hidden"}>
+      {viewMode === 'list' && (
+        <div className="bg-muted/50 px-6 py-3 border-b">
+          <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
+            <div className="col-span-2">Organization</div>
+            <div className="col-span-2">Primary Contact</div>
+            <div className="col-span-2">Email</div>
+            <div className="col-span-2">Location</div>
+            <div className="col-span-1">Student FTE</div>
+            <div className="col-span-2">Status</div>
+            <div className="col-span-1">Annual Fee</div>
+          </div>
+        </div>
+      )}
+      <div className={viewMode === 'list' ? "divide-y" : ""}>
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i} className={viewMode === 'grid' ? "" : "px-6 py-4"}>
+            {viewMode === 'grid' ? (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Skeleton className="h-8 w-8 rounded" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <div className="pt-2 border-t space-y-2">
+                      <Skeleton className="h-3 w-1/2" />
+                      <Skeleton className="h-3 w-1/3" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-12 gap-4 items-center">
+                <div className="col-span-2">
+                  <div className="flex items-center space-x-3">
+                    <Skeleton className="h-5 w-5" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+                <div className="col-span-2"><Skeleton className="h-4 w-20" /></div>
+                <div className="col-span-2"><Skeleton className="h-4 w-28" /></div>
+                <div className="col-span-2"><Skeleton className="h-4 w-16" /></div>
+                <div className="col-span-1"><Skeleton className="h-4 w-12" /></div>
+                <div className="col-span-2"><Skeleton className="h-6 w-16 rounded-full" /></div>
+                <div className="col-span-1"><Skeleton className="h-4 w-16" /></div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (initialLoading) {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
           <AppSidebar />
-          <main className="flex-1 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+          <main className="flex-1 p-8">
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground">HESS Member Information</h1>
+                  <p className="text-muted-foreground mt-2">
+                    Browse member organizations and their membership details
+                  </p>
+                </div>
+              </div>
+
+              {/* Statistics Cards Skeleton */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <Skeleton className="h-4 w-40" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-8 w-16" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <Skeleton className="h-4 w-32" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-8 w-24" />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Search and View Toggle Skeleton */}
+              <div className="flex gap-4 items-center">
+                <Skeleton className="h-10 flex-1" />
+                <Skeleton className="h-10 w-20" />
+              </div>
+
+              {renderSkeletons(6)}
+            </div>
           </main>
         </div>
       </SidebarProvider>
@@ -57,16 +183,29 @@ export default function ResearchDashboard() {
                   Browse member organizations and their membership details
                 </p>
               </div>
+              <Button variant="outline" onClick={refresh} disabled={loading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
             </div>
 
             {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
                 </CardHeader>
                 <CardContent>
+                  <div className="text-2xl font-bold text-foreground">{total.toLocaleString()}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Loaded Organizations</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="text-2xl font-bold text-foreground">{organizations.length}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Page {currentPage} of {totalPages}</p>
                 </CardContent>
               </Card>
               <Card>
@@ -80,6 +219,16 @@ export default function ResearchDashboard() {
                       return total + fte;
                     }, 0).toLocaleString()}
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">From loaded data</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Search Results</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">{filteredOrganizations.length}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Matching current search</p>
                 </CardContent>
               </Card>
             </div>
@@ -89,7 +238,7 @@ export default function ResearchDashboard() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Search organizations..."
+                  placeholder="Search loaded organizations..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -273,11 +422,50 @@ export default function ResearchDashboard() {
               </div>
             )}
 
-            {filteredOrganizations.length === 0 && (
+            {/* Load More Section */}
+            {hasMore && (
+              <div className="text-center py-6">
+                <Button onClick={loadMore} disabled={loading} variant="outline" className="min-w-32">
+                  {loading ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-4 w-4 mr-2" />
+                      Load More Organizations
+                    </>
+                  )}
+                </Button>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Showing {organizations.length} of {total} organizations
+                </p>
+              </div>
+            )}
+
+            {/* Loading More Indicator */}
+            {loading && organizations.length > 0 && (
+              <div className="py-4">
+                {renderSkeletons(3)}
+              </div>
+            )}
+
+            {filteredOrganizations.length === 0 && !loading && (
               <div className="text-center py-12">
                 <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-muted-foreground">No organizations found</h3>
-                <p className="text-muted-foreground">Try adjusting your search criteria.</p>
+                <p className="text-muted-foreground">
+                  {searchTerm ? 'Try adjusting your search criteria.' : 'No organizations available.'}
+                </p>
+              </div>
+            )}
+
+            {!hasMore && organizations.length > 0 && (
+              <div className="text-center py-6 border-t">
+                <p className="text-sm text-muted-foreground">
+                  All {total} organizations loaded
+                </p>
               </div>
             )}
           </div>

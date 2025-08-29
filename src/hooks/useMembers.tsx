@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -80,13 +80,35 @@ export interface CreateOrganizationData {
   notes?: string | null;
 }
 
-export function useMembers() {
+export function useMembers(pageSize: number = 20) {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [total, setTotal] = useState(0);
   const { toast } = useToast();
 
-  const fetchOrganizations = async () => {
+  const fetchOrganizations = useCallback(async (page: number = 0, reset: boolean = false) => {
     try {
+      if (reset) {
+        setLoading(true);
+        setInitialLoading(true);
+      } else {
+        setLoading(true);
+      }
+
+      // Get total count first (only on initial load)
+      if (page === 0) {
+        const { count } = await supabase
+          .from('organizations')
+          .select('*', { count: 'exact', head: true })
+          .eq('membership_status', 'active');
+        
+        setTotal(count || 0);
+      }
+
+      // Fetch organizations with pagination
       const { data, error } = await supabase
         .from('organizations')
         .select(`
@@ -103,11 +125,24 @@ export function useMembers() {
             primary_office_other, primary_office_other_details, other_software_comments
           )
         `)
-        .order('name');
+        .eq('membership_status', 'active')
+        .order('name')
+        .range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (error) throw error;
-      setOrganizations(data || []);
+
+      const newOrganizations = data || [];
+      
+      if (reset || page === 0) {
+        setOrganizations(newOrganizations);
+      } else {
+        setOrganizations(prev => [...prev, ...newOrganizations]);
+      }
+
+      setHasMore(newOrganizations.length === pageSize);
+      setCurrentPage(page);
     } catch (error: any) {
+      console.error('Error fetching organizations:', error);
       toast({
         title: 'Error fetching members',
         description: error.message,
@@ -115,8 +150,19 @@ export function useMembers() {
       });
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
-  };
+  }, [pageSize, toast]);
+
+  const loadMore = useCallback(() => {
+    if (!loading && hasMore) {
+      fetchOrganizations(currentPage + 1);
+    }
+  }, [fetchOrganizations, currentPage, loading, hasMore]);
+
+  const refresh = useCallback(() => {
+    fetchOrganizations(0, true);
+  }, [fetchOrganizations]);
 
   const createOrganization = async (orgData: CreateOrganizationData) => {
     try {
@@ -133,7 +179,7 @@ export function useMembers() {
         description: 'Organization created successfully'
       });
       
-      await fetchOrganizations();
+      await refresh();
       return data;
     } catch (error: any) {
       toast({
@@ -161,7 +207,7 @@ export function useMembers() {
         description: 'Organization updated successfully'
       });
       
-      await fetchOrganizations();
+      await refresh();
       return data;
     } catch (error: any) {
       toast({
@@ -172,10 +218,6 @@ export function useMembers() {
       throw error;
     }
   };
-
-  useEffect(() => {
-    fetchOrganizations();
-  }, []);
 
   const markAllOrganizationsActive = async () => {
     try {
@@ -195,7 +237,7 @@ export function useMembers() {
         description: `${data?.length || 0} organizations marked as active`
       });
       
-      await fetchOrganizations();
+      await refresh();
       return data;
     } catch (error: any) {
       toast({
@@ -216,8 +258,7 @@ export function useMembers() {
 
       if (error) throw error;
 
-      // Refetch organizations after deletion
-      await fetchOrganizations();
+      await refresh();
       
       toast({
         title: "Success",
@@ -234,10 +275,20 @@ export function useMembers() {
     }
   };
 
+  useEffect(() => {
+    fetchOrganizations(0, true);
+  }, [fetchOrganizations]);
+
   return { 
-    organizations, 
-    loading, 
-    fetchOrganizations, 
+    organizations,
+    loading,
+    initialLoading,
+    hasMore,
+    loadMore,
+    refresh,
+    total,
+    currentPage: currentPage + 1,
+    totalPages: Math.ceil(total / pageSize),
     createOrganization, 
     updateOrganization, 
     markAllOrganizationsActive,
