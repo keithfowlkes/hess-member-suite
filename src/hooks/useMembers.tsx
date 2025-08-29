@@ -80,36 +80,16 @@ export interface CreateOrganizationData {
   notes?: string | null;
 }
 
-export function useMembers(pageSize: number = 20) {
+export function useMembers() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchOrganizations = useCallback(async (page: number = 0, reset: boolean = false) => {
+  const fetchOrganizations = useCallback(async () => {
     try {
-      if (reset) {
-        setLoading(true);
-        setInitialLoading(true);
-      } else {
-        setLoading(true);
-      }
+      setLoading(true);
 
-      // Get total count first (only on initial load)
-      if (page === 0) {
-        const { count } = await supabase
-          .from('organizations')
-          .select('*', { count: 'exact', head: true })
-          .eq('membership_status', 'active')
-          .neq('name', 'Administrator');
-        
-        setTotal(count || 0);
-      }
-
-      // Fetch organizations with pagination
+      // Fetch all organizations at once
       const { data, error } = await supabase
         .from('organizations')
         .select(`
@@ -128,21 +108,11 @@ export function useMembers(pageSize: number = 20) {
         `)
         .eq('membership_status', 'active')
         .neq('name', 'Administrator')
-        .order('name')
-        .range(page * pageSize, (page + 1) * pageSize - 1);
+        .order('name');
 
       if (error) throw error;
 
-      const newOrganizations = data || [];
-      
-      if (reset || page === 0) {
-        setOrganizations(newOrganizations);
-      } else {
-        setOrganizations(prev => [...prev, ...newOrganizations]);
-      }
-
-      setHasMore(newOrganizations.length === pageSize);
-      setCurrentPage(page);
+      setOrganizations(data || []);
     } catch (error: any) {
       console.error('Error fetching organizations:', error);
       toast({
@@ -152,18 +122,11 @@ export function useMembers(pageSize: number = 20) {
       });
     } finally {
       setLoading(false);
-      setInitialLoading(false);
     }
-  }, [pageSize, toast]);
-
-  const loadMore = useCallback(() => {
-    if (!loading && hasMore) {
-      fetchOrganizations(currentPage + 1);
-    }
-  }, [fetchOrganizations, currentPage, loading, hasMore]);
+  }, [toast]);
 
   const refresh = useCallback(() => {
-    fetchOrganizations(0, true);
+    fetchOrganizations();
   }, [fetchOrganizations]);
 
   const createOrganization = async (orgData: CreateOrganizationData) => {
@@ -279,19 +242,13 @@ export function useMembers(pageSize: number = 20) {
   };
 
   useEffect(() => {
-    fetchOrganizations(0, true);
+    fetchOrganizations();
   }, [fetchOrganizations]);
 
   return { 
     organizations,
     loading,
-    initialLoading,
-    hasMore,
-    loadMore,
     refresh,
-    total,
-    currentPage: currentPage + 1,
-    totalPages: Math.ceil(total / pageSize),
     createOrganization, 
     updateOrganization, 
     markAllOrganizationsActive,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
@@ -7,20 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMembers } from '@/hooks/useMembers';
-import { Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, RefreshCw, ChevronDown } from 'lucide-react';
+import { Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, RefreshCw } from 'lucide-react';
 
 export default function ResearchDashboard() {
   const { 
     organizations, 
     loading, 
-    initialLoading, 
-    hasMore, 
-    loadMore, 
-    refresh, 
-    total,
-    currentPage,
-    totalPages 
-  } = useMembers(20);
+    refresh
+  } = useMembers();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -44,17 +38,6 @@ export default function ResearchDashboard() {
     }
   };
 
-  // Auto-load more when scrolling near bottom
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!loading && hasMore && (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 1000) {
-        loadMore();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loading, hasMore, loadMore]);
 
   const renderSkeletons = (count: number) => (
     <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "border rounded-lg overflow-hidden"}>
@@ -120,7 +103,7 @@ export default function ResearchDashboard() {
     </div>
   );
 
-  if (initialLoading) {
+  if (loading) {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
@@ -196,7 +179,7 @@ export default function ResearchDashboard() {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{total.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-foreground">{organizations.length.toLocaleString()}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -210,7 +193,6 @@ export default function ResearchDashboard() {
                       return total + fte;
                     }, 0).toLocaleString()}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">From loaded data</p>
                 </CardContent>
               </Card>
             </div>
@@ -219,12 +201,12 @@ export default function ResearchDashboard() {
             <div className="flex gap-4 items-center">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search loaded organizations..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                  <Input
+                    placeholder="Search organizations..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
               </div>
               <div className="flex border rounded-md">
                 <Button
@@ -401,13 +383,6 @@ export default function ResearchDashboard() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {/* Loading More Indicator */}
-            {loading && organizations.length > 0 && (
-              <div className="py-4">
-                {renderSkeletons(3)}
               </div>
             )}
 
