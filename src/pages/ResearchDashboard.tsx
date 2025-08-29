@@ -190,7 +190,7 @@ export default function ResearchDashboard() {
             </div>
 
             {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
@@ -211,15 +211,6 @@ export default function ResearchDashboard() {
                     }, 0).toLocaleString()}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">From loaded data</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Search Results</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{filteredOrganizations.length}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Matching current search</p>
                 </CardContent>
               </Card>
             </div>
