@@ -8,12 +8,14 @@ import { Navigate } from 'react-router-dom';
 import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User } from 'lucide-react';
 import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
 import { useOrganizationProfile } from '@/hooks/useOrganizationProfile';
+import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { useState, useEffect } from 'react';
 
 const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
   const [userOrganization, setUserOrganization] = useState<any>(null);
   const { getUserOrganization } = useOrganizationProfile();
+  const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
 
   // Fetch user's organization data
   useEffect(() => {
@@ -93,6 +95,30 @@ const Index = () => {
                   </Card>
                 );
               })}
+            </div>
+
+            {/* Member Totals */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
+                    {totalsLoading ? '...' : totals?.totalOrganizations?.toLocaleString() || 0}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Student FTE</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
+                    {totalsLoading ? '...' : totals?.totalStudentFte?.toLocaleString() || 0}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Recent Activity and Member Institution Info */}

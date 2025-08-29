@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useMembers } from '@/hooks/useMembers';
+import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload } from 'lucide-react';
 import { OrganizationDialog } from '@/components/OrganizationDialog';
 import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
@@ -16,6 +17,7 @@ import { OrganizationViewModal } from '@/components/OrganizationViewModal';
 export default function Members() {
   const navigate = useNavigate();
   const { organizations, loading } = useMembers();
+  const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -92,7 +94,9 @@ export default function Members() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{organizations.length}</div>
+              <div className="text-2xl font-bold text-foreground">
+                {totalsLoading ? '...' : totals?.totalOrganizations?.toLocaleString() || 0}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -101,10 +105,7 @@ export default function Members() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {organizations.reduce((total, org) => {
-                  const fte = org.student_fte || 0;
-                  return total + fte;
-                }, 0).toLocaleString()}
+                {totalsLoading ? '...' : totals?.totalStudentFte?.toLocaleString() || 0}
               </div>
             </CardContent>
           </Card>
