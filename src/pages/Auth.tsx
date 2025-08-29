@@ -389,12 +389,9 @@ export default function Auth() {
           }
         });
 
-        toast({
-          title: "Registration submitted!",
-          description: isReassignment 
-            ? "Reassignment request submitted and awaiting admin approval."
-            : "Please check your email and await approval from our admin team.",
-        });
+        // Redirect to confirmation page
+        const confirmationType = isReassignment ? 'reassignment' : 'registration';
+        window.location.href = `/registration-confirmation?type=${confirmationType}`;
         
         // Reset captcha after success
         if (recaptchaEnabled) {

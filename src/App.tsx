@@ -13,6 +13,7 @@ import Members from "./pages/Members";
 import MembershipFees from "./pages/MembershipFees";
 import Invoices from "./pages/Invoices";
 import PublicDirectory from "./pages/PublicDirectory";
+import RegistrationConfirmation from "./pages/RegistrationConfirmation";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/membership-fees" element={<ProtectedRoute><MembershipFees /></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
             <Route path="/public/directory" element={<PublicDirectory />} />
+            <Route path="/registration-confirmation" element={<RegistrationConfirmation />} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/profile/:profileId" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
