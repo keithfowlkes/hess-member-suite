@@ -10,6 +10,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 
 export default function Invoices() {
   const { invoices, loading, markAsPaid, sendInvoice } = useInvoices();
@@ -55,107 +57,50 @@ export default function Invoices() {
     e.stopPropagation();
     
     try {
-      // Create PDF directly using jsPDF with invoice data
+      // Create a hidden container for the invoice component
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      container.style.width = '800px';
+      container.style.background = 'white';
+      document.body.appendChild(container);
+
+      // Create and render the ProfessionalInvoice component
+      const { createRoot } = await import('react-dom/client');
+      const root = createRoot(container);
+      
+      await new Promise<void>((resolve) => {
+        root.render(
+          <ProfessionalInvoice invoice={invoice} />
+        );
+        // Give React time to render
+        setTimeout(resolve, 500);
+      });
+
+      // Convert to canvas
+      const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+      // Create PDF
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
 
-      // Set up fonts and colors
-      pdf.setFont('helvetica');
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      // Header
-      pdf.setFontSize(24);
-      pdf.setTextColor(107, 114, 128); // gray-500
-      pdf.text('INVOICE', 20, 30);
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
       
-      pdf.setFontSize(12);
-      pdf.setTextColor(102, 102, 102);
-      pdf.text(invoice.invoice_number, 20, 40);
-      
-      // Invoice details
-      pdf.setFontSize(10);
-      pdf.setTextColor(0, 0, 0);
-      
-      // Bill To section
-      let yPos = 60;
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Bill To:', 20, yPos);
-      pdf.setFont('helvetica', 'normal');
-      yPos += 6;
-      pdf.text(invoice.organizations?.name || '', 20, yPos);
-      yPos += 6;
-      pdf.text(invoice.organizations?.email || '', 20, yPos);
-      
-      // Invoice Details section
-      yPos = 60;
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Invoice Details:', 120, yPos);
-      pdf.setFont('helvetica', 'normal');
-      yPos += 6;
-      pdf.text(`Invoice Date: ${format(new Date(invoice.invoice_date), 'MMM dd, yyyy')}`, 120, yPos);
-      yPos += 6;
-      pdf.text(`Due Date: ${format(new Date(invoice.due_date), 'MMM dd, yyyy')}`, 120, yPos);
-      yPos += 6;
-      pdf.text(`Period: ${format(new Date(invoice.period_start_date), 'MMM dd, yyyy')} - ${format(new Date(invoice.period_end_date), 'MMM dd, yyyy')}`, 120, yPos);
-      
-      // Table header
-      yPos = 100;
-      pdf.setFillColor(107, 114, 128);
-      pdf.rect(20, yPos - 5, 170, 10, 'F');
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Description', 25, yPos);
-      pdf.text('Period', 100, yPos);
-      pdf.text('Amount', 160, yPos);
-      
-      // Table content
-      yPos += 15;
-      pdf.setTextColor(0, 0, 0);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Annual Membership Fee', 25, yPos);
-      if (invoice.prorated_amount) {
-        pdf.text('Prorated from membership start date', 25, yPos + 5);
-      }
-      pdf.text(`${format(new Date(invoice.period_start_date), 'MMM dd, yyyy')} - ${format(new Date(invoice.period_end_date), 'MMM dd, yyyy')}`, 100, yPos);
-      
-      const amount = invoice.prorated_amount || invoice.amount;
-      pdf.text(`$${amount.toLocaleString()}`, 160, yPos);
-      
-      if (invoice.prorated_amount) {
-        pdf.setTextColor(128, 128, 128);
-        pdf.text(`$${invoice.amount.toLocaleString()}`, 160, yPos + 5);
-        // Add strikethrough line
-        pdf.line(155, yPos + 3, 175, yPos + 3);
-      }
-      
-      // Total
-      yPos += 20;
-      pdf.setFillColor(248, 250, 252);
-      pdf.rect(20, yPos - 5, 170, 10, 'F');
-      pdf.setTextColor(0, 0, 0);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Total Due:', 25, yPos);
-      pdf.text(`$${amount.toLocaleString()}`, 160, yPos);
-      
-      // Notes
-      if (invoice.notes) {
-        yPos += 25;
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('Notes:', 20, yPos);
-        pdf.setFont('helvetica', 'normal');
-        yPos += 6;
-        const splitNotes = pdf.splitTextToSize(invoice.notes, 170);
-        pdf.text(splitNotes, 20, yPos);
-      }
-      
-      // Footer
-      yPos = 260;
-      pdf.setFontSize(8);
-      pdf.setTextColor(128, 128, 128);
-      pdf.text('Thank you for your business!', 20, yPos);
-      pdf.text(`Generated on ${format(new Date(), 'MMM dd, yyyy')}`, 120, yPos);
+      // Clean up
+      root.unmount();
+      document.body.removeChild(container);
       
       // Download the PDF
       pdf.save(`${invoice.invoice_number}.pdf`);
