@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ProgressiveSystemChart } from '@/components/ProgressiveSystemChart';
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { useSystemAnalytics, SystemUsage } from '@/hooks/useSystemAnalytics';
 import { InstitutionsModal } from '@/components/InstitutionsModal';
 import { PieChart as PieChartIcon, TrendingUp, BarChart3 } from 'lucide-react';
+
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff'];
 
 const SYSTEM_OPTIONS = [
   { key: 'all', label: 'All Systems', icon: BarChart3 },
@@ -32,6 +35,7 @@ const SYSTEM_DATA_MAP = [
 ];
 
 export function SystemAnalyticsDashboard() {
+  const { data: analytics, isLoading, error } = useSystemAnalytics();
   const [chartType, setChartType] = useState<'pie' | 'line'>('pie');
   const [selectedSystem, setSelectedSystem] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
@@ -45,6 +49,143 @@ export function SystemAnalyticsDashboard() {
     setSelectedSystemDisplayName(systemDisplayName);
     setModalOpen(true);
   };
+
+  const getSystemData = (systemKey: string): SystemUsage[] => {
+    if (!analytics) return [];
+    
+    const systemMap: Record<string, SystemUsage[]> = {
+      'student_information_system': analytics.studentInformationSystems,
+      'financial_system': analytics.financialSystems,
+      'learning_management': analytics.learningManagementSystems,
+      'financial_aid': analytics.financialAidSystems,
+      'hcm_hr': analytics.hcmSystems,
+      'payroll_system': analytics.payrollSystems,
+      'housing_management': analytics.housingManagementSystems,
+      'admissions_crm': analytics.admissionsCrms,
+      'alumni_advancement_crm': analytics.alumniAdvancementCrms,
+    };
+    
+    return systemMap[systemKey] || [];
+  };
+
+  const renderChart = (data: SystemUsage[], title: string, systemKey: string) => (
+    <Card key={systemKey} className="w-full bg-gradient-to-br from-card to-card/50 border-2 hover:shadow-lg transition-all duration-300">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <div className="text-2xl font-bold text-foreground">
+          {data.reduce((sum, item) => sum + item.count, 0)} institutions
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="h-48">
+          {chartType === 'pie' ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={60}
+                  fill="hsl(var(--primary))"
+                  dataKey="count"
+                  label={false}
+                >
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value, name) => [value, 'Institutions']}
+                  labelFormatter={(label) => data.find(d => d.count === label)?.name || label}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis 
+                  dataKey="name" 
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                  fontSize={10}
+                  stroke="hsl(var(--muted-foreground))"
+                />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="count" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={3}
+                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+        <div className="mt-3 space-y-1 max-h-32 overflow-y-auto">
+          {data.map((item, index) => (
+            <div key={item.name} className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-2 h-2 rounded-full flex-shrink-0" 
+                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                />
+                <button
+                  onClick={() => handleSystemClick(systemKey, item.name, title)}
+                  className="text-muted-foreground hover:text-primary transition-colors truncate max-w-[120px] text-left cursor-pointer"
+                  title={`Click to view institutions using ${item.name}`}
+                >
+                  {item.name}
+                </button>
+              </div>
+              <span className="font-medium text-foreground">{item.count}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  if (isLoading) {
+    return (
+      <Card className="mb-8 bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <BarChart3 className="h-6 w-6 text-primary" />
+            </div>
+            System Usage Analytics
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-48">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="mb-8 bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3 text-xl text-destructive">
+            <div className="p-2 rounded-lg bg-destructive/10">
+              <BarChart3 className="h-6 w-6 text-destructive" />
+            </div>
+            System Usage Analytics - Error
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Failed to load system analytics data</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const systemsToShow = selectedSystem === 'all' 
     ? SYSTEM_DATA_MAP
@@ -113,15 +254,10 @@ export function SystemAnalyticsDashboard() {
       <CardContent>
         <div className="w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {systemsToShow.map(({ key, title }) => (
-              <ProgressiveSystemChart
-                key={key}
-                title={title}
-                systemField={key}
-                chartType={chartType}
-                onSystemClick={handleSystemClick}
-              />
-            ))}
+            {systemsToShow.map(({ key, title }) => {
+              const data = getSystemData(key);
+              return data.length > 0 ? renderChart(data, title, key) : null;
+            })}
           </div>
         </div>
       </CardContent>
