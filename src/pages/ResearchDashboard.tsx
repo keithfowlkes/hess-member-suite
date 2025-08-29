@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMembers } from '@/hooks/useMembers';
 import { Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, RefreshCw } from 'lucide-react';
-import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
+
 
 export default function ResearchDashboard() {
   const { 
@@ -16,7 +16,7 @@ export default function ResearchDashboard() {
     loading, 
     refresh
   } = useMembers();
-  const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
+  
   
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -181,9 +181,7 @@ export default function ResearchDashboard() {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">
-                    {totalsLoading ? '...' : totals?.totalOrganizations?.toLocaleString() || 0}
-                  </div>
+                  <div className="text-2xl font-bold text-foreground">{organizations.length.toLocaleString()}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -192,7 +190,10 @@ export default function ResearchDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">
-                    {totalsLoading ? '...' : totals?.totalStudentFte?.toLocaleString() || 0}
+                    {organizations.reduce((total, org) => {
+                      const fte = org.student_fte || 0;
+                      return total + fte;
+                    }, 0).toLocaleString()}
                   </div>
                 </CardContent>
               </Card>
