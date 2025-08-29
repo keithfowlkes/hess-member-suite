@@ -15,7 +15,7 @@ interface OrganizationApprovalDialogProps {
   onOpenChange: (open: boolean) => void;
   organization: PendingOrganization | null;
   onApprove: (organizationId: string, message?: string) => Promise<void>;
-  onReject: (organizationId: string, message: string) => Promise<void>;
+  onReject: (organizationId: string, message?: string) => Promise<void>;
 }
 
 export const OrganizationApprovalDialog = ({
@@ -119,11 +119,11 @@ export const OrganizationApprovalDialog = ({
   };
 
   const handleReject = async () => {
-    if (!organization || !adminMessage.trim()) return;
+    if (!organization) return;
     
     setIsRejecting(true);
     try {
-      await onReject(organization.id, adminMessage);
+      await onReject(organization.id, adminMessage || '');
       onOpenChange(false);
       setAdminMessage('');
       setShowRejectForm(false);
@@ -333,11 +333,10 @@ export const OrganizationApprovalDialog = ({
             <div className="space-y-2">
               <Label htmlFor="admin-message">
                 Admin Message (Optional)
-                {showRejectForm && <span className="text-red-600"> - Required for rejection</span>}
               </Label>
               <Textarea
                 id="admin-message"
-                placeholder={showRejectForm ? "Please provide a reason for rejection..." : "Optional message to include in approval email..."}
+                placeholder={showRejectForm ? "Optional message to include in rejection email..." : "Optional message to include in approval email..."}
                 value={adminMessage}
                 onChange={(e) => setAdminMessage(e.target.value)}
                 className="min-h-[100px]"
@@ -377,7 +376,7 @@ export const OrganizationApprovalDialog = ({
                 <>
                   <Button
                     onClick={handleReject}
-                    disabled={isRejecting || !adminMessage.trim()}
+                    disabled={isRejecting}
                     variant="destructive"
                     className="flex items-center gap-2"
                   >
