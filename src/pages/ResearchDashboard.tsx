@@ -404,28 +404,6 @@ export default function ResearchDashboard() {
               </div>
             )}
 
-            {/* Load More Section */}
-            {hasMore && (
-              <div className="text-center py-6">
-                <Button onClick={loadMore} disabled={loading} variant="outline" className="min-w-32">
-                  {loading ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="h-4 w-4 mr-2" />
-                      Load More Organizations
-                    </>
-                  )}
-                </Button>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Showing {organizations.length} of {total} organizations
-                </p>
-              </div>
-            )}
-
             {/* Loading More Indicator */}
             {loading && organizations.length > 0 && (
               <div className="py-4">
@@ -439,14 +417,6 @@ export default function ResearchDashboard() {
                 <h3 className="text-lg font-medium text-muted-foreground">No organizations found</h3>
                 <p className="text-muted-foreground">
                   {searchTerm ? 'Try adjusting your search criteria.' : 'No organizations available.'}
-                </p>
-              </div>
-            )}
-
-            {!hasMore && organizations.length > 0 && (
-              <div className="text-center py-6 border-t">
-                <p className="text-sm text-muted-foreground">
-                  All {total} organizations loaded
                 </p>
               </div>
             )}
