@@ -63,7 +63,8 @@ export const useSystemAnalytics = () => {
           admissions_crm,
           alumni_advancement_crm
         `)
-        .eq('membership_status', 'active');
+        .eq('membership_status', 'active')
+        .neq('name', 'Administrator');
 
       if (error) throw error;
 

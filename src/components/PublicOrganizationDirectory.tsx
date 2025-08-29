@@ -94,6 +94,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
           )
         `)
         .eq('membership_status', 'active')
+        .neq('name', 'Administrator')
         .order('name');
 
       if (error) {

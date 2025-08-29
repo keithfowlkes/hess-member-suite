@@ -103,7 +103,8 @@ export function useMembers(pageSize: number = 20) {
         const { count } = await supabase
           .from('organizations')
           .select('*', { count: 'exact', head: true })
-          .eq('membership_status', 'active');
+          .eq('membership_status', 'active')
+          .neq('name', 'Administrator');
         
         setTotal(count || 0);
       }
@@ -126,6 +127,7 @@ export function useMembers(pageSize: number = 20) {
           )
         `)
         .eq('membership_status', 'active')
+        .neq('name', 'Administrator')
         .order('name')
         .range(page * pageSize, (page + 1) * pageSize - 1);
 
@@ -228,6 +230,7 @@ export function useMembers(pageSize: number = 20) {
           membership_start_date: new Date().toISOString().split('T')[0]
         })
         .neq('membership_status', 'active')
+        .neq('name', 'Administrator')
         .select();
 
       if (error) throw error;

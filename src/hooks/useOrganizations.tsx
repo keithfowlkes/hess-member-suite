@@ -9,6 +9,7 @@ export const useOrganizations = () => {
         .from('organizations')
         .select('id, name')
         .eq('membership_status', 'active')
+        .neq('name', 'Administrator')
         .order('name');
 
       if (error) throw error;
