@@ -13,7 +13,7 @@ import jsPDF from 'jspdf';
 
 export default function Invoices() {
   const { invoices, loading, markAsPaid, sendInvoice } = useInvoices();
-  const { isAdmin } = useAuth();
+  const { isViewingAsAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
   // Filter invoices based on user role
@@ -22,7 +22,7 @@ export default function Invoices() {
       invoice.organizations?.name.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Members can only see their own invoices
-    if (!isAdmin) {
+    if (!isViewingAsAdmin) {
       // Add user organization filtering logic here if needed
       return matchesSearch;
     }
@@ -188,15 +188,15 @@ export default function Invoices() {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  {isAdmin ? 'All Invoices' : 'My Invoices'}
+                  {isViewingAsAdmin ? 'All Invoices' : 'My Invoices'}
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                  {isAdmin 
+                  {isViewingAsAdmin 
                     ? 'View and manage all invoices. Use Membership Fees page for full invoice management.' 
                     : 'View your organization\'s invoices and payment status'}
                 </p>
               </div>
-              {isAdmin && (
+              {isViewingAsAdmin && (
                 <Button 
                   onClick={() => window.location.href = '/membership-fees'}
                   variant="outline"
@@ -266,7 +266,7 @@ export default function Invoices() {
                           )}
                         </div>
                         
-                        {isAdmin ? (
+                        {isViewingAsAdmin ? (
                           <div className="flex space-x-2">
                             {invoice.status === 'draft' && (
                               <Button
@@ -318,7 +318,7 @@ export default function Invoices() {
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-muted-foreground">No invoices found</h3>
                 <p className="text-muted-foreground">
-                  {isAdmin 
+                  {isViewingAsAdmin 
                     ? "No invoices match your search criteria." 
                     : "No invoices have been generated for your organization yet."}
                 </p>
