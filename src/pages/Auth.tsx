@@ -159,13 +159,7 @@ export default function Auth() {
 
   // Only redirect if user exists and we're not in the middle of a sign out process
   if (user && !loading) {
-    // Check if we just came from a sign out by checking URL params or session state
-    const urlParams = new URLSearchParams(window.location.search);
-    const fromSignOut = urlParams.get('from') === 'signout';
-    
-    if (!fromSignOut) {
-      return <Navigate to="/" replace />;
-    }
+    return <Navigate to="/" replace />;
   }
 
   const handleSignIn = async (e: React.FormEvent) => {

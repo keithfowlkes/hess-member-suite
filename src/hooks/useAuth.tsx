@@ -313,8 +313,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('Sign out successful');
       
-      // Navigate to auth page after sign out with a parameter to prevent auto-redirect
-      window.location.href = '/auth?from=signout';
+      // Use a simple redirect without the parameter to avoid complexity
+      window.location.replace('/auth');
     } catch (err) {
       console.error('Sign out exception:', err);
       // Clear local state as fallback
@@ -327,8 +327,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('sb-tyovnvuluyosjnabrzjc-auth-token');
       localStorage.removeItem('supabase.auth.token');
       
-      // Still redirect to auth page with parameter
-      window.location.href = '/auth?from=signout';
+      // Still redirect to auth page
+      window.location.replace('/auth');
     }
   };
 
@@ -359,6 +359,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
+    console.error('useAuth must be used within an AuthProvider - Current location:', window.location.href);
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
