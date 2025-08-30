@@ -23,13 +23,20 @@ export function useDashboardStats() {
 
   const fetchStats = async () => {
     try {
+      console.log('Fetching dashboard stats...');
+      
       // Get organization statistics
       const { data: orgStats, error: orgError } = await supabase
         .from('organizations')
         .select('membership_status, annual_fee_amount, student_fte')
         .neq('name', 'Administrator');
 
-      if (orgError) throw orgError;
+      if (orgError) {
+        console.error('Organization stats error:', orgError);
+        throw orgError;
+      }
+      
+      console.log('Organization stats fetched:', orgStats?.length || 0, 'records');
 
       // Get invoice statistics
       const { data: invoiceStats, error: invoiceError } = await supabase
@@ -37,7 +44,12 @@ export function useDashboardStats() {
         .select('status')
         .in('status', ['draft', 'sent']);
 
-      if (invoiceError) throw invoiceError;
+      if (invoiceError) {
+        console.error('Invoice stats error:', invoiceError);
+        throw invoiceError;
+      }
+      
+      console.log('Invoice stats fetched:', invoiceStats?.length || 0, 'records');
 
       // Calculate statistics
       const totalOrganizations = orgStats?.length || 0;
@@ -58,13 +70,16 @@ export function useDashboardStats() {
         return sum;
       }, 0) || 0;
 
-      setStats({
+      const calculatedStats = {
         totalOrganizations,
         activeOrganizations,
         pendingInvoices,
         totalRevenue,
         totalStudentFte
-      });
+      };
+      
+      console.log('Calculated stats:', calculatedStats);
+      setStats(calculatedStats);
 
     } catch (error: any) {
       console.error('Error fetching dashboard stats:', error);
@@ -74,6 +89,7 @@ export function useDashboardStats() {
         variant: 'destructive'
       });
     } finally {
+      console.log('Dashboard stats loading complete');
       setLoading(false);
     }
   };

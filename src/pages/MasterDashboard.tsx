@@ -83,6 +83,7 @@ import {
   MoreVertical,
   ChevronDown
 } from 'lucide-react';
+import { ConnectionTest } from '@/components/ConnectionTest';
 import { format } from 'date-fns';
 
 const MasterDashboard = () => {
@@ -266,12 +267,26 @@ const MasterDashboard = () => {
   });
 
   if (statsLoading || settingsLoading) {
+    console.log('Dashboard loading state:', { 
+      statsLoading, 
+      settingsLoading, 
+      approvalsLoading, 
+      invitationsLoading, 
+      memberInfoUpdateLoading 
+    });
+    
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
           <AppSidebar />
-          <main className="flex-1 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+          <main className="flex-1 p-8">
+            <ConnectionTest />
+            <div className="mt-8 flex flex-col items-center justify-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+              <p className="mt-4 text-muted-foreground">
+                Loading dashboard... (stats: {statsLoading ? 'loading' : 'done'}, settings: {settingsLoading ? 'loading' : 'done'})
+              </p>
+            </div>
           </main>
         </div>
       </SidebarProvider>

@@ -313,9 +313,22 @@ export function useSettings() {
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('Starting settings data load...');
       setLoading(true);
-      await Promise.all([fetchUsers(), fetchStats(), fetchSettings()]);
-      setLoading(false);
+      
+      try {
+        await Promise.all([
+          fetchUsers().then(() => console.log('Users fetch completed')),
+          fetchStats().then(() => console.log('Stats fetch completed')), 
+          fetchSettings().then(() => console.log('Settings fetch completed'))
+        ]);
+        console.log('All settings data loaded successfully');
+      } catch (error) {
+        console.error('Error loading settings data:', error);
+      } finally {
+        setLoading(false);
+        console.log('Settings loading state set to false');
+      }
     };
 
     loadData();
