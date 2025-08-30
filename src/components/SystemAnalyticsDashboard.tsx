@@ -106,19 +106,20 @@ export function SystemAnalyticsDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey="name" 
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                  fontSize={10}
-                  stroke="hsl(var(--muted-foreground))"
+                  tick={false}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <YAxis stroke="hsl(var(--muted-foreground))" />
                 <Tooltip />
                 <Bar 
                   dataKey="count" 
-                  fill="hsl(var(--primary))" 
                   radius={[4, 4, 0, 0]}
-                />
+                >
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
