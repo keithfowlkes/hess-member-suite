@@ -6,22 +6,29 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMembers } from '@/hooks/useMembers';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
-import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload } from 'lucide-react';
+import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
+import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload, Clock } from 'lucide-react';
 import { OrganizationDialog } from '@/components/OrganizationDialog';
 import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
 import { ImportMembersDialog } from '@/components/ImportMembersDialog';
 import { OrganizationViewModal } from '@/components/OrganizationViewModal';
+import { PendingRegistrationApprovalDialog } from '@/components/PendingRegistrationApprovalDialog';
+import type { PendingRegistration } from '@/hooks/usePendingRegistrations';
 
 export default function Members() {
   const navigate = useNavigate();
   const { organizations, loading } = useMembers();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
+  const { pendingRegistrations, loading: pendingLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrganization, setSelectedOrganization] = useState(null);
+  const [selectedPendingRegistration, setSelectedPendingRegistration] = useState<PendingRegistration | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [pendingApprovalDialogOpen, setPendingApprovalDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [viewModalOpen, setViewModalOpen] = useState(false);
 
@@ -43,7 +50,7 @@ export default function Members() {
     }
   };
 
-  if (loading) {
+  if (loading || pendingLoading) {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
@@ -61,299 +68,383 @@ export default function Members() {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 p-8">
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Member Organizations</h1>
-            <p className="text-muted-foreground mt-2">
-              Manage member organizations and their membership details
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => setImportDialogOpen(true)}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Import Member Organizations
-            </Button>
-            <Button onClick={() => {
-              setSelectedOrganization(null);
-              setDialogOpen(true);
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Organization
-            </Button>
-          </div>
-        </div>
-
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">
-                {totalsLoading ? '...' : totals?.totalOrganizations?.toLocaleString() || 0}
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Member Organizations</h1>
+                <p className="text-muted-foreground mt-2">
+                  Manage member organizations and their membership details
+                </p>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Student FTE</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">
-                {totalsLoading ? '...' : totals?.totalStudentFte?.toLocaleString() || 0}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setImportDialogOpen(true)}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import Member Organizations
+                </Button>
+                <Button onClick={() => {
+                  setSelectedOrganization(null);
+                  setDialogOpen(true);
+                }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Organization
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
 
-        {/* Search and View Toggle */}
-        <div className="flex gap-4 items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search organizations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="flex border rounded-md">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="rounded-r-none"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="rounded-l-none"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Organizations Display */}
-        {viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredOrganizations.map((organization) => (
-              <Card 
-                key={organization.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => {
-                  setSelectedOrganization(organization);
-                  setViewModalOpen(true);
-                }}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Building2 className="h-8 w-8 text-primary" />
-                      <div>
-                        <CardTitle className="text-lg">{organization.name}</CardTitle>
-                        <Badge className={`mt-1 ${getStatusColor(organization.membership_status)}`}>
-                          {organization.membership_status}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 text-sm">
-                    {organization.profiles && (
-                      <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground">Primary Contact</div>
-                        <div className="flex items-center text-foreground">
-                          <User className="h-4 w-4 mr-2" />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/organization/${organization.contact_person_id}`);
-                            }}
-                            className="text-primary hover:text-primary/80 hover:underline font-medium"
-                          >
-                            {organization.profiles.first_name} {organization.profiles.last_name}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {organization.email && (
-                      <div className="flex items-center text-muted-foreground">
-                        <Mail className="h-4 w-4 mr-2" />
-                        <a 
-                          href={`mailto:${organization.email}`}
-                          className="text-primary hover:underline"
-                        >
-                          {organization.email}
-                        </a>
-                      </div>
-                    )}
-                    {organization.phone && (
-                      <div className="flex items-center text-muted-foreground">
-                        <Phone className="h-4 w-4 mr-2" />
-                        {organization.phone}
-                      </div>
-                    )}
-                    {(organization.city || organization.state) && (
-                      <div className="flex items-center text-muted-foreground">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        {organization.city}{organization.city && organization.state && ', '}{organization.state}
-                      </div>
-                    )}
-                    <div className="pt-2 border-t space-y-1">
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Student FTE:</span>
-                        <span className="font-medium">{organization.student_fte || 'N/A'}</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Annual Fee:</span>
-                        <span className="font-medium">${organization.annual_fee_amount}</span>
-                      </div>
-                    </div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {totalsLoading ? '...' : totals?.totalOrganizations?.toLocaleString() || 0}
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="border rounded-lg overflow-hidden">
-            <div className="bg-muted/50 px-6 py-3 border-b">
-              <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
-                <div className="col-span-2">Organization</div>
-                <div className="col-span-2">Primary Contact</div>
-                <div className="col-span-2">Email</div>
-                <div className="col-span-2">Location</div>
-                <div className="col-span-1">Student FTE</div>
-                <div className="col-span-2">Status</div>
-                <div className="col-span-1">Annual Fee</div>
-              </div>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Pending Registrations</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
+                    {pendingLoading ? '...' : pendingRegistrations.length}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Student FTE</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">
+                    {totalsLoading ? '...' : totals?.totalStudentFte?.toLocaleString() || 0}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <div className="divide-y">
-              {filteredOrganizations.map((organization) => (
-                <div 
-                  key={organization.id}
-                  className="px-6 py-4 hover:bg-muted/30 cursor-pointer transition-colors"
-                  onClick={() => {
-                    setSelectedOrganization(organization);
-                    setViewModalOpen(true);
-                  }}
-                >
-                  <div className="grid grid-cols-12 gap-4 items-center">
-                    <div className="col-span-2">
-                      <div className="flex items-center space-x-3">
-                        <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
-                        <div>
-                          <div className="font-medium text-foreground">{organization.name}</div>
-                          {organization.phone && (
-                            <div className="text-sm text-muted-foreground">{organization.phone}</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-span-2">
-                      {organization.profiles ? (
-                        <div className="text-sm">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/organization/${organization.contact_person_id}`);
-                            }}
-                            className="font-medium text-primary hover:text-primary/80 hover:underline"
-                          >
-                            {organization.profiles.first_name} {organization.profiles.last_name}
-                          </button>
-                          {organization.profiles.phone && (
-                            <div className="text-muted-foreground">{organization.profiles.phone}</div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">—</span>
-                      )}
-                    </div>
-                    <div className="col-span-2">
-                      {organization.email ? (
-                        <a 
-                          href={`mailto:${organization.email}`}
-                          className="text-sm text-primary hover:underline"
-                        >
-                          {organization.email}
-                        </a>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">—</span>
-                      )}
-                    </div>
-                    <div className="col-span-2">
-                      {(organization.city || organization.state) ? (
-                        <div className="text-sm text-muted-foreground">
-                          {organization.city}{organization.city && organization.state && ', '}{organization.state}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">—</span>
-                      )}
-                    </div>
-                    <div className="col-span-1">
-                      <div className="text-sm font-medium">
-                        {organization.student_fte || '—'}
-                      </div>
-                    </div>
-                    <div className="col-span-2">
-                      <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
-                        {organization.membership_status}
-                      </Badge>
-                    </div>
-                    <div className="col-span-1">
-                      <div className="text-sm font-medium">${organization.annual_fee_amount}</div>
-                    </div>
+
+            <Tabs defaultValue="members" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="members">Member Organizations</TabsTrigger>
+                <TabsTrigger value="pending" className="relative">
+                  Pending Registrations
+                  {pendingRegistrations.length > 0 && (
+                    <Badge variant="secondary" className="ml-2 bg-yellow-100 text-yellow-800">
+                      {pendingRegistrations.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="members" className="space-y-4">
+                {/* Search and View Controls */}
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Search organizations..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('grid')}
+                    >
+                      <Grid3X3 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'list' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('list')}
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Organizations Display */}
+                {viewMode === 'grid' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredOrganizations.map((organization) => (
+                      <Card 
+                        key={organization.id} 
+                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => {
+                          setSelectedOrganization(organization);
+                          setViewModalOpen(true);
+                        }}
+                      >
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center space-x-3">
+                              <Building2 className="h-8 w-8 text-primary" />
+                              <div>
+                                <CardTitle className="text-lg">{organization.name}</CardTitle>
+                                <Badge className={`mt-1 ${getStatusColor(organization.membership_status)}`}>
+                                  {organization.membership_status}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2 text-sm">
+                            {organization.profiles && (
+                              <div className="space-y-1">
+                                <div className="text-xs text-muted-foreground">Primary Contact</div>
+                                <div className="flex items-center text-foreground">
+                                  <User className="h-4 w-4 mr-2" />
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/organization/${organization.contact_person_id}`);
+                                    }}
+                                    className="text-primary hover:text-primary/80 hover:underline font-medium"
+                                  >
+                                    {organization.profiles.first_name} {organization.profiles.last_name}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            {organization.email && (
+                              <div className="flex items-center text-muted-foreground">
+                                <Mail className="h-4 w-4 mr-2" />
+                                <a 
+                                  href={`mailto:${organization.email}`}
+                                  className="text-primary hover:underline"
+                                >
+                                  {organization.email}
+                                </a>
+                              </div>
+                            )}
+                            {organization.phone && (
+                              <div className="flex items-center text-muted-foreground">
+                                <Phone className="h-4 w-4 mr-2" />
+                                {organization.phone}
+                              </div>
+                            )}
+                            {(organization.city || organization.state) && (
+                              <div className="flex items-center text-muted-foreground">
+                                <MapPin className="h-4 w-4 mr-2" />
+                                {organization.city}{organization.city && organization.state && ', '}{organization.state}
+                              </div>
+                            )}
+                            <div className="pt-2 border-t space-y-1">
+                              <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>Student FTE:</span>
+                                <span className="font-medium">{organization.student_fte || 'N/A'}</span>
+                              </div>
+                              <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>Annual Fee:</span>
+                                <span className="font-medium">${organization.annual_fee_amount}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-muted/50 px-6 py-3 border-b">
+                      <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
+                        <div className="col-span-3">Organization</div>
+                        <div className="col-span-2">Primary Contact</div>
+                        <div className="col-span-2">Email</div>
+                        <div className="col-span-2">Location</div>
+                        <div className="col-span-1">Status</div>
+                        <div className="col-span-1">Student FTE</div>
+                        <div className="col-span-1">Annual Fee</div>
+                      </div>
+                    </div>
+                    <div className="divide-y">
+                      {filteredOrganizations.map((organization) => (
+                        <div 
+                          key={organization.id}
+                          className="px-6 py-4 hover:bg-muted/30 cursor-pointer transition-colors"
+                          onClick={() => {
+                            setSelectedOrganization(organization);
+                            setViewModalOpen(true);
+                          }}
+                        >
+                          <div className="grid grid-cols-12 gap-4 items-center">
+                            <div className="col-span-3">
+                              <div className="flex items-center space-x-3">
+                                <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
+                                <div>
+                                  <div className="font-medium text-foreground">{organization.name}</div>
+                                  {organization.phone && (
+                                    <div className="text-sm text-muted-foreground">{organization.phone}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-span-2">
+                              {organization.profiles ? (
+                                <div className="text-sm">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/organization/${organization.contact_person_id}`);
+                                    }}
+                                    className="font-medium text-primary hover:text-primary/80 hover:underline"
+                                  >
+                                    {organization.profiles.first_name} {organization.profiles.last_name}
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </div>
+                            <div className="col-span-2">
+                              {organization.email ? (
+                                <a 
+                                  href={`mailto:${organization.email}`}
+                                  className="text-sm text-primary hover:underline"
+                                >
+                                  {organization.email}
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </div>
+                            <div className="col-span-2">
+                              {(organization.city || organization.state) ? (
+                                <div className="text-sm text-muted-foreground">
+                                  {organization.city}{organization.city && organization.state && ', '}{organization.state}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </div>
+                            <div className="col-span-1">
+                              <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
+                                {organization.membership_status}
+                              </Badge>
+                            </div>
+                            <div className="col-span-1">
+                              <div className="text-sm font-medium">
+                                {organization.student_fte || '—'}
+                              </div>
+                            </div>
+                            <div className="col-span-1">
+                              <div className="text-sm font-medium">${organization.annual_fee_amount}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {filteredOrganizations.length === 0 && (
+                  <div className="text-center py-12">
+                    <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-muted-foreground">No organizations found</h3>
+                    <p className="text-muted-foreground">Try adjusting your search or add a new organization.</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="pending" className="space-y-4">
+                <div className="space-y-4">
+                  {pendingRegistrations.length === 0 ? (
+                    <Card>
+                      <CardContent className="flex flex-col items-center justify-center py-10">
+                        <Clock className="h-12 w-12 text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-semibold text-muted-foreground">No Pending Registrations</h3>
+                        <p className="text-sm text-muted-foreground text-center">
+                          All registration requests have been processed.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid gap-4">
+                      {pendingRegistrations.map((registration) => (
+                        <Card key={registration.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="text-lg font-semibold">{registration.organization_name}</h3>
+                                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                    Pending Approval
+                                  </Badge>
+                                </div>
+                                <div className="space-y-1 text-sm text-muted-foreground">
+                                  <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4" />
+                                    {registration.first_name} {registration.last_name}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Mail className="h-4 w-4" />
+                                    {registration.email}
+                                  </div>
+                                  {registration.city && registration.state && (
+                                    <div className="flex items-center gap-2">
+                                      <MapPin className="h-4 w-4" />
+                                      {registration.city}, {registration.state}
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4" />
+                                    Submitted: {new Date(registration.created_at).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </div>
+                              <Button
+                                onClick={() => {
+                                  setSelectedPendingRegistration(registration);
+                                  setPendingApprovalDialogOpen(true);
+                                }}
+                                size="sm"
+                              >
+                                Review Application
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
-        )}
 
-        {filteredOrganizations.length === 0 && (
-          <div className="text-center py-12">
-            <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground">No organizations found</h3>
-            <p className="text-muted-foreground">Try adjusting your search or add a new organization.</p>
-          </div>
-        )}
-      </div>
+          <OrganizationDialog 
+            open={dialogOpen} 
+            onOpenChange={setDialogOpen}
+            organization={selectedOrganization}
+          />
 
-      <ComprehensiveOrganizationDialog
-        open={dialogOpen}
-        onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) {
-            // Clear selected organization when dialog closes
-            setSelectedOrganization(null);
-          }
-        }}
-        organization={selectedOrganization}
-      />
+          <ComprehensiveOrganizationDialog 
+            open={viewModalOpen} 
+            onOpenChange={setViewModalOpen}
+            organization={selectedOrganization}
+          />
 
-      <ImportMembersDialog
-        open={importDialogOpen}
-        onOpenChange={setImportDialogOpen}
-      />
+          <ImportMembersDialog
+            open={importDialogOpen}
+            onOpenChange={setImportDialogOpen}
+          />
 
-      <OrganizationViewModal
-        organization={selectedOrganization}
-        isOpen={viewModalOpen}
-        onClose={() => {
-          setViewModalOpen(false);
-          setSelectedOrganization(null);
-        }}
-      />
+          <PendingRegistrationApprovalDialog
+            open={pendingApprovalDialogOpen}
+            onOpenChange={setPendingApprovalDialogOpen}
+            registration={selectedPendingRegistration}
+            onApprove={approveRegistration}
+            onReject={rejectRegistration}
+          />
         </main>
       </div>
     </SidebarProvider>

@@ -15,6 +15,17 @@ import { useFieldOptions, type SystemField } from '@/hooks/useSystemFieldOptions
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useCreateReassignmentRequest } from '@/hooks/useReassignmentRequests';
 
+// Simple password hashing function for demo purposes
+// In production, this should be done server-side
+const hashPassword = async (password: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+};
+
 export default function Auth() {
   const { user, signIn, signUp, loading } = useAuth();
   const { toast } = useToast();
@@ -363,11 +374,46 @@ export default function Auth() {
           : signUpForm.alumniAdvancementCrm,
       };
 
-      const { error } = await signUp(
-        signUpForm.email, 
-        signUpForm.password,
-        formDataWithCustomValues
-      );
+      // Store registration data for admin approval instead of creating user immediately
+      const { error } = await supabase
+        .from('pending_registrations')
+        .insert({
+          email: signUpForm.email,
+          password_hash: await hashPassword(signUpForm.password),
+          first_name: formDataWithCustomValues.firstName,
+          last_name: formDataWithCustomValues.lastName,
+          organization_name: formDataWithCustomValues.organization,
+          state_association: formDataWithCustomValues.stateAssociation,
+          student_fte: formDataWithCustomValues.studentFte ? parseInt(formDataWithCustomValues.studentFte) : null,
+          address: formDataWithCustomValues.address,
+          city: formDataWithCustomValues.city,
+          state: formDataWithCustomValues.state,
+          zip: formDataWithCustomValues.zip,
+          primary_contact_title: formDataWithCustomValues.primaryContactTitle,
+          secondary_first_name: formDataWithCustomValues.secondaryFirstName,
+          secondary_last_name: formDataWithCustomValues.secondaryLastName,
+          secondary_contact_title: formDataWithCustomValues.secondaryContactTitle,
+          secondary_contact_email: formDataWithCustomValues.secondaryContactEmail,
+          student_information_system: formDataWithCustomValues.studentInformationSystem,
+          financial_system: formDataWithCustomValues.financialSystem,
+          financial_aid: formDataWithCustomValues.financialAid,
+          hcm_hr: formDataWithCustomValues.hcmHr,
+          payroll_system: formDataWithCustomValues.payrollSystem,
+          purchasing_system: formDataWithCustomValues.purchasingSystem,
+          housing_management: formDataWithCustomValues.housingManagement,
+          learning_management: formDataWithCustomValues.learningManagement,
+          admissions_crm: formDataWithCustomValues.admissionsCrm,
+          alumni_advancement_crm: formDataWithCustomValues.alumniAdvancementCrm,
+          primary_office_apple: formDataWithCustomValues.primaryOfficeApple,
+          primary_office_asus: formDataWithCustomValues.primaryOfficeAsus,
+          primary_office_dell: formDataWithCustomValues.primaryOfficeDell,
+          primary_office_hp: formDataWithCustomValues.primaryOfficeHp,
+          primary_office_microsoft: formDataWithCustomValues.primaryOfficeMicrosoft,
+          primary_office_other: formDataWithCustomValues.primaryOfficeOther,
+          primary_office_other_details: formDataWithCustomValues.primaryOfficeOtherDetails,
+          other_software_comments: formDataWithCustomValues.otherSoftwareComments,
+          is_private_nonprofit: formDataWithCustomValues.isPrivateNonProfit,
+        });
       
       if (error) {
         toast({
@@ -381,24 +427,19 @@ export default function Auth() {
           setSignUpCaptcha(null);
         }
       } else {
-        // Send welcome email to new registrants
-        await supabase.functions.invoke('organization-emails', {
-          body: {
-            type: 'welcome',
-            to: signUpForm.email,
-            organizationName: signUpForm.organization
-          }
+        toast({
+          title: "Registration submitted successfully",
+          description: "Your registration has been submitted for admin approval. You'll receive an email when it's processed.",
         });
 
-        // Redirect to confirmation page
-        const confirmationType = isReassignment ? 'reassignment' : 'registration';
-        window.location.href = `/registration-confirmation?type=${confirmationType}`;
-        
         // Reset captcha after success
         if (recaptchaEnabled) {
           signUpCaptchaRef.current?.reset();
           setSignUpCaptcha(null);
         }
+        
+        // Redirect to confirmation page
+        window.location.href = '/registration-confirmation?type=pending';
       }
     }
     setIsSubmitting(false);
