@@ -778,13 +778,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      fix_missing_organizations: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          details: string[]
-          fixed_count: number
-        }[]
-      }
       generate_secure_token: {
         Args: Record<PropertyKey, never>
         Returns: string
