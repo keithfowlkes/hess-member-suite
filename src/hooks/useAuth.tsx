@@ -79,13 +79,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('Initializing auth...');
       
+      // Clear any corrupted session data first
+      const clearSession = () => {
+        localStorage.removeItem('sb-tyovnvuluyosjnabrzjc-auth-token');
+        localStorage.removeItem('supabase.auth.token');
+        console.log('Cleared potentially corrupted session data');
+      };
+      
       // Try to refresh the session first
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error('Session error:', sessionError);
-        // Clear any corrupted session data
-        await supabase.auth.signOut();
+        clearSession();
         if (mounted) {
           setLoading(false);
         }
@@ -113,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           
           if (refreshError) {
             console.error('Session refresh failed:', refreshError);
-            await supabase.auth.signOut();
+            clearSession();
             if (mounted) {
               setLoading(false);
             }
@@ -153,6 +159,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error initializing auth:', error);
       // Clear potentially corrupted session
       try {
+        localStorage.removeItem('sb-tyovnvuluyosjnabrzjc-auth-token');
+        localStorage.removeItem('supabase.auth.token');
         await supabase.auth.signOut();
       } catch (signOutError) {
         console.error('Error signing out during cleanup:', signOutError);
@@ -230,21 +238,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     console.log('Sign out clicked');
     try {
-      // Sign out from Supabase first - this will trigger the auth state change
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Sign out error:', error);
-        // Still clear local state on error to ensure user is logged out
-        setUser(null);
-        setSession(null);
-        setIsAdmin(false);
-        setViewMode('admin');
-      } else {
-        console.log('Sign out successful');
-      }
+      // Clear local state first
+      setUser(null);
+      setSession(null);
+      setIsAdmin(false);
+      setViewMode('admin');
       
-      // Navigate to auth page after sign out
-      window.location.href = '/auth';
+      // Clear any stored session data
+      localStorage.removeItem('sb-tyovnvuluyosjnabrzjc-auth-token');
+      localStorage.removeItem('supabase.auth.token');
+      
+      // Sign out from Supabase (even if there's no session)
+      await supabase.auth.signOut();
+      
+      console.log('Sign out successful');
+      
+      // Navigate to auth page after sign out with a parameter to prevent auto-redirect
+      window.location.href = '/auth?from=signout';
     } catch (err) {
       console.error('Sign out exception:', err);
       // Clear local state as fallback
@@ -252,8 +262,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       setIsAdmin(false);
       setViewMode('admin');
-      // Still redirect to auth page
-      window.location.href = '/auth';
+      
+      // Clear stored session data
+      localStorage.removeItem('sb-tyovnvuluyosjnabrzjc-auth-token');
+      localStorage.removeItem('supabase.auth.token');
+      
+      // Still redirect to auth page with parameter
+      window.location.href = '/auth?from=signout';
     }
   };
 
