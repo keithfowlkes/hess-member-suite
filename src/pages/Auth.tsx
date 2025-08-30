@@ -509,7 +509,11 @@ export default function Auth() {
                   <div className="space-y-2">
                     <Label className="text-gray-700 font-medium">Security Verification</Label>
                     {recaptchaEnabled ? (
-                      recaptchaSiteKey ? (
+                      isLoadingRecaptcha ? (
+                        <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
+                          <span className="text-gray-500 text-sm">Loading verification...</span>
+                        </div>
+                      ) : recaptchaSiteKey ? (
                         <ReCAPTCHA
                           ref={signInCaptchaRef}
                           sitekey={recaptchaSiteKey}
@@ -517,7 +521,8 @@ export default function Auth() {
                         />
                       ) : (
                         <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-                          No reCAPTCHA site key configured. Please contact administrator.
+                          <div className="font-medium">reCAPTCHA Configuration Missing</div>
+                          <div className="mt-1">Administrator needs to configure reCAPTCHA site key in Settings → Security Settings.</div>
                         </div>
                       )
                     ) : (
@@ -1163,24 +1168,22 @@ export default function Auth() {
                   
                   <div className="space-y-4">
                     {recaptchaEnabled ? (
-                      <>
-                        {recaptchaSiteKey ? (
-                          <ReCAPTCHA
-                            ref={signUpCaptchaRef}
-                            sitekey={recaptchaSiteKey}
-                            onChange={setSignUpCaptcha}
-                          />
-                        ) : (
-                          <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
-                            <span className="text-gray-500 text-sm">Loading verification...</span>
-                          </div>
-                        )}
-                        {!isLoadingRecaptcha && !recaptchaSetting?.setting_value && (
-                          <p className="text-xs text-red-500">
-                            No reCAPTCHA site key configured. Admin should configure it in System Settings.
-                          </p>
-                        )}
-                      </>
+                      isLoadingRecaptcha ? (
+                        <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
+                          <span className="text-gray-500 text-sm">Loading verification...</span>
+                        </div>
+                      ) : recaptchaSiteKey ? (
+                        <ReCAPTCHA
+                          ref={signUpCaptchaRef}
+                          sitekey={recaptchaSiteKey}
+                          onChange={setSignUpCaptcha}
+                        />
+                      ) : (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                          <div className="font-medium">reCAPTCHA Configuration Missing</div>
+                          <div className="mt-1">Administrator needs to configure reCAPTCHA site key in Settings → Security Settings.</div>
+                        </div>
+                      )
                     ) : (
                       <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
                         reCAPTCHA verification is disabled by administrator
