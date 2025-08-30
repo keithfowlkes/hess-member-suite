@@ -374,6 +374,13 @@ export default function Auth() {
       };
 
       // Store registration data for admin approval instead of creating user immediately
+      console.log('Submitting registration data:', {
+        email: signUpForm.email,
+        firstName: formDataWithCustomValues.firstName,
+        lastName: formDataWithCustomValues.lastName,
+        organization: formDataWithCustomValues.organization
+      });
+      
       const { error } = await supabase
         .from('pending_registrations')
         .insert({
@@ -415,6 +422,7 @@ export default function Auth() {
         });
       
       if (error) {
+        console.error('Registration error:', error);
         toast({
           title: "Sign up failed", 
           description: error.message,
