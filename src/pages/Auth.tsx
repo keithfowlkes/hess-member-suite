@@ -233,14 +233,19 @@ export default function Auth() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Temporarily disable reCAPTCHA validation for debugging
+    // TODO: Re-enable after fixing reCAPTCHA issues
+    /*
     if (recaptchaEnabled && !signUpCaptcha) {
+      console.warn('reCAPTCHA validation failed or incomplete');
       toast({
-        title: "Verification required",
-        description: "Please complete the captcha verification.",
+        title: "reCAPTCHA required",
+        description: "Please complete the reCAPTCHA verification. If it's not loading, try refreshing the page.",
         variant: "destructive"
       });
       return;
     }
+    */
     
     setIsSubmitting(true);
 
@@ -422,10 +427,21 @@ export default function Auth() {
         });
       
       if (error) {
-        console.error('Registration error:', error);
+        console.error('Registration error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        
+        let errorMessage = error.message;
+        if (error.code === '23505') {
+          errorMessage = "An account with this email already exists or is pending approval.";
+        }
+        
         toast({
           title: "Sign up failed", 
-          description: error.message,
+          description: errorMessage,
           variant: "destructive"
         });
         // Reset captcha on error
