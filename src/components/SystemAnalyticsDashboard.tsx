@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { useSystemAnalytics, SystemUsage } from '@/hooks/useSystemAnalytics';
 import { InstitutionsModal } from '@/components/InstitutionsModal';
 import { PieChart as PieChartIcon, TrendingUp, BarChart3 } from 'lucide-react';
@@ -36,7 +36,7 @@ const SYSTEM_DATA_MAP = [
 
 export function SystemAnalyticsDashboard() {
   const { data: analytics, isLoading, error } = useSystemAnalytics();
-  const [chartType, setChartType] = useState<'pie' | 'line'>('pie');
+  const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
   const [selectedSystem, setSelectedSystem] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSystemField, setSelectedSystemField] = useState<string | null>(null);
@@ -102,7 +102,7 @@ export function SystemAnalyticsDashboard() {
             </ResponsiveContainer>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data}>
+              <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey="name" 
@@ -114,14 +114,12 @@ export function SystemAnalyticsDashboard() {
                 />
                 <YAxis stroke="hsl(var(--muted-foreground))" />
                 <Tooltip />
-                <Line 
-                  type="monotone" 
+                <Bar 
                   dataKey="count" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={3}
-                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                  fill="hsl(var(--primary))" 
+                  radius={[4, 4, 0, 0]}
                 />
-              </LineChart>
+              </BarChart>
             </ResponsiveContainer>
           )}
         </div>
@@ -220,13 +218,13 @@ export function SystemAnalyticsDashboard() {
               Pie Charts
             </Button>
             <Button
-              variant={chartType === 'line' ? 'default' : 'outline'}
+              variant={chartType === 'bar' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setChartType('line')}
+              onClick={() => setChartType('bar')}
               className="gap-2"
             >
-              <TrendingUp className="h-4 w-4" />
-              Line Charts
+              <BarChart3 className="h-4 w-4" />
+              Bar Charts
             </Button>
           </div>
           
