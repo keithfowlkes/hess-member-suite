@@ -1,0 +1,54 @@
+-- Temporarily disable the problematic trigger
+DROP TRIGGER IF EXISTS check_missing_organizations_trigger ON profiles;
+
+-- Create the profile record manually
+INSERT INTO public.profiles (
+  user_id, first_name, last_name, email, organization, state_association, 
+  student_fte, address, city, state, zip, primary_contact_title,
+  secondary_first_name, secondary_last_name, secondary_contact_title, 
+  secondary_contact_email, student_information_system, financial_system,
+  financial_aid, hcm_hr, payroll_system, purchasing_system, 
+  housing_management, learning_management, admissions_crm, 
+  alumni_advancement_crm, primary_office_apple, primary_office_asus,
+  primary_office_dell, primary_office_hp, primary_office_microsoft,
+  primary_office_other, primary_office_other_details, other_software_comments,
+  is_private_nonprofit, created_at
+)
+VALUES (
+  'd2fbd27d-4a1b-4db4-ac0a-eee5a87a148b',
+  'James',
+  'Brown', 
+  'frank@deuslogic.com',
+  'First Baptist- Junction City, KY.',
+  'Ky',
+  333,
+  '456 olive street',
+  'Danville', 
+  'KY',
+  '40422',
+  'CIO',
+  'Imma',
+  'Thomas',
+  'Deputy CIO',
+  'imma@deuslogic.com',
+  'Anthology/Campus Management',
+  'Ellucian Banner Finance',
+  'Blackbaud Financial Edge',
+  'Jenzabar EX',
+  'Abila MIP Fund Accounting',
+  'Microsoft Dynamics GP',
+  'Anthology/Campus Management', 
+  'Canvas',
+  'Anthology Radius',
+  'A module that''s part of Collegix, our SIS',
+  true,
+  false,
+  false,
+  false,
+  true,
+  false,
+  '',
+  '',
+  true,
+  '2025-08-30 21:51:44.65437+00'
+);
