@@ -116,33 +116,38 @@ export function SystemAnalyticsDashboard() {
                 <Tooltip />
                 <Bar 
                   dataKey="count" 
-                  fill="hsl(var(--primary))" 
                   radius={[4, 4, 0, 0]}
-                />
+                >
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
-        <div className="mt-3 space-y-1 max-h-32 overflow-y-auto">
-          {data.map((item, index) => (
-            <div key={item.name} className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <div 
-                  className="w-2 h-2 rounded-full flex-shrink-0" 
-                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                />
-                <button
-                  onClick={() => handleSystemClick(systemKey, item.name, title)}
-                  className="text-muted-foreground hover:text-primary transition-colors truncate max-w-[120px] text-left cursor-pointer"
-                  title={`Click to view institutions using ${item.name}`}
-                >
-                  {item.name}
-                </button>
+        {chartType === 'pie' && (
+          <div className="mt-3 space-y-1 max-h-32 overflow-y-auto">
+            {data.map((item, index) => (
+              <div key={item.name} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-2 h-2 rounded-full flex-shrink-0" 
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  />
+                  <button
+                    onClick={() => handleSystemClick(systemKey, item.name, title)}
+                    className="text-muted-foreground hover:text-primary transition-colors truncate max-w-[120px] text-left cursor-pointer"
+                    title={`Click to view institutions using ${item.name}`}
+                  >
+                    {item.name}
+                  </button>
+                </div>
+                <span className="font-medium text-foreground">{item.count}</span>
               </div>
-              <span className="font-medium text-foreground">{item.count}</span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
