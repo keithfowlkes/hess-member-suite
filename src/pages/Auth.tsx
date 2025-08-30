@@ -514,20 +514,11 @@ export default function Auth() {
                           <span className="text-gray-500 text-sm">Loading verification...</span>
                         </div>
                       ) : (recaptchaEnabled && recaptchaSiteKey) ? (
-                        <div className="space-y-2">
-                          <ReCAPTCHA
-                            ref={signInCaptchaRef}
-                            sitekey={recaptchaSiteKey}
-                            onChange={setSignInCaptcha}
-                            onErrored={() => {
-                              console.error('reCAPTCHA Error: Invalid domain for site key');
-                            }}
-                          />
-                          <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700">
-                            <div className="font-medium">reCAPTCHA Domain Issue?</div>
-                            <div className="mt-1">If you see "Invalid domain for site key", add <code className="bg-amber-100 px-1 rounded">{window.location.hostname}</code> to your reCAPTCHA site configuration at <a href="https://www.google.com/recaptcha/admin" target="_blank" className="underline">Google reCAPTCHA Console</a>.</div>
-                          </div>
-                        </div>
+                        <ReCAPTCHA
+                          ref={signInCaptchaRef}
+                          sitekey={recaptchaSiteKey}
+                          onChange={setSignInCaptcha}
+                        />
                       ) : (
                         <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
                           <div className="font-medium">reCAPTCHA Configuration Missing</div>
@@ -1182,20 +1173,11 @@ export default function Auth() {
                           <span className="text-gray-500 text-sm">Loading verification...</span>
                         </div>
                       ) : (recaptchaEnabled && recaptchaSiteKey) ? (
-                        <div className="space-y-2">
-                          <ReCAPTCHA
-                            ref={signUpCaptchaRef}
-                            sitekey={recaptchaSiteKey}
-                            onChange={setSignUpCaptcha}
-                            onErrored={() => {
-                              console.error('reCAPTCHA Error: Invalid domain for site key');
-                            }}
-                          />
-                          <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700">
-                            <div className="font-medium">reCAPTCHA Domain Issue?</div>
-                            <div className="mt-1">If you see "Invalid domain for site key", add <code className="bg-amber-100 px-1 rounded">{window.location.hostname}</code> to your reCAPTCHA site configuration at <a href="https://www.google.com/recaptcha/admin" target="_blank" className="underline">Google reCAPTCHA Console</a>.</div>
-                          </div>
-                        </div>
+                        <ReCAPTCHA
+                          ref={signUpCaptchaRef}
+                          sitekey={recaptchaSiteKey}
+                          onChange={setSignUpCaptcha}
+                        />
                       ) : (
                         <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
                           <div className="font-medium">reCAPTCHA Configuration Missing</div>
