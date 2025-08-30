@@ -9,7 +9,6 @@ import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User } from 'luc
 import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
 import { useOrganizationProfile } from '@/hooks/useOrganizationProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
-import { ConnectionTest } from '@/components/ConnectionTest';
 import { useState, useEffect } from 'react';
 
 const Index = () => {
@@ -45,9 +44,6 @@ const Index = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 p-8">
-          {/* Temporary Connection Test - Remove after diagnosis */}
-          <ConnectionTest />
-          
           <div className="space-y-6">
             <div className="flex justify-between items-start">
               <div>
