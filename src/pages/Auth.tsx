@@ -598,7 +598,7 @@ export default function Auth() {
                           />
                           <div className="flex-1">
                             <label htmlFor="reassignment-request" className="text-gray-800 font-medium cursor-pointer">
-                              This is a reassignment request
+                              This is member information update request
                             </label>
                             <p className="text-sm text-gray-600 mt-1">
                               Check this if you're requesting to become the primary contact for an existing member institution.
