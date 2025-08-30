@@ -16,17 +16,32 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   }
 });
 
-// Add debugging for network issues
-supabase.auth.onAuthStateChange((event, session) => {
-  console.log('Supabase auth state change:', event);
-  console.log('Session status:', session ? 'authenticated' : 'not authenticated');
-  if (session) {
-    console.log('User email:', session.user?.email);
-    console.log('Session expires at:', new Date(session.expires_at! * 1000));
+// Test basic connection
+(async () => {
+  try {
+    console.log('Testing Supabase connection...');
+    console.log('Supabase URL:', SUPABASE_URL);
+    console.log('API Key (first 20 chars):', SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...');
+    
+    // Clear any corrupted session data
+    const clearSession = () => {
+      localStorage.removeItem('sb-tyovnvuluyosjnabrzjc-auth-token');
+      localStorage.removeItem('supabase.auth.token');
+      console.log('Cleared potentially corrupted session data');
+    };
+    
+    // Test connection with a simple query
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('Session check failed:', error);
+      clearSession();
+    } else {
+      console.log('Session check successful:', data.session ? 'authenticated' : 'not authenticated');
+    }
+  } catch (err) {
+    console.error('Connection test failed:', err);
+    // Clear session data on connection failure
+    localStorage.clear();
+    console.log('Cleared all localStorage due to connection failure');
   }
-});
-
-// Test connection
-console.log('Supabase client initialized');
-console.log('URL:', SUPABASE_URL);
-console.log('Key (first 20 chars):', SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...');
+})();
