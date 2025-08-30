@@ -513,7 +513,7 @@ export default function Auth() {
                         <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
                           <span className="text-gray-500 text-sm">Loading verification...</span>
                         </div>
-                      ) : recaptchaSiteKey ? (
+                      ) : (recaptchaEnabled && recaptchaSiteKey) ? (
                         <div className="space-y-2">
                           <ReCAPTCHA
                             ref={signInCaptchaRef}
@@ -1181,7 +1181,7 @@ export default function Auth() {
                         <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
                           <span className="text-gray-500 text-sm">Loading verification...</span>
                         </div>
-                      ) : recaptchaSiteKey ? (
+                      ) : (recaptchaEnabled && recaptchaSiteKey) ? (
                         <div className="space-y-2">
                           <ReCAPTCHA
                             ref={signUpCaptchaRef}
