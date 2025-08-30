@@ -74,47 +74,95 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Check for existing session
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
+  // Check for existing session
+  const initializeAuth = async () => {
+    try {
+      console.log('Initializing auth...');
+      
+      // Try to refresh the session first
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        // Clear any corrupted session data
+        await supabase.auth.signOut();
+        if (mounted) {
+          setLoading(false);
+        }
+        return;
+      }
+      
+      console.log('Session retrieved:', session ? 'valid' : 'none');
+      
+      if (!mounted) return;
+      
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Check if session is about to expire (within 5 minutes)
+        const expiresAt = session.expires_at;
+        const now = Math.floor(Date.now() / 1000);
+        const timeUntilExpiry = expiresAt - now;
         
-        if (!mounted) return;
+        console.log('Session expires in:', timeUntilExpiry, 'seconds');
         
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Check admin role for existing session
-          try {
-            const { data } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', session.user.id)
-              .eq('role', 'admin')
-              .single();
-            
+        if (timeUntilExpiry < 300) { // Less than 5 minutes
+          console.log('Session expiring soon, refreshing...');
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError) {
+            console.error('Session refresh failed:', refreshError);
+            await supabase.auth.signOut();
             if (mounted) {
-              setIsAdmin(!!data);
+              setLoading(false);
             }
-          } catch (error) {
-            console.error('Error checking admin role:', error);
-            if (mounted) {
-              setIsAdmin(false);
-            }
+            return;
+          }
+          
+          if (refreshData.session && mounted) {
+            setSession(refreshData.session);
+            setUser(refreshData.session.user);
           }
         }
         
-        if (mounted) {
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        if (mounted) {
-          setLoading(false);
+        // Check admin role for existing session
+        try {
+          const { data } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .eq('role', 'admin')
+            .single();
+          
+          if (mounted) {
+            setIsAdmin(!!data);
+          }
+        } catch (error) {
+          console.error('Error checking admin role:', error);
+          if (mounted) {
+            setIsAdmin(false);
+          }
         }
       }
-    };
+      
+      if (mounted) {
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error initializing auth:', error);
+      // Clear potentially corrupted session
+      try {
+        await supabase.auth.signOut();
+      } catch (signOutError) {
+        console.error('Error signing out during cleanup:', signOutError);
+      }
+      
+      if (mounted) {
+        setLoading(false);
+      }
+    }
+  };
 
     initializeAuth();
 

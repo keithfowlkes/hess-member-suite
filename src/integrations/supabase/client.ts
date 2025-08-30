@@ -15,3 +15,18 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+// Add debugging for network issues
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Supabase auth state change:', event);
+  console.log('Session status:', session ? 'authenticated' : 'not authenticated');
+  if (session) {
+    console.log('User email:', session.user?.email);
+    console.log('Session expires at:', new Date(session.expires_at! * 1000));
+  }
+});
+
+// Test connection
+console.log('Supabase client initialized');
+console.log('URL:', SUPABASE_URL);
+console.log('Key (first 20 chars):', SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...');
