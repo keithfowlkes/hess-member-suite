@@ -181,21 +181,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    return { error };
+    
+    if (error) {
+      return { error };
+    }
+    
+    // Check if user's organization is approved before allowing login
+    if (data.user) {
+      try {
+        // Get user's profile and organization status
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, organization')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+        
+        if (profile) {
+          const { data: organization } = await supabase
+            .from('organizations')
+            .select('membership_status')
+            .eq('contact_person_id', profile.id)
+            .maybeSingle();
+          
+          // Check if user is admin (admins can always login)
+          const { data: adminRole } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
+          
+          // If not admin and organization is not approved, sign them out and return error
+          if (!adminRole && organization?.membership_status === 'pending') {
+            await supabase.auth.signOut();
+            return { 
+              error: { 
+                message: "Your organization registration is still pending approval. Please wait for admin approval before signing in." 
+              } 
+            };
+          }
+          
+          if (!adminRole && organization?.membership_status === 'cancelled') {
+            await supabase.auth.signOut();
+            return { 
+              error: { 
+                message: "Your organization registration has been cancelled. Please contact support for assistance." 
+              } 
+            };
+          }
+        }
+      } catch (orgError) {
+        console.error('Error checking organization status:', orgError);
+        // Don't block login on check error for existing users
+      }
+    }
+    
+    return { error: null };
   };
 
   const signUp = async (email: string, password: string, userData: any) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
+    // Don't set emailRedirectTo to prevent automatic sign-in after registration
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
         data: {
           first_name: userData.firstName,
           last_name: userData.lastName,
@@ -228,10 +281,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           primary_office_microsoft: userData.primaryOfficeMicrosoft,
           primary_office_other: userData.primaryOfficeOther,
           primary_office_other_details: userData.primaryOfficeOtherDetails,
-          other_software_comments: userData.otherSoftwareComments
+          other_software_comments: userData.otherSoftwareComments,
+          isPrivateNonProfit: userData.isPrivateNonProfit
         }
       }
     });
+    
+    // Immediately sign out after registration to prevent automatic login
+    if (data.user && !error) {
+      await supabase.auth.signOut();
+    }
+    
     return { error };
   };
 
