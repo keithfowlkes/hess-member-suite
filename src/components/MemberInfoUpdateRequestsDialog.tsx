@@ -34,22 +34,22 @@ import {
   useApproveReassignmentRequest, 
   useRejectReassignmentRequest,
   useDeleteReassignmentRequest,
-  type ReassignmentRequest 
+  type MemberInfoUpdateRequest 
 } from '@/hooks/useReassignmentRequests';
 import { CheckCircle, XCircle, Eye, Trash2, AlertTriangle } from 'lucide-react';
 
-interface ReassignmentRequestsDialogProps {
+interface MemberInfoUpdateRequestsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentRequestsDialogProps) {
+export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInfoUpdateRequestsDialogProps) {
   const { data: requests = [], isLoading } = useReassignmentRequests();
   const approveRequest = useApproveReassignmentRequest();
   const rejectRequest = useRejectReassignmentRequest();
   const deleteRequest = useDeleteReassignmentRequest();
 
-  const [selectedRequest, setSelectedRequest] = useState<ReassignmentRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<MemberInfoUpdateRequest | null>(null);
   const [actionNotes, setActionNotes] = useState('');
   const [showDetails, setShowDetails] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -100,9 +100,9 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Organization Reassignment Requests</DialogTitle>
+          <DialogTitle>Member Information Update Requests</DialogTitle>
           <DialogDescription>
-            Manage organization reassignment requests and approve/reject changes
+            Manage member information update requests and approve/reject changes
           </DialogDescription>
         </DialogHeader>
 
@@ -206,7 +206,7 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
               {/* Contact Change Summary */}
               <Card className="md:col-span-2">
                 <CardHeader>
-                  <CardTitle className="text-base">Contact Reassignment Summary</CardTitle>
+                  <CardTitle className="text-base">Contact Change Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="bg-muted/30 rounded-md p-4">
@@ -280,7 +280,7 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
               <div className="text-center py-4">Loading requests...</div>
             ) : requests.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No reassignment requests found
+                No member information update requests found
               </div>
             ) : (
               <Table>
@@ -370,12 +370,12 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
-                Approve Reassignment Request
+                Approve Member Information Update Request
               </AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-4">
                   <p>
-                    You are about to approve the reassignment request for{' '}
+                    You are about to approve the member information update request for{' '}
                     <strong>{selectedRequest?.organizations?.name}</strong>.
                   </p>
                   
@@ -391,7 +391,7 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
                       </li>
                       <li>• All organization information will be completely replaced with the new submitted data</li>
                       <li>• The current primary contact will lose access to manage this organization</li>
-                      <li>• The reassignment request will be deleted after approval</li>
+                      <li>• The member information update request will be deleted after approval</li>
                       <li><strong>• This action cannot be undone</strong></li>
                     </ul>
                   </div>
@@ -415,7 +415,7 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 disabled={approveRequest.isPending}
               >
-                {approveRequest.isPending ? 'Approving...' : 'Approve Reassignment'}
+                {approveRequest.isPending ? 'Approving...' : 'Approve Update Request'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -425,9 +425,9 @@ export function ReassignmentRequestsDialog({ open, onOpenChange }: ReassignmentR
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Reassignment Request</AlertDialogTitle>
+              <AlertDialogTitle>Delete Member Information Update Request</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this reassignment request for{' '}
+                Are you sure you want to delete this member information update request for{' '}
                 <strong>{selectedRequest?.organizations?.name}</strong>? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>

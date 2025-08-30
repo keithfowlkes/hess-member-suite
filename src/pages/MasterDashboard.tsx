@@ -56,7 +56,7 @@ import { useReassignmentRequests, useApproveReassignmentRequest, useRejectReassi
 // Components
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
 import { InvitationManagementDialog } from '@/components/InvitationManagementDialog';
-import { ReassignmentRequestsDialog } from '@/components/ReassignmentRequestsDialog';
+import { MemberInfoUpdateRequestsDialog } from '@/components/MemberInfoUpdateRequestsDialog';
 
 // Icons
 import { 
@@ -98,22 +98,22 @@ const MasterDashboard = () => {
     rejectOrganization 
   } = useOrganizationApprovals();
   const { invitations, loading: invitationsLoading } = useOrganizationInvitations();
-  const { data: reassignmentRequests = [], isLoading: reassignmentLoading, refetch: refetchRequests } = useReassignmentRequests();
+  const { data: memberInfoUpdateRequests = [], isLoading: memberInfoUpdateLoading, refetch: refetchRequests } = useReassignmentRequests();
   
   // Calculate pending counts
   const pendingApprovalsCount = pendingOrganizations.length;
   const activeInvitationsCount = invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length;
-  const reassignmentRequestsCount = reassignmentRequests.length;
-  const totalOrganizationActions = pendingApprovalsCount + activeInvitationsCount + reassignmentRequestsCount;
-  const approveReassignment = useApproveReassignmentRequest();
-  const rejectReassignment = useRejectReassignmentRequest();
-  const deleteReassignment = useDeleteReassignmentRequest();
+  const memberInfoUpdateRequestsCount = memberInfoUpdateRequests.length;
+  const totalOrganizationActions = pendingApprovalsCount + activeInvitationsCount + memberInfoUpdateRequestsCount;
+  const approveMemberInfoUpdate = useApproveReassignmentRequest();
+  const rejectMemberInfoUpdate = useRejectReassignmentRequest();
+  const deleteMemberInfoUpdate = useDeleteReassignmentRequest();
 
   // State management
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showInvitationDialog, setShowInvitationDialog] = useState(false);
-  const [showReassignmentDialog, setShowReassignmentDialog] = useState(false);
+  const [showMemberInfoUpdateDialog, setShowMemberInfoUpdateDialog] = useState(false);
   
   // Search functionality
   const [organizationSearchTerm, setOrganizationSearchTerm] = useState('');
@@ -472,13 +472,13 @@ const MasterDashboard = () => {
                       )}
                     </TabsTrigger>
                     <TabsTrigger value="reassignments" className="relative">
-                      Reassignment Requests
-                      {reassignmentRequestsCount > 0 && (
+                      Member Info Updates
+                      {memberInfoUpdateRequestsCount > 0 && (
                         <Badge 
                           variant="destructive" 
                           className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
                         >
-                          {reassignmentRequestsCount}
+                          {memberInfoUpdateRequestsCount}
                         </Badge>
                       )}
                     </TabsTrigger>
@@ -618,10 +618,10 @@ const MasterDashboard = () => {
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl font-semibold">Organization Reassignment Requests</h2>
                       <div className="flex items-center gap-2">
-                        {reassignmentRequests.length > 0 && (
+                        {memberInfoUpdateRequests.length > 0 && (
                           <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
                             <AlertCircle className="h-4 w-4" />
-                            <span className="font-medium">{reassignmentRequests.length} Pending</span>
+                            <span className="font-medium">{memberInfoUpdateRequests.length} Pending</span>
                           </div>
                         )}
                         <Button onClick={() => refetchRequests()}>
@@ -631,13 +631,13 @@ const MasterDashboard = () => {
                       </div>
                     </div>
 
-                    {reassignmentLoading ? (
+                    {memberInfoUpdateLoading ? (
                       <Card>
                         <CardContent className="p-6">
                           <div className="text-center">Loading reassignment requests...</div>
                         </CardContent>
                       </Card>
-                    ) : reassignmentRequests.length === 0 ? (
+                    ) : memberInfoUpdateRequests.length === 0 ? (
                       <Card>
                         <CardContent className="p-6">
                           <div className="text-center text-muted-foreground">
@@ -648,7 +648,7 @@ const MasterDashboard = () => {
                       </Card>
                     ) : (
                       <div className="space-y-2">
-                        {reassignmentRequests.map((request) => (
+                        {memberInfoUpdateRequests.map((request) => (
                           <Collapsible key={request.id}>
                             <Card>
                               <CollapsibleTrigger asChild>
@@ -818,8 +818,8 @@ const MasterDashboard = () => {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => approveReassignment.mutate({ id: request.id })}
-                                        disabled={approveReassignment.isPending}
+                                        onClick={() => approveMemberInfoUpdate.mutate({ id: request.id })}
+                                        disabled={approveMemberInfoUpdate.isPending}
                                         className="flex items-center gap-1"
                                       >
                                         <CheckCircle className="h-3 w-3" />
@@ -828,8 +828,8 @@ const MasterDashboard = () => {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => deleteReassignment.mutate(request.id)}
-                                        disabled={deleteReassignment.isPending}
+                                        onClick={() => deleteMemberInfoUpdate.mutate(request.id)}
+                                        disabled={deleteMemberInfoUpdate.isPending}
                                         className="flex items-center gap-1 text-destructive hover:text-destructive"
                                       >
                                         <XCircle className="h-3 w-3" />
@@ -1135,9 +1135,9 @@ const MasterDashboard = () => {
         onOpenChange={setShowInvitationDialog}
       />
 
-      <ReassignmentRequestsDialog
-        open={showReassignmentDialog}
-        onOpenChange={setShowReassignmentDialog}
+      <MemberInfoUpdateRequestsDialog
+        open={showMemberInfoUpdateDialog}
+        onOpenChange={setShowMemberInfoUpdateDialog}
       />
     </SidebarProvider>
   );

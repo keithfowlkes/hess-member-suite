@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
 
-export interface ReassignmentRequest {
+export interface MemberInfoUpdateRequest {
   id: string;
   organization_id: string;
   requested_by: string;
@@ -116,11 +116,11 @@ export const useReassignmentRequests = () => {
         })
       );
 
-      return enrichedRequests as ReassignmentRequest[];
+      return enrichedRequests as MemberInfoUpdateRequest[];
     },
   });
 
-  // Subscribe to realtime updates for new reassignment requests
+  // Subscribe to realtime updates for new member information update requests
   useEffect(() => {
     const channel = supabase
       .channel('reassignment-requests')
@@ -132,14 +132,14 @@ export const useReassignmentRequests = () => {
           table: 'organization_reassignment_requests'
         },
         (payload) => {
-          console.log('New reassignment request:', payload);
+          console.log('New member info update request:', payload);
           // Refetch to get the complete data
           query.refetch();
           
           // Show notification
           toast({
-            title: "New Reassignment Request",
-            description: `A new organization reassignment request has been submitted and is awaiting approval.`,
+            title: "New Member Information Update Request",
+            description: `A new member information update request has been submitted and is awaiting approval.`,
             duration: 5000,
           });
         }
@@ -152,7 +152,7 @@ export const useReassignmentRequests = () => {
           table: 'organization_reassignment_requests'
         },
         (payload) => {
-          console.log('Reassignment request updated:', payload);
+          console.log('Member info update request updated:', payload);
           // Refetch to ensure we have the latest data
           query.refetch();
         }
@@ -177,7 +177,7 @@ export const useCreateReassignmentRequest = () => {
       new_contact_email: string;
       new_organization_data: any;
     }) => {
-      console.log('Creating reassignment request with data:', data);
+      console.log('Creating member info update request with data:', data);
       console.log('Current user auth state:', await supabase.auth.getUser());
       
       const { data: result, error } = await supabase
@@ -202,13 +202,13 @@ export const useCreateReassignmentRequest = () => {
       queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
       toast({
         title: "Success",
-        description: "Reassignment request submitted successfully. Awaiting admin approval.",
+        description: "Member information update request submitted successfully. Awaiting admin approval.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to submit reassignment request",
+        description: error.message || "Failed to submit member information update request",
         variant: "destructive"
       });
     }
@@ -255,7 +255,7 @@ export const useApproveReassignmentRequest = () => {
 
       if (updateOrgError) throw updateOrgError;
 
-      // Delete the reassignment request (simpler approach - no audit trail needed)
+      // Delete the member info update request (simpler approach - no audit trail needed)
       const { error: deleteRequestError } = await supabase
         .from('organization_reassignment_requests')
         .delete()
@@ -268,13 +268,13 @@ export const useApproveReassignmentRequest = () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
       toast({
         title: "Success",
-        description: "Reassignment request approved successfully.",
+        description: "Member information update request approved successfully.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to approve reassignment request",
+        description: error.message || "Failed to approve member information update request",
         variant: "destructive"
       });
     }
@@ -301,13 +301,13 @@ export const useRejectReassignmentRequest = () => {
       queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
       toast({
         title: "Success",
-        description: "Reassignment request rejected and removed.",
+        description: "Member information update request rejected and removed.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to reject reassignment request",
+        description: error.message || "Failed to reject member information update request",
         variant: "destructive"
       });
     }
@@ -331,13 +331,13 @@ export const useDeleteReassignmentRequest = () => {
       queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
       toast({
         title: "Success",
-        description: "Reassignment request deleted.",
+        description: "Member information update request deleted.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete reassignment request",
+        description: error.message || "Failed to delete member information update request",
         variant: "destructive"
       });
     }

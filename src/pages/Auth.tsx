@@ -316,7 +316,7 @@ export default function Auth() {
         }
       } catch (error: any) {
         toast({
-          title: "Reassignment request failed",
+          title: "Member information update request failed",
           description: error.message,
           variant: "destructive"
         });

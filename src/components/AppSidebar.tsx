@@ -30,11 +30,11 @@ export function AppSidebar() {
   // Fetch pending action counts for admin
   const { pendingOrganizations } = useOrganizationApprovals();
   const { invitations } = useOrganizationInvitations();
-  const { data: reassignmentRequests = [] } = useReassignmentRequests();
+  const { data: memberInfoUpdateRequests = [] } = useReassignmentRequests();
   
   // Calculate total pending actions
   const activeInvitations = invitations?.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()) || [];
-  const totalPendingActions = (pendingOrganizations?.length || 0) + activeInvitations.length + reassignmentRequests.length;
+  const totalPendingActions = (pendingOrganizations?.length || 0) + activeInvitations.length + memberInfoUpdateRequests.length;
   
   console.log('Sidebar render - isAdmin:', isAdmin, 'isViewingAsAdmin:', isViewingAsAdmin);
   

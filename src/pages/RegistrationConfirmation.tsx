@@ -8,11 +8,11 @@ export default function RegistrationConfirmation() {
   const isReassignment = searchParams.get('type') === 'reassignment';
 
   const title = isReassignment 
-    ? 'Reassignment Request Submitted'
+    ? 'Member Information Update Request Submitted'
     : 'Registration Submitted Successfully';
 
   const description = isReassignment
-    ? 'Your membership reassignment request has been received and is currently under review by our administrative team.'
+    ? 'Your member information update request has been received and is currently under review by our administrative team.'
     : 'Your membership application has been received and is currently under review by our administrative team.';
 
   return (
@@ -54,7 +54,7 @@ export default function RegistrationConfirmation() {
               <div className="flex items-center justify-center gap-3 text-base bg-muted/30 rounded-lg p-4 max-w-md mx-auto">
                 <Mail className="h-5 w-5 text-primary flex-shrink-0" />
                 <span>
-                  You will receive an email notification once your {isReassignment ? 'reassignment request' : 'application'} has been approved.
+                  You will receive an email notification once your {isReassignment ? 'member information update request' : 'application'} has been approved.
                 </span>
               </div>
             </div>
@@ -65,7 +65,7 @@ export default function RegistrationConfirmation() {
               <div className="text-left space-y-3 text-muted-foreground">
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                  <span>Our administrative team will review your {isReassignment ? 'reassignment request' : 'application'}</span>
+                  <span>Our administrative team will review your {isReassignment ? 'member information update request' : 'application'}</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
