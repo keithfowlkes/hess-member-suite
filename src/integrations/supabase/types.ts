@@ -281,6 +281,7 @@ export type Database = {
           requested_by: string | null
           status: string
           updated_at: string
+          user_registration_data: Json | null
         }
         Insert: {
           admin_notes?: string | null
@@ -295,6 +296,7 @@ export type Database = {
           requested_by?: string | null
           status?: string
           updated_at?: string
+          user_registration_data?: Json | null
         }
         Update: {
           admin_notes?: string | null
@@ -309,6 +311,7 @@ export type Database = {
           requested_by?: string | null
           status?: string
           updated_at?: string
+          user_registration_data?: Json | null
         }
         Relationships: [
           {

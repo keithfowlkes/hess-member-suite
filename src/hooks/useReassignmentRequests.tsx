@@ -176,6 +176,7 @@ export const useCreateReassignmentRequest = () => {
       organization_id: string;
       new_contact_email: string;
       new_organization_data: any;
+      user_registration_data: any;
     }) => {
       console.log('Creating member info update request with data:', data);
       console.log('Current user auth state:', await supabase.auth.getUser());
@@ -186,6 +187,7 @@ export const useCreateReassignmentRequest = () => {
           organization_id: data.organization_id,
           new_contact_email: data.new_contact_email,
           new_organization_data: data.new_organization_data,
+          user_registration_data: data.user_registration_data,
           original_organization_data: null, // Not needed with simpler approach
           requested_by: null, // Not needed - will be handled on approval
         })
@@ -201,8 +203,8 @@ export const useCreateReassignmentRequest = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
       toast({
-        title: "Success",
-        description: "Member information update request submitted successfully. Awaiting admin approval.",
+        title: "Member information update request submitted successfully",
+        description: "Your organization update request has been submitted for admin approval. You'll receive an email when it's processed.",
       });
     },
     onError: (error: any) => {
@@ -220,55 +222,26 @@ export const useApproveReassignmentRequest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
-      // Get the request data
-      const { data: request, error: fetchError } = await supabase
-        .from('organization_reassignment_requests')
-        .select('*')
-        .eq('id', id)
-        .single();
+    mutationFn: async ({ id, notes, adminUserId }: { id: string; notes?: string; adminUserId?: string }) => {
+      const { data, error } = await supabase.functions.invoke('approve-reassignment-request', {
+        body: {
+          requestId: id,
+          adminUserId
+        }
+      });
 
-      if (fetchError) throw fetchError;
+      if (error) {
+        throw error;
+      }
 
-      // Find or create profile for new contact
-      const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', request.new_contact_email)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-
-      let contactPersonId = existingProfile?.id;
-
-      // If no existing profile, we'll need the new user to complete registration
-      // For now, just update the organization data without changing contact person
-      
-      // Replace the organization with new data
-      const { error: updateOrgError } = await supabase
-        .from('organizations')
-        .update({
-          ...request.new_organization_data as any,
-          contact_person_id: contactPersonId || null, // Will be updated when user registers
-        })
-        .eq('id', request.organization_id);
-
-      if (updateOrgError) throw updateOrgError;
-
-      // Delete the member info update request (simpler approach - no audit trail needed)
-      const { error: deleteRequestError } = await supabase
-        .from('organization_reassignment_requests')
-        .delete()
-        .eq('id', id);
-
-      if (deleteRequestError) throw deleteRequestError;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
       toast({
         title: "Success",
-        description: "Member information update request approved successfully.",
+        description: "Member information update request approved and user account created successfully.",
       });
     },
     onError: (error: any) => {

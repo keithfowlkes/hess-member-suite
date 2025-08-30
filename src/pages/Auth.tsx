@@ -319,13 +319,17 @@ export default function Auth() {
           organization_id: selectedOrganizationId,
           new_contact_email: signUpForm.email,
           new_organization_data: newOrgData,
+          user_registration_data: {
+            email: signUpForm.email,
+            password_hash: await hashPassword(signUpForm.password),
+            first_name: signUpForm.firstName,
+            last_name: signUpForm.lastName,
+            is_private_nonprofit: signUpForm.isPrivateNonProfit
+          }
         });
 
-        // Reset captcha after success
-        if (recaptchaEnabled) {
-          signUpCaptchaRef.current?.reset();
-          setSignUpCaptcha(null);
-        }
+        // Redirect to confirmation page
+        window.location.href = '/registration-confirmation?type=reassignment';
       } catch (error: any) {
         toast({
           title: "Member information update request failed",

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Dialog,
   DialogContent,
@@ -48,6 +49,7 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
   const approveRequest = useApproveReassignmentRequest();
   const rejectRequest = useRejectReassignmentRequest();
   const deleteRequest = useDeleteReassignmentRequest();
+  const { user } = useAuth();
 
   const [selectedRequest, setSelectedRequest] = useState<MemberInfoUpdateRequest | null>(null);
   const [actionNotes, setActionNotes] = useState('');
@@ -57,13 +59,19 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
 
   const handleApprove = async () => {
     if (!selectedRequest) return;
-    await approveRequest.mutateAsync({
-      id: selectedRequest.id,
-      notes: actionNotes
-    });
-    setSelectedRequest(null);
-    setActionNotes('');
-    setShowApprovalDialog(false);
+    
+    try {
+      await approveRequest.mutateAsync({
+        id: selectedRequest.id,
+        notes: actionNotes,
+        adminUserId: user?.id
+      });
+      setSelectedRequest(null);
+      setActionNotes('');
+      setShowApprovalDialog(false);
+    } catch (error) {
+      console.error('Error approving request:', error);
+    }
   };
 
   const handleDelete = async () => {
