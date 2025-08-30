@@ -97,6 +97,11 @@ const Index = () => {
               })}
             </div>
 
+            {/* Scroll hint text */}
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Please scroll down for more HESS institution information.</p>
+            </div>
+
             {/* Member Totals */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
