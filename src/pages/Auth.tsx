@@ -233,6 +233,16 @@ export default function Auth() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🚀 REGISTRATION DEBUG: handleSignUp started');
+    console.log('📋 Form data state:', {
+      email: signUpForm.email,
+      firstName: signUpForm.firstName,
+      lastName: signUpForm.lastName,
+      organization: signUpForm.organization,
+      isReassignment,
+      selectedOrganizationId
+    });
+    
     // Temporarily disable reCAPTCHA validation for debugging
     // TODO: Re-enable after fixing reCAPTCHA issues
     /*
@@ -247,6 +257,7 @@ export default function Auth() {
     }
     */
     
+    console.log('✅ REGISTRATION DEBUG: Validation passed, setting submitting state');
     setIsSubmitting(true);
 
     // If this is a reassignment request, handle differently
@@ -379,13 +390,16 @@ export default function Auth() {
       };
 
       // Store registration data for admin approval instead of creating user immediately
-      console.log('Submitting registration data:', {
+      console.log('📝 REGISTRATION DEBUG: Submitting to pending_registrations table');
+      console.log('📊 Complete registration data:', {
         email: signUpForm.email,
         firstName: formDataWithCustomValues.firstName,
         lastName: formDataWithCustomValues.lastName,
-        organization: formDataWithCustomValues.organization
+        organization: formDataWithCustomValues.organization,
+        allFormData: formDataWithCustomValues
       });
       
+      console.log('🔄 REGISTRATION DEBUG: About to call supabase.from(pending_registrations).insert()');
       const { error } = await supabase
         .from('pending_registrations')
         .insert({
@@ -427,11 +441,13 @@ export default function Auth() {
         });
       
       if (error) {
-        console.error('Registration error details:', {
+        console.error('❌ REGISTRATION DEBUG: Database insert failed');
+        console.error('🔍 Registration error details:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
-          code: error.code
+          code: error.code,
+          fullError: error
         });
         
         let errorMessage = error.message;
@@ -450,6 +466,9 @@ export default function Auth() {
           setSignUpCaptcha(null);
         }
       } else {
+        console.log('✅ REGISTRATION DEBUG: Database insert successful!');
+        console.log('🎉 REGISTRATION DEBUG: Registration saved to pending_registrations table');
+        
         toast({
           title: "Registration submitted successfully",
           description: "Your registration has been submitted for admin approval. You'll receive an email when it's processed.",
@@ -461,10 +480,12 @@ export default function Auth() {
           setSignUpCaptcha(null);
         }
         
+        console.log('🔄 REGISTRATION DEBUG: About to redirect to confirmation page');
         // Redirect to confirmation page
         window.location.href = '/registration-confirmation?type=pending';
       }
     }
+    console.log('🏁 REGISTRATION DEBUG: Setting submitting to false and finishing');
     setIsSubmitting(false);
   };
 

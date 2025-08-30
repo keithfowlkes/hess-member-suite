@@ -50,6 +50,7 @@ export function usePendingRegistrations() {
 
   const fetchPendingRegistrations = async () => {
     try {
+      console.log('🔍 PENDING DEBUG: Fetching pending registrations...');
       const { data, error } = await supabase
         .from('pending_registrations')
         .select('*')
@@ -57,7 +58,7 @@ export function usePendingRegistrations() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching pending registrations:', error);
+        console.error('❌ PENDING DEBUG: Error fetching pending registrations:', error);
         toast({
           title: "Error",
           description: "Failed to fetch pending registrations",
@@ -66,9 +67,13 @@ export function usePendingRegistrations() {
         return;
       }
 
+      console.log('✅ PENDING DEBUG: Successfully fetched pending registrations:', {
+        count: data?.length || 0,
+        registrations: data?.map(r => ({ id: r.id, email: r.email, organization: r.organization_name, created_at: r.created_at }))
+      });
       setPendingRegistrations((data || []) as PendingRegistration[]);
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error('❌ PENDING DEBUG: Unexpected error:', error);
     } finally {
       setLoading(false);
     }
@@ -154,14 +159,22 @@ export function usePendingRegistrations() {
   };
 
   useEffect(() => {
+    console.log('🎬 PENDING DEBUG: Setting up pending registrations hook');
     fetchPendingRegistrations();
 
     // Subscribe to real-time updates
+    console.log('📡 PENDING DEBUG: Setting up real-time subscription for pending_registrations');
     const subscription = supabase
       .channel('pending_registrations_channel')
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'pending_registrations' }, 
-        () => {
+        (payload) => {
+          console.log('🔔 PENDING DEBUG: Real-time INSERT event received:', {
+            eventType: 'INSERT',
+            payload: payload.new,
+            email: payload.new?.email,
+            organization: payload.new?.organization_name
+          });
           fetchPendingRegistrations();
           toast({
             title: "New Registration",
@@ -169,9 +182,12 @@ export function usePendingRegistrations() {
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 PENDING DEBUG: Subscription status changed:', status);
+      });
 
     return () => {
+      console.log('🛑 PENDING DEBUG: Cleaning up subscription');
       subscription.unsubscribe();
     };
   }, [toast]);
