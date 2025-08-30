@@ -98,7 +98,7 @@ export const useOrganizationApprovals = () => {
           profiles!contact_person_id(email, first_name, last_name)
         `)
         .eq('id', organizationId)
-        .single();
+        .maybeSingle();
 
       if (orgError) throw orgError;
 
@@ -189,7 +189,7 @@ export const useOrganizationApprovals = () => {
           profiles!contact_person_id(email, first_name, last_name)
         `)
         .eq('id', organizationId)
-        .single();
+        .maybeSingle();
 
       if (orgError) throw orgError;
 

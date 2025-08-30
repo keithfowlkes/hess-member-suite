@@ -27,7 +27,7 @@ export const useOrganizationStatus = () => {
         .from('profiles')
         .select('id, organization')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError || !profile) {
         return {
@@ -42,7 +42,7 @@ export const useOrganizationStatus = () => {
         .from('organizations')
         .select('membership_status, name')
         .eq('contact_person_id', profile.id)
-        .single();
+        .maybeSingle();
 
       if (orgError || !organization) {
         return {
