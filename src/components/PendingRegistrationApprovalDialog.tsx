@@ -347,19 +347,6 @@ export function PendingRegistrationApprovalDialog({
                       className="min-h-[60px]"
                     />
                   </div>
-
-                  <div className="flex justify-end pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowPreviewModal(true)}
-                      className="flex items-center gap-2"
-                      disabled={!membershipStartDate || !invoiceAmount}
-                    >
-                      <Eye className="h-4 w-4" />
-                      Preview Invoice
-                    </Button>
-                  </div>
                 </div>
               )}
             </CardContent>
@@ -380,6 +367,18 @@ export function PendingRegistrationApprovalDialog({
                   </>
                 )}
               </Button>
+              
+              {sendInvoice && membershipStartDate && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowPreviewModal(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  Preview Invoice
+                </Button>
+              )}
               
               <Button
                 onClick={() => setShowRejectForm(true)}
