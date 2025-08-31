@@ -21,7 +21,7 @@ function replaceTemplateVariables(content: string, data: Record<string, string>)
 }
 
 // Generate full invoice HTML matching exact sample invoice design
-function generateInvoiceHTML(template: any, templateData: Record<string, string>, invoice: any) {
+function generateInvoiceHTML(template: any, templateData: Record<string, string>, invoice: any, invoiceId: string) {
   // Format dates exactly like ProfessionalInvoice component
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -363,7 +363,7 @@ serve(async (req) => {
       period_start_date: invoice.period_start_date,
       period_end_date: invoice.period_end_date,
       notes: invoice.notes
-    });
+    }, invoiceId);
 
     // Initialize Resend for sending email
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
