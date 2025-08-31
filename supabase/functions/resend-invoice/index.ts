@@ -11,6 +11,99 @@ interface ResendInvoiceRequest {
   invoiceId: string;
 }
 
+// Template variable replacement function
+function replaceTemplateVariables(content: string, data: Record<string, string>) {
+  let result = content;
+  Object.entries(data).forEach(([placeholder, value]) => {
+    result = result.replace(new RegExp(placeholder, 'g'), value);
+  });
+  return result;
+}
+
+// Generate full invoice HTML from template
+function generateInvoiceHTML(template: any, templateData: Record<string, string>, invoice: any) {
+  const headerHtml = replaceTemplateVariables(template.header_content, templateData);
+  const footerHtml = replaceTemplateVariables(template.footer_content, templateData);
+  
+  const invoiceDate = new Date(invoice.invoice_date).toLocaleDateString();
+  const dueDate = new Date(invoice.due_date).toLocaleDateString();
+  const periodStart = new Date(invoice.period_start_date).toLocaleDateString();
+  const periodEnd = new Date(invoice.period_end_date).toLocaleDateString();
+  
+  return `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; background: white; padding: 2rem;">
+      <style>
+        .header-content { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 3px solid #6b7280; }
+        .logo-section img { max-height: 80px; width: auto; }
+        .invoice-title h1 { font-size: 2.5rem; font-weight: bold; color: #6b7280; margin: 0; }
+        .invoice-number { font-size: 1.1rem; color: #666; margin: 0.5rem 0 0 0; }
+        .invoice-details { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+        .detail-section h3 { font-size: 1.1rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; }
+        .invoice-table { width: 100%; border-collapse: collapse; margin: 2rem 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .invoice-table th { background: linear-gradient(135deg, #6b7280, #4b5563); color: white; padding: 1rem; text-align: left; font-weight: 600; }
+        .invoice-table td { padding: 1rem; border-bottom: 1px solid #e5e7eb; }
+        .invoice-table .amount-cell { text-align: right; font-weight: 600; }
+        .total-row { background: #f8fafc; font-weight: bold; font-size: 1.1rem; }
+        .footer-content { margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e5e7eb; }
+        .payment-info { background: #f9fafb; padding: 1.5rem; border-left: 4px solid #6b7280; margin-bottom: 1rem; }
+        .payment-info h3 { color: #6b7280; margin-bottom: 0.5rem; }
+        .contact-info { text-align: center; padding: 1rem; background: #f8fafc; border-radius: 0.5rem; }
+      </style>
+      
+      ${headerHtml}
+      
+      <div class="invoice-details">
+        <div class="detail-section">
+          <h3>Bill To:</h3>
+          <p><strong>${invoice.organizationName}</strong></p>
+          <p>${invoice.organizationEmail}</p>
+        </div>
+        <div class="detail-section">
+          <h3>Invoice Details:</h3>
+          <p><strong>Invoice Date:</strong> ${invoiceDate}</p>
+          <p><strong>Due Date:</strong> ${dueDate}</p>
+          <p><strong>Period:</strong> ${periodStart} - ${periodEnd}</p>
+        </div>
+      </div>
+      
+      <table class="invoice-table">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Period</th>
+            <th class="amount-cell">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <strong>Annual Membership Fee</strong>
+              ${invoice.proratedAmount ? '<div style="font-size: 0.9rem; color: #666; margin-top: 0.25rem;">Prorated from membership start date</div>' : ''}
+            </td>
+            <td>${periodStart} - ${periodEnd}</td>
+            <td class="amount-cell">
+              ${invoice.proratedAmount ? 
+                `<div>$${invoice.proratedAmount.toLocaleString()}</div><div style="font-size: 0.9rem; color: #999; text-decoration: line-through;">$${invoice.invoiceAmount.toLocaleString()}</div>` :
+                `$${invoice.invoiceAmount.toLocaleString()}`
+              }
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="2"><strong>Total Due:</strong></td>
+            <td class="amount-cell"><strong>$${(invoice.proratedAmount || invoice.invoiceAmount).toLocaleString()}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+      
+      ${invoice.notes ? `<div style="margin: 2rem 0;"><h3>Notes:</h3><p>${invoice.notes}</p></div>` : ''}
+      
+      ${footerHtml}
+    </div>
+  `;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -51,95 +144,54 @@ serve(async (req) => {
       throw new Error('Organization information not found for invoice');
     }
 
+    // Get default invoice template
+    const { data: template, error: templateError } = await supabase
+      .from('invoice_templates')
+      .select('*')
+      .eq('is_default', true)
+      .single();
+
+    if (templateError || !template) {
+      console.error('Default template not found:', templateError);
+      throw new Error('Default invoice template not found');
+    }
+
     const organization = invoice.organizations;
     const finalAmount = invoice.prorated_amount || invoice.amount;
 
+    // Prepare template data
+    const templateData = {
+      '{{LOGO}}': template.logo_url ? `<img src="${template.logo_url}" alt="Logo" style="max-height: 80px;" />` : '',
+      '{{INVOICE_NUMBER}}': invoice.invoice_number,
+      '{{INVOICE_DATE}}': new Date(invoice.invoice_date).toLocaleDateString(),
+      '{{DUE_DATE}}': new Date(invoice.due_date).toLocaleDateString(),
+      '{{ORGANIZATION_NAME}}': organization.name,
+      '{{ORGANIZATION_EMAIL}}': organization.email,
+      '{{AMOUNT}}': `$${invoice.amount.toLocaleString()}`,
+      '{{PRORATED_AMOUNT}}': invoice.prorated_amount ? `$${invoice.prorated_amount.toLocaleString()}` : '',
+      '{{PERIOD_START}}': new Date(invoice.period_start_date).toLocaleDateString(),
+      '{{PERIOD_END}}': new Date(invoice.period_end_date).toLocaleDateString(),
+      '{{PAYMENT_TERMS}}': '30',
+      '{{CONTACT_EMAIL}}': 'billing@hessconsortium.org',
+      '{{NOTES}}': invoice.notes || ''
+    };
+
+    // Generate HTML using template
+    const html = generateInvoiceHTML(template, templateData, {
+      organizationName: organization.name,
+      organizationEmail: organization.email,
+      invoiceAmount: invoice.amount,
+      proratedAmount: invoice.prorated_amount,
+      invoice_date: invoice.invoice_date,
+      due_date: invoice.due_date,
+      period_start_date: invoice.period_start_date,
+      period_end_date: invoice.period_end_date,
+      notes: invoice.notes
+    });
+
     // Initialize Resend for sending email
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
     const subject = `HESS Consortium Membership Invoice - ${organization.name}`;
-    
-    // Determine if this is a prorated invoice
-    let proratedInfo = '';
-    if (invoice.prorated_amount && invoice.prorated_amount !== invoice.amount) {
-      proratedInfo = `
-        <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
-          <h3 style="color: #0369a1; margin: 0 0 10px 0;">Prorated Membership Fee</h3>
-          <p><strong>Full Annual Fee:</strong> $${invoice.amount.toLocaleString()}</p>
-          <p><strong>Prorated Amount:</strong> $${invoice.prorated_amount.toLocaleString()}</p>
-          <p><strong>Period:</strong> ${new Date(invoice.period_start_date).toLocaleDateString()} - ${new Date(invoice.period_end_date).toLocaleDateString()}</p>
-        </div>
-      `;
-    }
-    
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white;">
-        <div style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); color: white; padding: 30px; text-align: center;">
-          <h1 style="margin: 0; font-size: 28px;">HESS Consortium</h1>
-          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Membership Invoice</p>
-        </div>
-        
-        <div style="padding: 40px 30px;">
-          <h2 style="color: #1f2937; margin-bottom: 20px;">Dear ${organization.name} Team,</h2>
-          
-          <p style="color: #4b5563; line-height: 1.6; margin-bottom: 30px;">
-            This is a resend of your HESS Consortium membership invoice. Please find the details below.
-          </p>
-
-          ${proratedInfo}
-          
-          <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 25px; margin: 30px 0;">
-            <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 18px;">Invoice Details</h3>
-            <div style="display: grid; gap: 12px;">
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                <span style="color: #6b7280; font-weight: 500;">Invoice Number:</span>
-                <span style="color: #1f2937; font-weight: 600;">${invoice.invoice_number}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                <span style="color: #6b7280; font-weight: 500;">Invoice Date:</span>
-                <span style="color: #1f2937;">${new Date(invoice.invoice_date).toLocaleDateString()}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                <span style="color: #6b7280; font-weight: 500;">Due Date:</span>
-                <span style="color: #1f2937;">${new Date(invoice.due_date).toLocaleDateString()}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 2px solid #0ea5e9;">
-                <span style="color: #6b7280; font-weight: 500;">Amount Due:</span>
-                <span style="color: #0ea5e9; font-weight: bold; font-size: 18px;">$${finalAmount.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-
-          <div style="background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 20px; margin: 30px 0;">
-            <h3 style="color: #065f46; margin: 0 0 10px 0;">Payment Instructions</h3>
-            <p style="color: #065f46; margin: 0; line-height: 1.5;">
-              Please remit payment within 30 days of the invoice date. For questions about this invoice or payment methods, 
-              please contact our billing department.
-            </p>
-          </div>
-
-          ${invoice.notes ? `
-            <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 20px; margin: 30px 0;">
-              <h3 style="color: #92400e; margin: 0 0 10px 0;">Additional Notes</h3>
-              <p style="color: #92400e; margin: 0; line-height: 1.5;">${invoice.notes}</p>
-            </div>
-          ` : ''}
-
-          <div style="margin-top: 40px; text-align: center;">
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-              Thank you for your membership in the HESS Consortium!
-            </p>
-          </div>
-        </div>
-        
-        <div style="background: #f9fafb; padding: 20px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-          <p style="color: #6b7280; font-size: 12px; margin: 0;">
-            HESS Consortium | Higher Education Support Services<br>
-            This is an automated message. Please do not reply to this email.
-          </p>
-        </div>
-      </div>
-    `;
 
     const emailResponse = await resend.emails.send({
       from: "HESS Consortium <onboarding@resend.dev>",
