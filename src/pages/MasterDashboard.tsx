@@ -1024,9 +1024,18 @@ const MasterDashboard = () => {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {filteredUsers.map((user) => (
+                               {filteredUsers.map((user) => (
                               <TableRow key={user.id}>
-                                <TableCell className="font-medium">{user.email}</TableCell>
+                                <TableCell className="font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <span>{user.email}</span>
+                                    {user.organization && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {user.organization}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </TableCell>
                                 <TableCell>
                                   <Badge variant={user.user_roles?.[0]?.role === 'admin' ? 'default' : 'secondary'}>
                                     {user.user_roles?.[0]?.role || 'member'}
