@@ -1028,7 +1028,12 @@ const MasterDashboard = () => {
                               <TableRow key={user.id}>
                                 <TableCell className="font-medium">
                                   <div className="flex items-center gap-2">
-                                    <span>{user.email}</span>
+                                    <a 
+                                      href={`mailto:${user.email}`}
+                                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                                    >
+                                      {user.email}
+                                    </a>
                                     {user.organization && (
                                       <Badge variant="secondary" className="text-xs bg-gray-200 text-gray-700 border-gray-300">
                                         {user.organization}
