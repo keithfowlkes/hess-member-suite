@@ -226,7 +226,7 @@ serve(async (req) => {
 
     // Prepare template data
     const templateData = {
-      '{{LOGO}}': template.logo_url ? `<img src="${template.logo_url}" alt="Logo" style="max-height: 80px;" />` : '',
+      '{{LOGO}}': template.logo_url ? `<img src="${template.logo_url.startsWith('http') ? template.logo_url : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev${template.logo_url}`}" alt="Logo" style="max-height: 80px;" />` : '',
       '{{INVOICE_NUMBER}}': invoiceNumber,
       '{{INVOICE_DATE}}': new Date().toLocaleDateString(),
       '{{DUE_DATE}}': dueDate.toLocaleDateString(),
