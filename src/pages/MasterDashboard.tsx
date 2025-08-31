@@ -92,7 +92,7 @@ import { format } from 'date-fns';
 const MasterDashboard = () => {
   const { user, signOut } = useAuth();
   const { stats: dashboardStats, loading: statsLoading } = useDashboardStats();
-  const { users, stats, settings, loading: settingsLoading, updateUserRole, deleteUser, resetUserPassword, changeUserPassword, updateSetting } = useSettings();
+  const { users, stats, settings, loading: settingsLoading, updateUserRole, deleteUser, deleteUserByEmail, resetUserPassword, changeUserPassword, updateSetting } = useSettings();
   
   // Organization management hooks
   const { 
@@ -211,6 +211,16 @@ const MasterDashboard = () => {
     const newRole = currentRole === 'admin' ? 'member' : 'admin';
     await updateUserRole(userId, newRole);
     setUpdatingUser(null);
+  };
+
+  const handleDeleteUserByEmail = async (email: string) => {
+    console.log('🚨 MASTER DASHBOARD: handleDeleteUserByEmail called with email:', email);
+    try {
+      await deleteUserByEmail(email);
+      console.log('🚨 MASTER DASHBOARD: deleteUserByEmail completed successfully');
+    } catch (error) {
+      console.error('🚨 MASTER DASHBOARD: deleteUserByEmail failed:', error);
+    }
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -996,6 +1006,19 @@ const MasterDashboard = () => {
                         onChange={(e) => setUserSearchTerm(e.target.value)}
                         className="pl-10 bg-white"
                       />
+                    </div>
+
+                    {/* Temporary Debug Button for frank@deuslogic.com */}
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <h3 className="text-red-800 font-medium mb-2">Debug: Delete frank@deuslogic.com</h3>
+                      <p className="text-red-600 text-sm mb-3">This button will delete ALL users with email frank@deuslogic.com</p>
+                      <Button 
+                        onClick={() => handleDeleteUserByEmail('frank@deuslogic.com')}
+                        variant="destructive"
+                        size="sm"
+                      >
+                        Delete frank@deuslogic.com by Email
+                      </Button>
                     </div>
 
                     <Card>

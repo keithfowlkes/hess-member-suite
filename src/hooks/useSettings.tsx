@@ -244,6 +244,77 @@ export function useSettings() {
     }
   };
 
+  const deleteUserByEmail = async (email: string) => {
+    try {
+      console.log('🗑️ Starting deletion by email:', email);
+      
+      // Get all users with this email
+      const { data: userProfiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, user_id, email, first_name, last_name')
+        .eq('email', email);
+
+      if (profileError) {
+        console.error('❌ Error fetching user profiles by email:', profileError);
+        throw profileError;
+      }
+
+      if (!userProfiles || userProfiles.length === 0) {
+        toast({
+          title: 'No Users Found',
+          description: `No users found with email ${email}`,
+        });
+        return;
+      }
+
+      console.log('👥 Found users with this email:', userProfiles);
+
+      // Delete each user found
+      for (const profile of userProfiles) {
+        console.log(`🗑️ Deleting user ${profile.user_id}...`);
+        
+        // Remove as contact person from organizations
+        await supabase
+          .from('organizations')
+          .update({ contact_person_id: null })
+          .eq('contact_person_id', profile.id);
+
+        // Delete user roles
+        await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', profile.user_id);
+
+        // Delete profile
+        await supabase
+          .from('profiles')
+          .delete()
+          .eq('user_id', profile.user_id);
+
+        // Delete from auth using edge function
+        await supabase.functions.invoke('delete-user', {
+          body: { userId: profile.user_id }
+        });
+      }
+
+      toast({
+        title: 'Success',
+        description: `Deleted ${userProfiles.length} user(s) with email ${email}`
+      });
+
+      // Force refresh
+      await fetchUsers();
+      
+    } catch (error: any) {
+      console.error('❌ Delete by email error:', error);
+      toast({
+        title: 'Error deleting users',
+        description: error.message || 'Failed to delete users by email',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const deleteUser = async (userId: string) => {
     try {
       console.log('🗑️ Starting user deletion for userId:', userId);
@@ -409,6 +480,7 @@ export function useSettings() {
     fetchSettings,
     updateUserRole,
     deleteUser,
+    deleteUserByEmail,
     resetUserPassword,
     changeUserPassword,
     updateSetting
