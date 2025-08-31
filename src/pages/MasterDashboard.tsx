@@ -52,11 +52,14 @@ import { useSettings } from '@/hooks/useSettings';
 import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
 import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
 import { useReassignmentRequests, useApproveReassignmentRequest, useRejectReassignmentRequest, useDeleteReassignmentRequest } from '@/hooks/useReassignmentRequests';
+import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
 
 // Components
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
 import { InvitationManagementDialog } from '@/components/InvitationManagementDialog';
 import { MemberInfoUpdateRequestsDialog } from '@/components/MemberInfoUpdateRequestsDialog';
+import { PendingRegistrationApprovalDialog } from '@/components/PendingRegistrationApprovalDialog';
+import type { PendingRegistration } from '@/hooks/usePendingRegistrations';
 
 // Icons
 import { 
@@ -100,9 +103,10 @@ const MasterDashboard = () => {
   } = useOrganizationApprovals();
   const { invitations, loading: invitationsLoading } = useOrganizationInvitations();
   const { data: memberInfoUpdateRequests = [], isLoading: memberInfoUpdateLoading, refetch: refetchRequests } = useReassignmentRequests();
+  const { pendingRegistrations, loading: pendingRegistrationsLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
   
   // Calculate pending counts
-  const pendingApprovalsCount = pendingOrganizations.length;
+  const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length;
   const activeInvitationsCount = invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length;
   const memberInfoUpdateRequestsCount = memberInfoUpdateRequests.length;
   const totalOrganizationActions = pendingApprovalsCount + activeInvitationsCount + memberInfoUpdateRequestsCount;
@@ -112,7 +116,9 @@ const MasterDashboard = () => {
 
   // State management
   const [selectedOrganization, setSelectedOrganization] = useState(null);
+  const [selectedPendingRegistration, setSelectedPendingRegistration] = useState<PendingRegistration | null>(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [showRegistrationApprovalDialog, setShowRegistrationApprovalDialog] = useState(false);
   const [showInvitationDialog, setShowInvitationDialog] = useState(false);
   const [showMemberInfoUpdateDialog, setShowMemberInfoUpdateDialog] = useState(false);
   
@@ -165,10 +171,10 @@ const MasterDashboard = () => {
   const adminStats = [
     {
       title: 'Pending Approvals',
-      value: pendingOrganizations.length,
+      value: pendingOrganizations.length + pendingRegistrations.length,
       icon: Clock,
       color: 'text-orange-600',
-      description: 'Organizations awaiting review'
+      description: 'Organizations & registrations awaiting review'
     },
     {
       title: 'Active Invitations',
@@ -258,6 +264,18 @@ const MasterDashboard = () => {
     );
   });
 
+  const filteredPendingRegistrations = pendingRegistrations.filter(reg => {
+    const searchLower = organizationSearchTerm.toLowerCase();
+    return (
+      reg.organization_name.toLowerCase().includes(searchLower) ||
+      reg.first_name.toLowerCase().includes(searchLower) ||
+      reg.last_name.toLowerCase().includes(searchLower) ||
+      reg.email.toLowerCase().includes(searchLower) ||
+      reg.city?.toLowerCase().includes(searchLower) ||
+      reg.state?.toLowerCase().includes(searchLower)
+    );
+  });
+
   const filteredUsers = users.filter(user => {
     const searchLower = userSearchTerm.toLowerCase();
     return (
@@ -272,7 +290,8 @@ const MasterDashboard = () => {
       settingsLoading, 
       approvalsLoading, 
       invitationsLoading, 
-      memberInfoUpdateLoading 
+      memberInfoUpdateLoading,
+      pendingRegistrationsLoading 
     });
     
     return (
@@ -502,62 +521,64 @@ const MasterDashboard = () => {
 
                   <TabsContent value="approvals" className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-semibold">Organization Applications</h2>
+                      <h2 className="text-xl font-semibold">Pending Applications</h2>
                       <div className="flex items-center gap-2">
-                        {pendingOrganizations.length > 0 && (
+                        {(pendingOrganizations.length + pendingRegistrations.length) > 0 && (
                           <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
                             <AlertCircle className="h-4 w-4" />
-                            <span className="font-medium">{pendingOrganizations.length} Pending Review</span>
+                            <span className="font-medium">{pendingOrganizations.length + pendingRegistrations.length} Pending Review</span>
                           </div>
                         )}
                         <Badge variant="secondary" className="text-sm">
-                          {filteredPendingOrganizations.length} of {pendingOrganizations.length} shown
+                          {filteredPendingOrganizations.length + filteredPendingRegistrations.length} of {pendingOrganizations.length + pendingRegistrations.length} shown
                         </Badge>
                       </div>
                     </div>
 
-                    {/* Search Bar for Organizations */}
+                    {/* Search Bar */}
                     <div className="relative max-w-md">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                       <Input
-                        placeholder="Search organizations, contacts, or locations..."
+                        placeholder="Search applications, contacts, or locations..."
                         value={organizationSearchTerm}
                         onChange={(e) => setOrganizationSearchTerm(e.target.value)}
                         className="pl-10 bg-white"
                       />
                     </div>
 
-                    {approvalsLoading ? (
+                    {(approvalsLoading || pendingRegistrationsLoading) ? (
                       <Card>
                         <CardContent className="p-6">
-                          <div className="text-center">Loading pending organizations...</div>
+                          <div className="text-center">Loading pending applications...</div>
                         </CardContent>
                       </Card>
-                    ) : filteredPendingOrganizations.length === 0 ? (
+                    ) : (filteredPendingOrganizations.length === 0 && filteredPendingRegistrations.length === 0) ? (
                       <Card>
                         <CardContent className="p-6">
                           <div className="text-center text-muted-foreground">
                             <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
                             {organizationSearchTerm ? (
-                              <p>No organizations match your search "{organizationSearchTerm}".</p>
+                              <p>No applications match your search "{organizationSearchTerm}".</p>
                             ) : (
-                              <p>No pending organization applications.</p>
+                              <p>No pending applications.</p>
                             )}
                           </div>
                         </CardContent>
                       </Card>
                     ) : (
                       <div className="grid gap-4">
+                        {/* Existing Organization Applications */}
                         {filteredPendingOrganizations.map((org) => (
-                          <Card key={org.id} className="hover:shadow-md transition-shadow">
+                          <Card key={`org-${org.id}`} className="hover:shadow-md transition-shadow">
                             <CardContent className="p-6">
                               <div className="flex items-center justify-between">
                                 <div className="space-y-2">
                                   <div className="flex items-center gap-3">
                                     <h3 className="text-lg font-semibold">{org.name}</h3>
-                                     <Badge variant={org.profiles?.is_private_nonprofit ? "default" : "destructive"}>
-                                       {org.profiles?.is_private_nonprofit ? "Private Non-Profit" : "Not Approved"}
-                                     </Badge>
+                                    <Badge variant="secondary">Organization Update</Badge>
+                                    <Badge variant={org.profiles?.is_private_nonprofit ? "default" : "destructive"}>
+                                      {org.profiles?.is_private_nonprofit ? "Private Non-Profit" : "Not Approved"}
+                                    </Badge>
                                   </div>
                                   
                                   <div className="text-sm text-muted-foreground space-y-1">
@@ -583,6 +604,56 @@ const MasterDashboard = () => {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleReviewOrganization(org)}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                    Review
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                        
+                        {/* New Registration Applications */}
+                        {filteredPendingRegistrations.map((reg) => (
+                          <Card key={`reg-${reg.id}`} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-3">
+                                    <h3 className="text-lg font-semibold">{reg.organization_name}</h3>
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                      New Registration
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="text-sm text-muted-foreground space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <Users className="h-3 w-3" />
+                                      <span>
+                                        Contact: {reg.first_name} {reg.last_name}
+                                        {reg.primary_contact_title && ` - ${reg.primary_contact_title}`}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      Email: {reg.email} | Location: {reg.city}, {reg.state}
+                                    </div>
+                                    <div>
+                                      Student FTE: {reg.student_fte?.toLocaleString() || 'Not specified'} | 
+                                      Submitted: {new Date(reg.created_at).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedPendingRegistration(reg);
+                                      setShowRegistrationApprovalDialog(true);
+                                    }}
                                     className="flex items-center gap-2"
                                   >
                                     <Eye className="h-3 w-3" />
@@ -1153,6 +1224,19 @@ const MasterDashboard = () => {
       <MemberInfoUpdateRequestsDialog
         open={showMemberInfoUpdateDialog}
         onOpenChange={setShowMemberInfoUpdateDialog}
+        requests={memberInfoUpdateRequests}
+        onApprove={approveMemberInfoUpdate.mutateAsync}
+        onReject={rejectMemberInfoUpdate.mutateAsync}
+        onDelete={deleteMemberInfoUpdate.mutateAsync}
+        onRefresh={refetchRequests}
+      />
+
+      <PendingRegistrationApprovalDialog
+        open={showRegistrationApprovalDialog}
+        onOpenChange={setShowRegistrationApprovalDialog}
+        registration={selectedPendingRegistration}
+        onApprove={approveRegistration}
+        onReject={rejectRegistration}
       />
     </SidebarProvider>
   );

@@ -9,26 +9,20 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMembers } from '@/hooks/useMembers';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
-import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
-import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload, Clock } from 'lucide-react';
+import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload } from 'lucide-react';
 import { OrganizationDialog } from '@/components/OrganizationDialog';
 import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
 import { ImportMembersDialog } from '@/components/ImportMembersDialog';
 import { OrganizationViewModal } from '@/components/OrganizationViewModal';
-import { PendingRegistrationApprovalDialog } from '@/components/PendingRegistrationApprovalDialog';
-import type { PendingRegistration } from '@/hooks/usePendingRegistrations';
 
 export default function Members() {
   const navigate = useNavigate();
   const { organizations, loading } = useMembers();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
-  const { pendingRegistrations, loading: pendingLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrganization, setSelectedOrganization] = useState(null);
-  const [selectedPendingRegistration, setSelectedPendingRegistration] = useState<PendingRegistration | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [pendingApprovalDialogOpen, setPendingApprovalDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [viewModalOpen, setViewModalOpen] = useState(false);
 
@@ -50,7 +44,7 @@ export default function Members() {
     }
   };
 
-  if (loading || pendingLoading) {
+  if (loading) {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
@@ -95,53 +89,40 @@ export default function Members() {
             </div>
 
             {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Organizations
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">
-                    {totalsLoading ? '...' : totals?.totalOrganizations?.toLocaleString() || 0}
+                  <div className="text-2xl font-bold">
+                    {totalsLoading ? '...' : totals?.totalOrganizations || 0}
                   </div>
                 </CardContent>
               </Card>
+              
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Pending Registrations</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Student FTE
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">
-                    {pendingLoading ? '...' : pendingRegistrations.length}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Student FTE</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">
-                    {totalsLoading ? '...' : totals?.totalStudentFte?.toLocaleString() || 0}
+                  <div className="text-2xl font-bold">
+                    {totalsLoading ? '...' : (totals?.totalStudentFte || 0).toLocaleString()}
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <Tabs defaultValue="members" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="members">Member Organizations</TabsTrigger>
-                <TabsTrigger value="pending" className="relative">
-                  Pending Registrations
-                  {pendingRegistrations.length > 0 && (
-                    <Badge variant="secondary" className="ml-2 bg-yellow-100 text-yellow-800">
-                      {pendingRegistrations.length}
-                    </Badge>
-                  )}
-                </TabsTrigger>
+            <Tabs defaultValue="organizations" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="organizations">Member Organizations</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="members" className="space-y-4">
+              <TabsContent value="organizations" className="space-y-4">
                 {/* Search and View Controls */}
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                   <div className="relative flex-1 max-w-md">
@@ -354,70 +335,6 @@ export default function Members() {
                   </div>
                 )}
               </TabsContent>
-
-              <TabsContent value="pending" className="space-y-4">
-                <div className="space-y-4">
-                  {pendingRegistrations.length === 0 ? (
-                    <Card>
-                      <CardContent className="flex flex-col items-center justify-center py-10">
-                        <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold text-muted-foreground">No Pending Registrations</h3>
-                        <p className="text-sm text-muted-foreground text-center">
-                          All registration requests have been processed.
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="grid gap-4">
-                      {pendingRegistrations.map((registration) => (
-                        <Card key={registration.id} className="hover:shadow-md transition-shadow">
-                          <CardContent className="p-6">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="text-lg font-semibold">{registration.organization_name}</h3>
-                                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                    Pending Approval
-                                  </Badge>
-                                </div>
-                                <div className="space-y-1 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-2">
-                                    <User className="h-4 w-4" />
-                                    {registration.first_name} {registration.last_name}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4" />
-                                    {registration.email}
-                                  </div>
-                                  {registration.city && registration.state && (
-                                    <div className="flex items-center gap-2">
-                                      <MapPin className="h-4 w-4" />
-                                      {registration.city}, {registration.state}
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="h-4 w-4" />
-                                    Submitted: {new Date(registration.created_at).toLocaleDateString()}
-                                  </div>
-                                </div>
-                              </div>
-                              <Button
-                                onClick={() => {
-                                  setSelectedPendingRegistration(registration);
-                                  setPendingApprovalDialogOpen(true);
-                                }}
-                                size="sm"
-                              >
-                                Review Application
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
             </Tabs>
           </div>
 
@@ -436,14 +353,6 @@ export default function Members() {
           <ImportMembersDialog
             open={importDialogOpen}
             onOpenChange={setImportDialogOpen}
-          />
-
-          <PendingRegistrationApprovalDialog
-            open={pendingApprovalDialogOpen}
-            onOpenChange={setPendingApprovalDialogOpen}
-            registration={selectedPendingRegistration}
-            onApprove={approveRegistration}
-            onReject={rejectRegistration}
           />
         </main>
       </div>
