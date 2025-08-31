@@ -20,26 +20,28 @@ function replaceTemplateVariables(content: string, data: Record<string, string>)
   return result;
 }
 
-// Generate full invoice HTML from template using exact same logic as ProfessionalInvoice component
+// Generate full invoice HTML matching exact ProfessionalInvoice component structure
 function generateInvoiceHTML(template: any, templateData: Record<string, string>, invoice: any) {
   const headerHtml = replaceTemplateVariables(template.header_content, templateData);
   const footerHtml = replaceTemplateVariables(template.footer_content, templateData);
   
-  const invoiceDate = new Date(invoice.invoice_date).toLocaleDateString('en-US', { 
-    year: 'numeric', month: 'short', day: '2-digit' 
-  });
-  const dueDate = new Date(invoice.due_date).toLocaleDateString('en-US', { 
-    year: 'numeric', month: 'short', day: '2-digit' 
-  });
-  const periodStart = new Date(invoice.period_start_date).toLocaleDateString('en-US', { 
-    year: 'numeric', month: 'short', day: '2-digit' 
-  });
-  const periodEnd = new Date(invoice.period_end_date).toLocaleDateString('en-US', { 
-    year: 'numeric', month: 'short', day: '2-digit' 
-  });
+  // Format dates exactly like ProfessionalInvoice component
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: '2-digit' 
+    });
+  };
+  
+  const invoiceDate = formatDate(invoice.invoice_date);
+  const dueDate = formatDate(invoice.due_date);
+  const periodStart = formatDate(invoice.period_start_date);
+  const periodEnd = formatDate(invoice.period_end_date);
   
   return `
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; background: white; padding: 2rem;">
+    <div class="invoice-container" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: white; padding: 2rem; max-width: 64rem; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
       <style>
         .invoice-container {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -156,6 +158,26 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
           color: #6b7280;
           margin-bottom: 0.5rem;
         }
+        
+        .text-sm {
+          font-size: 0.875rem;
+        }
+        
+        .text-gray-600 {
+          color: #4b5563;
+        }
+        
+        .text-gray-500 {
+          color: #6b7280;
+        }
+        
+        .line-through {
+          text-decoration: line-through;
+        }
+        
+        .mt-1 {
+          margin-top: 0.25rem;
+        }
       </style>
       
       <!-- Header -->
@@ -190,14 +212,14 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
           <tr>
             <td>
               <strong>Annual Membership Fee</strong>
-              ${invoice.proratedAmount ? '<div style="font-size: 0.9rem; color: #666; margin-top: 0.25rem;">Prorated from membership start date</div>' : ''}
+              ${invoice.proratedAmount ? '<div class="text-sm text-gray-600 mt-1">Prorated from membership start date</div>' : ''}
             </td>
             <td>
               ${periodStart} - ${periodEnd}
             </td>
             <td class="amount-cell">
               ${invoice.proratedAmount ? 
-                `<div>$${invoice.proratedAmount.toLocaleString()}</div><div style="font-size: 0.9rem; color: #999; text-decoration: line-through;">$${invoice.invoiceAmount.toLocaleString()}</div>` :
+                `<div>$${invoice.proratedAmount.toLocaleString()}</div><div class="text-sm text-gray-500 line-through">$${invoice.invoiceAmount.toLocaleString()}</div>` :
                 `$${invoice.invoiceAmount.toLocaleString()}`
               }
             </td>
@@ -277,7 +299,16 @@ serve(async (req) => {
     const organization = invoice.organizations;
     const finalAmount = invoice.prorated_amount || invoice.amount;
 
-    // Prepare template data with tracking logo URL
+    // Prepare template data with tracking logo URL and exact date formatting
+    const formatDate = (dateStr: string) => {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: '2-digit' 
+      });
+    };
+    
     const trackingLogoUrl = template.logo_url ? 
       `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/functions/v1/track-invoice-open?invoice_id=${invoiceId}&logo_url=${encodeURIComponent(template.logo_url.startsWith('http') ? template.logo_url : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev${template.logo_url}`)}` 
       : '';
@@ -285,16 +316,16 @@ serve(async (req) => {
     const templateData = {
       '{{LOGO}}': trackingLogoUrl ? `<img src="${trackingLogoUrl}" alt="Logo" style="max-height: 80px;" />` : '',
       '{{INVOICE_NUMBER}}': invoice.invoice_number,
-      '{{INVOICE_DATE}}': new Date(invoice.invoice_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }),
-      '{{DUE_DATE}}': new Date(invoice.due_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }),
+      '{{INVOICE_DATE}}': formatDate(invoice.invoice_date),
+      '{{DUE_DATE}}': formatDate(invoice.due_date),
       '{{ORGANIZATION_NAME}}': organization.name,
       '{{ORGANIZATION_ADDRESS}}': 'Organization Address',
       '{{ORGANIZATION_EMAIL}}': organization.email,
       '{{ORGANIZATION_PHONE}}': '',
       '{{AMOUNT}}': `$${invoice.amount.toLocaleString()}`,
       '{{PRORATED_AMOUNT}}': invoice.prorated_amount ? `$${invoice.prorated_amount.toLocaleString()}` : '',
-      '{{PERIOD_START}}': new Date(invoice.period_start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }),
-      '{{PERIOD_END}}': new Date(invoice.period_end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }),
+      '{{PERIOD_START}}': formatDate(invoice.period_start_date),
+      '{{PERIOD_END}}': formatDate(invoice.period_end_date),
       '{{PAYMENT_TERMS}}': '30',
       '{{CONTACT_EMAIL}}': 'billing@hessconsortium.org',
       '{{NOTES}}': invoice.notes || ''
