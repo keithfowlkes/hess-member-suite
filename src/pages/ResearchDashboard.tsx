@@ -45,14 +45,13 @@ export default function ResearchDashboard() {
     <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "border rounded-lg overflow-hidden"}>
       {viewMode === 'list' && (
         <div className="bg-muted/50 px-6 py-3 border-b">
-          <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
+          <div className="grid grid-cols-11 gap-4 text-sm font-medium text-muted-foreground">
             <div className="col-span-2">Organization</div>
             <div className="col-span-2">Primary Contact</div>
             <div className="col-span-2">Email</div>
             <div className="col-span-2">Location</div>
             <div className="col-span-1">Student FTE</div>
             <div className="col-span-2">Status</div>
-            <div className="col-span-1">Annual Fee</div>
           </div>
         </div>
       )}
@@ -84,7 +83,7 @@ export default function ResearchDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-12 gap-4 items-center">
+              <div className="grid grid-cols-11 gap-4 items-center">
                 <div className="col-span-2">
                   <div className="flex items-center space-x-3">
                     <Skeleton className="h-5 w-5" />
@@ -96,7 +95,6 @@ export default function ResearchDashboard() {
                 <div className="col-span-2"><Skeleton className="h-4 w-16" /></div>
                 <div className="col-span-1"><Skeleton className="h-4 w-12" /></div>
                 <div className="col-span-2"><Skeleton className="h-6 w-16 rounded-full" /></div>
-                <div className="col-span-1"><Skeleton className="h-4 w-16" /></div>
               </div>
             )}
           </div>
@@ -292,10 +290,6 @@ export default function ResearchDashboard() {
                             <span>Student FTE:</span>
                             <span className="font-medium">{organization.student_fte || 'N/A'}</span>
                           </div>
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>Annual Fee:</span>
-                            <span className="font-medium">${organization.annual_fee_amount}</span>
-                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -305,14 +299,13 @@ export default function ResearchDashboard() {
             ) : (
               <div className="border rounded-lg overflow-hidden">
                 <div className="bg-muted/50 px-6 py-3 border-b">
-                  <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
+                  <div className="grid grid-cols-11 gap-4 text-sm font-medium text-muted-foreground">
                     <div className="col-span-2">Organization</div>
                     <div className="col-span-2">Primary Contact</div>
                     <div className="col-span-2">Email</div>
                     <div className="col-span-2">Location</div>
                     <div className="col-span-1">Student FTE</div>
                     <div className="col-span-2">Status</div>
-                    <div className="col-span-1">Annual Fee</div>
                   </div>
                 </div>
                 <div className="divide-y">
@@ -321,67 +314,64 @@ export default function ResearchDashboard() {
                       key={organization.id}
                       className="px-6 py-4 hover:bg-muted/30 transition-colors"
                     >
-                      <div className="grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-2">
-                          <div className="flex items-center space-x-3">
-                            <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
-                            <div>
-                              <div className="font-medium text-foreground">{organization.name}</div>
-                              {organization.phone && (
-                                <div className="text-sm text-muted-foreground">{organization.phone}</div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-span-2">
-                          {organization.profiles ? (
-                            <div className="text-sm">
-                              <div className="font-medium text-foreground">
-                                {organization.profiles.first_name} {organization.profiles.last_name}
-                              </div>
-                              {organization.profiles.phone && (
-                                <div className="text-muted-foreground">{organization.profiles.phone}</div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">—</span>
-                          )}
-                        </div>
-                        <div className="col-span-2">
-                          {organization.email ? (
-                            <a 
-                              href={`mailto:${organization.email}`}
-                              className="text-sm text-primary hover:underline"
-                            >
-                              {organization.email}
-                            </a>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">—</span>
-                          )}
-                        </div>
-                        <div className="col-span-2">
-                          {(organization.city || organization.state) ? (
-                            <div className="text-sm text-muted-foreground">
-                              {organization.city}{organization.city && organization.state && ', '}{organization.state}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">—</span>
-                          )}
-                        </div>
-                        <div className="col-span-1">
-                          <div className="text-sm font-medium">
-                            {organization.student_fte || '—'}
-                          </div>
-                        </div>
-                        <div className="col-span-2">
-                          <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
-                            {organization.membership_status}
-                          </Badge>
-                        </div>
-                        <div className="col-span-1">
-                          <div className="text-sm font-medium">${organization.annual_fee_amount}</div>
-                        </div>
-                      </div>
+                       <div className="grid grid-cols-11 gap-4 items-center">
+                         <div className="col-span-2">
+                           <div className="flex items-center space-x-3">
+                             <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
+                             <div>
+                               <div className="font-medium text-foreground">{organization.name}</div>
+                               {organization.phone && (
+                                 <div className="text-sm text-muted-foreground">{organization.phone}</div>
+                               )}
+                             </div>
+                           </div>
+                         </div>
+                         <div className="col-span-2">
+                           {organization.profiles ? (
+                             <div className="text-sm">
+                               <div className="font-medium text-foreground">
+                                 {organization.profiles.first_name} {organization.profiles.last_name}
+                               </div>
+                               {organization.profiles.phone && (
+                                 <div className="text-muted-foreground">{organization.profiles.phone}</div>
+                               )}
+                             </div>
+                           ) : (
+                             <span className="text-muted-foreground text-sm">—</span>
+                           )}
+                         </div>
+                         <div className="col-span-2">
+                           {organization.email ? (
+                             <a 
+                               href={`mailto:${organization.email}`}
+                               className="text-sm text-primary hover:underline"
+                             >
+                               {organization.email}
+                             </a>
+                           ) : (
+                             <span className="text-muted-foreground text-sm">—</span>
+                           )}
+                         </div>
+                         <div className="col-span-2">
+                           {(organization.city || organization.state) ? (
+                             <div className="text-sm text-muted-foreground">
+                               {organization.city}{organization.city && organization.state && ', '}{organization.state}
+                             </div>
+                           ) : (
+                             <span className="text-muted-foreground text-sm">—</span>
+                           )}
+                         </div>
+                         <div className="col-span-1">
+                           <div className="text-sm font-medium">
+                             {organization.student_fte || '—'}
+                           </div>
+                         </div>
+                         <div className="col-span-2">
+                           <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
+                             {organization.membership_status}
+                           </Badge>
+                         </div>
+                       </div>
                     </div>
                   ))}
                 </div>
