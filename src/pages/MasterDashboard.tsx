@@ -223,8 +223,8 @@ const MasterDashboard = () => {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    await deleteUser(userId);
+  const handleDeleteUser = async (userId: string, userEmail?: string) => {
+    await deleteUser(userId, userEmail);
   };
 
   const handlePasswordReset = async (email: string) => {
@@ -1002,19 +1002,6 @@ const MasterDashboard = () => {
                       />
                     </div>
 
-                    {/* Temporary Debug Button for fowlkes@thecoalition.us */}
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                      <h3 className="text-red-800 font-medium mb-2">Debug: Delete fowlkes@thecoalition.us</h3>
-                      <p className="text-red-600 text-sm mb-3">This button will delete ALL users with email fowlkes@thecoalition.us</p>
-                      <Button 
-                        onClick={() => handleDeleteUserByEmail('fowlkes@thecoalition.us')}
-                        variant="destructive"
-                        size="sm"
-                      >
-                        Delete fowlkes@thecoalition.us by Email
-                      </Button>
-                    </div>
-
                     <Card>
                       <CardContent className="p-6">
                         {filteredUsers.length === 0 ? (
@@ -1102,10 +1089,10 @@ const MasterDashboard = () => {
                                            </AlertDialogHeader>
                                            <AlertDialogFooter>
                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                             <AlertDialogAction
-                                               onClick={() => handleDeleteUser(user.id)}
-                                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                             >
+                                              <AlertDialogAction
+                                                onClick={() => handleDeleteUser(user.id, user.email)}
+                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                              >
                                                Delete
                                              </AlertDialogAction>
                                            </AlertDialogFooter>

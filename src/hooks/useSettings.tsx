@@ -40,7 +40,6 @@ export function useSettings() {
 
   const fetchUsers = async () => {
     try {
-      console.log('🔄 FETCHING USERS: Starting user fetch...');
       // First get all profiles
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
@@ -61,13 +60,9 @@ export function useSettings() {
         ...profile,
         user_roles: roles?.filter(role => role.user_id === profile.user_id) || []
       })) || [];
-
-      console.log('🔄 FETCHING USERS: Found', usersWithRoles.length, 'users');
-      console.log('🔄 FETCHING USERS: Frank users:', usersWithRoles.filter(u => u.email.includes('frank@deuslogic.com')));
       
       setUsers(usersWithRoles);
     } catch (error: any) {
-      console.error('🔄 FETCHING USERS: Error:', error);
       toast({
         title: 'Error fetching users',
         description: error.message,
@@ -315,7 +310,7 @@ export function useSettings() {
     }
   };
 
-  const deleteUser = async (userId: string) => {
+  const deleteUser = async (userId: string, userEmail?: string) => {
     try {
       console.log('🗑️ Starting user deletion for userId:', userId);
       
@@ -332,7 +327,15 @@ export function useSettings() {
       }
 
       if (!userProfile) {
-        console.log('⚠️ No profile found for user - may already be deleted');
+        console.log('⚠️ No profile found for userId - trying email fallback if available');
+        
+        // If we have an email, try deleting by email instead
+        if (userEmail) {
+          console.log('🔄 Falling back to delete by email:', userEmail);
+          await deleteUserByEmail(userEmail);
+          return;
+        }
+        
         // Force refresh the user list since this user seems to be stale data
         toast({
           title: 'User Already Deleted',
