@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, Download } from 'lucide-react';
+import { useResendInvoice } from '@/hooks/useResendInvoice';
+import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, Download, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -16,6 +17,7 @@ import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 export default function Invoices() {
   const { invoices, loading, markAsPaid, sendInvoice } = useInvoices();
   const { isViewingAsAdmin } = useAuth();
+  const resendInvoice = useResendInvoice();
   const [searchTerm, setSearchTerm] = useState('');
 
   // Filter invoices based on user role
@@ -51,6 +53,11 @@ export default function Invoices() {
   const handleSendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     await sendInvoice(invoiceId);
+  };
+
+  const handleResendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    resendInvoice.mutate({ invoiceId });
   };
 
   const generatePDF = async (invoice: any, e: React.MouseEvent) => {
@@ -224,13 +231,24 @@ export default function Invoices() {
                               </Button>
                             )}
                             {(invoice.status === 'sent' || invoice.status === 'overdue') && (
-                              <Button
-                                size="sm"
-                                onClick={(e) => handleMarkAsPaid(invoice.id, e)}
-                              >
-                                <DollarSign className="h-4 w-4 mr-1" />
-                                Mark Paid
-                              </Button>
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => handleResendInvoice(invoice.id, e)}
+                                  disabled={resendInvoice.isPending}
+                                >
+                                  <Mail className="h-4 w-4 mr-1" />
+                                  Send Again
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => handleMarkAsPaid(invoice.id, e)}
+                                >
+                                  <DollarSign className="h-4 w-4 mr-1" />
+                                  Mark Paid
+                                </Button>
+                              </>
                             )}
                           </div>
                         ) : (
