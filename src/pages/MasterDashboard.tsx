@@ -1030,7 +1030,7 @@ const MasterDashboard = () => {
                                   <div className="flex items-center gap-2">
                                     <span>{user.email}</span>
                                     {user.organization && (
-                                      <Badge variant="outline" className="text-xs">
+                                      <Badge variant="secondary" className="text-xs bg-black text-white border-black">
                                         {user.organization}
                                       </Badge>
                                     )}
