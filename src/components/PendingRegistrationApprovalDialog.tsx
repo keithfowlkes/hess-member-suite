@@ -270,13 +270,14 @@ export function PendingRegistrationApprovalDialog({
                 <DollarSign className="h-5 w-5" />
                 Invoice Options
               </CardTitle>
-              {sendInvoice && membershipStartDate && (
+              {sendInvoice && (
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setShowPreviewModal(true)}
                   className="flex items-center gap-2"
+                  disabled={!membershipStartDate || !invoiceAmount}
                 >
                   <Eye className="h-4 w-4" />
                   Preview Invoice
