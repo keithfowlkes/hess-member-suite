@@ -29,7 +29,7 @@ function replaceTemplateVariables(content: string, data: Record<string, string>)
 }
 
 // Generate full invoice HTML matching exact sample invoice design
-function generateInvoiceHTML(template: any, templateData: Record<string, string>, invoice: any) {
+function generateInvoiceHTML(template: any, templateData: Record<string, string>, invoice: any, embedded: boolean = false) {
   // Format dates exactly like ProfessionalInvoice component
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -192,7 +192,10 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
       <!-- Header with Logo and Invoice Title -->
       <div class="invoice-header">
         <div class="logo-section">
-          ${template.logo_url ? `<img src="https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/functions/v1/track-invoice-open?invoice_id=${templateData['{{INVOICE_NUMBER}}']}&logo_url=${encodeURIComponent(template.logo_url.startsWith('http') ? template.logo_url : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev${template.logo_url}`)}" alt="Company Logo" style="max-height: 80px; width: auto;" onerror="this.style.display='none';" />` : ''}
+          ${template.logo_url ? 
+            `<img src="${embedded ? 'cid:logo' : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/functions/v1/track-invoice-open?invoice_id=${templateData['{{INVOICE_NUMBER}}']}&logo_url=${encodeURIComponent(template.logo_url.startsWith('http') ? template.logo_url : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev${template.logo_url}`)}`}" alt="Company Logo" style="max-height: 80px; width: auto;" onerror="this.style.display='none';" />` : 
+            ''
+          }
           <div class="company-info">
             <h3>HESS Consortium</h3>
             <p>Higher Education Systems & Services Consortium</p>
@@ -417,7 +420,29 @@ serve(async (req) => {
       '{{NOTES}}': notes || ''
     };
 
-    // Generate HTML using template
+    // Get logo file as attachment
+    let logoAttachment = null;
+    if (template.logo_url) {
+      try {
+        const logoPath = template.logo_url.replace('/storage/v1/object/public/invoice-logos/', '');
+        const { data: logoData, error: logoError } = await supabase.storage
+          .from('invoice-logos')
+          .download(logoPath);
+        
+        if (!logoError && logoData) {
+          const logoBuffer = await logoData.arrayBuffer();
+          logoAttachment = {
+            filename: 'logo.png',
+            content: Array.from(new Uint8Array(logoBuffer)),
+            cid: 'logo'
+          };
+        }
+      } catch (error) {
+        console.log('Could not load logo for attachment:', error);
+      }
+    }
+
+    // Generate HTML using template with embedded logo
     const html = generateInvoiceHTML(template, templateData, {
       organizationName,
       organizationEmail,
@@ -428,18 +453,25 @@ serve(async (req) => {
       period_start_date: periodStartDate,
       period_end_date: periodEndDate,
       notes
-    });
+    }, true); // true for embedded logo
 
     // Initialize Resend for sending email
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     const subject = `HESS Consortium Membership Invoice - ${organizationName}`;
 
-    const emailResponse = await resend.emails.send({
+    const emailPayload: any = {
       from: "HESS Consortium <onboarding@resend.dev>",
       to: [organizationEmail],
       subject: subject,
       html: html,
-    });
+    };
+
+    // Add attachment if logo is available
+    if (logoAttachment) {
+      emailPayload.attachments = [logoAttachment];
+    }
+
+    const emailResponse = await resend.emails.send(emailPayload);
 
     console.log("Invoice email sent successfully:", emailResponse);
 
