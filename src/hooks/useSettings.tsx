@@ -241,18 +241,29 @@ export function useSettings() {
 
   const deleteUser = async (userId: string) => {
     try {
+      console.log('🗑️ Starting user deletion for userId:', userId);
+      
       // First check if user is a contact person for any organization
-      const { data: userProfile } = await supabase
+      const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id, email')
         .eq('user_id', userId)
         .single();
+
+      if (profileError) {
+        console.error('❌ Error fetching user profile:', profileError);
+        throw profileError;
+      }
+
+      console.log('👤 User profile found:', userProfile);
 
       if (userProfile) {
         const { data: organizations } = await supabase
           .from('organizations')
           .select('id, name')
           .eq('contact_person_id', userProfile.id);
+
+        console.log('🏢 Organizations where user is contact:', organizations);
 
         if (organizations && organizations.length > 0) {
           // Remove user as contact person from organizations
@@ -261,7 +272,12 @@ export function useSettings() {
             .update({ contact_person_id: null })
             .eq('contact_person_id', userProfile.id);
 
-          if (orgUpdateError) throw orgUpdateError;
+          if (orgUpdateError) {
+            console.error('❌ Error updating organizations:', orgUpdateError);
+            throw orgUpdateError;
+          }
+
+          console.log('✅ Removed as contact from organizations');
 
           toast({
             title: 'Contact removed',
@@ -272,31 +288,46 @@ export function useSettings() {
       }
 
       // Delete user roles first
-      await supabase
+      console.log('🔐 Deleting user roles...');
+      const { error: rolesError } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId);
+      
+      if (rolesError) {
+        console.error('❌ Error deleting user roles:', rolesError);
+        throw rolesError;
+      }
+      console.log('✅ User roles deleted');
 
       // Delete profile (now has proper DELETE policy)
+      console.log('👤 Deleting user profile...');
       const { error } = await supabase
         .from('profiles')
         .delete()
         .eq('user_id', userId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error deleting profile:', error);
+        throw error;
+      }
+      console.log('✅ User profile deleted');
 
       // Delete from auth.users table using edge function
+      console.log('🔑 Calling delete-user edge function...');
       const { error: authError } = await supabase.functions.invoke('delete-user', {
         body: { userId }
       });
 
       if (authError) {
-        console.error('Error deleting user from auth:', authError);
+        console.error('❌ Error deleting user from auth:', authError);
         toast({
           title: "Warning",
           description: "User profile deleted but auth account may still exist.",
           variant: "destructive"
         });
+      } else {
+        console.log('✅ Auth user deletion completed');
       }
 
       toast({
@@ -304,9 +335,11 @@ export function useSettings() {
         description: 'User account deleted successfully'
       });
 
+      console.log('🔄 Refreshing user list...');
       await fetchUsers();
+      console.log('✅ User deletion process completed');
     } catch (error: any) {
-      console.error('Delete user error:', error);
+      console.error('❌ Delete user error:', error);
       toast({
         title: 'Error deleting user',
         description: error.message || 'Failed to delete user account',
