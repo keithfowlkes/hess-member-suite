@@ -214,7 +214,13 @@ const MasterDashboard = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    await deleteUser(userId);
+    console.log('🚨 MASTER DASHBOARD: handleDeleteUser called with userId:', userId);
+    try {
+      await deleteUser(userId);
+      console.log('🚨 MASTER DASHBOARD: deleteUser completed successfully');
+    } catch (error) {
+      console.error('🚨 MASTER DASHBOARD: deleteUser failed:', error);
+    }
   };
 
   const handlePasswordReset = async (email: string) => {
