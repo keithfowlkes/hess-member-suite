@@ -17,6 +17,7 @@ import { useMembers } from '@/hooks/useMembers';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useResendInvoice } from '@/hooks/useResendInvoice';
 import { setupDefaultInvoiceTemplate } from '@/utils/setupDefaultInvoiceTemplate';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { InvoiceDialog } from '@/components/InvoiceDialog';
@@ -61,6 +62,7 @@ export default function MembershipFees() {
   const { invoices, createInvoice, markAsPaid, sendInvoice, markAllInvoicesAsPaid } = useInvoices();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
+  const resendInvoice = useResendInvoice();
   
   // Fee management states
   const [bulkFeeAmount, setBulkFeeAmount] = useState<string>('');
@@ -488,6 +490,11 @@ export default function MembershipFees() {
   const handleSendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     await sendInvoice(invoiceId);
+  };
+
+  const handleResendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    resendInvoice.mutate({ invoiceId });
   };
 
   // Test email function
@@ -1183,13 +1190,24 @@ export default function MembershipFees() {
                                   </Button>
                                 )}
                                 {(invoice.status === 'sent' || invoice.status === 'overdue') && (
-                                  <Button
-                                    size="sm"
-                                    onClick={(e) => handleMarkAsPaid(invoice.id, e)}
-                                  >
-                                    <DollarSign className="h-4 w-4 mr-1" />
-                                    Mark Paid
-                                  </Button>
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={(e) => handleResendInvoice(invoice.id, e)}
+                                      disabled={resendInvoice.isPending}
+                                    >
+                                      <Mail className="h-4 w-4 mr-1" />
+                                      Send Again
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={(e) => handleMarkAsPaid(invoice.id, e)}
+                                    >
+                                      <DollarSign className="h-4 w-4 mr-1" />
+                                      Mark Paid
+                                    </Button>
+                                  </>
                                 )}
                                 <Button
                                   size="sm"
