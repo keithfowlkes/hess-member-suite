@@ -186,7 +186,7 @@ export const useOrganizationApprovals = () => {
         .from('organizations')
         .select(`
           *,
-          profiles!contact_person_id(email, first_name, last_name)
+          profiles!contact_person_id(user_id, email, first_name, last_name)
         `)
         .eq('id', organizationId)
         .maybeSingle();
@@ -213,17 +213,29 @@ export const useOrganizationApprovals = () => {
         });
       }
 
+      // Delete the associated user account
+      if (org.profiles?.user_id) {
+        const { error: userDeleteError } = await supabase.auth.admin.deleteUser(
+          org.profiles.user_id
+        );
+        
+        if (userDeleteError) {
+          console.error('Error deleting user account:', userDeleteError);
+          // Don't throw here as the organization rejection should still proceed
+        }
+      }
+
       // Log the action
       await supabase.from('audit_log').insert({
         action: 'organization_rejected',
         entity_type: 'organization',
         entity_id: organizationId,
-        details: { organizationName: org.name, adminMessage }
+        details: { organizationName: org.name, adminMessage, userDeleted: !!org.profiles?.user_id }
       });
 
       toast({
         title: "Organization Rejected",
-        description: `${org.name} has been rejected and notified.`,
+        description: `${org.name} has been rejected and the associated user account has been deleted.`,
       });
 
       await fetchPendingOrganizations();
