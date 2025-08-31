@@ -192,7 +192,7 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
       <!-- Header with Logo and Invoice Title -->
       <div class="invoice-header">
         <div class="logo-section">
-          ${template.logo_url ? `<img src="${template.logo_url.startsWith('http') ? template.logo_url : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev${template.logo_url}`}" alt="Company Logo" style="max-height: 80px;" />` : ''}
+          ${template.logo_url ? `<img src="https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/functions/v1/track-invoice-open?invoice_id=${templateData['{{INVOICE_NUMBER}}']}&logo_url=${encodeURIComponent(template.logo_url.startsWith('http') ? template.logo_url : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev${template.logo_url}`)}" alt="Company Logo" style="max-height: 80px; width: auto;" onerror="this.style.display='none';" />` : ''}
           <div class="company-info">
             <h3>HESS Consortium</h3>
             <p>Higher Education Systems & Services Consortium</p>
@@ -399,12 +399,8 @@ serve(async (req) => {
       });
     };
     
-    const trackingLogoUrl = template.logo_url ? 
-      `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/functions/v1/track-invoice-open?invoice_id=${invoice.id}&logo_url=${encodeURIComponent(template.logo_url.startsWith('http') ? template.logo_url : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev${template.logo_url}`)}` 
-      : '';
-    
     const templateData = {
-      '{{LOGO}}': trackingLogoUrl ? `<img src="${trackingLogoUrl}" alt="Logo" style="max-height: 80px;" />` : '',
+      '{{LOGO}}': '', // Not used in new design, logo is embedded directly
       '{{INVOICE_NUMBER}}': invoiceNumber,
       '{{INVOICE_DATE}}': formatDate(new Date().toISOString()),
       '{{DUE_DATE}}': formatDate(dueDate.toISOString()),
