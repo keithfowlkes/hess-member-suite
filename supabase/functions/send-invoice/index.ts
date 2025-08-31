@@ -194,7 +194,7 @@ serve(async (req) => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "HESS Consortium <onboarding@resend.dev>",
+      from: "HESS Consortium <billing@hessconsortium.app>",
       to: [organizationEmail],
       subject: subject,
       html: html,
