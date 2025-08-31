@@ -116,10 +116,12 @@ const MasterDashboard = () => {
   // State management
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [selectedPendingRegistration, setSelectedPendingRegistration] = useState<PendingRegistration | null>(null);
+  const [selectedMemberInfoUpdate, setSelectedMemberInfoUpdate] = useState(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showRegistrationApprovalDialog, setShowRegistrationApprovalDialog] = useState(false);
   const [showInvitationDialog, setShowInvitationDialog] = useState(false);
   const [showMemberInfoUpdateDialog, setShowMemberInfoUpdateDialog] = useState(false);
+  const [showMemberInfoUpdateComparisonDialog, setShowMemberInfoUpdateComparisonDialog] = useState(false);
   
   // Search functionality
   const [organizationSearchTerm, setOrganizationSearchTerm] = useState('');
@@ -663,9 +665,9 @@ const MasterDashboard = () => {
                                     <h3 className="text-lg font-semibold">
                                       {request.new_organization_data?.name || 'Organization Update'}
                                     </h3>
-                                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                      Member Info Update
-                                    </Badge>
+                                     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                       Member Info Update
+                                     </Badge>
                                   </div>
                                   
                                   <div className="text-sm text-muted-foreground space-y-1">
@@ -686,15 +688,18 @@ const MasterDashboard = () => {
                                 </div>
 
                                 <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setShowMemberInfoUpdateDialog(true)}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Eye className="h-3 w-3" />
-                                    Review
-                                  </Button>
+                                   <Button
+                                     variant="outline"
+                                     size="sm"
+                                     onClick={() => {
+                                       setSelectedMemberInfoUpdate(request);
+                                       setShowMemberInfoUpdateComparisonDialog(true);
+                                     }}
+                                     className="flex items-center gap-2"
+                                   >
+                                     <Eye className="h-3 w-3" />
+                                     Review Changes
+                                   </Button>
                                 </div>
                               </div>
                             </CardContent>
@@ -741,10 +746,10 @@ const MasterDashboard = () => {
                       <h2 className="text-xl font-semibold">Organization Reassignment Requests</h2>
                       <div className="flex items-center gap-2">
                         {memberInfoUpdateRequests.length > 0 && (
-                          <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
-                            <AlertCircle className="h-4 w-4" />
-                            <span className="font-medium">{memberInfoUpdateRequests.length} Pending</span>
-                          </div>
+                           <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                             <AlertCircle className="h-4 w-4" />
+                             <span className="font-medium">{memberInfoUpdateRequests.length} Pending</span>
+                           </div>
                         )}
                         <Button onClick={() => refetchRequests()}>
                           <RefreshCw className="h-4 w-4 mr-2" />
@@ -1261,6 +1266,194 @@ const MasterDashboard = () => {
         open={showMemberInfoUpdateDialog}
         onOpenChange={setShowMemberInfoUpdateDialog}
       />
+
+      {/* Member Info Update Comparison Dialog */}
+      <Dialog open={showMemberInfoUpdateComparisonDialog} onOpenChange={setShowMemberInfoUpdateComparisonDialog}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Member Information Update Request</DialogTitle>
+            <DialogDescription>
+              Review the comparison between current and updated organization information
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedMemberInfoUpdate && (
+            <div className="space-y-6">
+              {/* Contact Change Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Current Contact</h4>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    {selectedMemberInfoUpdate.organizations?.profiles?.first_name && selectedMemberInfoUpdate.organizations?.profiles?.last_name ? (
+                      <div>{selectedMemberInfoUpdate.organizations.profiles.first_name} {selectedMemberInfoUpdate.organizations.profiles.last_name}</div>
+                    ) : (
+                      <div>No name on file</div>
+                    )}
+                    <div>{selectedMemberInfoUpdate.organizations?.profiles?.email || 'No email on file'}</div>
+                  </div>
+                </div>
+
+                {/* New Contact Information */}
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Requested New Contact</h4>
+                  <div className="text-sm text-muted-foreground">
+                    {selectedMemberInfoUpdate.new_contact_email}
+                  </div>
+                </div>
+              </div>
+
+              {/* Organization Information Comparison */}
+              {selectedMemberInfoUpdate.new_organization_data && (
+                <div className="space-y-4">
+                  <h4 className="font-medium text-lg">Organization Information Comparison</h4>
+                  
+                  {(() => {
+                    const currentOrg = selectedMemberInfoUpdate.organizations as any;
+                    const newOrgData = selectedMemberInfoUpdate.new_organization_data as Record<string, any>;
+                    
+                    // Define field mappings for consistent display
+                    const fieldMappings = [
+                      { key: 'name', label: 'Organization Name', current: currentOrg?.name, new: newOrgData?.name },
+                      { 
+                        key: 'address', 
+                        label: 'Address', 
+                        current: [currentOrg?.address_line_1, currentOrg?.address_line_2].filter(Boolean).join(', '),
+                        new: [newOrgData?.address_line_1, newOrgData?.address_line_2].filter(Boolean).join(', ')
+                      },
+                      { key: 'city', label: 'City', current: currentOrg?.city, new: newOrgData?.city },
+                      { key: 'state', label: 'State', current: currentOrg?.state, new: newOrgData?.state },
+                      { key: 'zip_code', label: 'ZIP Code', current: currentOrg?.zip_code, new: newOrgData?.zip_code },
+                      { key: 'country', label: 'Country', current: currentOrg?.country, new: newOrgData?.country },
+                      { 
+                        key: 'primary_contact', 
+                        label: 'Primary Contact', 
+                        current: currentOrg?.contact_person_id && currentOrg?.profiles
+                          ? `${currentOrg.profiles.first_name} ${currentOrg.profiles.last_name}` 
+                          : 'Not set',
+                        new: newOrgData?.primary_contact_name || 'Not specified'
+                      },
+                      { key: 'primary_contact_title', label: 'Primary Contact Title', current: currentOrg?.primary_contact_title, new: newOrgData?.primary_contact_title },
+                      { key: 'phone', label: 'Phone', current: currentOrg?.phone, new: newOrgData?.phone },
+                      { key: 'email', label: 'Email', current: currentOrg?.email, new: newOrgData?.email },
+                      { key: 'website', label: 'Website', current: currentOrg?.website, new: newOrgData?.website },
+                      { 
+                        key: 'secondary_contact', 
+                        label: 'Secondary Contact', 
+                        current: `${currentOrg?.secondary_first_name || ''} ${currentOrg?.secondary_last_name || ''}`.trim() || 'Not set',
+                        new: `${newOrgData?.secondary_first_name || ''} ${newOrgData?.secondary_last_name || ''}`.trim() || 'Not set'
+                      },
+                      { key: 'secondary_contact_email', label: 'Secondary Contact Email', current: currentOrg?.secondary_contact_email, new: newOrgData?.secondary_contact_email },
+                      { key: 'secondary_contact_title', label: 'Secondary Contact Title', current: currentOrg?.secondary_contact_title, new: newOrgData?.secondary_contact_title },
+                      { key: 'student_fte', label: 'Student FTE', current: currentOrg?.student_fte?.toLocaleString(), new: newOrgData?.student_fte?.toLocaleString() },
+                      { key: 'membership_status', label: 'Membership Status', current: currentOrg?.membership_status, new: newOrgData?.membership_status },
+                      { key: 'student_information_system', label: 'Student Information System', current: currentOrg?.student_information_system, new: newOrgData?.student_information_system },
+                      { key: 'financial_system', label: 'Financial System', current: currentOrg?.financial_system, new: newOrgData?.financial_system },
+                      { key: 'financial_aid', label: 'Financial Aid', current: currentOrg?.financial_aid, new: newOrgData?.financial_aid },
+                      { key: 'learning_management', label: 'Learning Management', current: currentOrg?.learning_management, new: newOrgData?.learning_management },
+                      { key: 'hcm_hr', label: 'HCM HR', current: currentOrg?.hcm_hr, new: newOrgData?.hcm_hr },
+                      { key: 'payroll_system', label: 'Payroll System', current: currentOrg?.payroll_system, new: newOrgData?.payroll_system },
+                      { key: 'purchasing_system', label: 'Purchasing System', current: currentOrg?.purchasing_system, new: newOrgData?.purchasing_system },
+                      { key: 'housing_management', label: 'Housing Management', current: currentOrg?.housing_management, new: newOrgData?.housing_management },
+                      { key: 'admissions_crm', label: 'Admissions CRM', current: currentOrg?.admissions_crm, new: newOrgData?.admissions_crm },
+                      { key: 'alumni_advancement_crm', label: 'Alumni Advancement CRM', current: currentOrg?.alumni_advancement_crm, new: newOrgData?.alumni_advancement_crm },
+                      { key: 'notes', label: 'Notes', current: currentOrg?.notes, new: newOrgData?.notes }
+                    ];
+                    
+                    // Filter to show only fields that have values or changes
+                    const relevantFields = fieldMappings.filter(field => 
+                      field.current || field.new
+                    );
+                    
+                    const changedFields = relevantFields.filter(field => field.current !== field.new);
+                    
+                    return (
+                      <div className="space-y-4">
+                        {changedFields.length > 0 && (
+                          <div className="text-sm text-muted-foreground">
+                            {changedFields.length} field{changedFields.length !== 1 ? 's' : ''} will be updated
+                          </div>
+                        )}
+                        
+                        <div className="border border-border rounded-lg overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="bg-muted/50">
+                                <TableHead className="font-semibold">Field</TableHead>
+                                <TableHead className="font-semibold">Current Value</TableHead>
+                                <TableHead className="font-semibold">Updated Value</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {relevantFields.map((field) => {
+                                const currentValue = field.current || 'Not set';
+                                const newValue = field.new || 'Not set';
+                                const hasChanged = currentValue !== newValue;
+                                
+                                return (
+                                  <TableRow 
+                                    key={field.key} 
+                                    className={hasChanged ? "bg-amber-50/50" : ""}
+                                  >
+                                    <TableCell className="font-medium text-foreground">
+                                      {field.label}
+                                      {hasChanged && (
+                                        <Badge variant="outline" className="ml-2 text-xs bg-amber-100 text-amber-800 border-amber-300">
+                                          Changed
+                                        </Badge>
+                                      )}
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground break-words max-w-xs">
+                                      {currentValue}
+                                    </TableCell>
+                                    <TableCell className={`break-words max-w-xs ${hasChanged ? 'text-blue-700 font-medium' : 'text-muted-foreground'}`}>
+                                      {newValue}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Actions */}
+              {selectedMemberInfoUpdate.status === 'pending' && (
+                <div className="flex gap-2 justify-end border-t pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => approveMemberInfoUpdate.mutate({ id: selectedMemberInfoUpdate.id })}
+                    disabled={approveMemberInfoUpdate.isPending}
+                    className="flex items-center gap-2"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    {approveMemberInfoUpdate.isPending ? 'Approving...' : 'Approve Request'}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => deleteMemberInfoUpdate.mutate(selectedMemberInfoUpdate.id)}
+                    disabled={deleteMemberInfoUpdate.isPending}
+                    className="flex items-center gap-2"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    {deleteMemberInfoUpdate.isPending ? 'Deleting...' : 'Delete Request'}
+                  </Button>
+                </div>
+              )}
+
+              {selectedMemberInfoUpdate.admin_notes && (
+                <div className="border-t pt-4">
+                  <h4 className="font-medium text-sm mb-2">Admin Notes</h4>
+                  <p className="text-sm text-muted-foreground">{selectedMemberInfoUpdate.admin_notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <PendingRegistrationApprovalDialog
         open={showRegistrationApprovalDialog}
