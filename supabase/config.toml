@@ -3,10 +3,22 @@ project_id = "tyovnvuluyosjnabrzjc"
 [functions.ai-dashboard-generator]
 verify_jwt = true
 
+[functions.approve-pending-registration]
+verify_jwt = true
+
+[functions.approve-reassignment-request]
+verify_jwt = true
+
 [functions.import-members]
 verify_jwt = true
 
 [functions.organization-emails]
+verify_jwt = true
+
+[functions.send-invoice]
+verify_jwt = true
+
+[functions.send-overdue-reminder]
 verify_jwt = true
 
 [functions.test-email]
