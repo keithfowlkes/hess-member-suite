@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PendingRegistration } from '@/hooks/usePendingRegistrations';
 import { useAuth } from '@/hooks/useAuth';
 import { useSendInvoice } from '@/hooks/useSendInvoice';
-import { Mail, DollarSign, Calendar, FileText } from 'lucide-react';
+import { Mail, DollarSign, Calendar, FileText, Eye } from 'lucide-react';
+import { InvoicePreviewModal } from '@/components/InvoicePreviewModal';
 
 interface PendingRegistrationApprovalDialogProps {
   open: boolean;
@@ -35,6 +36,7 @@ export function PendingRegistrationApprovalDialog({
   const [invoiceAmount, setInvoiceAmount] = useState('1000');
   const [membershipStartDate, setMembershipStartDate] = useState('');
   const [invoiceNotes, setInvoiceNotes] = useState('');
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const { user } = useAuth();
   const sendInvoiceMutation = useSendInvoice();
 
@@ -345,6 +347,19 @@ export function PendingRegistrationApprovalDialog({
                       className="min-h-[60px]"
                     />
                   </div>
+
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowPreviewModal(true)}
+                      className="flex items-center gap-2"
+                      disabled={!membershipStartDate || !invoiceAmount}
+                    >
+                      <Eye className="h-4 w-4" />
+                      Preview Invoice
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -410,6 +425,18 @@ export function PendingRegistrationApprovalDialog({
             </div>
           )}
         </div>
+
+        {/* Invoice Preview Modal */}
+        <InvoicePreviewModal
+          open={showPreviewModal}
+          onOpenChange={setShowPreviewModal}
+          organizationName={registration.organization_name}
+          organizationEmail={registration.email}
+          invoiceAmount={parseFloat(invoiceAmount)}
+          proratedAmount={proratedAmount || undefined}
+          membershipStartDate={membershipStartDate}
+          notes={invoiceNotes}
+        />
       </DialogContent>
     </Dialog>
   );
