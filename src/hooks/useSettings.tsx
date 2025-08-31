@@ -263,11 +263,23 @@ export function useSettings() {
       if (!userProfile) {
         console.log('⚠️ No profile found for user - may already be deleted');
         // Force refresh the user list since this user seems to be stale data
-        await fetchUsers();
         toast({
           title: 'User Already Deleted',
-          description: 'This user was already deleted from the system.',
+          description: 'This user was already deleted from the system. Refreshing user list...',
         });
+        
+        // Force a hard refresh of the users list
+        console.log('🔄 Force refreshing user list...');
+        await fetchUsers();
+        
+        // If that doesn't work, let's also reload the entire settings data
+        setTimeout(async () => {
+          console.log('🔄 Reloading all settings data...');
+          setLoading(true);
+          await Promise.all([fetchUsers(), fetchStats(), fetchSettings()]);
+          setLoading(false);
+        }, 1000);
+        
         return;
       }
 
