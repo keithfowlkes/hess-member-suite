@@ -265,11 +265,23 @@ export function PendingRegistrationApprovalDialog({
 
           {/* Invoice Options */}
           <Card className="border-blue-200 bg-blue-50">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
               <CardTitle className="flex items-center gap-2 text-blue-800">
                 <DollarSign className="h-5 w-5" />
                 Invoice Options
               </CardTitle>
+              {sendInvoice && membershipStartDate && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPreviewModal(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  Preview Invoice
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-2">
@@ -367,18 +379,6 @@ export function PendingRegistrationApprovalDialog({
                   </>
                 )}
               </Button>
-              
-              {sendInvoice && membershipStartDate && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowPreviewModal(true)}
-                  className="flex items-center gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  Preview Invoice
-                </Button>
-              )}
               
               <Button
                 onClick={() => setShowRejectForm(true)}
