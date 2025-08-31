@@ -1224,11 +1224,6 @@ const MasterDashboard = () => {
       <MemberInfoUpdateRequestsDialog
         open={showMemberInfoUpdateDialog}
         onOpenChange={setShowMemberInfoUpdateDialog}
-        requests={memberInfoUpdateRequests}
-        onApprove={approveMemberInfoUpdate.mutateAsync}
-        onReject={rejectMemberInfoUpdate.mutateAsync}
-        onDelete={deleteMemberInfoUpdate.mutateAsync}
-        onRefresh={refetchRequests}
       />
 
       <PendingRegistrationApprovalDialog
