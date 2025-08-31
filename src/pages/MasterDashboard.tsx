@@ -215,14 +215,11 @@ const MasterDashboard = () => {
 
   const handleDeleteUser = async (userId: string) => {
     console.log('🚨 MASTER DASHBOARD: handleDeleteUser called with userId:', userId);
-    alert(`Delete function called for user ID: ${userId}`);
     try {
       await deleteUser(userId);
       console.log('🚨 MASTER DASHBOARD: deleteUser completed successfully');
-      alert('Delete function completed');
     } catch (error) {
       console.error('🚨 MASTER DASHBOARD: deleteUser failed:', error);
-      alert(`Delete function failed: ${error.message}`);
     }
   };
 
