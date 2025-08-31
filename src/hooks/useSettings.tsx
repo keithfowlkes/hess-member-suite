@@ -285,14 +285,18 @@ export function useSettings() {
       
       if (error) throw error;
 
-      // Also delete from auth.users table
-      try {
-        const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-        if (authError && !authError.message?.includes('User not found')) {
-          console.warn('Could not delete from auth.users:', authError.message);
-        }
-      } catch (authErr) {
-        console.warn('Auth deletion warning:', authErr);
+      // Delete from auth.users table using edge function
+      const { error: authError } = await supabase.functions.invoke('delete-user', {
+        body: { userId }
+      });
+
+      if (authError) {
+        console.error('Error deleting user from auth:', authError);
+        toast({
+          title: "Warning",
+          description: "User profile deleted but auth account may still exist.",
+          variant: "destructive"
+        });
       }
 
       toast({

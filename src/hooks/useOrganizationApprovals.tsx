@@ -215,9 +215,9 @@ export const useOrganizationApprovals = () => {
 
       // Delete the associated user account
       if (org.profiles?.user_id) {
-        const { error: userDeleteError } = await supabase.auth.admin.deleteUser(
-          org.profiles.user_id
-        );
+        const { error: userDeleteError } = await supabase.functions.invoke('delete-user', {
+          body: { userId: org.profiles.user_id }
+        });
         
         if (userDeleteError) {
           console.error('Error deleting user account:', userDeleteError);
