@@ -34,7 +34,7 @@ export function AppSidebar() {
   const { data: memberInfoUpdateRequests = [] } = useReassignmentRequests();
   const { pendingRegistrations } = usePendingRegistrations();
   
-  // Calculate total pending actions including new registrations
+  // Calculate total pending actions including new registrations and member info updates
   const activeInvitations = invitations?.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()) || [];
   const totalPendingActions = (pendingOrganizations?.length || 0) + 
                              activeInvitations.length + 

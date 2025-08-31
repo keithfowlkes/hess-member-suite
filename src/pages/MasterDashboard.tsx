@@ -106,10 +106,9 @@ const MasterDashboard = () => {
   const { pendingRegistrations, loading: pendingRegistrationsLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
   
   // Calculate pending counts
-  const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length;
+  const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length;
   const activeInvitationsCount = invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length;
-  const memberInfoUpdateRequestsCount = memberInfoUpdateRequests.length;
-  const totalOrganizationActions = pendingApprovalsCount + activeInvitationsCount + memberInfoUpdateRequestsCount;
+  const totalOrganizationActions = pendingApprovalsCount + activeInvitationsCount;
   const approveMemberInfoUpdate = useApproveReassignmentRequest();
   const rejectMemberInfoUpdate = useRejectReassignmentRequest();
   const deleteMemberInfoUpdate = useDeleteReassignmentRequest();
@@ -505,32 +504,21 @@ const MasterDashboard = () => {
                         </Badge>
                       )}
                     </TabsTrigger>
-                    <TabsTrigger value="reassignments" className="relative">
-                      Member Info Updates
-                      {memberInfoUpdateRequestsCount > 0 && (
-                        <Badge 
-                          variant="destructive" 
-                          className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                        >
-                          {memberInfoUpdateRequestsCount}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
                     <TabsTrigger value="users">User Management</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="approvals" className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-semibold">Pending Applications</h2>
+                      <h2 className="text-xl font-semibold">Pending Applications & Updates</h2>
                       <div className="flex items-center gap-2">
-                        {(pendingOrganizations.length + pendingRegistrations.length) > 0 && (
+                        {(pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length) > 0 && (
                           <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
                             <AlertCircle className="h-4 w-4" />
-                            <span className="font-medium">{pendingOrganizations.length + pendingRegistrations.length} Pending Review</span>
+                            <span className="font-medium">{pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length} Pending Review</span>
                           </div>
                         )}
                         <Badge variant="secondary" className="text-sm">
-                          {filteredPendingOrganizations.length + filteredPendingRegistrations.length} of {pendingOrganizations.length + pendingRegistrations.length} shown
+                          {filteredPendingOrganizations.length + filteredPendingRegistrations.length + memberInfoUpdateRequests.length} of {pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length} shown
                         </Badge>
                       </div>
                     </div>
@@ -552,7 +540,7 @@ const MasterDashboard = () => {
                           <div className="text-center">Loading pending applications...</div>
                         </CardContent>
                       </Card>
-                    ) : (filteredPendingOrganizations.length === 0 && filteredPendingRegistrations.length === 0) ? (
+                    ) : (filteredPendingOrganizations.length === 0 && filteredPendingRegistrations.length === 0 && memberInfoUpdateRequests.length === 0) ? (
                       <Card>
                         <CardContent className="p-6">
                           <div className="text-center text-muted-foreground">
@@ -560,7 +548,7 @@ const MasterDashboard = () => {
                             {organizationSearchTerm ? (
                               <p>No applications match your search "{organizationSearchTerm}".</p>
                             ) : (
-                              <p>No pending applications.</p>
+                              <p>No pending applications or updates.</p>
                             )}
                           </div>
                         </CardContent>
@@ -654,6 +642,54 @@ const MasterDashboard = () => {
                                       setSelectedPendingRegistration(reg);
                                       setShowRegistrationApprovalDialog(true);
                                     }}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                    Review
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+
+                        {/* Member Info Update Requests */}
+                        {memberInfoUpdateRequests.map((request) => (
+                          <Card key={`update-${request.id}`} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-3">
+                                    <h3 className="text-lg font-semibold">
+                                      {request.new_organization_data?.name || 'Organization Update'}
+                                    </h3>
+                                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                      Member Info Update
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="text-sm text-muted-foreground space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <Users className="h-3 w-3" />
+                                      <span>New Contact: {request.new_contact_email}</span>
+                                    </div>
+                                    <div>
+                                      Status: {request.status} | 
+                                      Requested: {new Date(request.created_at).toLocaleDateString()}
+                                    </div>
+                                    {request.admin_notes && (
+                                      <div>
+                                        Notes: {request.admin_notes}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowMemberInfoUpdateDialog(true)}
                                     className="flex items-center gap-2"
                                   >
                                     <Eye className="h-3 w-3" />
