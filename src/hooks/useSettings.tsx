@@ -255,6 +255,17 @@ export function useSettings() {
         throw profileError;
       }
 
+      if (!userProfile) {
+        console.log('⚠️ No profile found for user - may already be deleted');
+        // Force refresh the user list since this user seems to be stale data
+        await fetchUsers();
+        toast({
+          title: 'User Already Deleted',
+          description: 'This user was already deleted from the system.',
+        });
+        return;
+      }
+
       console.log('👤 User profile found:', userProfile);
 
       if (userProfile) {
@@ -285,8 +296,6 @@ export function useSettings() {
             variant: 'default'
           });
         }
-      } else {
-        console.log('👤 No profile found for user - may be orphaned auth record');
       }
 
       // Delete user roles first
