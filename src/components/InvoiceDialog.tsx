@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -30,7 +30,7 @@ import { Button } from '@/components/ui/button';
 import { useInvoices, Invoice, CreateInvoiceData } from '@/hooks/useInvoices';
 import { useMembers } from '@/hooks/useMembers';
 import { useAuth } from '@/hooks/useAuth';
-import { CalendarIcon, FileText, Edit } from 'lucide-react';
+import { CalendarIcon, FileText, Edit, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -40,6 +40,8 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const invoiceSchema = z.object({
   organization_id: z.string().min(1, 'Organization is required').optional(),
@@ -73,6 +75,50 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
   const { organizations } = useMembers();
   const { isAdmin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const invoiceRef = useRef<HTMLDivElement>(null);
+
+  // Function to download invoice as PDF
+  const downloadPDF = async () => {
+    if (!invoiceRef.current || !invoice) return;
+
+    try {
+      // Capture the invoice element as canvas
+      const canvas = await html2canvas(invoiceRef.current, {
+        scale: 2, // Higher quality
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+      // Create PDF
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Calculate dimensions to fit A4
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const finalWidth = imgWidth * ratio;
+      const finalHeight = imgHeight * ratio;
+      
+      // Center the image on the page
+      const x = (pdfWidth - finalWidth) / 2;
+      const y = (pdfHeight - finalHeight) / 2;
+      
+      pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+      
+      // Generate filename
+      const organizationName = invoice.organizations?.name || 'Unknown';
+      const fileName = `Invoice_${invoice.invoice_number}_${organizationName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      
+      // Download the PDF
+      pdf.save(fileName);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(bulkMode ? bulkInvoiceSchema : invoiceSchema),
@@ -476,19 +522,32 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
 
         {invoice ? (
           <Tabs defaultValue="view" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="view" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Professional View
-              </TabsTrigger>
-              <TabsTrigger value="edit" className="flex items-center gap-2">
-                <Edit className="h-4 w-4" />
-                Edit Details
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex items-center justify-between mb-4">
+              <TabsList className="grid grid-cols-2 w-fit">
+                <TabsTrigger value="view" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Professional View
+                </TabsTrigger>
+                <TabsTrigger value="edit" className="flex items-center gap-2">
+                  <Edit className="h-4 w-4" />
+                  Edit Details
+                </TabsTrigger>
+              </TabsList>
+              <Button 
+                onClick={downloadPDF}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download PDF
+              </Button>
+            </div>
             
             <TabsContent value="view" className="mt-4">
-              <ProfessionalInvoice invoice={invoice} />
+              <div ref={invoiceRef}>
+                <ProfessionalInvoice invoice={invoice} />
+              </div>
             </TabsContent>
             
             <TabsContent value="edit" className="mt-4">
