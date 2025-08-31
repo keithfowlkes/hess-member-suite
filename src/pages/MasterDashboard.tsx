@@ -588,15 +588,15 @@ const MasterDashboard = () => {
                                 </div>
 
                                 <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleReviewOrganization(org)}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Eye className="h-3 w-3" />
-                                    Review
-                                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleReviewOrganization(org)}
+                    className="flex items-center gap-2"
+                  >
+                    <Eye className="h-3 w-3" />
+                    Review Changes
+                  </Button>
                                 </div>
                               </div>
                             </CardContent>
