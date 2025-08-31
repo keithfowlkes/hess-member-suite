@@ -20,11 +20,8 @@ function replaceTemplateVariables(content: string, data: Record<string, string>)
   return result;
 }
 
-// Generate full invoice HTML matching exact ProfessionalInvoice component structure
+// Generate full invoice HTML matching exact sample invoice design
 function generateInvoiceHTML(template: any, templateData: Record<string, string>, invoice: any) {
-  const headerHtml = replaceTemplateVariables(template.header_content, templateData);
-  const footerHtml = replaceTemplateVariables(template.footer_content, templateData);
-  
   // Format dates exactly like ProfessionalInvoice component
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -41,21 +38,15 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
   const periodEnd = formatDate(invoice.period_end_date);
   
   return `
-    <div class="invoice-container" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: white; padding: 2rem; max-width: 64rem; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+    <div style="font-family: Arial, sans-serif; line-height: 1.4; color: #333; font-size: 14px; background: white; padding: 2rem; max-width: 800px; margin: 0 auto;">
       <style>
-        .invoice-container {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          line-height: 1.6;
-          color: #333;
-        }
-        
-        .header-content {
+        .invoice-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
           margin-bottom: 2rem;
           padding-bottom: 1rem;
-          border-bottom: 3px solid #6b7280;
+          border-bottom: 1px solid #666;
         }
         
         .logo-section img {
@@ -63,89 +54,89 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
           width: auto;
         }
         
+        .invoice-title {
+          text-align: right;
+        }
+        
         .invoice-title h1 {
-          font-size: 2.5rem;
+          font-size: 2rem;
           font-weight: bold;
-          color: #6b7280;
+          color: #666;
           margin: 0;
+          letter-spacing: 2px;
         }
         
         .invoice-number {
-          font-size: 1.1rem;
+          font-size: 0.9rem;
           color: #666;
           margin: 0.5rem 0 0 0;
+        }
+        
+        .company-info {
+          margin-bottom: 2rem;
+          line-height: 1.3;
+        }
+        
+        .company-info h3 {
+          font-size: 1rem;
+          font-weight: bold;
+          margin: 0 0 0.25rem 0;
+        }
+        
+        .company-info p {
+          margin: 0.1rem 0;
+          font-size: 0.9rem;
+          color: #555;
         }
         
         .invoice-details {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 2rem;
+          gap: 3rem;
           margin-bottom: 2rem;
         }
         
         .detail-section h3 {
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: #6b7280;
-          margin-bottom: 0.5rem;
-          border-bottom: 1px solid #e5e7eb;
-          padding-bottom: 0.25rem;
+          font-size: 1rem;
+          font-weight: bold;
+          color: #333;
+          margin-bottom: 0.75rem;
+        }
+        
+        .detail-section p {
+          margin: 0.25rem 0;
+          font-size: 0.9rem;
         }
         
         .invoice-table {
           width: 100%;
           border-collapse: collapse;
           margin: 2rem 0;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
         .invoice-table th {
-          background: linear-gradient(135deg, #6b7280, #4b5563);
+          background: #6b7280;
           color: white;
-          padding: 1rem;
+          padding: 0.75rem;
           text-align: left;
-          font-weight: 600;
+          font-weight: bold;
+          font-size: 0.9rem;
         }
         
         .invoice-table td {
-          padding: 1rem;
-          border-bottom: 1px solid #e5e7eb;
+          padding: 0.75rem;
         }
         
         .invoice-table .amount-cell {
           text-align: right;
-          font-weight: 600;
+          font-weight: normal;
         }
         
-        .total-row {
-          background: #f8fafc;
+        .total-section {
+          text-align: right;
+          margin: 1rem 0;
           font-weight: bold;
-          font-size: 1.1rem;
-        }
-        
-        .footer-content {
-          margin-top: 3rem;
-          padding-top: 2rem;
-          border-top: 2px solid #e5e7eb;
-        }
-        
-        .payment-info {
-          background: #f9fafb;
-          padding: 1.5rem;
-          border-left: 4px solid #6b7280;
-          margin-bottom: 1rem;
-        }
-        
-        .payment-info h3 {
-          color: #6b7280;
-          margin-bottom: 0.5rem;
-        }
-        
-        .contact-info {
-          text-align: center;
-          padding: 1rem;
-          background: #f8fafc;
-          border-radius: 0.5rem;
+          font-size: 1rem;
         }
         
         .notes-section {
@@ -153,37 +144,60 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
         }
         
         .notes-section h3 {
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: #6b7280;
+          font-size: 1rem;
+          font-weight: bold;
           margin-bottom: 0.5rem;
         }
         
-        .text-sm {
-          font-size: 0.875rem;
+        .payment-info {
+          background: #f8f9fa;
+          padding: 1rem;
+          border-left: 4px solid #6b7280;
+          margin: 2rem 0;
         }
         
-        .text-gray-600 {
-          color: #4b5563;
+        .payment-info h3 {
+          font-size: 1rem;
+          font-weight: bold;
+          color: #333;
+          margin-bottom: 0.5rem;
         }
         
-        .text-gray-500 {
-          color: #6b7280;
+        .payment-info p {
+          margin: 0.25rem 0;
+          font-size: 0.9rem;
         }
         
-        .line-through {
-          text-decoration: line-through;
+        .footer-section {
+          text-align: center;
+          margin-top: 3rem;
+          padding-top: 2rem;
+          font-size: 0.9rem;
+          color: #666;
         }
         
-        .mt-1 {
-          margin-top: 0.25rem;
+        .footer-section p {
+          margin: 0.25rem 0;
         }
       </style>
       
-      <!-- Header -->
-      ${headerHtml}
+      <!-- Header with Logo and Invoice Title -->
+      <div class="invoice-header">
+        <div class="logo-section">
+          ${template.logo_url ? `<img src="${template.logo_url.startsWith('http') ? template.logo_url : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev${template.logo_url}`}" alt="Company Logo" style="max-height: 80px;" />` : ''}
+          <div class="company-info">
+            <h3>HESS Consortium</h3>
+            <p>Higher Education Systems & Services Consortium</p>
+            <p>A consortium of private, non-profit colleges and universities</p>
+          </div>
+        </div>
+        <div class="invoice-title">
+          <h1>INVOICE</h1>
+          <p class="invoice-number">Invoice #${templateData['{{INVOICE_NUMBER}}']}</p>
+        </div>
+      </div>
       
-      <!-- Invoice Details -->
+      <!-- Bill To and Invoice Details -->
       <div class="invoice-details">
         <div class="detail-section">
           <h3>Bill To:</h3>
@@ -199,7 +213,7 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
         </div>
       </div>
       
-      <!-- Invoice Items Table -->
+      <!-- Invoice Items Table -->  
       <table class="invoice-table">
         <thead>
           <tr>
@@ -212,34 +226,45 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
           <tr>
             <td>
               <strong>Annual Membership Fee</strong>
-              ${invoice.proratedAmount ? '<div class="text-sm text-gray-600 mt-1">Prorated from membership start date</div>' : ''}
+              ${invoice.proratedAmount ? '<div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">Prorated from membership start date</div>' : ''}
             </td>
             <td>
               ${periodStart} - ${periodEnd}
             </td>
             <td class="amount-cell">
               ${invoice.proratedAmount ? 
-                `<div>$${invoice.proratedAmount.toLocaleString()}</div><div class="text-sm text-gray-500 line-through">$${invoice.invoiceAmount.toLocaleString()}</div>` :
+                `$${invoice.proratedAmount.toLocaleString()}` :
                 `$${invoice.invoiceAmount.toLocaleString()}`
               }
             </td>
           </tr>
         </tbody>
-        <tfoot>
-          <tr class="total-row">
-            <td colspan="2"><strong>Total Due:</strong></td>
-            <td class="amount-cell">
-              <strong>$${(invoice.proratedAmount || invoice.invoiceAmount).toLocaleString()}</strong>
-            </td>
-          </tr>
-        </tfoot>
       </table>
+      
+      <!-- Total Due -->
+      <div class="total-section">
+        <p><strong>Total Due: $${(invoice.proratedAmount || invoice.invoiceAmount).toLocaleString()}</strong></p>
+      </div>
       
       <!-- Notes -->
       ${invoice.notes ? `<div class="notes-section"><h3>Notes:</h3><p>${invoice.notes}</p></div>` : ''}
       
+      <!-- Payment Information -->
+      <div class="payment-info">
+        <h3>Payment Information</h3>
+        <p><strong>Payment Terms:</strong> Net 30 days</p>
+        <p><strong>Due Date:</strong> ${dueDate}</p>
+        <p>Please include invoice number ${templateData['{{INVOICE_NUMBER}}']} with your payment.</p>
+      </div>
+      
       <!-- Footer -->
-      ${footerHtml}
+      <div class="footer-section">
+        <p>Questions about your invoice?</p>
+        <p>Contact us at: billing@hessconsortium.org</p>
+        <p>Visit us online: www.hessconsortium.org</p>
+        <br />
+        <p>Thank you for being a valued member of the HESS Consortium community!</p>
+      </div>
     </div>
   `;
 }
