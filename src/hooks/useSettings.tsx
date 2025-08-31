@@ -40,6 +40,7 @@ export function useSettings() {
 
   const fetchUsers = async () => {
     try {
+      console.log('🔄 FETCHING USERS: Starting user fetch...');
       // First get all profiles
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
@@ -61,8 +62,12 @@ export function useSettings() {
         user_roles: roles?.filter(role => role.user_id === profile.user_id) || []
       })) || [];
 
+      console.log('🔄 FETCHING USERS: Found', usersWithRoles.length, 'users');
+      console.log('🔄 FETCHING USERS: Frank users:', usersWithRoles.filter(u => u.email.includes('frank@deuslogic.com')));
+      
       setUsers(usersWithRoles);
     } catch (error: any) {
+      console.error('🔄 FETCHING USERS: Error:', error);
       toast({
         title: 'Error fetching users',
         description: error.message,
