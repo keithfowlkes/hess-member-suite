@@ -15,6 +15,9 @@ verify_jwt = true
 [functions.organization-emails]
 verify_jwt = true
 
+[functions.resend-invoice]
+verify_jwt = true
+
 [functions.send-invoice]
 verify_jwt = true
 
@@ -23,3 +26,6 @@ verify_jwt = true
 
 [functions.test-email]
 verify_jwt = true
+
+[functions.track-invoice-open]
+verify_jwt = false

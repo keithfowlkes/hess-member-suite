@@ -170,6 +170,7 @@ export type Database = {
           invoice_date: string
           invoice_number: string
           notes: string | null
+          opened_at: string | null
           organization_id: string
           paid_date: string | null
           period_end_date: string
@@ -187,6 +188,7 @@ export type Database = {
           invoice_date?: string
           invoice_number: string
           notes?: string | null
+          opened_at?: string | null
           organization_id: string
           paid_date?: string | null
           period_end_date: string
@@ -204,6 +206,7 @@ export type Database = {
           invoice_date?: string
           invoice_number?: string
           notes?: string | null
+          opened_at?: string | null
           organization_id?: string
           paid_date?: string | null
           period_end_date?: string
