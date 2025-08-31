@@ -185,7 +185,7 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
       <div class="invoice-header">
         <div class="logo-section">
           ${template.logo_url ? 
-            `<img src="${embedded ? 'cid:logo' : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/functions/v1/track-invoice-open?invoice_id=${invoiceId}&logo_url=${encodeURIComponent(template.logo_url.startsWith('http') ? template.logo_url : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev${template.logo_url}`)}`}" alt="Company Logo" style="max-height: 80px; width: auto;" onerror="this.style.display='none';" />` : 
+            `<img src="${embedded ? 'cid:logo' : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/functions/v1/track-invoice-open?invoice_id=${templateData['{{INVOICE_NUMBER}}']}&logo_url=${encodeURIComponent(template.logo_url.startsWith('http') ? template.logo_url : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev${template.logo_url}`)}`}" alt="Company Logo" style="max-height: 80px; width: auto;" onerror="this.style.display='none';" />` : 
             ''
           }
           <div class="company-info">
