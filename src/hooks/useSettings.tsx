@@ -248,7 +248,7 @@ export function useSettings() {
         .from('profiles')
         .select('id, email')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('❌ Error fetching user profile:', profileError);
@@ -285,6 +285,8 @@ export function useSettings() {
             variant: 'default'
           });
         }
+      } else {
+        console.log('👤 No profile found for user - may be orphaned auth record');
       }
 
       // Delete user roles first
