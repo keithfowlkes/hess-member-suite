@@ -79,7 +79,7 @@ export function usePendingRegistrations() {
     }
   };
 
-  const approveRegistration = async (registrationId: string, adminUserId?: string): Promise<boolean> => {
+  const approveRegistration = async (registrationId: string, adminUserId?: string): Promise<boolean | { success: boolean; organizationId?: string }> => {
     try {
       setLoading(true);
       
@@ -92,6 +92,18 @@ export function usePendingRegistrations() {
 
       if (error) {
         throw error;
+      }
+
+      // Check if the response includes organizationId
+      if (data && data.organizationId) {
+        toast({
+          title: "Registration Approved",
+          description: "The registration has been approved and user account created successfully.",
+        });
+
+        // Refresh the list
+        await fetchPendingRegistrations();
+        return { success: true, organizationId: data.organizationId };
       }
 
       toast({

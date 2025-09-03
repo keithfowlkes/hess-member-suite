@@ -184,7 +184,19 @@ serve(async (req) => {
 
     // The handle_new_user trigger will automatically create the profile and organization
     // We just need to wait a moment for it to process
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Get the newly created organization
+    const { data: newOrganization, error: orgError } = await supabaseAdmin
+      .from('organizations')
+      .select('id, name, email')
+      .eq('name', pendingReg.organization_name)  
+      .single();
+
+    if (orgError) {
+      console.error('Error finding newly created organization:', orgError);
+      // Continue without organization data
+    }
 
     // Update the pending registration status
     const { error: updateError } = await supabaseAdmin
@@ -214,25 +226,68 @@ serve(async (req) => {
       console.error('Error sending password reset email:', resetError);
     }
 
-    // Send approval email
+    // Send welcome email using organization-emails function
     try {
-      await supabaseAdmin.functions.invoke('organization-emails', {
-        body: {
-          type: 'approval',
-          to: pendingReg.email,
-          organizationName: pendingReg.organization_name
-        }
-      });
-      console.log('Sent approval email');
+      if (newOrganization) {
+        console.log('Sending welcome email via organization-emails function...');
+        
+        // Prepare organization data for the welcome email
+        const organizationData = {
+          primary_contact_name: `${pendingReg.first_name} ${pendingReg.last_name}`,
+          primary_contact_title: pendingReg.primary_contact_title || '',
+          secondary_first_name: pendingReg.secondary_first_name || '',
+          secondary_last_name: pendingReg.secondary_last_name || '',
+          secondary_contact_title: pendingReg.secondary_contact_title || '',
+          secondary_contact_email: pendingReg.secondary_contact_email || '',
+          student_fte: pendingReg.student_fte || 0,
+          address_line_1: pendingReg.address || '',
+          city: pendingReg.city || '',
+          state: pendingReg.state || '',
+          zip_code: pendingReg.zip || '',
+          phone: '',
+          email: pendingReg.email,
+          website: '',
+          student_information_system: pendingReg.student_information_system || '',
+          financial_system: pendingReg.financial_system || '',
+          financial_aid: pendingReg.financial_aid || '',
+          hcm_hr: pendingReg.hcm_hr || '',
+          payroll_system: pendingReg.payroll_system || '',
+          purchasing_system: pendingReg.purchasing_system || '',
+          housing_management: pendingReg.housing_management || '',
+          learning_management: pendingReg.learning_management || '',
+          admissions_crm: pendingReg.admissions_crm || '',
+          alumni_advancement_crm: pendingReg.alumni_advancement_crm || '',
+          primary_office_apple: pendingReg.primary_office_apple || false,
+          primary_office_asus: pendingReg.primary_office_asus || false,
+          primary_office_dell: pendingReg.primary_office_dell || false,
+          primary_office_hp: pendingReg.primary_office_hp || false,
+          primary_office_microsoft: pendingReg.primary_office_microsoft || false,
+          primary_office_other: pendingReg.primary_office_other || false,
+          primary_office_other_details: pendingReg.primary_office_other_details || '',
+          other_software_comments: pendingReg.other_software_comments || '',
+        };
+
+        await supabaseAdmin.functions.invoke('organization-emails', {
+          body: {
+            type: 'welcome_approved',
+            to: pendingReg.email,
+            organizationName: pendingReg.organization_name,
+            secondaryEmail: pendingReg.secondary_contact_email,
+            organizationData: organizationData
+          }
+        });
+        console.log('Sent welcome email successfully');
+      }
     } catch (emailError) {
-      console.error('Error sending approval email:', emailError);
+      console.error('Error sending welcome email:', emailError);
     }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: 'Registration approved and user created successfully',
-        userId: authUser.user?.id 
+        userId: authUser.user?.id,
+        organizationId: newOrganization?.id // Include organization ID for invoice sending
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

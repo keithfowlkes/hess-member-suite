@@ -17,7 +17,7 @@ interface PendingRegistrationApprovalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   registration: PendingRegistration | null;
-  onApprove: (registrationId: string, adminUserId?: string) => Promise<boolean>;
+  onApprove: (registrationId: string, adminUserId?: string) => Promise<boolean | { success: boolean; organizationId?: string }>;
   onReject: (registrationId: string, reason: string, adminUserId?: string) => Promise<boolean>;
 }
 
@@ -80,11 +80,19 @@ export function PendingRegistrationApprovalDialog({
     
     setIsSubmitting(true);
     try {
-      const success = await onApprove(registration.id, user?.id);
-      if (success && sendInvoice && membershipStartDate) {
-        // Get the created organization ID after approval
-        // For now, we'll use the registration ID as a placeholder
-        await handleSendInvoice(registration.id);
+      const result = await onApprove(registration.id, user?.id);
+      
+      // Check if result includes organization ID (updated approval function returns this)
+      let organizationId = registration.id; // fallback to registration ID
+      if (typeof result === 'object' && result && 'organizationId' in result && result.organizationId) {
+        organizationId = result.organizationId;
+      }
+      
+      const success = typeof result === 'boolean' ? result : (result && 'success' in result ? result.success : true);
+      
+      if (success && sendInvoice && membershipStartDate && organizationId) {
+        // Use the actual organization ID returned from approval
+        await handleSendInvoice(organizationId);
       }
 
       if (success) {
