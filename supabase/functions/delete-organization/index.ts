@@ -118,7 +118,25 @@ serve(async (req) => {
       console.log(`Deleted ${deletedReassignments?.length || 0} reassignment requests`);
     }
 
-    // 5. Delete the organization (this will cascade to profiles via the foreign key)
+    // 5. Delete pending registrations for this organization/email
+    let deletedPendingRegs = [];
+    if (organization.profiles?.email) {
+      const { data: deletedRegs, error: pendingError } = await supabaseAdmin
+        .from('pending_registrations')
+        .delete()
+        .eq('email', organization.profiles.email)
+        .select('id');
+
+      if (pendingError) {
+        console.error('Error deleting pending registrations:', pendingError);
+      } else {
+        deletedPendingRegs = deletedRegs || [];
+        deletedItems.push(`${deletedPendingRegs.length} pending registrations`);
+        console.log(`Deleted ${deletedPendingRegs.length} pending registrations`);
+      }
+    }
+
+    // 6. Delete the organization (this will cascade to profiles via the foreign key)
     const { error: deleteOrgError } = await supabaseAdmin
       .from('organizations')
       .delete()
@@ -135,7 +153,7 @@ serve(async (req) => {
     deletedItems.push('organization record');
     console.log('Deleted organization record');
 
-    // 6. Delete user roles and auth user if user exists
+    // 7. Delete user roles and auth user if user exists
     if (userId) {
       // Delete user roles first
       const { data: deletedRoles, error: roleError } = await supabaseAdmin
