@@ -140,13 +140,52 @@ export const useOrganizationApprovals = () => {
         }
       }
 
-      // Send approval email to primary contact
+      // Send welcome email to primary contact with full organization details
       if (org.profiles?.email) {
+        const primaryContactName = `${org.profiles.first_name} ${org.profiles.last_name}`;
+        
+        const organizationData = {
+          primary_contact_name: primaryContactName,
+          primary_contact_title: org.primary_contact_title,
+          secondary_first_name: org.secondary_first_name,
+          secondary_last_name: org.secondary_last_name,
+          secondary_contact_title: org.secondary_contact_title,
+          secondary_contact_email: org.secondary_contact_email,
+          student_fte: org.student_fte,
+          address_line_1: org.address_line_1,
+          city: org.city,
+          state: org.state,
+          zip_code: org.zip_code,
+          phone: org.phone,
+          email: org.email,
+          website: org.website,
+          student_information_system: org.student_information_system,
+          financial_system: org.financial_system,
+          financial_aid: org.financial_aid,
+          hcm_hr: org.hcm_hr,
+          payroll_system: org.payroll_system,
+          purchasing_system: org.purchasing_system,
+          housing_management: org.housing_management,
+          learning_management: org.learning_management,
+          admissions_crm: org.admissions_crm,
+          alumni_advancement_crm: org.alumni_advancement_crm,
+          primary_office_apple: org.primary_office_apple,
+          primary_office_asus: org.primary_office_asus,
+          primary_office_dell: org.primary_office_dell,
+          primary_office_hp: org.primary_office_hp,
+          primary_office_microsoft: org.primary_office_microsoft,
+          primary_office_other: org.primary_office_other,
+          primary_office_other_details: org.primary_office_other_details,
+          other_software_comments: org.other_software_comments,
+        };
+
         await supabase.functions.invoke('organization-emails', {
           body: {
-            type: 'approval',
+            type: 'welcome_approved',
             to: org.profiles.email,
             organizationName: org.name,
+            secondaryEmail: org.secondary_contact_email,
+            organizationData: organizationData,
             adminMessage
           }
         });
