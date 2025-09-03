@@ -1246,164 +1246,181 @@ const MasterDashboard = () => {
                   <p className="text-muted-foreground">Customize system messages and notifications</p>
                 </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Password Reset Message</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Customize the message shown to users when their password is reset
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="password-reset-message">Reset Message</Label>
-                      <Textarea
-                        id="password-reset-message"
-                        placeholder="Enter the password reset message..."
-                        value={passwordResetMessage}
-                        onChange={(e) => setPasswordResetMessage(e.target.value)}
-                        rows={4}
-                        className="mt-2"
-                      />
-                    </div>
-                    <Button 
-                      onClick={handleSavePasswordMessage}
-                      disabled={savingMessage}
-                    >
-                      {savingMessage ? "Saving..." : "Save Message"}
-                    </Button>
-                  </CardContent>
-                </Card>
+                <Tabs defaultValue="password-reset" className="space-y-6">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="password-reset">Password Reset</TabsTrigger>
+                    <TabsTrigger value="cc-recipients">CC Recipients</TabsTrigger>
+                    <TabsTrigger value="welcome-template">Welcome Template</TabsTrigger>
+                  </TabsList>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Welcome Message CC Recipients</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Configure recipients who will be CCed on welcome messages. Enable/disable default recipients and add additional ones.
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label>Default Recipients</Label>
-                      <p className="text-xs text-muted-foreground mb-2">Configure which default recipients should receive welcome messages</p>
-                      <div className="mt-2 space-y-2">
-                        {Object.entries(defaultRecipients).map(([email, enabled]) => (
-                          <div key={email} className="flex items-center justify-between p-2 border rounded-lg">
-                            <span className="text-sm">{email}</span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteDefaultRecipient(email)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label>Additional Recipients</Label>
-                      <div className="mt-2 space-y-2">
-                        {welcomeCcRecipients.map((email, index) => (
-                          <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
-                            <span className="text-sm">{email}</span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveCcRecipient(email)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        ))}
-                        
-                        <div className="flex gap-2">
-                          <Input
-                            type="email"
-                            placeholder="Enter email address"
-                            value={newCcEmail}
-                            onChange={(e) => setNewCcEmail(e.target.value)}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleAddCcRecipient();
-                              }
-                            }}
+                  {/* Password Reset Subtab */}
+                  <TabsContent value="password-reset" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Password Reset Message</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Customize the message shown to users when their password is reset
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <Label htmlFor="password-reset-message">Reset Message</Label>
+                          <Textarea
+                            id="password-reset-message"
+                            placeholder="Enter the password reset message..."
+                            value={passwordResetMessage}
+                            onChange={(e) => setPasswordResetMessage(e.target.value)}
+                            rows={4}
+                            className="mt-2"
                           />
-                          <Button
-                            onClick={handleAddCcRecipient}
-                            disabled={!newCcEmail.trim() || welcomeCcRecipients.includes(newCcEmail.trim())}
-                          >
-                            Add
-                          </Button>
                         </div>
-                      </div>
-                    </div>
+                        <Button 
+                          onClick={handleSavePasswordMessage}
+                          disabled={savingMessage}
+                        >
+                          {savingMessage ? "Saving..." : "Save Message"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
 
-                    <Button 
-                      onClick={handleSaveCcRecipients}
-                      disabled={savingCcRecipients}
-                    >
-                      {savingCcRecipients ? "Saving..." : "Save CC Recipients"}
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Welcome Message for Approved Organizations</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Customize the welcome email sent to newly approved organizations. Use variables like {'{{'}`primary_contact_name`{'}}'} and {'{{'}`organization_name`{'}}'} for personalization.
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="welcome-message">Welcome Message Template</Label>
-                      <div className="mt-2">
-                        <ReactQuill
-                          theme="snow"
-                          value={welcomeMessage}
-                          onChange={setWelcomeMessage}
-                          modules={{
-                            toolbar: [
-                              [{ 'header': [1, 2, 3, false] }],
-                              ['bold', 'italic', 'underline', 'strike'],
-                              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                              [{ 'color': [] }, { 'background': [] }],
-                              ['link', 'image'],
-                              ['clean']
-                            ],
-                          }}
-                          formats={[
-                            'header', 'bold', 'italic', 'underline', 'strike',
-                            'list', 'bullet', 'color', 'background',
-                            'link', 'image'
-                          ]}
-                          style={{ minHeight: '300px' }}
-                        />
-                      </div>
-                      <div className="mt-4 p-3 bg-muted rounded-lg">
-                        <p className="text-sm font-medium mb-2">Available Variables:</p>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <code>{'{{'}`primary_contact_name`{'}}'}</code>
-                          <code>{'{{'}`organization_name`{'}}'}</code>
-                          <code>{'{{'}`secondary_contact_email`{'}}'}</code>
-                          <code>{'{{'}`student_fte`{'}}'}</code>
-                          <code>{'{{'}`address`{'}}'}</code>
-                          <code>{'{{'}`city`{'}}'}, {'{{'}`state`{'}}'} {'{{'}`zip_code`{'}}'}</code>
+                  {/* CC Recipients Subtab */}
+                  <TabsContent value="cc-recipients" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Welcome Message CC Recipients</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Configure recipients who will be CCed on welcome messages. Enable/disable default recipients and add additional ones.
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <Label>Default Recipients</Label>
+                          <p className="text-xs text-muted-foreground mb-2">Configure which default recipients should receive welcome messages</p>
+                          <div className="mt-2 space-y-2">
+                            {Object.entries(defaultRecipients).map(([email, enabled]) => (
+                              <div key={email} className="flex items-center justify-between p-2 border rounded-lg">
+                                <span className="text-sm">{email}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteDefaultRecipient(email)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                    <Button 
-                      onClick={handleSaveWelcomeMessage}
-                      disabled={savingWelcomeMessage}
-                    >
-                      {savingWelcomeMessage ? "Saving..." : "Save Welcome Message"}
-                    </Button>
-                  </CardContent>
-                </Card>
+
+                        <div>
+                          <Label>Additional Recipients</Label>
+                          <div className="mt-2 space-y-2">
+                            {welcomeCcRecipients.map((email, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
+                                <span className="text-sm">{email}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveCcRecipient(email)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            ))}
+                            
+                            <div className="flex gap-2">
+                              <Input
+                                type="email"
+                                placeholder="Enter email address"
+                                value={newCcEmail}
+                                onChange={(e) => setNewCcEmail(e.target.value)}
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleAddCcRecipient();
+                                  }
+                                }}
+                              />
+                              <Button
+                                onClick={handleAddCcRecipient}
+                                disabled={!newCcEmail.trim() || welcomeCcRecipients.includes(newCcEmail.trim())}
+                              >
+                                Add
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Button 
+                          onClick={handleSaveCcRecipients}
+                          disabled={savingCcRecipients}
+                        >
+                          {savingCcRecipients ? "Saving..." : "Save CC Recipients"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Welcome Template Subtab */}
+                  <TabsContent value="welcome-template" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Welcome Message for Approved Organizations</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Customize the welcome email sent to newly approved organizations. Use variables like {'{{'}`primary_contact_name`{'}}'} and {'{{'}`organization_name`{'}}'} for personalization.
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <Label htmlFor="welcome-message">Welcome Message Template</Label>
+                          <div className="mt-2">
+                            <ReactQuill
+                              theme="snow"
+                              value={welcomeMessage}
+                              onChange={setWelcomeMessage}
+                              modules={{
+                                toolbar: [
+                                  [{ 'header': [1, 2, 3, false] }],
+                                  ['bold', 'italic', 'underline', 'strike'],
+                                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                  [{ 'color': [] }, { 'background': [] }],
+                                  ['link', 'image'],
+                                  ['clean']
+                                ],
+                              }}
+                              formats={[
+                                'header', 'bold', 'italic', 'underline', 'strike',
+                                'list', 'bullet', 'color', 'background',
+                                'link', 'image'
+                              ]}
+                              style={{ minHeight: '300px' }}
+                            />
+                          </div>
+                          <div className="mt-4 p-3 bg-muted rounded-lg">
+                            <p className="text-sm font-medium mb-2">Available Variables:</p>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <code>{'{{'}`primary_contact_name`{'}}'}</code>
+                              <code>{'{{'}`organization_name`{'}}'}</code>
+                              <code>{'{{'}`secondary_contact_email`{'}}'}</code>
+                              <code>{'{{'}`student_fte`{'}}'}</code>
+                              <code>{'{{'}`address`{'}}'}</code>
+                              <code>{'{{'}`city`{'}}'}, {'{{'}`state`{'}}'} {'{{'}`zip_code`{'}}'}</code>
+                            </div>
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={handleSaveWelcomeMessage}
+                          disabled={savingWelcomeMessage}
+                        >
+                          {savingWelcomeMessage ? "Saving..." : "Save Welcome Message"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </TabsContent>
 
               {/* Analytics Tab */}
