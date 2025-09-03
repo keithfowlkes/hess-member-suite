@@ -460,7 +460,7 @@ serve(async (req) => {
     const subject = `HESS Consortium Membership Invoice - ${organizationName}`;
 
     const emailPayload: any = {
-      from: "HESS Consortium <support@hessconsortium.org>",
+      from: "HESS Consortium <support@members.hessconsortium.app>",
       to: [organizationEmail],
       subject: subject,
       html: html,
