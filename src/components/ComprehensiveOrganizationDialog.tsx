@@ -42,6 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useMembers, Organization, CreateOrganizationData } from '@/hooks/useMembers';
+import { useFieldOptions } from '@/hooks/useSystemFieldOptions';
 import { CalendarIcon, User, Building2, Mail, Phone, MapPin, Database, Monitor, Trash2, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -116,6 +117,65 @@ interface OrganizationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organization?: Organization | null;
+}
+
+interface SystemFieldsSectionProps {
+  profileForm: any;
+}
+
+function SystemFieldsSection({ profileForm }: SystemFieldsSectionProps) {
+  const systemFields = [
+    { key: 'student_information_system', label: 'Student Information System' },
+    { key: 'financial_system', label: 'Financial System' },
+    { key: 'financial_aid', label: 'Financial Aid System' },
+    { key: 'hcm_hr', label: 'HCM/HR System' },
+    { key: 'payroll_system', label: 'Payroll System' },
+    { key: 'purchasing_system', label: 'Purchasing System' },
+    { key: 'housing_management', label: 'Housing Management' },
+    { key: 'learning_management', label: 'Learning Management System' },
+    { key: 'admissions_crm', label: 'Admissions CRM' },
+    { key: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM' },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      {systemFields.map(({ key, label }) => {
+        const options = useFieldOptions(key as any);
+        
+        return (
+          <FormField
+            key={key}
+            control={profileForm.control}
+            name={key as keyof ProfileFormData}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{label}</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value as string || ''}
+                >
+                  <FormControl>
+                    <SelectTrigger className="bg-popover">
+                      <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-popover max-h-[200px] overflow-y-auto">
+                    <SelectItem value="">None</SelectItem>
+                    {options.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        );
+      })}
+    </div>
+  );
 }
 
 export function ComprehensiveOrganizationDialog({ open, onOpenChange, organization }: OrganizationDialogProps) {
@@ -924,35 +984,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
                     Systems & Software Information
                   </h3>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    {[
-                      { key: 'student_information_system', label: 'Student Information System', type: 'text' },
-                      { key: 'financial_system', label: 'Financial System', type: 'text' },
-                      { key: 'financial_aid', label: 'Financial Aid System', type: 'text' },
-                      { key: 'hcm_hr', label: 'HCM/HR System', type: 'text' },
-                      { key: 'payroll_system', label: 'Payroll System', type: 'text' },
-                      { key: 'purchasing_system', label: 'Purchasing System', type: 'text' },
-                      { key: 'housing_management', label: 'Housing Management', type: 'text' },
-                      { key: 'learning_management', label: 'Learning Management System', type: 'text' },
-                      { key: 'admissions_crm', label: 'Admissions CRM', type: 'text' },
-                      { key: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM', type: 'text' },
-                    ].map(({ key, label }) => (
-                      <FormField
-                        key={key}
-                        control={profileForm.control}
-                        name={key as keyof ProfileFormData}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{label}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={`Enter ${label.toLowerCase()}`} {...field} value={field.value as string || ''} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    ))}
-                  </div>
+                  <SystemFieldsSection profileForm={profileForm} />
 
                   <FormField
                     control={profileForm.control}
