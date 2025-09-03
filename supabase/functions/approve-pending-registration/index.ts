@@ -187,15 +187,25 @@ serve(async (req) => {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Get the newly created organization and activate it
-    // First check if organization already exists by name
+    // First check if organization already exists by name AND contact person
     let { data: newOrganization, error: orgError } = await supabaseAdmin
       .from('organizations')
-      .select('id, name, email')
-      .eq('name', pendingReg.organization_name)  
+      .select('id, name, email, contact_person_id, profiles:contact_person_id(user_id)')
+      .eq('name', pendingReg.organization_name)
       .single();
 
-    // If organization doesn't exist, create it manually (happens when updating existing users)
-    if (orgError || !newOrganization) {
+    // Check if the found organization belongs to the current user
+    let shouldCreateNew = true;
+    if (!orgError && newOrganization && newOrganization.profiles?.user_id === authUser.user?.id) {
+      console.log('Found existing organization for same user');
+      shouldCreateNew = false;
+    } else if (!orgError && newOrganization) {
+      console.log('Found organization with same name but different user - will create new one');
+      shouldCreateNew = true;
+    }
+
+    // If organization doesn't exist for this user, create it manually
+    if (shouldCreateNew) {
       console.log('Organization not found, creating manually...');
       
       // Get the profile ID for the user
