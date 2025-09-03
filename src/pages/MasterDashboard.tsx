@@ -29,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Switch } from '@/components/ui/switch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -145,6 +146,10 @@ const MasterDashboard = () => {
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [welcomeCcRecipients, setWelcomeCcRecipients] = useState<string[]>([]);
   const [newCcEmail, setNewCcEmail] = useState('');
+  const [defaultRecipients, setDefaultRecipients] = useState<{[email: string]: boolean}>({
+    'keith.fowlkes@hessconsortium.org': true,
+    'gpechan@flagler.edu': true
+  });
   const [savingMessage, setSavingMessage] = useState(false);
   const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
   const [savingCcRecipients, setSavingCcRecipients] = useState(false);
@@ -271,7 +276,15 @@ const MasterDashboard = () => {
   const handleSaveCcRecipients = async () => {
     setSavingCcRecipients(true);
     await updateSetting('welcome_message_cc_recipients', JSON.stringify(welcomeCcRecipients));
+    await updateSetting('welcome_message_default_recipients', JSON.stringify(defaultRecipients));
     setSavingCcRecipients(false);
+  };
+
+  const handleToggleDefaultRecipient = (email: string) => {
+    setDefaultRecipients(prev => ({
+      ...prev,
+      [email]: !prev[email]
+    }));
   };
 
   const handleAddCcRecipient = () => {
@@ -341,6 +354,21 @@ const MasterDashboard = () => {
       } catch (error) {
         console.error('Error parsing CC recipients:', error);
         setWelcomeCcRecipients([]);
+      }
+    }
+    
+    // Load default recipients settings
+    const defaultRecipientsSetting = settings.find(s => s.setting_key === 'welcome_message_default_recipients');
+    if (defaultRecipientsSetting?.setting_value) {
+      try {
+        const defaultRecipientsConfig = JSON.parse(defaultRecipientsSetting.setting_value);
+        setDefaultRecipients(defaultRecipientsConfig);
+      } catch (error) {
+        console.error('Error parsing default recipients:', error);
+        setDefaultRecipients({
+          'keith.fowlkes@hessconsortium.org': true,
+          'gpechan@flagler.edu': true
+        });
       }
     }
   }, [settings]);
@@ -1249,21 +1277,30 @@ const MasterDashboard = () => {
                   <CardHeader>
                     <CardTitle>Welcome Message CC Recipients</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Configure additional recipients who will be CCed on welcome messages. Keith Fowlkes and Gwen Pechan are always included.
+                      Configure recipients who will be CCed on welcome messages. Enable/disable default recipients and add additional ones.
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label>Default Recipients (Always Included)</Label>
+                      <Label>Default Recipients</Label>
+                      <p className="text-xs text-muted-foreground mb-2">Configure which default recipients should receive welcome messages</p>
                       <div className="mt-2 space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                          <span className="text-sm">keith.fowlkes@hessconsortium.org</span>
-                          <Badge variant="secondary">Default</Badge>
-                        </div>
-                        <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                          <span className="text-sm">gpechan@flagler.edu</span>
-                          <Badge variant="secondary">Default</Badge>
-                        </div>
+                        {Object.entries(defaultRecipients).map(([email, enabled]) => (
+                          <div key={email} className="flex items-center justify-between p-2 border rounded-lg">
+                            <span className="text-sm">{email}</span>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={enabled}
+                                onCheckedChange={() => handleToggleDefaultRecipient(email)}
+                              />
+                              {enabled ? (
+                                <Badge variant="secondary">Enabled</Badge>
+                              ) : (
+                                <Badge variant="outline">Disabled</Badge>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
 

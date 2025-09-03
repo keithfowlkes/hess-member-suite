@@ -402,8 +402,30 @@ const handler = async (req: Request): Promise<Response> => {
           console.error('Error fetching CC recipients:', ccError);
         }
 
-        // Default CC recipients
-        const defaultCcRecipients = ['keith.fowlkes@hessconsortium.org', 'gpechan@flagler.edu'];
+        // Get default recipients configuration from system settings
+        const { data: defaultRecipientsSetting, error: defaultRecipientsError } = await supabase
+          .from('system_settings')
+          .select('setting_value')
+          .eq('setting_key', 'welcome_message_default_recipients')
+          .single();
+
+        let defaultCcRecipients = ['keith.fowlkes@hessconsortium.org', 'gpechan@flagler.edu']; // fallback
+        
+        if (defaultRecipientsSetting?.setting_value && !defaultRecipientsError) {
+          try {
+            const defaultRecipientsConfig = JSON.parse(defaultRecipientsSetting.setting_value);
+            // Only include enabled default recipients
+            defaultCcRecipients = Object.entries(defaultRecipientsConfig)
+              .filter(([_, enabled]) => enabled)
+              .map(([email, _]) => email);
+            console.log('Using configured default CC recipients:', defaultCcRecipients);
+          } catch (error) {
+            console.error('Error parsing default recipients config:', error);
+            console.log('Using fallback default CC recipients:', defaultCcRecipients);
+          }
+        } else {
+          console.log('Using fallback default CC recipients:', defaultCcRecipients);
+        }
         
         if (ccSetting?.setting_value) {
           try {
