@@ -16,7 +16,7 @@ export default function RegistrationConfirmation() {
     : 'Your membership application has been received and is currently under review by our administrative team.';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex items-start justify-center pt-8 p-4">
       <div className="w-full max-w-2xl">
         <Card className="border-border/50 shadow-2xl bg-card/95 backdrop-blur-sm">
           <CardContent className="p-12 text-center space-y-8">
