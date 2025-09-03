@@ -13,7 +13,10 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== UNAPPROVE ORGANIZATION FUNCTION START ===');
+    
     // Initialize Supabase admin client
+    console.log('Initializing Supabase admin client...');
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -25,6 +28,7 @@ serve(async (req) => {
       }
     );
 
+    console.log('Parsing request body...');
     const { organizationId, adminUserId } = await req.json();
     
     if (!organizationId || !adminUserId) {
@@ -153,16 +157,35 @@ serve(async (req) => {
       );
     }
 
+    console.log('Starting deletion process...');
     const deletedItems = [];
 
     // Delete invoices associated with the organization
-    const { data: deletedInvoices } = await supabaseAdmin
-      .from('invoices')
-      .delete()
-      .eq('organization_id', organizationId)
-      .select('id');
+    try {
+      console.log('Deleting invoices...');
+      const { data: deletedInvoices, error: invoicesError } = await supabaseAdmin
+        .from('invoices')
+        .delete()
+        .eq('organization_id', organizationId)
+        .select('id');
 
-    deletedItems.push(`${deletedInvoices?.length || 0} invoices`);
+      if (invoicesError) {
+        console.error('Error deleting invoices:', invoicesError);
+        return new Response(
+          JSON.stringify({ error: `Failed to delete invoices: ${invoicesError.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      deletedItems.push(`${deletedInvoices?.length || 0} invoices`);
+      console.log(`Deleted ${deletedInvoices?.length || 0} invoices`);
+    } catch (error) {
+      console.error('Exception deleting invoices:', error);
+      return new Response(
+        JSON.stringify({ error: `Exception deleting invoices: ${error.message}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Delete organization invitations
     const { data: deletedInvitations } = await supabaseAdmin
@@ -264,9 +287,18 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Unexpected error:', error);
+    console.error('=== UNEXPECTED ERROR IN UNAPPROVE FUNCTION ===');
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ 
+        error: 'Internal server error', 
+        details: error.message,
+        type: error.name 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
