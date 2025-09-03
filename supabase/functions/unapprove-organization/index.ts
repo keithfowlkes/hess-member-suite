@@ -81,60 +81,77 @@ serve(async (req) => {
       );
     }
     const userId = profile.user_id;
+    let pendingReg;
+
+    console.log('Profile data:', JSON.stringify(profile, null, 2));
+    console.log('Organization data:', JSON.stringify(organization, null, 2));
 
     // Create pending registration record
-    const { data: pendingReg, error: pendingError } = await supabaseAdmin
-      .from('pending_registrations')
-      .insert({
+    try {
+      const pendingData = {
         email: profile.email,
         password_hash: `unapproved_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-        first_name: profile.first_name,
-        last_name: profile.last_name,
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
         organization_name: organization.name,
-        state_association: profile.state_association || organization.secondary_contact_title,
-        student_fte: organization.student_fte || profile.student_fte,
-        address: profile.address || organization.address_line_1,
-        city: profile.city || organization.city,
-        state: profile.state || organization.state,
-        zip: profile.zip || organization.zip_code,
-        primary_contact_title: profile.primary_contact_title || organization.primary_contact_title,
-        secondary_first_name: profile.secondary_first_name || organization.secondary_first_name,
-        secondary_last_name: profile.secondary_last_name || organization.secondary_last_name,
-        secondary_contact_title: profile.secondary_contact_title || organization.secondary_contact_title,
-        secondary_contact_email: profile.secondary_contact_email || organization.secondary_contact_email,
-        student_information_system: profile.student_information_system || organization.student_information_system,
-        financial_system: profile.financial_system || organization.financial_system,
-        financial_aid: profile.financial_aid || organization.financial_aid,
-        hcm_hr: profile.hcm_hr || organization.hcm_hr,
-        payroll_system: profile.payroll_system || organization.payroll_system,
-        purchasing_system: profile.purchasing_system || organization.purchasing_system,
-        housing_management: profile.housing_management || organization.housing_management,
-        learning_management: profile.learning_management || organization.learning_management,
-        admissions_crm: profile.admissions_crm || organization.admissions_crm,
-        alumni_advancement_crm: profile.alumni_advancement_crm || organization.alumni_advancement_crm,
+        state_association: profile.state_association || '',
+        student_fte: organization.student_fte || profile.student_fte || null,
+        address: profile.address || organization.address_line_1 || '',
+        city: profile.city || organization.city || '',
+        state: profile.state || organization.state || '',
+        zip: profile.zip || organization.zip_code || '',
+        primary_contact_title: profile.primary_contact_title || organization.primary_contact_title || '',
+        secondary_first_name: profile.secondary_first_name || organization.secondary_first_name || '',
+        secondary_last_name: profile.secondary_last_name || organization.secondary_last_name || '',
+        secondary_contact_title: profile.secondary_contact_title || organization.secondary_contact_title || '',
+        secondary_contact_email: profile.secondary_contact_email || organization.secondary_contact_email || '',
+        student_information_system: profile.student_information_system || organization.student_information_system || '',
+        financial_system: profile.financial_system || organization.financial_system || '',
+        financial_aid: profile.financial_aid || organization.financial_aid || '',
+        hcm_hr: profile.hcm_hr || organization.hcm_hr || '',
+        payroll_system: profile.payroll_system || organization.payroll_system || '',
+        purchasing_system: profile.purchasing_system || organization.purchasing_system || '',
+        housing_management: profile.housing_management || organization.housing_management || '',
+        learning_management: profile.learning_management || organization.learning_management || '',
+        admissions_crm: profile.admissions_crm || organization.admissions_crm || '',
+        alumni_advancement_crm: profile.alumni_advancement_crm || organization.alumni_advancement_crm || '',
         primary_office_apple: profile.primary_office_apple ?? organization.primary_office_apple ?? false,
         primary_office_asus: profile.primary_office_asus ?? organization.primary_office_asus ?? false,
         primary_office_dell: profile.primary_office_dell ?? organization.primary_office_dell ?? false,
         primary_office_hp: profile.primary_office_hp ?? organization.primary_office_hp ?? false,
         primary_office_microsoft: profile.primary_office_microsoft ?? organization.primary_office_microsoft ?? false,
         primary_office_other: profile.primary_office_other ?? organization.primary_office_other ?? false,
-        primary_office_other_details: profile.primary_office_other_details || organization.primary_office_other_details,
-        other_software_comments: profile.other_software_comments || organization.other_software_comments,
+        primary_office_other_details: profile.primary_office_other_details || organization.primary_office_other_details || '',
+        other_software_comments: profile.other_software_comments || organization.other_software_comments || '',
         is_private_nonprofit: profile.is_private_nonprofit ?? false,
         approval_status: 'pending'
-      })
-      .select()
-      .single();
+      };
 
-    if (pendingError) {
-      console.error('Error creating pending registration:', pendingError);
+      console.log('Pending registration data:', JSON.stringify(pendingData, null, 2));
+
+      const { data: pendingRegData, error: pendingError } = await supabaseAdmin
+        .from('pending_registrations')
+        .insert(pendingData)
+        .select()
+        .single();
+
+      if (pendingError) {
+        console.error('Error creating pending registration:', pendingError);
+        return new Response(
+          JSON.stringify({ error: `Failed to create pending registration: ${pendingError.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      pendingReg = pendingRegData;
+      console.log('Created pending registration:', pendingReg.id);
+    } catch (error) {
+      console.error('Exception during pending registration creation:', error);
       return new Response(
-        JSON.stringify({ error: `Failed to create pending registration: ${pendingError.message}` }),
+        JSON.stringify({ error: `Exception creating pending registration: ${error.message}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log('Created pending registration:', pendingReg.id);
 
     const deletedItems = [];
 
