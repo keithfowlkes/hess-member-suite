@@ -251,6 +251,42 @@ export function useMembers() {
     }
   };
 
+  const unapproveOrganization = async (id: string) => {
+    try {
+      // Get current user for admin tracking
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Must be authenticated to unapprove organizations');
+      }
+
+      // Call the edge function to unapprove and restore to pending queue
+      const { data, error } = await supabase.functions.invoke('unapprove-organization', {
+        body: {
+          organizationId: id,
+          adminUserId: user.id
+        }
+      });
+
+      if (error) throw error;
+
+      await refresh();
+      
+      toast({
+        title: "Success",
+        description: data.message || "Organization unapproved and restored to pending approval queue.",
+      });
+    } catch (error: any) {
+      console.error('Error unapproving organization:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to unapprove organization",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchOrganizations();
   }, [fetchOrganizations]);
@@ -262,6 +298,7 @@ export function useMembers() {
     createOrganization, 
     updateOrganization, 
     markAllOrganizationsActive,
-    deleteOrganization
+    deleteOrganization,
+    unapproveOrganization
   };
 }

@@ -179,7 +179,7 @@ function SystemFieldsSection({ profileForm }: SystemFieldsSectionProps) {
 }
 
 export function ComprehensiveOrganizationDialog({ open, onOpenChange, organization }: OrganizationDialogProps) {
-  const { createOrganization, updateOrganization, refresh, deleteOrganization } = useMembers();
+  const { createOrganization, updateOrganization, refresh, deleteOrganization, unapproveOrganization } = useMembers();
   const { isAdmin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -200,6 +200,25 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
       toast({
         title: "Error",
         description: error.message || "Failed to delete organization",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUnapprove = async () => {
+    if (!organization) return;
+    
+    try {
+      await unapproveOrganization(organization.id);
+      onOpenChange(false);
+      toast({
+        title: "Organization Unapproved",
+        description: "Organization has been restored to pending approval queue.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to unapprove organization",
         variant: "destructive"
       });
     }
@@ -1074,37 +1093,65 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
         </Tabs>
 
         <div className="flex justify-between items-center pt-4 border-t">
-          <div>
+          <div className="flex gap-2">
             {organization && isAdmin && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm">
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete Organization
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-destructive" />
-                      <AlertDialogTitle>Delete Organization</AlertDialogTitle>
-                    </div>
-                    <AlertDialogDescription>
-                      Are you sure you want to remove "{organization.name}" from organizational membership? 
-                      This action cannot be undone and will permanently delete all organization data.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDelete}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
+              <>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-orange-600 border-orange-200 hover:bg-orange-50">
+                      Unapprove
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Unapprove Organization</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will restore "{organization.name}" back to the pending approval queue. 
+                        The organization and associated user account will be deleted and recreated as a pending registration.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleUnapprove}
+                        className="bg-orange-600 text-white hover:bg-orange-700"
+                      >
+                        Unapprove Organization
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4 mr-1" />
                       Delete Organization
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                        <AlertDialogTitle>Delete Organization</AlertDialogTitle>
+                      </div>
+                      <AlertDialogDescription>
+                        Are you sure you want to remove "{organization.name}" from organizational membership? 
+                        This action cannot be undone and will permanently delete all organization data.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete Organization
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
             )}
           </div>
           <div className="flex gap-2">
