@@ -142,6 +142,7 @@ export const useOrganizationApprovals = () => {
 
       // Send welcome email to primary contact with full organization details
       if (org.profiles?.email) {
+        console.log('Preparing welcome email for organization approval...');
         const primaryContactName = `${org.profiles.first_name} ${org.profiles.last_name}`;
         
         const organizationData = {
@@ -179,7 +180,15 @@ export const useOrganizationApprovals = () => {
           other_software_comments: org.other_software_comments,
         };
 
-        await supabase.functions.invoke('organization-emails', {
+        console.log('Sending welcome email with data:', {
+          type: 'welcome_approved',
+          to: org.profiles.email,
+          organizationName: org.name,
+          secondaryEmail: org.secondary_contact_email,
+          organizationDataKeys: Object.keys(organizationData)
+        });
+
+        const { error: emailError } = await supabase.functions.invoke('organization-emails', {
           body: {
             type: 'welcome_approved',
             to: org.profiles.email,
@@ -189,6 +198,13 @@ export const useOrganizationApprovals = () => {
             adminMessage
           }
         });
+
+        if (emailError) {
+          console.error('Email sending failed:', emailError);
+          throw new Error(`Failed to send welcome email: ${emailError.message}`);
+        }
+
+        console.log('Welcome email sent successfully');
       }
 
       // Log the action
