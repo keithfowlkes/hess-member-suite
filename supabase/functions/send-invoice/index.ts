@@ -501,8 +501,14 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error("Error in send-invoice function:", error);
+    console.error("Error stack:", error.stack);
+    console.error("Error details:", JSON.stringify(error, null, 2));
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack,
+        type: error.constructor.name
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
