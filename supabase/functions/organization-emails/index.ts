@@ -432,7 +432,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "HESS Consortium <noreply@hessconsortium.org>",
+      from: "HESS Consortium <support@hessconsortium.org>",
       to: emailTo,
       cc: cc.length > 0 ? cc : undefined,
       subject,

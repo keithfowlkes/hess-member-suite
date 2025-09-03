@@ -96,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "HESS Consortium <billing@hessconsortium.org>",
+      from: "HESS Consortium <support@hessconsortium.org>",
       to: [to],
       subject,
       html,
