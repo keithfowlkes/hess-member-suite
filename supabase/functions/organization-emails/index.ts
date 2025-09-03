@@ -257,8 +257,72 @@ const handler = async (req: Request): Promise<Response> => {
       case 'welcome_approved':
         subject = `Welcome to HESS Consortium - ${organizationName}`;
         
+        // Get the welcome message template from system settings
+        const { data: templateSetting } = await supabase
+          .from('system_settings')
+          .select('setting_value')
+          .eq('setting_key', 'welcome_message_template')
+          .single();
+
+        let welcomeTemplate = '';
+        if (templateSetting?.setting_value) {
+          welcomeTemplate = templateSetting.setting_value;
+        } else {
+          // Fallback to default template if none exists
+          welcomeTemplate = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <center>
+                <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+              </center>
+              
+              <p>{{primary_contact_name}},</p>
+              
+              <p>Thank you for your registration for HESS Consortium membership. I want to welcome you and {{organization_name}} personally to membership in the HESS Consortium!</p>
+              
+              <p>I've CCed Gwen Pechan, HESS Board President and CIO at Flagler College to welcome you also.</p>
+              
+              <p>If you have a few minutes, I would love to fill you in on the work we are doing together in the Consortium and with our business partners.</p>
+              
+              <p>We will make sure to get your contact information into our member listserv asap.</p>
+              
+              <p>Also, make sure to register for an account on our HESS Online Leadership Community collaboration website to download the latest information and join in conversation with HESS CIOs. You will definitely want to sign up online at <a href="https://www.hessconsortium.org/community">https://www.hessconsortium.org/community</a> and invite your staff to participate also.</p>
+              
+              <p>You now have access to our HESS / Coalition Educational Discount Program with Insight for computer and network hardware, peripherals and cloud software. Please create an institutional portal account at <a href="https://www.insight.com/HESS">www.insight.com/HESS</a> online now. We hope you will evaluate these special Insight discount pricing and let us know how it looks compared to your current suppliers.</p>
+              
+              <p>After you have joined the HESS OLC (mentioned above), click the Member Discounts icon at the top of the page to see all of the discount programs you have access to as a HESS member institution.</p>
+              
+              <p>Again, welcome to our quickly growing group of private, non-profit institutions in technology!</p>
+              
+              <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/04/KeithFowlkesshortsig.png" alt="Keith Fowlkes Signature" style="margin: 20px 0;">
+              
+              <p>Keith Fowlkes, M.A., M.B.A.<br>
+              Executive Director and Founder<br>
+              The HESS Consortium<br>
+              keith.fowlkes@hessconsortium.org | 859.516.3571</p>
+            </div>
+          `;
+        }
+
+        // Replace template variables with actual values
         const primaryContactName = organizationData?.primary_contact_name || 'Member';
+        
+        html = welcomeTemplate
+          .replace(/{{primary_contact_name}}/g, primaryContactName)
+          .replace(/{{organization_name}}/g, organizationName)
+          .replace(/{{secondary_contact_email}}/g, organizationData?.secondary_contact_email || '')
+          .replace(/{{student_fte}}/g, organizationData?.student_fte?.toString() || '')
+          .replace(/{{address}}/g, organizationData?.address_line_1 || '')
+          .replace(/{{city}}/g, organizationData?.city || '')
+          .replace(/{{state}}/g, organizationData?.state || '')
+          .replace(/{{zip_code}}/g, organizationData?.zip_code || '')
+          .replace(/{{phone}}/g, organizationData?.phone || '')
+          .replace(/{{email}}/g, organizationData?.email || '')
+          .replace(/{{website}}/g, organizationData?.website || '');
+
+        // Add the submitted information section at the bottom
         const submissionDetails = organizationData ? `
+          <hr style="margin: 40px 0; border: none; border-top: 2px solid #2563eb;">
+          <h2 style="color: #2563eb;">Their submitted information is listed below.</h2>
           <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
             <tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Organization:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationName}</td></tr>
             ${organizationData.primary_contact_title ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Primary Contact Title:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.primary_contact_title}</td></tr>` : ''}
@@ -286,43 +350,7 @@ const handler = async (req: Request): Promise<Response> => {
           </table>
         ` : '';
         
-        html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <center>
-              <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-            </center>
-            
-            <p>${primaryContactName},</p>
-            
-            <p>Thank you for your registration for HESS Consortium membership. I want to welcome you and ${organizationName} personally to membership in the HESS Consortium!</p>
-            
-            <p>I've CCed Gwen Pechan, HESS Board President and CIO at Flagler College to welcome you also.</p>
-            
-            <p>If you have a few minutes, I would love to fill you in on the work we are doing together in the Consortium and with our business partners.</p>
-            
-            <p>We will make sure to get your contact information into our member listserv asap.</p>
-            
-            <p>Also, make sure to register for an account on our HESS Online Leadership Community collaboration website to download the latest information and join in conversation with HESS CIOs. You will definitely want to sign up online at <a href="https://www.hessconsortium.org/community">https://www.hessconsortium.org/community</a> and invite your staff to participate also.</p>
-            
-            <p>You now have access to our HESS / Coalition Educational Discount Program with Insight for computer and network hardware, peripherals and cloud software. Please create an institutional portal account at <a href="https://www.insight.com/HESS">www.insight.com/HESS</a> online now. We hope you will evaluate these special Insight discount pricing and let us know how it looks compared to your current suppliers.</p>
-            
-            <p>After you have joined the HESS OLC (mentioned above), click the Member Discounts icon at the top of the page to see all of the discount programs you have access to as a HESS member institution.</p>
-            
-            <p>Again, welcome to our quickly growing group of private, non-profit institutions in technology!</p>
-            
-            <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/04/KeithFowlkesshortsig.png" alt="Keith Fowlkes Signature" style="margin: 20px 0;">
-            
-            <p>Keith Fowlkes, M.A., M.B.A.<br>
-            Executive Director and Founder<br>
-            The HESS Consortium<br>
-            keith.fowlkes@hessconsortium.org | 859.516.3571</p>
-            
-            <hr style="margin: 40px 0; border: none; border-top: 2px solid #2563eb;">
-            
-            <h2 style="color: #2563eb;">Their submitted information is listed below.</h2>
-            ${submissionDetails}
-          </div>
-        `;
+        html = html + submissionDetails;
         break;
 
       default:
