@@ -280,11 +280,12 @@ const MasterDashboard = () => {
     setSavingCcRecipients(false);
   };
 
-  const handleToggleDefaultRecipient = (email: string) => {
-    setDefaultRecipients(prev => ({
-      ...prev,
-      [email]: !prev[email]
-    }));
+  const handleDeleteDefaultRecipient = (email: string) => {
+    setDefaultRecipients(prev => {
+      const updated = { ...prev };
+      delete updated[email];
+      return updated;
+    });
   };
 
   const handleAddCcRecipient = () => {
@@ -1288,17 +1289,14 @@ const MasterDashboard = () => {
                         {Object.entries(defaultRecipients).map(([email, enabled]) => (
                           <div key={email} className="flex items-center justify-between p-2 border rounded-lg">
                             <span className="text-sm">{email}</span>
-                            <div className="flex items-center gap-2">
-                              <Switch
-                                checked={enabled}
-                                onCheckedChange={() => handleToggleDefaultRecipient(email)}
-                              />
-                              {enabled ? (
-                                <Badge variant="secondary">Enabled</Badge>
-                              ) : (
-                                <Badge variant="outline">Disabled</Badge>
-                              )}
-                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteDefaultRecipient(email)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              Remove
+                            </Button>
                           </div>
                         ))}
                       </div>

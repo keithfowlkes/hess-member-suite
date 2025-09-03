@@ -414,10 +414,8 @@ const handler = async (req: Request): Promise<Response> => {
         if (defaultRecipientsSetting?.setting_value && !defaultRecipientsError) {
           try {
             const defaultRecipientsConfig = JSON.parse(defaultRecipientsSetting.setting_value);
-            // Only include enabled default recipients
-            defaultCcRecipients = Object.entries(defaultRecipientsConfig)
-              .filter(([_, enabled]) => enabled)
-              .map(([email, _]) => email);
+            // Only include recipients that exist in the configuration (not deleted)
+            defaultCcRecipients = Object.keys(defaultRecipientsConfig);
             console.log('Using configured default CC recipients:', defaultCcRecipients);
           } catch (error) {
             console.error('Error parsing default recipients config:', error);
