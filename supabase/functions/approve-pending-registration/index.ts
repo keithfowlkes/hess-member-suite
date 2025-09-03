@@ -54,8 +54,81 @@ serve(async (req) => {
 
     console.log(`Found pending registration for: ${pendingReg.email}`);
 
-    // Create the auth user
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    // Check if user already exists
+    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (listError) {
+      console.error('Error listing users:', listError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to check existing users' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const existingUser = existingUsers.users.find(user => user.email === pendingReg.email);
+    
+    let authUser;
+    
+    if (existingUser) {
+      console.log(`User already exists for email: ${pendingReg.email}, updating user metadata`);
+      
+      // Update existing user's metadata
+      const { data: updatedUser, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        existingUser.id,
+        {
+          user_metadata: {
+            ...existingUser.user_metadata,
+            first_name: pendingReg.first_name,
+            last_name: pendingReg.last_name,
+            organization: pendingReg.organization_name,
+            state_association: pendingReg.state_association,
+            student_fte: pendingReg.student_fte?.toString(),
+            address: pendingReg.address,
+            city: pendingReg.city,
+            state: pendingReg.state,
+            zip: pendingReg.zip,
+            primary_contact_title: pendingReg.primary_contact_title,
+            secondary_first_name: pendingReg.secondary_first_name,
+            secondary_last_name: pendingReg.secondary_last_name,
+            secondary_contact_title: pendingReg.secondary_contact_title,
+            secondary_contact_email: pendingReg.secondary_contact_email,
+            student_information_system: pendingReg.student_information_system,
+            financial_system: pendingReg.financial_system,
+            financial_aid: pendingReg.financial_aid,
+            hcm_hr: pendingReg.hcm_hr,
+            payroll_system: pendingReg.payroll_system,
+            purchasing_system: pendingReg.purchasing_system,
+            housing_management: pendingReg.housing_management,
+            learning_management: pendingReg.learning_management,
+            admissions_crm: pendingReg.admissions_crm,
+            alumni_advancement_crm: pendingReg.alumni_advancement_crm,
+            primary_office_apple: pendingReg.primary_office_apple,
+            primary_office_asus: pendingReg.primary_office_asus,
+            primary_office_dell: pendingReg.primary_office_dell,
+            primary_office_hp: pendingReg.primary_office_hp,
+            primary_office_microsoft: pendingReg.primary_office_microsoft,
+            primary_office_other: pendingReg.primary_office_other,
+            primary_office_other_details: pendingReg.primary_office_other_details,
+            other_software_comments: pendingReg.other_software_comments,
+            isPrivateNonProfit: pendingReg.is_private_nonprofit,
+          }
+        }
+      );
+
+      if (updateError) {
+        console.error('Error updating existing user:', updateError);
+        return new Response(
+          JSON.stringify({ error: `Failed to update existing user: ${updateError.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      authUser = { user: updatedUser.user };
+    } else {
+      console.log(`Creating new user for email: ${pendingReg.email}`);
+      
+      // Create the auth user
+      const { data: newUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: pendingReg.email,
       password: Math.random().toString(36).slice(-8) + 'A1!', // Temporary password
       email_confirm: true, // Skip email confirmation
@@ -93,18 +166,21 @@ serve(async (req) => {
         primary_office_other_details: pendingReg.primary_office_other_details,
         other_software_comments: pendingReg.other_software_comments,
         isPrivateNonProfit: pendingReg.is_private_nonprofit,
-      }
-    });
+        }
+      });
 
-    if (authError) {
-      console.error('Error creating auth user:', authError);
-      return new Response(
-        JSON.stringify({ error: `Failed to create user account: ${authError.message}` }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (authError) {
+        console.error('Error creating auth user:', authError);
+        return new Response(
+          JSON.stringify({ error: `Failed to create user account: ${authError.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      authUser = { user: newUser.user };
     }
 
-    console.log(`Created auth user: ${authUser.user?.id} for email: ${pendingReg.email}`);
+    console.log(`Processed auth user: ${authUser.user?.id} for email: ${pendingReg.email}`);
 
     // The handle_new_user trigger will automatically create the profile and organization
     // We just need to wait a moment for it to process
