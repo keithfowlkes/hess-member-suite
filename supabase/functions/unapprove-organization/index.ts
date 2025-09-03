@@ -92,6 +92,20 @@ serve(async (req) => {
 
     // Create pending registration record
     try {
+      // First, delete any existing pending registration with this email
+      console.log(`Checking for existing pending registration with email: ${profile.email}`);
+      const { error: deleteError } = await supabaseAdmin
+        .from('pending_registrations')
+        .delete()
+        .eq('email', profile.email);
+
+      if (deleteError) {
+        console.error('Error deleting existing pending registration:', deleteError);
+        // Continue anyway - this might not exist
+      } else {
+        console.log('Deleted any existing pending registration for this email');
+      }
+
       const pendingData = {
         email: profile.email,
         password_hash: `unapproved_${Date.now()}_${Math.random().toString(36).slice(2)}`,
@@ -131,7 +145,7 @@ serve(async (req) => {
         approval_status: 'pending'
       };
 
-      console.log('Pending registration data:', JSON.stringify(pendingData, null, 2));
+      console.log('Creating new pending registration...');
 
       const { data: pendingRegData, error: pendingError } = await supabaseAdmin
         .from('pending_registrations')
