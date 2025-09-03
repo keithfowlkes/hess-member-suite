@@ -245,7 +245,7 @@ serve(async (req) => {
       details: {
         organizationName: organization.name,
         contactEmail: profile.email,
-        pendingRegistrationId: pendingReg.id,
+        pendingRegistrationId: pendingReg?.id,
         deletedItems: deletedItems,
         unapprovedBy: adminUserId
       }
@@ -257,7 +257,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         message: `Successfully unapproved ${organization.name} and restored to pending approval queue`,
-        pendingRegistrationId: pendingReg.id,
+        pendingRegistrationId: pendingReg?.id,
         deletedItems: deletedItems
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
