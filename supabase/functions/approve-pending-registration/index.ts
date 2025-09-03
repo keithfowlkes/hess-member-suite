@@ -186,7 +186,7 @@ serve(async (req) => {
     // We just need to wait a moment for it to process
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Get the newly created organization
+    // Get the newly created organization and activate it
     const { data: newOrganization, error: orgError } = await supabaseAdmin
       .from('organizations')
       .select('id, name, email')
@@ -196,6 +196,21 @@ serve(async (req) => {
     if (orgError) {
       console.error('Error finding newly created organization:', orgError);
       // Continue without organization data
+    } else {
+      // Update organization to active status upon approval
+      const { error: updateOrgError } = await supabaseAdmin
+        .from('organizations')
+        .update({
+          membership_status: 'active',
+          membership_start_date: new Date().toISOString().split('T')[0]
+        })
+        .eq('id', newOrganization.id);
+
+      if (updateOrgError) {
+        console.error('Error activating organization:', updateOrgError);
+      } else {
+        console.log(`Organization ${newOrganization.name} activated successfully`);
+      }
     }
 
     // Update the pending registration status
