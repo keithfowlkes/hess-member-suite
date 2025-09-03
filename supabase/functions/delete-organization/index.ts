@@ -135,8 +135,9 @@ serve(async (req) => {
     deletedItems.push('organization record');
     console.log('Deleted organization record');
 
-    // 6. Delete user roles if user exists
+    // 6. Delete user roles and auth user if user exists
     if (userId) {
+      // Delete user roles first
       const { data: deletedRoles, error: roleError } = await supabaseAdmin
         .from('user_roles')
         .delete()
@@ -150,21 +151,7 @@ serve(async (req) => {
         console.log(`Deleted ${deletedRoles?.length || 0} user roles`);
       }
 
-      // 7. Delete profile (if not already cascade deleted)
-      const { data: deletedProfiles, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .delete()
-        .eq('user_id', userId)
-        .select('id');
-
-      if (profileError) {
-        console.error('Error deleting profile:', profileError);
-      } else {
-        deletedItems.push(`${deletedProfiles?.length || 0} profiles`);
-        console.log(`Deleted ${deletedProfiles?.length || 0} profiles`);
-      }
-
-      // 8. Delete auth user (this should be done last)
+      // Delete auth user first (this should cascade delete the profile via foreign key)
       const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
       if (authError) {
@@ -172,10 +159,25 @@ serve(async (req) => {
           console.log('User not found in auth (already deleted)');
         } else {
           console.error('Error deleting auth user:', authError);
+          
+          // If auth deletion fails, try to delete profile manually
+          console.log('Attempting manual profile deletion...');
+          const { data: deletedProfiles, error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .delete()
+            .eq('user_id', userId)
+            .select('id');
+
+          if (profileError) {
+            console.error('Error deleting profile manually:', profileError);
+          } else {
+            deletedItems.push(`${deletedProfiles?.length || 0} profiles (manual)`);
+            console.log(`Manually deleted ${deletedProfiles?.length || 0} profiles`);
+          }
         }
       } else {
         deletedItems.push('auth user');
-        console.log('Deleted auth user');
+        console.log('Deleted auth user (profile should cascade delete)');
       }
     }
 
