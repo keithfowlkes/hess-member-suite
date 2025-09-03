@@ -217,10 +217,20 @@ export function useMembers() {
 
   const deleteOrganization = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('organizations')
-        .delete()
-        .eq('id', id);
+      // Get current user for admin tracking
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Must be authenticated to delete organizations');
+      }
+
+      // Call the edge function for comprehensive deletion
+      const { data, error } = await supabase.functions.invoke('delete-organization', {
+        body: {
+          organizationId: id,
+          adminUserId: user.id
+        }
+      });
 
       if (error) throw error;
 
@@ -228,7 +238,7 @@ export function useMembers() {
       
       toast({
         title: "Success",
-        description: "Organization deleted successfully.",
+        description: data.message || "Organization and all associated data deleted successfully.",
       });
     } catch (error: any) {
       console.error('Error deleting organization:', error);
