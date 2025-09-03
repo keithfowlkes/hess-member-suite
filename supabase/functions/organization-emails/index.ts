@@ -357,12 +357,34 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error(`Unknown email type: ${type}`);
     }
 
-    // For welcome_approved emails, also CC Gwen Pechan and secondary contact
+    // For welcome_approved emails, get CC recipients from settings and add default ones
     let emailTo = [to];
     let cc: string[] = [];
     
     if (type === 'welcome_approved') {
-      cc.push('gpechan@flagler.edu'); // Gwen Pechan
+      // Get CC recipients from system settings
+      const { data: ccSetting } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'welcome_message_cc_recipients')
+        .single();
+
+      // Default CC recipients
+      const defaultCcRecipients = ['keith.fowlkes@hessconsortium.org', 'gpechan@flagler.edu'];
+      
+      if (ccSetting?.setting_value) {
+        try {
+          const configuredCc = JSON.parse(ccSetting.setting_value);
+          cc = [...new Set([...defaultCcRecipients, ...configuredCc])]; // Merge and dedupe
+        } catch (error) {
+          console.error('Error parsing CC recipients:', error);
+          cc = defaultCcRecipients;
+        }
+      } else {
+        cc = defaultCcRecipients;
+      }
+
+      // Add secondary contact to main recipients if exists
       if (secondaryEmail && secondaryEmail !== to) {
         emailTo.push(secondaryEmail);
       }

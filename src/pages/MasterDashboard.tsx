@@ -143,8 +143,11 @@ const MasterDashboard = () => {
   // Messages state
   const [passwordResetMessage, setPasswordResetMessage] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [welcomeCcRecipients, setWelcomeCcRecipients] = useState<string[]>([]);
+  const [newCcEmail, setNewCcEmail] = useState('');
   const [savingMessage, setSavingMessage] = useState(false);
   const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
+  const [savingCcRecipients, setSavingCcRecipients] = useState(false);
 
   // Stats for the overview section
   const mainStats = [
@@ -265,7 +268,24 @@ const MasterDashboard = () => {
     setSavingWelcomeMessage(false);
   };
 
-  // Initialize password reset message and welcome message when settings load
+  const handleSaveCcRecipients = async () => {
+    setSavingCcRecipients(true);
+    await updateSetting('welcome_message_cc_recipients', JSON.stringify(welcomeCcRecipients));
+    setSavingCcRecipients(false);
+  };
+
+  const handleAddCcRecipient = () => {
+    if (newCcEmail.trim() && !welcomeCcRecipients.includes(newCcEmail.trim())) {
+      setWelcomeCcRecipients([...welcomeCcRecipients, newCcEmail.trim()]);
+      setNewCcEmail('');
+    }
+  };
+
+  const handleRemoveCcRecipient = (email: string) => {
+    setWelcomeCcRecipients(welcomeCcRecipients.filter(recipient => recipient !== email));
+  };
+
+  // Initialize password reset message, welcome message, and CC recipients when settings load
   useEffect(() => {
     const passwordSetting = settings.find(s => s.setting_key === 'password_reset_message');
     if (passwordSetting?.setting_value) {
@@ -310,6 +330,18 @@ const MasterDashboard = () => {
         </div>
       `;
       setWelcomeMessage(defaultTemplate);
+    }
+
+    // Load CC recipients
+    const ccSetting = settings.find(s => s.setting_key === 'welcome_message_cc_recipients');
+    if (ccSetting?.setting_value) {
+      try {
+        const ccList = JSON.parse(ccSetting.setting_value);
+        setWelcomeCcRecipients(ccList);
+      } catch (error) {
+        console.error('Error parsing CC recipients:', error);
+        setWelcomeCcRecipients([]);
+      }
     }
   }, [settings]);
 
@@ -1209,6 +1241,77 @@ const MasterDashboard = () => {
                       disabled={savingMessage}
                     >
                       {savingMessage ? "Saving..." : "Save Message"}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Welcome Message CC Recipients</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Configure additional recipients who will be CCed on welcome messages. Keith Fowlkes and Gwen Pechan are always included.
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label>Default Recipients (Always Included)</Label>
+                      <div className="mt-2 space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                          <span className="text-sm">keith.fowlkes@hessconsortium.org</span>
+                          <Badge variant="secondary">Default</Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                          <span className="text-sm">gpechan@flagler.edu</span>
+                          <Badge variant="secondary">Default</Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>Additional Recipients</Label>
+                      <div className="mt-2 space-y-2">
+                        {welcomeCcRecipients.map((email, index) => (
+                          <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
+                            <span className="text-sm">{email}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveCcRecipient(email)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ))}
+                        
+                        <div className="flex gap-2">
+                          <Input
+                            type="email"
+                            placeholder="Enter email address"
+                            value={newCcEmail}
+                            onChange={(e) => setNewCcEmail(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddCcRecipient();
+                              }
+                            }}
+                          />
+                          <Button
+                            onClick={handleAddCcRecipient}
+                            disabled={!newCcEmail.trim() || welcomeCcRecipients.includes(newCcEmail.trim())}
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={handleSaveCcRecipients}
+                      disabled={savingCcRecipients}
+                    >
+                      {savingCcRecipients ? "Saving..." : "Save CC Recipients"}
                     </Button>
                   </CardContent>
                 </Card>
