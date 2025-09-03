@@ -91,6 +91,9 @@ export function PendingRegistrationApprovalDialog({
       const success = typeof result === 'boolean' ? result : (result && 'success' in result ? result.success : true);
       
       if (success && sendInvoice && membershipStartDate && organizationId) {
+        // Add 2-second delay before sending invoice to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
         // Use the actual organization ID returned from approval
         await handleSendInvoice(organizationId);
       }
