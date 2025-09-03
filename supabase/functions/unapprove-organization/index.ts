@@ -39,21 +39,7 @@ serve(async (req) => {
     // Get organization details
     const { data: organization, error: orgError } = await supabaseAdmin
       .from('organizations')
-      .select(`
-        *,
-        profiles:contact_person_id (
-          user_id, first_name, last_name, email, phone, organization, state_association,
-          address, city, state, zip, primary_contact_title,
-          secondary_first_name, secondary_last_name, secondary_contact_title,
-          secondary_contact_email, student_information_system, financial_system,
-          financial_aid, hcm_hr, payroll_system, purchasing_system,
-          housing_management, learning_management, admissions_crm,
-          alumni_advancement_crm, primary_office_apple, primary_office_asus,
-          primary_office_dell, primary_office_hp, primary_office_microsoft,
-          primary_office_other, primary_office_other_details, other_software_comments,
-          is_private_nonprofit
-        )
-      `)
+      .select('*')
       .eq('id', organizationId)
       .single();
 
@@ -67,14 +53,33 @@ serve(async (req) => {
 
     console.log(`Found organization: ${organization.name}`);
 
-    if (!organization.profiles) {
+    // Get profile - try by contact_person_id first, then by organization name
+    let profile;
+    if (organization.contact_person_id) {
+      const { data: profileData } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .eq('id', organization.contact_person_id)
+        .single();
+      profile = profileData;
+    }
+
+    // If no profile found via contact_person_id, try by organization name
+    if (!profile) {
+      const { data: profileData } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .eq('organization', organization.name)
+        .single();
+      profile = profileData;
+    }
+
+    if (!profile) {
       return new Response(
-        JSON.stringify({ error: 'Organization has no contact person profile' }),
+        JSON.stringify({ error: 'No profile found for this organization' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const profile = organization.profiles;
     const userId = profile.user_id;
 
     // Create pending registration record
