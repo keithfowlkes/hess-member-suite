@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { deleteKeithUser } from '@/utils/deleteKeithUser';
 
 export interface UserProfile {
   id: string;
@@ -507,29 +506,6 @@ export function useSettings() {
       setLoading(true);
       
       try {
-        // Execute keith deletion if still exists
-        const keithUserId = '5cdb96c0-3ecb-4a92-9e9d-e5f161b73c2e';
-        console.log('🗑️ Checking for keith.fowlkes@higheredcommunities.org deletion...');
-        
-        const { data: keithProfile } = await supabase
-          .from('profiles')
-          .select('user_id, email')
-          .eq('user_id', keithUserId)
-          .single();
-        
-        if (keithProfile) {
-          console.log('👤 Found Keith profile, deleting...');
-          const { data: deleteResult, error: deleteError } = await supabase.functions.invoke('delete-user', {
-            body: { userId: keithUserId }
-          });
-          
-          if (deleteError) {
-            console.error('❌ Failed to delete Keith:', deleteError);
-          } else {
-            console.log('✅ Keith profile deleted:', deleteResult);
-          }
-        }
-        
         await Promise.all([
           fetchUsers().then(() => console.log('Users fetch completed')),
           fetchStats().then(() => console.log('Stats fetch completed')), 
