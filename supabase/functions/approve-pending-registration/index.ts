@@ -127,10 +127,10 @@ serve(async (req) => {
     } else {
       console.log(`Creating new user for email: ${pendingReg.email}`);
       
-      // Create the auth user
+      // Create the auth user using their original password
       const { data: newUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: pendingReg.email,
-      password: Math.random().toString(36).slice(-8) + 'A1!', // Temporary password
+      password: pendingReg.password_hash, // Use the password they set during registration
       email_confirm: true, // Skip email confirmation
       user_metadata: {
         first_name: pendingReg.first_name,
@@ -299,18 +299,7 @@ serve(async (req) => {
       // Don't return error here as user is already created
     }
 
-    // Send password reset email so user can set their password
-    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: pendingReg.email,
-      options: {
-        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'supabase.co')}/auth/v1/verify?redirect_to=${encodeURIComponent(req.headers.get('origin') || 'https://tyovnvuluyosjnabrzjc.supabase.co')}/auth`
-      }
-    });
-
-    if (resetError) {
-      console.error('Error sending password reset email:', resetError);
-    }
+    // User can now log in directly with their original password
 
     // Send welcome email using organization-emails function
     try {

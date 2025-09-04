@@ -15,10 +15,9 @@ import { useFieldOptions, type SystemField } from '@/hooks/useSystemFieldOptions
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useCreateReassignmentRequest } from '@/hooks/useReassignmentRequests';
 
-// Simple password placeholder for pending registrations
-// Real password will be set via password reset email after approval
-const createPasswordPlaceholder = (password: string): string => {
-  return `pending_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+// Store the actual password for later use during approval
+const storeActualPassword = (password: string): string => {
+  return password;
 };
 
 export default function Auth() {
@@ -332,7 +331,7 @@ export default function Auth() {
           new_organization_data: newOrgData,
           user_registration_data: {
             email: signUpForm.email,
-            password_hash: createPasswordPlaceholder(signUpForm.password),
+            password_hash: storeActualPassword(signUpForm.password),
             first_name: signUpForm.firstName,
             last_name: signUpForm.lastName,
             is_private_nonprofit: signUpForm.isPrivateNonProfit
@@ -404,7 +403,7 @@ export default function Auth() {
         .from('pending_registrations')
         .insert({
           email: signUpForm.email,
-        password_hash: createPasswordPlaceholder(signUpForm.password),
+        password_hash: storeActualPassword(signUpForm.password),
           first_name: formDataWithCustomValues.firstName,
           last_name: formDataWithCustomValues.lastName,
           organization_name: formDataWithCustomValues.organization,
