@@ -40,6 +40,8 @@ export function useSettings() {
 
   const fetchUsers = async () => {
     try {
+      console.log('🔍 Fetching users with validation...');
+      
       // First get all profiles
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
@@ -48,6 +50,8 @@ export function useSettings() {
 
       if (profileError) throw profileError;
 
+      console.log(`📊 Found ${profiles?.length || 0} profiles in database`);
+
       // Then get all user roles
       const { data: roles, error: roleError } = await supabase
         .from('user_roles')
@@ -55,14 +59,25 @@ export function useSettings() {
 
       if (roleError) throw roleError;
 
+      // Filter out any profiles that might be stale or problematic
+      // In a perfect world we'd validate against auth.users, but we'll rely on cleanup functions for that
+      const validProfiles = profiles?.filter(profile => {
+        // Basic validation - must have required fields
+        return profile.user_id && profile.email && profile.first_name && profile.last_name;
+      }) || [];
+
+      console.log(`✅ Filtered to ${validProfiles.length} valid profiles`);
+
       // Combine the data
-      const usersWithRoles = profiles?.map(profile => ({
+      const usersWithRoles = validProfiles.map(profile => ({
         ...profile,
         user_roles: roles?.filter(role => role.user_id === profile.user_id) || []
-      })) || [];
+      }));
       
       setUsers(usersWithRoles);
+      console.log('👥 User list updated with validated profiles');
     } catch (error: any) {
+      console.error('❌ Error fetching users:', error);
       toast({
         title: 'Error fetching users',
         description: error.message,

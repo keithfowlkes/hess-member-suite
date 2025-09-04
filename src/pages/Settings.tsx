@@ -52,7 +52,7 @@ const availableSections = [
 ];
 
 export default function Settings() {
-  const { users, stats, settings, loading, updateUserRole, deleteUser, resetUserPassword, changeUserPassword, updateSetting } = useSettings();
+  const { users, stats, settings, loading, updateUserRole, deleteUser, resetUserPassword, changeUserPassword, updateSetting, cleanupOrphanedProfiles } = useSettings();
   const { data: recaptchaSetting } = useSystemSetting('recaptcha_site_key');
   const updateSystemSetting = useUpdateSystemSetting();
   const { 
@@ -431,6 +431,58 @@ export default function Settings() {
               </TabsContent>
 
               <TabsContent value="security" className="space-y-6">
+                {/* User Management Cleanup */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      User Management
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Clean up orphaned user profiles and manage user data integrity
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-4">
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 className="font-medium text-yellow-800 mb-2">Orphaned Profile Cleanup</h4>
+                        <p className="text-sm text-yellow-700 mb-3">
+                          Sometimes user profiles can become "orphaned" when their authentication records are deleted but profile data remains. 
+                          This can cause errors in the User Management interface.
+                        </p>
+                        <Button 
+                          variant="outline" 
+                          onClick={cleanupOrphanedProfiles}
+                          disabled={loading}
+                          className="bg-yellow-100 border-yellow-300 text-yellow-800 hover:bg-yellow-200"
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Scanning...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Clean Up Orphaned Profiles
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <p><strong>What this does:</strong></p>
+                        <ul className="list-disc list-inside ml-2 space-y-1">
+                          <li>Scans all user profiles to find orphaned entries</li>
+                          <li>Removes profiles that no longer have authentication records</li>
+                          <li>Cleans up associated roles and organization assignments</li>
+                          <li>Refreshes the user list to show only valid accounts</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* reCAPTCHA Configuration */}
                 <Card>
                   <CardHeader>
