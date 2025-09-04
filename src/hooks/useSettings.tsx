@@ -253,43 +253,7 @@ export function useSettings() {
     try {
       console.log('🔄 Updating role for user:', userId, 'to:', newRole);
       
-      // First validate that the user still exists
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, email, first_name, last_name')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error('❌ Error fetching user profile:', profileError);
-        throw profileError;
-      }
-
-      if (!profile) {
-        console.log('⚠️ Profile not found for userId:', userId);
-        toast({
-          title: 'User Not Found',
-          description: 'This user profile no longer exists. Refreshing user list...',
-          variant: 'destructive'
-        });
-        await fetchUsers();
-        return;
-      }
-
-      console.log('✅ Profile found:', profile);
-
-      // Check if this is a protected user
-      if (profile.email.includes('keith.fowlkes') && newRole === 'member') {
-        const confirmChange = confirm(
-          `You are trying to remove admin privileges from ${profile.email}. ` +
-          `This may be a protected account. Are you sure you want to continue?`
-        );
-        if (!confirmChange) {
-          return;
-        }
-      }
-
-      // First delete existing role with more detailed error handling
+      // First delete existing role with detailed error handling
       console.log('🗑️ Deleting existing roles for user...');
       const { error: deleteError } = await supabase
         .from('user_roles')
@@ -298,12 +262,6 @@ export function useSettings() {
 
       if (deleteError) {
         console.error('❌ Error deleting existing role:', deleteError);
-        console.error('❌ Delete error details:', {
-          message: deleteError.message,
-          details: deleteError.details,
-          hint: deleteError.hint,
-          code: deleteError.code
-        });
         
         // Provide more specific error message
         if (deleteError.message?.includes('Cannot remove admin role')) {
@@ -320,7 +278,7 @@ export function useSettings() {
 
       console.log('✅ Existing roles deleted successfully');
 
-      // Then insert new role with detailed error handling
+      // Then insert new role
       console.log('➕ Inserting new role...');
       const { error: insertError } = await supabase
         .from('user_roles')
@@ -331,12 +289,6 @@ export function useSettings() {
 
       if (insertError) {
         console.error('❌ Error inserting new role:', insertError);
-        console.error('❌ Insert error details:', {
-          message: insertError.message,
-          details: insertError.details,
-          hint: insertError.hint,
-          code: insertError.code
-        });
         throw insertError;
       }
 
