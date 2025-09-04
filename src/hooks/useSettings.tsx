@@ -111,7 +111,16 @@ export function useSettings() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw new Error(error.message || 'Failed to change password');
+      }
+
+      // Check if the response indicates an error (non-2xx status)
+      if (data?.error) {
+        console.error('❌ Password change failed:', data.error);
+        throw new Error(data.error);
+      }
 
       console.log('✅ Password change completed:', data);
 
@@ -121,9 +130,18 @@ export function useSettings() {
       });
     } catch (error: any) {
       console.error('❌ Password change error:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = error.message;
+      if (errorMessage.includes('User not found')) {
+        errorMessage = 'This user account no longer exists in the authentication system. The user may have been deleted.';
+      } else if (errorMessage.includes('non-2xx status code')) {
+        errorMessage = 'Failed to change password. Please check if the user account still exists.';
+      }
+      
       toast({
         title: 'Error changing password',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive'
       });
     }

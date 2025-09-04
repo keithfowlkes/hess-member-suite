@@ -44,6 +44,26 @@ serve(async (req) => {
       }
     );
 
+    // First check if user exists in auth.users
+    console.log('🔍 Checking if user exists in auth...');
+    const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    
+    if (getUserError || !userData.user) {
+      console.error('❌ User not found in auth.users:', getUserError?.message || 'No user data');
+      return new Response(
+        JSON.stringify({ 
+          error: `User not found. The user may have been deleted from authentication system.`,
+          details: getUserError?.message || 'User does not exist in auth.users'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404,
+        }
+      );
+    }
+
+    console.log('✅ User exists, proceeding with password change...');
+
     // Update user password using admin client
     const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
       password: newPassword
