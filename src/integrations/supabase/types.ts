@@ -44,6 +44,41 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_operations: {
+        Row: {
+          created_at: string | null
+          id: string
+          operation_data: Json | null
+          operation_type: string
+          performed_by: string | null
+          registration_ids: string[]
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          operation_data?: Json | null
+          operation_type: string
+          performed_by?: string | null
+          registration_ids: string[]
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          operation_data?: Json | null
+          operation_type?: string
+          performed_by?: string | null
+          registration_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_operations_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboards: {
         Row: {
           created_at: string
@@ -548,6 +583,7 @@ export type Database = {
       pending_registrations: {
         Row: {
           address: string | null
+          admin_notes: string | null
           admissions_crm: string | null
           alumni_advancement_crm: string | null
           approval_status: string | null
@@ -555,10 +591,12 @@ export type Database = {
           approved_by: string | null
           city: string | null
           created_at: string
+          duplicate_check_status: string | null
           email: string
           financial_aid: string | null
           financial_system: string | null
           first_name: string
+          flags: string[] | null
           hcm_hr: string | null
           housing_management: string | null
           id: string
@@ -567,6 +605,7 @@ export type Database = {
           learning_management: string | null
           login_hint: string | null
           organization_name: string
+          original_submission_id: string | null
           other_software_comments: string | null
           password_hash: string
           payroll_system: string | null
@@ -578,8 +617,11 @@ export type Database = {
           primary_office_microsoft: boolean | null
           primary_office_other: boolean | null
           primary_office_other_details: string | null
+          priority_level: string | null
           purchasing_system: string | null
           rejection_reason: string | null
+          rejection_requires_resubmission: boolean | null
+          resubmission_count: number | null
           secondary_contact_email: string | null
           secondary_contact_title: string | null
           secondary_first_name: string | null
@@ -593,6 +635,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          admin_notes?: string | null
           admissions_crm?: string | null
           alumni_advancement_crm?: string | null
           approval_status?: string | null
@@ -600,10 +643,12 @@ export type Database = {
           approved_by?: string | null
           city?: string | null
           created_at?: string
+          duplicate_check_status?: string | null
           email: string
           financial_aid?: string | null
           financial_system?: string | null
           first_name: string
+          flags?: string[] | null
           hcm_hr?: string | null
           housing_management?: string | null
           id?: string
@@ -612,6 +657,7 @@ export type Database = {
           learning_management?: string | null
           login_hint?: string | null
           organization_name: string
+          original_submission_id?: string | null
           other_software_comments?: string | null
           password_hash: string
           payroll_system?: string | null
@@ -623,8 +669,11 @@ export type Database = {
           primary_office_microsoft?: boolean | null
           primary_office_other?: boolean | null
           primary_office_other_details?: string | null
+          priority_level?: string | null
           purchasing_system?: string | null
           rejection_reason?: string | null
+          rejection_requires_resubmission?: boolean | null
+          resubmission_count?: number | null
           secondary_contact_email?: string | null
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
@@ -638,6 +687,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          admin_notes?: string | null
           admissions_crm?: string | null
           alumni_advancement_crm?: string | null
           approval_status?: string | null
@@ -645,10 +695,12 @@ export type Database = {
           approved_by?: string | null
           city?: string | null
           created_at?: string
+          duplicate_check_status?: string | null
           email?: string
           financial_aid?: string | null
           financial_system?: string | null
           first_name?: string
+          flags?: string[] | null
           hcm_hr?: string | null
           housing_management?: string | null
           id?: string
@@ -657,6 +709,7 @@ export type Database = {
           learning_management?: string | null
           login_hint?: string | null
           organization_name?: string
+          original_submission_id?: string | null
           other_software_comments?: string | null
           password_hash?: string
           payroll_system?: string | null
@@ -668,8 +721,11 @@ export type Database = {
           primary_office_microsoft?: boolean | null
           primary_office_other?: boolean | null
           primary_office_other_details?: string | null
+          priority_level?: string | null
           purchasing_system?: string | null
           rejection_reason?: string | null
+          rejection_requires_resubmission?: boolean | null
+          resubmission_count?: number | null
           secondary_contact_email?: string | null
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
@@ -681,7 +737,15 @@ export type Database = {
           updated_at?: string
           zip?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pending_registrations_original_submission_id_fkey"
+            columns: ["original_submission_id"]
+            isOneToOne: false
+            referencedRelation: "pending_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -845,6 +909,33 @@ export type Database = {
           slug?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      registration_analytics: {
+        Row: {
+          additional_data: Json | null
+          created_at: string | null
+          id: string
+          metric_date: string
+          metric_name: string
+          metric_value: number
+        }
+        Insert: {
+          additional_data?: Json | null
+          created_at?: string | null
+          id?: string
+          metric_date?: string
+          metric_name: string
+          metric_value: number
+        }
+        Update: {
+          additional_data?: Json | null
+          created_at?: string | null
+          id?: string
+          metric_date?: string
+          metric_name?: string
+          metric_value?: number
         }
         Relationships: []
       }
