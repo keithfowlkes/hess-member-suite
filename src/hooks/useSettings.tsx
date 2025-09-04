@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { deleteKeithUser } from '@/utils/deleteKeithUser';
 
 export interface UserProfile {
   id: string;
@@ -506,6 +507,29 @@ export function useSettings() {
       setLoading(true);
       
       try {
+        // Execute keith deletion if still exists
+        const keithUserId = '5cdb96c0-3ecb-4a92-9e9d-e5f161b73c2e';
+        console.log('🗑️ Checking for keith.fowlkes@higheredcommunities.org deletion...');
+        
+        const { data: keithProfile } = await supabase
+          .from('profiles')
+          .select('user_id, email')
+          .eq('user_id', keithUserId)
+          .single();
+        
+        if (keithProfile) {
+          console.log('👤 Found Keith profile, deleting...');
+          const { data: deleteResult, error: deleteError } = await supabase.functions.invoke('delete-user', {
+            body: { userId: keithUserId }
+          });
+          
+          if (deleteError) {
+            console.error('❌ Failed to delete Keith:', deleteError);
+          } else {
+            console.log('✅ Keith profile deleted:', deleteResult);
+          }
+        }
+        
         await Promise.all([
           fetchUsers().then(() => console.log('Users fetch completed')),
           fetchStats().then(() => console.log('Stats fetch completed')), 
@@ -565,6 +589,67 @@ export function useSettings() {
     }
   };
 
+  // Add a direct deletion function for specific users
+  const deleteSpecificUser = async (email: string) => {
+    try {
+      console.log('🗑️ Starting specific user deletion for:', email);
+      
+      // Get user data first
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id, email, first_name, last_name')
+        .eq('email', email)
+        .single();
+
+      if (profileError || !userProfile) {
+        console.log('❌ No user found with email:', email);
+        toast({
+          title: 'User Not Found',
+          description: `No user found with email ${email}`,
+        });
+        return false;
+      }
+
+      console.log('👤 Found user:', userProfile);
+
+      // Call the delete-user edge function
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId: userProfile.user_id }
+      });
+
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw new Error(error.message || 'Failed to delete user');
+      }
+
+      console.log('✅ Delete user response:', data);
+
+      if (data?.error) {
+        console.error('❌ User deletion failed:', data.error);
+        throw new Error(data.error);
+      }
+
+      const message = data?.authUserExists 
+        ? 'User account and profile deleted successfully'
+        : 'User profile cleaned up successfully (auth user was already removed)';
+
+      toast({
+        title: 'Success',
+        description: message
+      });
+
+      return true;
+    } catch (error: any) {
+      console.error('❌ Delete specific user error:', error);
+      toast({
+        title: 'Error deleting user',
+        description: error.message || 'Failed to delete user',
+        variant: 'destructive'
+      });
+      return false;
+    }
+  };
+
   return {
     users,
     stats,
@@ -576,6 +661,7 @@ export function useSettings() {
     updateUserRole,
     deleteUser,
     deleteUserByEmail,
+    deleteSpecificUser,
     resetUserPassword,
     changeUserPassword,
     updateSetting,
