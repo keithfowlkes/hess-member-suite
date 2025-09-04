@@ -19,6 +19,7 @@ import { useFormFields, FormField } from '@/hooks/useFormFields';
 import { useToast } from '@/hooks/use-toast';
 import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDirectory';
 import { SystemFieldOptionsManager } from '@/components/SystemFieldOptionsManager';
+import { UserDeletionHandler } from '@/components/UserDeletionHandler';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
@@ -298,6 +299,7 @@ export default function Settings() {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 p-8">
+          <UserDeletionHandler />
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold text-foreground flex items-center">
