@@ -253,25 +253,6 @@ export function useSettings() {
     try {
       console.log('🔄 Updating role for user:', userId, 'to:', newRole);
       
-      // Check if user exists by trying to get their session info
-      // This is an indirect way to validate the auth user exists
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('email, first_name, last_name')
-        .eq('user_id', userId)
-        .single();
-
-      if (profileError || !profile) {
-        console.error('❌ Profile not found:', profileError);
-        toast({
-          title: 'User Not Found',
-          description: 'This user profile no longer exists. Please refresh the user list.',
-          variant: 'destructive'
-        });
-        await fetchUsers();
-        return;
-      }
-
       // First delete existing role
       console.log('🗑️ Deleting existing roles for user...');
       const { error: deleteError } = await supabase
@@ -310,9 +291,16 @@ export function useSettings() {
         
         // Check for specific foreign key constraint error
         if (insertError.code === '23503' && insertError.message?.includes('user_roles_user_id_fkey')) {
+          // Get user email for better error message
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('user_id', userId)
+            .single();
+            
           toast({
             title: 'Orphaned Profile Detected',
-            description: `${profile.email} is an orphaned profile (no auth user exists). Please use the cleanup tool to remove orphaned profiles.`,
+            description: `${profile?.email || 'This user'} is an orphaned profile (no auth user exists). Please use the cleanup tool to remove orphaned profiles.`,
             variant: 'destructive'
           });
           return;
@@ -425,34 +413,7 @@ export function useSettings() {
     try {
       console.log('🗑️ Starting user deletion for userId:', userId);
       
-      // First check if user profile exists
-      const { data: userProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, email, first_name, last_name')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error('❌ Error fetching user profile:', profileError);
-        throw profileError;
-      }
-
-      if (!userProfile) {
-        console.log('⚠️ No profile found for userId - user may already be deleted');
-        
-        toast({
-          title: 'User Already Deleted',
-          description: 'This user appears to have been already deleted. Refreshing user list...',
-        });
-        
-        // Force refresh the user list
-        await fetchUsers();
-        return;
-      }
-
-      console.log('👤 User profile found:', userProfile);
-
-      // Call edge function to handle the deletion
+      // Call edge function to handle the deletion without pre-validation
       const { data, error } = await supabase.functions.invoke('delete-user', {
         body: { userId: userId }
       });

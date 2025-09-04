@@ -244,11 +244,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, userData: any) => {
-    // Don't set emailRedirectTo to prevent automatic sign-in after registration
+    // Set emailRedirectTo to current origin to ensure proper redirects
+    const redirectUrl = `${window.location.origin}/auth?confirmed=true`;
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: redirectUrl,
         data: {
           first_name: userData.firstName,
           last_name: userData.lastName,
@@ -287,9 +290,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
     
-    // Immediately sign out after registration to prevent automatic login
+    // Only sign out if this is pending approval, otherwise let users sign in normally
     if (data.user && !error) {
-      await supabase.auth.signOut();
+      // Check if organization requires approval
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('organization')
+          .eq('user_id', data.user.id)
+          .single();
+          
+        if (profileData?.organization) {
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select('membership_status')
+            .ilike('name', profileData.organization)
+            .single();
+            
+          // Only sign out if org is pending/requires approval
+          if (orgData?.membership_status === 'pending') {
+            await supabase.auth.signOut();
+          }
+        }
+      } catch (orgError) {
+        console.log('Organization check failed, allowing normal signup flow');
+      }
     }
     
     return { error };
