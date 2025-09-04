@@ -17,6 +17,9 @@ import { useCreateReassignmentRequest } from '@/hooks/useReassignmentRequests';
 
 // Store the actual password for later use during approval
 const storeActualPassword = (password: string): string => {
+  // Instead of storing plain text, we'll store it securely
+  // For now, return the actual password to fix the login issue
+  console.log('📝 PASSWORD DEBUG: Storing password for approval process');
   return password;
 };
 
@@ -399,6 +402,7 @@ export default function Auth() {
       });
       
       console.log('🔄 REGISTRATION DEBUG: About to call supabase.from(pending_registrations).insert()');
+      console.log('📝 PASSWORD DEBUG: Password being stored:', signUpForm.password ? 'Password provided' : 'No password');
       const { error } = await supabase
         .from('pending_registrations')
         .insert({
