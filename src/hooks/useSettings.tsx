@@ -102,19 +102,25 @@ export function useSettings() {
 
   const changeUserPassword = async (userId: string, newPassword: string) => {
     try {
-      // Note: This requires a service role key which should be handled server-side
-      // For now, we'll use the admin updateUser function
-      const { error } = await supabase.auth.admin.updateUserById(userId, {
-        password: newPassword
+      console.log('🔑 Changing password for user:', userId);
+      
+      const { data, error } = await supabase.functions.invoke('change-user-password', {
+        body: { 
+          userId: userId,
+          newPassword: newPassword
+        }
       });
 
       if (error) throw error;
+
+      console.log('✅ Password change completed:', data);
 
       toast({
         title: 'Password changed',
         description: 'User password has been updated successfully'
       });
     } catch (error: any) {
+      console.error('❌ Password change error:', error);
       toast({
         title: 'Error changing password',
         description: error.message,
