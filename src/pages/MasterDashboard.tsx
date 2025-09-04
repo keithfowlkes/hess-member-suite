@@ -221,9 +221,14 @@ const MasterDashboard = () => {
 
   const handleRoleUpdate = async (userId: string, currentRole: string) => {
     setUpdatingUser(userId);
-    const newRole = currentRole === 'admin' ? 'member' : 'admin';
-    await updateUserRole(userId, newRole);
-    setUpdatingUser(null);
+    try {
+      const newRole = currentRole === 'admin' ? 'member' : 'admin';
+      await updateUserRole(userId, newRole);
+    } catch (error) {
+      console.error('Role update failed:', error);
+    } finally {
+      setUpdatingUser(null);
+    }
   };
 
   const handleDeleteUserByEmail = async (email: string) => {
@@ -237,11 +242,19 @@ const MasterDashboard = () => {
   };
 
   const handleDeleteUser = async (userId: string, userEmail?: string) => {
-    await deleteUser(userId, userEmail);
+    try {
+      await deleteUser(userId, userEmail);
+    } catch (error) {
+      console.error('Delete user failed:', error);
+    }
   };
 
   const handlePasswordReset = async (email: string) => {
-    await resetUserPassword(email);
+    try {
+      await resetUserPassword(email);
+    } catch (error) {
+      console.error('Password reset failed:', error);
+    }
   };
 
   const handleOpenChangePassword = (userId: string, userName: string) => {
@@ -255,10 +268,15 @@ const MasterDashboard = () => {
     }
     
     setChangingPassword(true);
-    await changeUserPassword(changePasswordDialog.userId, newPassword);
-    setChangingPassword(false);
-    setChangePasswordDialog({ open: false, userId: '', userName: '' });
-    setNewPassword('');
+    try {
+      await changeUserPassword(changePasswordDialog.userId, newPassword);
+      setChangePasswordDialog({ open: false, userId: '', userName: '' });
+      setNewPassword('');
+    } catch (error) {
+      console.error('Change password failed:', error);
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   const handleSavePasswordMessage = async () => {
@@ -1168,62 +1186,74 @@ const MasterDashboard = () => {
                                          <MoreVertical className="h-4 w-4" />
                                        </Button>
                                      </DropdownMenuTrigger>
-                                     <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
-                                       <DropdownMenuItem
-                                         onClick={() => handleRoleUpdate(user.id, user.user_roles?.[0]?.role || 'member')}
-                                         disabled={updatingUser === user.id}
-                                         className="flex items-center gap-2"
-                                       >
-                                         {updatingUser === user.id ? (
-                                           <Loader2 className="h-4 w-4 animate-spin" />
-                                         ) : (
-                                           <KeyRound className="h-4 w-4" />
-                                         )}
-                                         {user.user_roles?.[0]?.role === 'admin' ? 'Make Member' : 'Make Admin'}
-                                       </DropdownMenuItem>
-                                       <DropdownMenuItem
-                                         onClick={() => handlePasswordReset(user.email)}
-                                         className="flex items-center gap-2"
-                                       >
-                                         <RefreshCw className="h-4 w-4" />
-                                         Reset Password
-                                       </DropdownMenuItem>
-                                       <DropdownMenuItem
-                                         onClick={() => handleOpenChangePassword(user.id, user.email)}
-                                         className="flex items-center gap-2"
-                                       >
-                                         <Lock className="h-4 w-4" />
-                                         Change Password
-                                       </DropdownMenuItem>
-                                       <DropdownMenuSeparator />
-                                       <AlertDialog>
-                                         <AlertDialogTrigger asChild>
-                                           <DropdownMenuItem
-                                             className="text-destructive focus:text-destructive flex items-center gap-2"
-                                             onSelect={(e) => e.preventDefault()}
-                                           >
-                                             <UserMinus className="h-4 w-4" />
-                                             Delete User
-                                           </DropdownMenuItem>
-                                         </AlertDialogTrigger>
-                                         <AlertDialogContent>
-                                           <AlertDialogHeader>
-                                             <AlertDialogTitle>Delete User</AlertDialogTitle>
-                                             <AlertDialogDescription>
-                                               Are you sure you want to delete {user.email}? This action cannot be undone.
-                                             </AlertDialogDescription>
-                                           </AlertDialogHeader>
-                                           <AlertDialogFooter>
-                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                              <AlertDialogAction
-                                                onClick={() => handleDeleteUser(user.id, user.email)}
-                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                              >
-                                               Delete
-                                             </AlertDialogAction>
-                                           </AlertDialogFooter>
-                                         </AlertDialogContent>
-                                       </AlertDialog>
+                                      <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
+                                        <DropdownMenuItem
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            handleRoleUpdate(user.user_id || user.id, user.user_roles?.[0]?.role || 'member');
+                                          }}
+                                          disabled={updatingUser === (user.user_id || user.id)}
+                                          className="flex items-center gap-2 cursor-pointer"
+                                        >
+                                          {updatingUser === (user.user_id || user.id) ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <KeyRound className="h-4 w-4" />
+                                          )}
+                                          {user.user_roles?.[0]?.role === 'admin' ? 'Make Member' : 'Make Admin'}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            handlePasswordReset(user.email);
+                                          }}
+                                          className="flex items-center gap-2 cursor-pointer"
+                                        >
+                                          <RefreshCw className="h-4 w-4" />
+                                          Reset Password
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            handleOpenChangePassword(user.user_id || user.id, user.email);
+                                          }}
+                                          className="flex items-center gap-2 cursor-pointer"
+                                        >
+                                          <Lock className="h-4 w-4" />
+                                          Change Password
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <DropdownMenuItem
+                                              className="text-destructive focus:text-destructive flex items-center gap-2 cursor-pointer"
+                                              onSelect={(e) => e.preventDefault()}
+                                            >
+                                              <UserMinus className="h-4 w-4" />
+                                              Delete User
+                                            </DropdownMenuItem>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>Delete User</AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                Are you sure you want to delete {user.email}? This action cannot be undone and will remove all associated data.
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                               <AlertDialogAction
+                                                 onClick={(e) => {
+                                                   e.preventDefault();
+                                                   handleDeleteUser(user.user_id || user.id, user.email);
+                                                 }}
+                                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                               >
+                                                Delete
+                                              </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
                                      </DropdownMenuContent>
                                    </DropdownMenu>
                                  </TableCell>
