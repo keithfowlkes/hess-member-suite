@@ -565,6 +565,7 @@ export type Database = {
           is_private_nonprofit: boolean | null
           last_name: string
           learning_management: string | null
+          login_hint: string | null
           organization_name: string
           other_software_comments: string | null
           password_hash: string
@@ -609,6 +610,7 @@ export type Database = {
           is_private_nonprofit?: boolean | null
           last_name: string
           learning_management?: string | null
+          login_hint?: string | null
           organization_name: string
           other_software_comments?: string | null
           password_hash: string
@@ -653,6 +655,7 @@ export type Database = {
           is_private_nonprofit?: boolean | null
           last_name?: string
           learning_management?: string | null
+          login_hint?: string | null
           organization_name?: string
           other_software_comments?: string | null
           password_hash?: string

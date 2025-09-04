@@ -239,17 +239,12 @@ export default function Auth() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Get the password reset redirect URL from system settings
-    const { data: redirectSetting } = await supabase
-      .from('system_settings')
-      .select('setting_value')
-      .eq('setting_key', 'password_reset_redirect_url')
-      .single();
-    
-    const redirectUrl = redirectSetting?.setting_value || 'https://members.hessconsortium.app/auth?reset=true';
-    
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: redirectUrl
+    // Use custom password reset edge function that includes login hint
+    const { data, error } = await supabase.functions.invoke('send-password-reset', {
+      body: { 
+        email: resetEmail,
+        redirectUrl: 'https://members.hessconsortium.app/auth?reset=true'
+      }
     });
     
     if (error) {
@@ -517,6 +512,7 @@ export default function Auth() {
           primary_office_other_details: formDataWithCustomValues.primaryOfficeOtherDetails,
           other_software_comments: formDataWithCustomValues.otherSoftwareComments,
           is_private_nonprofit: formDataWithCustomValues.isPrivateNonProfit,
+          login_hint: signUpForm.loginHint,
         });
       
       if (error) {
