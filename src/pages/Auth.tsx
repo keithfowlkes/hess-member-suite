@@ -26,6 +26,7 @@ const storeActualPassword = (password: string): string => {
 export default function Auth() {
   const { user, signIn, signUp, loading } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const { data: organizations = [] } = useOrganizations();
   const createReassignmentRequest = useCreateReassignmentRequest();
   const { data: recaptchaSetting, isLoading: isLoadingRecaptcha } = useSystemSetting('recaptcha_site_key');
@@ -38,8 +39,35 @@ export default function Auth() {
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<string>('');
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
   const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
+  
+  // Check if this is a password reset callback
+  const isPasswordReset = searchParams.get('reset') === 'true';
+  const hasError = searchParams.get('error');
+  
+  // Handle password reset errors on component mount
+  useEffect(() => {
+    if (hasError) {
+      let errorMessage = "Password reset failed.";
+      const errorCode = searchParams.get('error_code');
+      const errorDescription = searchParams.get('error_description');
+      
+      if (errorCode === 'otp_expired') {
+        errorMessage = "The password reset link has expired. Please request a new one.";
+      } else if (errorDescription) {
+        errorMessage = decodeURIComponent(errorDescription);
+      }
+      
+      toast({
+        title: "Password Reset Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
+  }, [hasError, searchParams, toast]);
   
   // Get reCAPTCHA settings from database - wait for loading to complete
   const recaptchaSiteKey = isLoadingRecaptcha ? null : recaptchaSetting?.setting_value;
@@ -211,7 +239,7 @@ export default function Auth() {
     setIsSubmitting(true);
     
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth?reset=true`
+      redirectTo: "https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/auth?reset=true"
     });
     
     if (error) {
@@ -227,6 +255,44 @@ export default function Auth() {
       });
       setShowPasswordReset(false);
       setResetEmail('');
+    }
+    
+    setIsSubmitting(false);
+  };
+
+  const handleNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure both passwords are identical.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    if (error) {
+      toast({
+        title: "Password update failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Password updated successfully",
+        description: "You can now sign in with your new password.",
+      });
+      // Clear the reset parameter from URL
+      window.history.replaceState({}, document.title, '/auth');
+      setNewPassword('');
+      setConfirmPassword('');
     }
     
     setIsSubmitting(false);
@@ -515,17 +581,59 @@ export default function Auth() {
             <div className="bg-auth-form rounded-lg shadow-sm p-8">
               <div className="border-b border-gray-200 pb-4 mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">
-                  {showPasswordReset ? 'Reset Password' : 'Sign In'}
+                  {isPasswordReset ? 'Set New Password' : showPasswordReset ? 'Reset Password' : 'Sign In'}
                 </h2>
                 <p className="text-gray-600 mt-1">
-                  {showPasswordReset 
-                    ? 'Enter your email to receive password reset instructions'
-                    : 'Sign in to your HESS Consortium account'
+                  {isPasswordReset 
+                    ? 'Please enter your new password'
+                    : showPasswordReset 
+                      ? 'Enter your email to receive password reset instructions'
+                      : 'Sign in to your HESS Consortium account'
                   }
                 </p>
               </div>
               
-              {showPasswordReset ? (
+              {isPasswordReset ? (
+                <form onSubmit={handleNewPassword} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password" className="text-gray-700 font-medium">
+                      New Password <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="Enter your new password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="bg-gray-50 border-gray-300"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password" className="text-gray-700 font-medium">
+                      Confirm Password <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="Confirm your new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="bg-gray-50 border-gray-300"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" 
+                    disabled={isSubmitting || !newPassword || !confirmPassword}
+                  >
+                    {isSubmitting ? 'Setting Password...' : 'Set New Password'}
+                  </Button>
+                </form>
+              ) : showPasswordReset ? (
                 <form onSubmit={handlePasswordReset} className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="reset-email" className="text-gray-700 font-medium">
