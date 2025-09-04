@@ -793,7 +793,11 @@ export default function Settings() {
           
           {/* Footer */}
           <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
-            {/* Logo will be added here once provided */}
+            <img 
+              src="/lovable-uploads/4a98a7dc-4bad-4f5b-94d4-fa028adbc2f6.png" 
+              alt="DeusLogic Logo" 
+              className="h-8 w-auto mb-2 opacity-70"
+            />
             <p className="text-xs text-muted-foreground">
               Copyright 2025 DeusLogic, LLC.
             </p>
