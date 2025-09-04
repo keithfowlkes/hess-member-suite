@@ -72,10 +72,11 @@ serve(async (req) => {
     if (existingUser) {
       console.log(`User already exists for email: ${pendingReg.email}, updating user metadata`);
       
-      // Update existing user's metadata
+      // Update existing user's metadata and password
       const { data: updatedUser, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
         existingUser.id,
         {
+          password: pendingReg.password_hash, // Update password to match registration
           user_metadata: {
             ...existingUser.user_metadata,
             first_name: pendingReg.first_name,
