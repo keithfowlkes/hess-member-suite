@@ -790,6 +790,14 @@ export default function Settings() {
               </TabsContent>
             </Tabs>
           </div>
+          
+          {/* Footer */}
+          <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
+            {/* Logo will be added here once provided */}
+            <p className="text-xs text-muted-foreground">
+              Copyright 2025 DeusLogic, LLC.
+            </p>
+          </div>
         </main>
       </div>
     </SidebarProvider>
