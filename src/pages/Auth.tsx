@@ -232,31 +232,6 @@ export default function Auth() {
     setIsSubmitting(false);
   };
 
-  // Auto-send password reset for problematic admin user
-  React.useEffect(() => {
-    const sendAdminReset = async () => {
-      const adminEmail = 'keith.fowlkes@higheredcommunities.org';
-      try {
-        const { error } = await supabase.auth.resetPasswordForEmail(adminEmail, {
-          redirectTo: `${window.location.origin}/auth?reset=true`
-        });
-        if (!error) {
-          console.log('📧 Password reset email sent to admin user');
-          toast({
-            title: "Admin Password Reset",
-            description: `Password reset email sent to ${adminEmail}. Check your email to set a new password.`,
-            duration: 8000,
-          });
-        }
-      } catch (err) {
-        console.log('Password reset not needed or failed:', err);
-      }
-    };
-    
-    // Send reset email on component mount
-    sendAdminReset();
-  }, []);
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
