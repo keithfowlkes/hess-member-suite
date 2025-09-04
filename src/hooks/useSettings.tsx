@@ -272,6 +272,54 @@ export function useSettings() {
           return;
         }
         
+        // Check for foreign key constraint error indicating orphaned profile
+        if (deleteError.code === '23503' && deleteError.message?.includes('user_roles_user_id_fkey')) {
+          console.log('🧹 Detected orphaned profile during deletion, cleaning up...');
+          
+          // Get user email for better error message
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, id')
+            .eq('user_id', userId)
+            .single();
+          
+          // Clean up the orphaned profile immediately
+          if (profile) {
+            console.log(`🧹 Cleaning up orphaned profile: ${profile.email}`);
+            
+            try {
+              // Remove as contact person from organizations
+              await supabase
+                .from('organizations')
+                .update({ contact_person_id: null })
+                .eq('contact_person_id', profile.id);
+
+              // Delete the profile (this should also clean up any remaining user_roles)
+              await supabase
+                .from('profiles')
+                .delete()
+                .eq('user_id', userId);
+                
+              toast({
+                title: 'Orphaned Profile Cleaned',
+                description: `Removed orphaned profile for ${profile.email}. Refreshing user list...`,
+              });
+              
+              // Refresh the users list
+              await fetchUsers();
+              return;
+            } catch (cleanupError) {
+              console.error('❌ Error during orphaned profile cleanup:', cleanupError);
+              toast({
+                title: 'Cleanup Failed',
+                description: `Failed to clean up orphaned profile for ${profile.email}. Please try the full cleanup tool.`,
+                variant: 'destructive'
+              });
+              return;
+            }
+          }
+        }
+        
         throw deleteError;
       }
 
@@ -291,19 +339,50 @@ export function useSettings() {
         
         // Check for specific foreign key constraint error
         if (insertError.code === '23503' && insertError.message?.includes('user_roles_user_id_fkey')) {
+          console.log('🧹 Detected orphaned profile during insertion, cleaning up...');
+          
           // Get user email for better error message
           const { data: profile } = await supabase
             .from('profiles')
-            .select('email')
+            .select('email, id')
             .eq('user_id', userId)
             .single();
+          
+          // Clean up the orphaned profile immediately
+          if (profile) {
+            console.log(`🧹 Cleaning up orphaned profile: ${profile.email}`);
             
-          toast({
-            title: 'Orphaned Profile Detected',
-            description: `${profile?.email || 'This user'} is an orphaned profile (no auth user exists). Please use the cleanup tool to remove orphaned profiles.`,
-            variant: 'destructive'
-          });
-          return;
+            try {
+              // Remove as contact person from organizations
+              await supabase
+                .from('organizations')
+                .update({ contact_person_id: null })
+                .eq('contact_person_id', profile.id);
+
+              // Delete the profile
+              await supabase
+                .from('profiles')
+                .delete()
+                .eq('user_id', userId);
+                
+              toast({
+                title: 'Orphaned Profile Cleaned',
+                description: `Removed orphaned profile for ${profile.email}. Refreshing user list...`,
+              });
+              
+              // Refresh the users list
+              await fetchUsers();
+              return;
+            } catch (cleanupError) {
+              console.error('❌ Error during orphaned profile cleanup:', cleanupError);
+              toast({
+                title: 'Cleanup Failed',
+                description: `Failed to clean up orphaned profile for ${profile.email}. Please try the full cleanup tool.`,
+                variant: 'destructive'
+              });
+              return;
+            }
+          }
         }
         
         throw insertError;
@@ -329,9 +408,9 @@ export function useSettings() {
       } else if (error.code === '23503') {
         errorMessage = 'This user profile is orphaned (no corresponding authentication record exists). Please run the cleanup tool first.';
       }
-      
+
       toast({
-        title: 'Error updating user role',
+        title: 'Error',
         description: errorMessage,
         variant: 'destructive'
       });
