@@ -278,7 +278,19 @@ export function useSettings() {
 
       console.log('✅ Profile found:', profile);
 
-      // First delete existing role
+      // Check if this is a protected user
+      if (profile.email.includes('keith.fowlkes') && newRole === 'member') {
+        const confirmChange = confirm(
+          `You are trying to remove admin privileges from ${profile.email}. ` +
+          `This may be a protected account. Are you sure you want to continue?`
+        );
+        if (!confirmChange) {
+          return;
+        }
+      }
+
+      // First delete existing role with more detailed error handling
+      console.log('🗑️ Deleting existing roles for user...');
       const { error: deleteError } = await supabase
         .from('user_roles')
         .delete()
@@ -286,10 +298,30 @@ export function useSettings() {
 
       if (deleteError) {
         console.error('❌ Error deleting existing role:', deleteError);
+        console.error('❌ Delete error details:', {
+          message: deleteError.message,
+          details: deleteError.details,
+          hint: deleteError.hint,
+          code: deleteError.code
+        });
+        
+        // Provide more specific error message
+        if (deleteError.message?.includes('Cannot remove admin role')) {
+          toast({
+            title: 'Cannot Remove Admin Role',
+            description: 'This user account is protected and cannot have their admin role removed.',
+            variant: 'destructive'
+          });
+          return;
+        }
+        
         throw deleteError;
       }
 
-      // Then insert new role
+      console.log('✅ Existing roles deleted successfully');
+
+      // Then insert new role with detailed error handling
+      console.log('➕ Inserting new role...');
       const { error: insertError } = await supabase
         .from('user_roles')
         .insert({
@@ -299,6 +331,12 @@ export function useSettings() {
 
       if (insertError) {
         console.error('❌ Error inserting new role:', insertError);
+        console.error('❌ Insert error details:', {
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+          code: insertError.code
+        });
         throw insertError;
       }
 
@@ -312,9 +350,19 @@ export function useSettings() {
       await fetchUsers();
     } catch (error: any) {
       console.error('❌ Role update error:', error);
+      
+      // Provide more helpful error messages
+      let errorMessage = error.message || 'Failed to update user role';
+      
+      if (error.message?.includes('protect_keith_admin_role')) {
+        errorMessage = 'This is a protected admin account that cannot have its role changed.';
+      } else if (error.message?.includes('Cannot remove admin role')) {
+        errorMessage = 'This admin account is protected from role changes for security reasons.';
+      }
+      
       toast({
         title: 'Error updating user role',
-        description: error.message || 'Failed to update user role',
+        description: errorMessage,
         variant: 'destructive'
       });
     }
