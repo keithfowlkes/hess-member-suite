@@ -78,7 +78,7 @@ export function useSettings() {
       const customMessage = passwordResetSetting?.setting_value || "A password reset link has been sent to your email address.";
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`
+        redirectTo: `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/auth?reset=true`
       });
 
       if (error) throw error;

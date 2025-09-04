@@ -238,8 +238,17 @@ export default function Auth() {
     e.preventDefault();
     setIsSubmitting(true);
     
+    // Get the app base URL from system settings or fallback to current origin
+    const { data: appUrlSetting } = await supabase
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_key', 'app_base_url')
+      .single();
+    
+    const redirectUrl = appUrlSetting?.setting_value || window.location.origin;
+    
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: "https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/auth?reset=true"
+      redirectTo: `${redirectUrl}/auth?reset=true`
     });
     
     if (error) {
