@@ -465,9 +465,21 @@ export function useSettings() {
           .eq('user_id', profile.user_id);
 
         // Delete from auth using edge function
-        await supabase.functions.invoke('delete-user', {
+        const { data: deleteData, error: deleteError } = await supabase.functions.invoke('delete-user', {
           body: { userId: profile.user_id }
         });
+
+        if (deleteError) {
+          console.error('❌ Edge function error for user:', profile.user_id, deleteError);
+          throw new Error(deleteError.message || 'Failed to delete user from auth');
+        }
+
+        if (deleteData?.error) {
+          console.error('❌ User deletion failed for:', profile.user_id, deleteData.error);
+          throw new Error(deleteData.error);
+        }
+
+        console.log('✅ Successfully deleted user:', profile.user_id, deleteData);
       }
 
       toast({
