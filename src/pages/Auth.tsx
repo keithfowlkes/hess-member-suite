@@ -181,7 +181,8 @@ export default function Auth() {
     primaryOfficeMicrosoft: false,
     primaryOfficeOther: false,
     primaryOfficeOtherDetails: '',
-    otherSoftwareComments: ''
+    otherSoftwareComments: '',
+    loginHint: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -853,25 +854,42 @@ export default function Auth() {
                         <p className="text-xs text-gray-500">This will be your login email address</p>
                       </div>
                       
-                      {!isReassignment && (
-                        <div className="lg:col-span-2 space-y-2">
-                          <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
-                            Password <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="signup-password"
-                            type="password"
-                            placeholder="Create a secure password"
-                            value={signUpForm.password}
-                            onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300 max-w-md"
-                            disabled={!signUpForm.isPrivateNonProfit}
-                            required
-                            minLength={6}
-                          />
-                          <p className="text-xs text-gray-500">Minimum 6 characters required</p>
-                        </div>
-                      )}
+                       {!isReassignment && (
+                         <>
+                           <div className="lg:col-span-2 space-y-2">
+                             <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
+                               Password <span className="text-red-500">*</span>
+                             </Label>
+                             <Input
+                               id="signup-password"
+                               type="password"
+                               placeholder="Create a secure password"
+                               value={signUpForm.password}
+                               onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                               className="h-11 bg-gray-50 border-gray-300 max-w-md"
+                               disabled={!signUpForm.isPrivateNonProfit}
+                               required
+                               minLength={6}
+                             />
+                             <p className="text-xs text-gray-500">Minimum 6 characters required</p>
+                           </div>
+                           <div className="lg:col-span-2 space-y-2">
+                             <Label htmlFor="signup-login-hint" className="text-gray-700 font-medium text-sm">
+                               Login Hint (Optional)
+                             </Label>
+                             <Input
+                               id="signup-login-hint"
+                               type="text"
+                               placeholder="e.g., Maiden name, pet name, etc."
+                               value={signUpForm.loginHint}
+                               onChange={(e) => setSignUpForm(prev => ({ ...prev, loginHint: e.target.value }))}
+                               className="h-11 bg-gray-50 border-gray-300 max-w-md"
+                               disabled={!signUpForm.isPrivateNonProfit}
+                             />
+                             <p className="text-xs text-gray-500">This hint will be included in password reset emails to help you remember your account</p>
+                           </div>
+                         </>
+                       )}
                     </div>
                   </div>
                 </div>

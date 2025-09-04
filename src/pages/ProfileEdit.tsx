@@ -51,6 +51,7 @@ interface ProfileData {
   primary_office_other: boolean;
   primary_office_other_details: string;
   other_software_comments: string;
+  login_hint: string;
 }
 
 const ProfileEdit = () => {
@@ -369,15 +370,28 @@ const ProfileEdit = () => {
                       disabled={!isEditing}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="primary_contact_title">Title</Label>
-                    <Input
-                      id="primary_contact_title"
-                      value={editedProfile?.primary_contact_title || ''}
-                      onChange={(e) => updateField('primary_contact_title', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
+                   <div>
+                     <Label htmlFor="primary_contact_title">Title</Label>
+                     <Input
+                       id="primary_contact_title"
+                       value={editedProfile?.primary_contact_title || ''}
+                       onChange={(e) => updateField('primary_contact_title', e.target.value)}
+                       disabled={!isEditing}
+                     />
+                   </div>
+                   <div>
+                     <Label htmlFor="login_hint">Login Hint</Label>
+                     <Input
+                       id="login_hint"
+                       value={editedProfile?.login_hint || ''}
+                       onChange={(e) => updateField('login_hint', e.target.value)}
+                       disabled={!isEditing}
+                       placeholder="e.g., Maiden name, pet name, etc."
+                     />
+                     <p className="text-xs text-muted-foreground mt-1">
+                       This hint will be included in password reset emails to help you remember your account
+                     </p>
+                   </div>
                 </div>
               </CardContent>
             </Card>

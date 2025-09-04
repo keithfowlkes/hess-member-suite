@@ -697,6 +697,7 @@ export type Database = {
           is_private_nonprofit: boolean | null
           last_name: string
           learning_management: string | null
+          login_hint: string | null
           organization: string | null
           other_software_comments: string | null
           payroll_system: string | null
@@ -738,6 +739,7 @@ export type Database = {
           is_private_nonprofit?: boolean | null
           last_name: string
           learning_management?: string | null
+          login_hint?: string | null
           organization?: string | null
           other_software_comments?: string | null
           payroll_system?: string | null
@@ -779,6 +781,7 @@ export type Database = {
           is_private_nonprofit?: boolean | null
           last_name?: string
           learning_management?: string | null
+          login_hint?: string | null
           organization?: string | null
           other_software_comments?: string | null
           payroll_system?: string | null
