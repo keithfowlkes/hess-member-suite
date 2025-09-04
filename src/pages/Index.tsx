@@ -231,6 +231,18 @@ const Index = () => {
               <SystemAnalyticsDashboard />
             </div>
           </div>
+          
+          {/* Footer */}
+          <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
+            <img 
+              src="/lovable-uploads/95b9e225-2202-4407-bdb2-f95edf683d93.png" 
+              alt="DeusLogic Logo" 
+              className="h-8 w-auto mb-2 opacity-70"
+            />
+            <p className="text-xs text-muted-foreground">
+              Copyright 2025 DeusLogic, LLC.
+            </p>
+          </div>
         </main>
       </div>
     </SidebarProvider>
