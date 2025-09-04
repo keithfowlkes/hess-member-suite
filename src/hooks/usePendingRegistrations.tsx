@@ -41,6 +41,12 @@ export interface PendingRegistration {
   approval_status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   rejection_reason?: string | null;
+  // New fields
+  priority_level?: 'low' | 'normal' | 'high' | 'urgent';
+  admin_notes?: string | null;
+  duplicate_check_status?: 'pending' | 'clean' | 'flagged';
+  flags?: string[] | null;
+  resubmission_count?: number;
 }
 
 export function usePendingRegistrations() {
@@ -204,11 +210,151 @@ export function usePendingRegistrations() {
     };
   }, [toast]);
 
+  const bulkApprove = async (registrationIds: string[], adminUserId?: string): Promise<void> => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('bulk-registration-operations', {
+        body: {
+          operation: 'approve',
+          registrationIds,
+          adminUserId
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Bulk Approval Complete",
+        description: `Successfully processed ${registrationIds.length} registration(s).`,
+      });
+
+      await fetchPendingRegistrations();
+    } catch (error: any) {
+      console.error('Error in bulk approve:', error);
+      toast({
+        title: "Bulk Approval Failed",
+        description: error.message || "Failed to process bulk approval",
+        variant: "destructive"
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const bulkReject = async (registrationIds: string[], reason: string, adminUserId?: string): Promise<void> => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('bulk-registration-operations', {
+        body: {
+          operation: 'reject',
+          registrationIds,
+          rejectionReason: reason,
+          adminUserId
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Bulk Rejection Complete",
+        description: `Successfully processed ${registrationIds.length} registration(s).`,
+      });
+
+      await fetchPendingRegistrations();
+    } catch (error: any) {
+      console.error('Error in bulk reject:', error);
+      toast({
+        title: "Bulk Rejection Failed", 
+        description: error.message || "Failed to process bulk rejection",
+        variant: "destructive"
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const bulkUpdatePriority = async (registrationIds: string[], priority: string, adminUserId?: string): Promise<void> => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('bulk-registration-operations', {
+        body: {
+          operation: 'priority_update',
+          registrationIds,
+          priority,
+          adminUserId
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Priority Update Complete",
+        description: `Successfully updated priority for ${registrationIds.length} registration(s).`,
+      });
+
+      await fetchPendingRegistrations();
+    } catch (error: any) {
+      console.error('Error in bulk priority update:', error);
+      toast({
+        title: "Priority Update Failed",
+        description: error.message || "Failed to update priorities",
+        variant: "destructive"
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updatePriority = async (registrationId: string, priority: string, adminUserId?: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('pending_registrations')
+        .update({
+          priority_level: priority,
+          admin_notes: `Priority updated to ${priority}`,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', registrationId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Priority Updated",
+        description: `Registration priority updated to ${priority}.`,
+      });
+
+      await fetchPendingRegistrations();
+      return true;
+    } catch (error: any) {
+      console.error('Error updating priority:', error);
+      toast({
+        title: "Priority Update Failed",
+        description: error.message || "Failed to update priority",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     pendingRegistrations,
     loading,
     approveRegistration,
     rejectRegistration,
+    bulkApprove,
+    bulkReject,
+    bulkUpdatePriority,
+    updatePriority,
     refetch: fetchPendingRegistrations
   };
 }
