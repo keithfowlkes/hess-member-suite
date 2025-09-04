@@ -253,7 +253,26 @@ export function useSettings() {
     try {
       console.log('🔄 Updating role for user:', userId, 'to:', newRole);
       
-      // First delete existing role with detailed error handling
+      // Check if user exists by trying to get their session info
+      // This is an indirect way to validate the auth user exists
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email, first_name, last_name')
+        .eq('user_id', userId)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('❌ Profile not found:', profileError);
+        toast({
+          title: 'User Not Found',
+          description: 'This user profile no longer exists. Please refresh the user list.',
+          variant: 'destructive'
+        });
+        await fetchUsers();
+        return;
+      }
+
+      // First delete existing role
       console.log('🗑️ Deleting existing roles for user...');
       const { error: deleteError } = await supabase
         .from('user_roles')
@@ -263,7 +282,6 @@ export function useSettings() {
       if (deleteError) {
         console.error('❌ Error deleting existing role:', deleteError);
         
-        // Provide more specific error message
         if (deleteError.message?.includes('Cannot remove admin role')) {
           toast({
             title: 'Cannot Remove Admin Role',
@@ -289,6 +307,17 @@ export function useSettings() {
 
       if (insertError) {
         console.error('❌ Error inserting new role:', insertError);
+        
+        // Check for specific foreign key constraint error
+        if (insertError.code === '23503' && insertError.message?.includes('user_roles_user_id_fkey')) {
+          toast({
+            title: 'Orphaned Profile Detected',
+            description: `${profile.email} is an orphaned profile (no auth user exists). Please use the cleanup tool to remove orphaned profiles.`,
+            variant: 'destructive'
+          });
+          return;
+        }
+        
         throw insertError;
       }
 
@@ -303,13 +332,14 @@ export function useSettings() {
     } catch (error: any) {
       console.error('❌ Role update error:', error);
       
-      // Provide more helpful error messages
       let errorMessage = error.message || 'Failed to update user role';
       
       if (error.message?.includes('protect_keith_admin_role')) {
         errorMessage = 'This is a protected admin account that cannot have its role changed.';
       } else if (error.message?.includes('Cannot remove admin role')) {
         errorMessage = 'This admin account is protected from role changes for security reasons.';
+      } else if (error.code === '23503') {
+        errorMessage = 'This user profile is orphaned (no corresponding authentication record exists). Please run the cleanup tool first.';
       }
       
       toast({
