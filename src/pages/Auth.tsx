@@ -238,17 +238,17 @@ export default function Auth() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Get the app base URL from system settings or fallback to current origin
-    const { data: appUrlSetting } = await supabase
+    // Get the password reset redirect URL from system settings
+    const { data: redirectSetting } = await supabase
       .from('system_settings')
       .select('setting_value')
-      .eq('setting_key', 'app_base_url')
+      .eq('setting_key', 'password_reset_redirect_url')
       .single();
     
-    const redirectUrl = appUrlSetting?.setting_value || window.location.origin;
+    const redirectUrl = redirectSetting?.setting_value || 'https://members.hessconsortium.app/auth?reset=true';
     
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${redirectUrl}/auth?reset=true`
+      redirectTo: redirectUrl
     });
     
     if (error) {

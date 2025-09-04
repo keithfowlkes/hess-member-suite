@@ -77,8 +77,17 @@ export function useSettings() {
       const passwordResetSetting = settings.find(s => s.setting_key === 'password_reset_message');
       const customMessage = passwordResetSetting?.setting_value || "A password reset link has been sent to your email address.";
 
+      // Get the password reset redirect URL from system settings
+      const { data: redirectSetting } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'password_reset_redirect_url')
+        .single();
+      
+      const redirectUrl = redirectSetting?.setting_value || 'https://members.hessconsortium.app/auth?reset=true';
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/auth?reset=true`
+        redirectTo: redirectUrl
       });
 
       if (error) throw error;
