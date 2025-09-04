@@ -236,32 +236,70 @@ export function useSettings() {
 
   const updateUserRole = async (userId: string, newRole: 'admin' | 'member') => {
     try {
+      console.log('🔄 Updating role for user:', userId, 'to:', newRole);
+      
+      // First validate that the user still exists
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, email, first_name, last_name')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('❌ Error fetching user profile:', profileError);
+        throw profileError;
+      }
+
+      if (!profile) {
+        console.log('⚠️ Profile not found for userId:', userId);
+        toast({
+          title: 'User Not Found',
+          description: 'This user profile no longer exists. Refreshing user list...',
+          variant: 'destructive'
+        });
+        await fetchUsers();
+        return;
+      }
+
+      console.log('✅ Profile found:', profile);
+
       // First delete existing role
-      await supabase
+      const { error: deleteError } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId);
 
+      if (deleteError) {
+        console.error('❌ Error deleting existing role:', deleteError);
+        throw deleteError;
+      }
+
       // Then insert new role
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('user_roles')
         .insert({
           user_id: userId,
           role: newRole
         });
 
-      if (error) throw error;
+      if (insertError) {
+        console.error('❌ Error inserting new role:', insertError);
+        throw insertError;
+      }
+
+      console.log('✅ Role updated successfully');
 
       toast({
         title: 'Success',
-        description: 'User role updated successfully'
+        description: `User role updated to ${newRole} successfully`
       });
 
       await fetchUsers();
     } catch (error: any) {
+      console.error('❌ Role update error:', error);
       toast({
         title: 'Error updating user role',
-        description: error.message,
+        description: error.message || 'Failed to update user role',
         variant: 'destructive'
       });
     }
@@ -342,10 +380,10 @@ export function useSettings() {
     try {
       console.log('🗑️ Starting user deletion for userId:', userId);
       
-      // First check if user is a contact person for any organization
+      // First check if user profile exists
       const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, email')
+        .select('id, email, first_name, last_name')
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -355,124 +393,63 @@ export function useSettings() {
       }
 
       if (!userProfile) {
-        console.log('⚠️ No profile found for userId - trying email fallback if available');
+        console.log('⚠️ No profile found for userId - user may already be deleted');
         
-        // If we have an email, try deleting by email instead
-        if (userEmail) {
-          console.log('🔄 Falling back to delete by email:', userEmail);
-          await deleteUserByEmail(userEmail);
-          return;
-        }
-        
-        // Force refresh the user list since this user seems to be stale data
         toast({
           title: 'User Already Deleted',
-          description: 'This user was already deleted from the system. Refreshing user list...',
+          description: 'This user appears to have been already deleted. Refreshing user list...',
         });
         
-        // Force a hard refresh of the users list
-        console.log('🔄 Force refreshing user list...');
+        // Force refresh the user list
         await fetchUsers();
-        
-        // If that doesn't work, let's also reload the entire settings data
-        setTimeout(async () => {
-          console.log('🔄 Reloading all settings data...');
-          setLoading(true);
-          await Promise.all([fetchUsers(), fetchStats(), fetchSettings()]);
-          setLoading(false);
-        }, 1000);
-        
         return;
       }
 
       console.log('👤 User profile found:', userProfile);
 
-      if (userProfile) {
-        const { data: organizations } = await supabase
-          .from('organizations')
-          .select('id, name')
-          .eq('contact_person_id', userProfile.id);
-
-        console.log('🏢 Organizations where user is contact:', organizations);
-
-        if (organizations && organizations.length > 0) {
-          // Remove user as contact person from organizations
-          const { error: orgUpdateError } = await supabase
-            .from('organizations')
-            .update({ contact_person_id: null })
-            .eq('contact_person_id', userProfile.id);
-
-          if (orgUpdateError) {
-            console.error('❌ Error updating organizations:', orgUpdateError);
-            throw orgUpdateError;
-          }
-
-          console.log('✅ Removed as contact from organizations');
-
-          toast({
-            title: 'Contact removed',
-            description: `User was removed as contact person from ${organizations.length} organization(s)`,
-            variant: 'default'
-          });
-        }
-      }
-
-      // Delete user roles first
-      console.log('🔐 Deleting user roles...');
-      const { error: rolesError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
-      
-      if (rolesError) {
-        console.error('❌ Error deleting user roles:', rolesError);
-        throw rolesError;
-      }
-      console.log('✅ User roles deleted');
-
-      // Delete profile (now has proper DELETE policy)
-      console.log('👤 Deleting user profile...');
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('user_id', userId);
-      
-      if (error) {
-        console.error('❌ Error deleting profile:', error);
-        throw error;
-      }
-      console.log('✅ User profile deleted');
-
-      // Delete from auth.users table using edge function
-      console.log('🔑 Calling delete-user edge function...');
-      const { error: authError } = await supabase.functions.invoke('delete-user', {
-        body: { userId }
+      // Call edge function to handle the deletion
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId: userId }
       });
 
-      if (authError) {
-        console.error('❌ Error deleting user from auth:', authError);
-        toast({
-          title: "Warning",
-          description: "User profile deleted but auth account may still exist.",
-          variant: "destructive"
-        });
-      } else {
-        console.log('✅ Auth user deletion completed');
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw new Error(error.message || 'Failed to delete user');
       }
+
+      console.log('✅ Delete user response:', data);
+
+      if (data?.error) {
+        console.error('❌ User deletion failed:', data.error);
+        throw new Error(data.error);
+      }
+
+      const message = data?.authUserExists 
+        ? 'User account and profile deleted successfully'
+        : 'User profile cleaned up successfully (auth user was already removed)';
 
       toast({
         title: 'Success',
-        description: 'User account deleted successfully'
+        description: message
       });
 
+      // Refresh user list
       console.log('🔄 Refreshing user list...');
       await fetchUsers();
-      console.log('✅ User deletion process completed');
+      
     } catch (error: any) {
       console.error('❌ Delete user error:', error);
+      
+      let errorMessage = error.message || 'Failed to delete user account';
+      if (errorMessage.includes('User not found')) {
+        errorMessage = 'User was already deleted from the system. Cleaning up remaining data...';
+        // Still refresh to clean up the UI
+        await fetchUsers();
+      }
+      
       toast({
         title: 'Error deleting user',
-        description: error.message || 'Failed to delete user account',
+        description: errorMessage,
         variant: 'destructive'
       });
     }
@@ -501,6 +478,48 @@ export function useSettings() {
     loadData();
   }, []);
 
+  // Add a cleanup function for orphaned profiles
+  const cleanupOrphanedProfiles = async () => {
+    try {
+      console.log('🧹 Starting orphaned profiles cleanup...');
+      setLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('cleanup-orphaned-profiles');
+      
+      if (error) {
+        console.error('❌ Cleanup error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Cleanup completed:', data);
+      
+      if (data?.orphanedProfilesFound > 0) {
+        toast({
+          title: 'Cleanup Completed',
+          description: `Found and cleaned up ${data.orphanedProfilesFound} orphaned user profiles.`,
+        });
+      } else {
+        toast({
+          title: 'No Issues Found',
+          description: 'All user profiles are properly linked to auth accounts.',
+        });
+      }
+      
+      // Refresh the user list
+      await fetchUsers();
+      
+    } catch (error: any) {
+      console.error('❌ Cleanup error:', error);
+      toast({
+        title: 'Cleanup Failed',
+        description: error.message || 'Failed to cleanup orphaned profiles',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     users,
     stats,
@@ -514,6 +533,7 @@ export function useSettings() {
     deleteUserByEmail,
     resetUserPassword,
     changeUserPassword,
-    updateSetting
+    updateSetting,
+    cleanupOrphanedProfiles
   };
 }
