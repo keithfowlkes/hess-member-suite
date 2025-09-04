@@ -95,8 +95,8 @@ Deno.serve(async (req) => {
     // Clean up profile data regardless of auth user existence
     console.log('🧹 Cleaning up profile and related data...');
 
-    // Get user profile for cleanup
-    const { data: profile, error: profileFetchError } = await supabaseClient
+    // Get user profile for cleanup using admin client
+    const { data: profile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('id, email, first_name, last_name')
       .eq('user_id', userId)
@@ -117,9 +117,9 @@ Deno.serve(async (req) => {
     if (profile) {
       console.log('👤 Found profile:', profile);
       
-      // Remove as contact person from organizations
+      // Remove as contact person from organizations using admin client
       console.log('🏢 Removing as contact person from organizations...');
-      const { data: orgUpdateData, error: orgUpdateError } = await supabaseClient
+      const { data: orgUpdateData, error: orgUpdateError } = await supabaseAdmin
         .from('organizations')
         .update({ contact_person_id: null })
         .eq('contact_person_id', profile.id)
@@ -132,9 +132,9 @@ Deno.serve(async (req) => {
         console.log(`✅ Updated ${cleanupResults.organizationsUpdated} organizations`);
       }
 
-      // Delete user roles
+      // Delete user roles using admin client
       console.log('🔐 Deleting user roles...');
-      const { error: rolesError } = await supabaseClient
+      const { error: rolesError } = await supabaseAdmin
         .from('user_roles')
         .delete()
         .eq('user_id', userId);
@@ -146,9 +146,9 @@ Deno.serve(async (req) => {
         console.log('✅ User roles deleted');
       }
 
-      // Delete profile
+      // Delete profile using admin client
       console.log('👤 Deleting user profile...');
-      const { error: profileDeleteError } = await supabaseClient
+      const { error: profileDeleteError } = await supabaseAdmin
         .from('profiles')
         .delete()
         .eq('user_id', userId);
