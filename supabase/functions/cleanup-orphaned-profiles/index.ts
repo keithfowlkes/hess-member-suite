@@ -62,41 +62,102 @@ serve(async (req) => {
         
         const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
         
-        if (getUserError || !userData.user) {
+        // Consider profile orphaned if:
+        // 1. getUserError exists (user not found, etc.)
+        // 2. userData is null/undefined
+        // 3. userData.user is null/undefined
+        // 4. getUserError message includes "User not found" or similar
+        const isOrphaned = getUserError || 
+                          !userData || 
+                          !userData.user ||
+                          (getUserError && (
+                            getUserError.message?.includes('User not found') ||
+                            getUserError.message?.includes('not found') ||
+                            getUserError.code === 'user_not_found'
+                          ));
+        
+        if (isOrphaned) {
           console.log(`⚠️ Orphaned profile found: ${profile.email} (${profile.user_id})`);
+          console.log(`   Error details:`, getUserError?.message || 'No user data returned');
           orphanedProfiles.push(profile);
           
           // Clean up this orphaned profile
           console.log(`🧹 Cleaning up orphaned profile: ${profile.email}`);
           
-          // Remove as contact person from organizations
-          await supabaseClient
-            .from('organizations')
-            .update({ contact_person_id: null })
-            .eq('contact_person_id', profile.id);
+          try {
+            // Remove as contact person from organizations
+            const { error: orgError } = await supabaseClient
+              .from('organizations')
+              .update({ contact_person_id: null })
+              .eq('contact_person_id', profile.id);
+            
+            if (orgError) {
+              console.error(`⚠️ Error updating organizations:`, orgError);
+            }
 
-          // Delete user roles
-          await supabaseClient
-            .from('user_roles')
-            .delete()
-            .eq('user_id', profile.user_id);
+            // Delete user roles first (to avoid constraint issues)
+            const { error: roleError } = await supabaseClient
+              .from('user_roles')
+              .delete()
+              .eq('user_id', profile.user_id);
+            
+            if (roleError) {
+              console.error(`⚠️ Error deleting user roles:`, roleError);
+            }
 
-          // Delete profile
-          await supabaseClient
-            .from('profiles')
-            .delete()
-            .eq('user_id', profile.user_id);
+            // Delete profile
+            const { error: profileError } = await supabaseClient
+              .from('profiles')
+              .delete()
+              .eq('user_id', profile.user_id);
+            
+            if (profileError) {
+              console.error(`⚠️ Error deleting profile:`, profileError);
+              throw profileError;
+            }
 
-          console.log(`✅ Cleaned up orphaned profile: ${profile.email}`);
+            console.log(`✅ Cleaned up orphaned profile: ${profile.email}`);
+          } catch (cleanupError) {
+            console.error(`❌ Failed to cleanup profile ${profile.email}:`, cleanupError);
+            cleanupErrors.push({
+              profile: profile.email,
+              error: `Cleanup failed: ${cleanupError.message}`
+            });
+          }
         } else {
           console.log(`✅ Profile ${profile.email} has valid auth user`);
         }
       } catch (error) {
         console.error(`❌ Error processing profile ${profile.email}:`, error);
-        cleanupErrors.push({
-          profile: profile.email,
-          error: error.message
-        });
+        
+        // If we can't check the user, treat as potentially orphaned and try to clean up
+        console.log(`🔍 Unable to verify ${profile.email}, treating as potentially orphaned`);
+        orphanedProfiles.push(profile);
+        
+        try {
+          // Attempt cleanup anyway
+          await supabaseClient
+            .from('organizations')
+            .update({ contact_person_id: null })
+            .eq('contact_person_id', profile.id);
+
+          await supabaseClient
+            .from('user_roles')
+            .delete()
+            .eq('user_id', profile.user_id);
+
+          await supabaseClient
+            .from('profiles')
+            .delete()
+            .eq('user_id', profile.user_id);
+
+          console.log(`✅ Cleaned up unverifiable profile: ${profile.email}`);
+        } catch (cleanupError) {
+          cleanupErrors.push({
+            profile: profile.email,
+            error: `Processing error: ${error.message}, Cleanup error: ${cleanupError.message}`
+          });
+        }
       }
     }
 
