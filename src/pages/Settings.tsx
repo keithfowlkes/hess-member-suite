@@ -18,7 +18,7 @@ import { useSystemSetting, useUpdateSystemSetting } from '@/hooks/useSystemSetti
 import { useFormFields, FormField } from '@/hooks/useFormFields';
 import { useToast } from '@/hooks/use-toast';
 import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDirectory';
-import { SystemFieldOptionsManager } from '@/components/SystemFieldOptionsManager';
+import { SimpleSystemFieldManager } from '@/components/SimpleSystemFieldManager';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
@@ -411,7 +411,7 @@ export default function Settings() {
               </TabsContent>
 
               <TabsContent value="forms" className="space-y-6">
-                <SystemFieldOptionsManager />
+                <SimpleSystemFieldManager />
               </TabsContent>
 
               <TabsContent value="public" className="space-y-6">

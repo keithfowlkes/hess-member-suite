@@ -109,49 +109,19 @@ export const useSystemFieldOptions = () => {
   return query;
 };
 
-// Get options for a specific field with advanced deduplication
+// Get options for a specific field - simplified to only use managed options
 export const useFieldOptions = (fieldName: SystemField) => {
-  const { data: allOptions, dataUpdatedAt } = useSystemFieldOptions();
-  const { data: profileValues } = useSystemFieldValues();
+  const { data: allOptions } = useSystemFieldOptions();
   
-  // Use useMemo to recalculate when data changes
+  // Return only the managed options from the database
   return useMemo(() => {
-    // Combine managed options with existing profile values
     const managedOptions = allOptions?.filter(opt => opt.field_name === fieldName) || [];
-    const profileValuesList = profileValues?.[fieldName] || [];
     
-    console.log(`🔍 useFieldOptions for ${fieldName} (updated at ${dataUpdatedAt}):`, {
-      managedOptionsCount: managedOptions.length,
-      managedOptions: managedOptions.map(opt => opt.option_value),
-      profileValuesCount: profileValuesList.length,
-      profileValues: profileValuesList
-    });
-    
-    // Merge and deduplicate - ensure no empty/null values
-    const allValues = [
-      ...managedOptions.map(opt => opt.option_value),
-      ...profileValuesList
-    ].filter(value => value && typeof value === 'string' && value.trim().length > 0);
-    
-    // Advanced deduplication: case-insensitive, trim whitespace, preserve original casing
-    const valueMap = new Map<string, string>();
-    
-    allValues.forEach(value => {
-      const normalizedKey = value.trim().toLowerCase();
-      if (!valueMap.has(normalizedKey)) {
-        valueMap.set(normalizedKey, value.trim());
-      }
-    });
-    
-    // Convert back to array and sort case-insensitively
-    const finalOptions = Array.from(valueMap.values()).sort((a, b) => 
-      a.localeCompare(b, undefined, { sensitivity: 'base' })
-    );
-    
-    console.log(`✅ Final options for ${fieldName}:`, finalOptions);
-    
-    return finalOptions;
-  }, [fieldName, allOptions, profileValues, dataUpdatedAt]);
+    // Return sorted option values
+    return managedOptions
+      .map(opt => opt.option_value)
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  }, [fieldName, allOptions]);
 };
 
 // Add new system field option
