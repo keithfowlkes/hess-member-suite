@@ -160,7 +160,7 @@ function SystemFieldsSection({ profileForm }: SystemFieldsSectionProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-popover max-h-[200px] overflow-y-auto">
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {options.map((option) => (
                       <SelectItem key={option} value={option}>
                         {option}
