@@ -5,6 +5,7 @@ import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
 import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
 import { useReassignmentRequests } from '@/hooks/useReassignmentRequests';
 import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
+import { AdminCustomEntriesNotification } from '@/components/AdminCustomEntriesNotification';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -133,23 +134,34 @@ export function AppSidebar() {
       <SidebarFooter className="mt-auto border-t">
         <SidebarMenu>
           {isAdmin && (
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Button
-                  variant="ghost"
-                  onClick={toggleViewMode}
-                  className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
-                >
-                  {isViewingAsAdmin ? 
-                    <ToggleRight className="h-4 w-4 text-green-500" /> : 
-                    <ToggleLeft className="h-4 w-4 text-blue-500" />
-                  }
-                  {!isCollapsed && (
-                    <span className="ml-2">{isViewingAsAdmin ? 'Switch to Member View' : 'Switch to Admin View'}</span>
-                  )}
-                </Button>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            <>
+              {isViewingAsAdmin && !isCollapsed && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <div className="w-full px-3 py-2">
+                      <AdminCustomEntriesNotification />
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Button
+                    variant="ghost"
+                    onClick={toggleViewMode}
+                    className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
+                  >
+                    {isViewingAsAdmin ? 
+                      <ToggleRight className="h-4 w-4 text-green-500" /> : 
+                      <ToggleLeft className="h-4 w-4 text-blue-500" />
+                    }
+                    {!isCollapsed && (
+                      <span className="ml-2">{isViewingAsAdmin ? 'Switch to Member View' : 'Switch to Admin View'}</span>
+                    )}
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
           )}
           <SidebarMenuItem>
             <SidebarMenuButton asChild>

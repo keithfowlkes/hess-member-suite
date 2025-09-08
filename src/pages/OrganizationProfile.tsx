@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { useOrganizationProfile, OrganizationProfile } from '@/hooks/useOrganizationProfile';
 import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
+import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
 import { Loader2, Edit, Save, X, ArrowLeft, Building2, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -535,76 +536,86 @@ const OrganizationProfilePage = () => {
                 <CardTitle>Software Systems</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <SystemFieldSelect
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <EnhancedSystemFieldSelect
                     fieldName="student_information_system"
                     label="Student Information System"
                     value={editedData?.organization.student_information_system || ''}
                     onChange={(value) => updateOrganizationField('student_information_system', value)}
                     disabled={!isEditing}
+                    organizationId={editedData?.organization.id}
                   />
-                  <SystemFieldSelect
+                  <EnhancedSystemFieldSelect
                     fieldName="financial_system"
                     label="Financial System"
                     value={editedData?.organization.financial_system || ''}
                     onChange={(value) => updateOrganizationField('financial_system', value)}
                     disabled={!isEditing}
+                    organizationId={editedData?.organization.id}
                   />
-                  <SystemFieldSelect
+                  <EnhancedSystemFieldSelect
                     fieldName="financial_aid"
                     label="Financial Aid System"
                     value={editedData?.organization.financial_aid || ''}
                     onChange={(value) => updateOrganizationField('financial_aid', value)}
                     disabled={!isEditing}
+                    organizationId={editedData?.organization.id}
                   />
-                  <SystemFieldSelect
+                  <EnhancedSystemFieldSelect
                     fieldName="hcm_hr"
                     label="Human Capital Management"
                     value={editedData?.organization.hcm_hr || ''}
                     onChange={(value) => updateOrganizationField('hcm_hr', value)}
                     disabled={!isEditing}
+                    organizationId={editedData?.organization.id}
                   />
-                  <SystemFieldSelect
+                  <EnhancedSystemFieldSelect
                     fieldName="payroll_system"
                     label="Payroll System"
                     value={editedData?.organization.payroll_system || ''}
                     onChange={(value) => updateOrganizationField('payroll_system', value)}
                     disabled={!isEditing}
+                    organizationId={editedData?.organization.id}
                   />
-                  <SystemFieldSelect
+                  <EnhancedSystemFieldSelect
                     fieldName="purchasing_system"
                     label="Purchasing System"
                     value={editedData?.organization.purchasing_system || ''}
                     onChange={(value) => updateOrganizationField('purchasing_system', value)}
                     disabled={!isEditing}
+                    organizationId={editedData?.organization.id}
                   />
-                  <SystemFieldSelect
+                  <EnhancedSystemFieldSelect
                     fieldName="housing_management"
                     label="Housing Management System"
                     value={editedData?.organization.housing_management || ''}
                     onChange={(value) => updateOrganizationField('housing_management', value)}
                     disabled={!isEditing}
+                    organizationId={editedData?.organization.id}
                   />
-                  <SystemFieldSelect
+                  <EnhancedSystemFieldSelect
                     fieldName="learning_management"
                     label="Learning Management System"
                     value={editedData?.organization.learning_management || ''}
                     onChange={(value) => updateOrganizationField('learning_management', value)}
                     disabled={!isEditing}
+                    organizationId={editedData?.organization.id}
                   />
-                  <SystemFieldSelect
+                  <EnhancedSystemFieldSelect
                     fieldName="admissions_crm"
                     label="Admissions CRM"
                     value={editedData?.organization.admissions_crm || ''}
                     onChange={(value) => updateOrganizationField('admissions_crm', value)}
                     disabled={!isEditing}
+                    organizationId={editedData?.organization.id}
                   />
-                  <SystemFieldSelect
+                  <EnhancedSystemFieldSelect
                     fieldName="alumni_advancement_crm"
                     label="Alumni/Advancement CRM"
                     value={editedData?.organization.alumni_advancement_crm || ''}
                     onChange={(value) => updateOrganizationField('alumni_advancement_crm', value)}
                     disabled={!isEditing}
+                    organizationId={editedData?.organization.id}
                   />
                 </div>
 

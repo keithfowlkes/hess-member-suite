@@ -79,6 +79,59 @@ export type Database = {
           },
         ]
       }
+      custom_software_entries: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          custom_value: string
+          field_name: string
+          id: string
+          organization_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string | null
+          submitted_by: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          custom_value: string
+          field_name: string
+          id?: string
+          organization_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          custom_value?: string
+          field_name?: string
+          id?: string
+          organization_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_software_entries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboards: {
         Row: {
           created_at: string
