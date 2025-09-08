@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 export interface SystemFieldOption {
   id: string;
@@ -70,44 +70,8 @@ export const useSystemFieldValues = () => {
 // Get managed system field options (from database table) with real-time updates
 export const useSystemFieldOptions = () => {
   const queryClient = useQueryClient();
-  
-  // Set up real-time subscription with error handling
-  useEffect(() => {
-    let channel: any = null;
-    
-    try {
-      channel = supabase
-        .channel('system-field-options-realtime')
-        .on(
-          'postgres_changes',
-          {
-            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-            schema: 'public',
-            table: 'system_field_options'
-          },
-          (payload) => {
-            console.log('System field options changed:', payload);
-            // Invalidate queries to refresh data
-            queryClient.invalidateQueries({ queryKey: ['system-field-options'] });
-          }
-        )
-        .subscribe();
-    } catch (error) {
-      console.warn('Real-time subscription failed, continuing without real-time updates:', error);
-    }
 
-    return () => {
-      if (channel) {
-        try {
-          supabase.removeChannel(channel);
-        } catch (error) {
-          console.warn('Error removing channel:', error);
-        }
-      }
-    };
-  }, [queryClient]);
-
-  return useQuery({
+  const query = useQuery({
     queryKey: ['system-field-options'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -119,48 +83,75 @@ export const useSystemFieldOptions = () => {
       return data as SystemFieldOption[];
     },
   });
+
+  // Set up real-time subscription for system field options
+  useEffect(() => {
+    const channel = supabase
+      .channel('system-field-options-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'system_field_options' },
+        (payload) => {
+          console.log('🔄 System field options changed, refetching...', payload);
+          // Invalidate all related queries to ensure UI updates
+          queryClient.invalidateQueries({ queryKey: ['system-field-options'] });
+          queryClient.invalidateQueries({ queryKey: ['system-field-values'] });
+          // Force refetch to ensure immediate update
+          queryClient.refetchQueries({ queryKey: ['system-field-options'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  return query;
 };
 
 // Get options for a specific field with advanced deduplication
 export const useFieldOptions = (fieldName: SystemField) => {
-  const { data: allOptions } = useSystemFieldOptions();
+  const { data: allOptions, dataUpdatedAt } = useSystemFieldOptions();
   const { data: profileValues } = useSystemFieldValues();
   
-  // Combine managed options with existing profile values
-  const managedOptions = allOptions?.filter(opt => opt.field_name === fieldName) || [];
-  const profileValuesList = profileValues?.[fieldName] || [];
-  
-  console.log(`🔍 useFieldOptions for ${fieldName}:`, {
-    managedOptionsCount: managedOptions.length,
-    managedOptions: managedOptions.map(opt => opt.option_value),
-    profileValuesCount: profileValuesList.length,
-    profileValues: profileValuesList
-  });
-  
-  // Merge and deduplicate - ensure no empty/null values
-  const allValues = [
-    ...managedOptions.map(opt => opt.option_value),
-    ...profileValuesList
-  ].filter(value => value && typeof value === 'string' && value.trim().length > 0);
-  
-  // Advanced deduplication: case-insensitive, trim whitespace, preserve original casing
-  const valueMap = new Map<string, string>();
-  
-  allValues.forEach(value => {
-    const normalizedKey = value.trim().toLowerCase();
-    if (!valueMap.has(normalizedKey)) {
-      valueMap.set(normalizedKey, value.trim());
-    }
-  });
-  
-  // Convert back to array and sort case-insensitively
-  const finalOptions = Array.from(valueMap.values()).sort((a, b) => 
-    a.localeCompare(b, undefined, { sensitivity: 'base' })
-  );
-  
-  console.log(`✅ Final options for ${fieldName}:`, finalOptions);
-  
-  return finalOptions;
+  // Use useMemo to recalculate when data changes
+  return useMemo(() => {
+    // Combine managed options with existing profile values
+    const managedOptions = allOptions?.filter(opt => opt.field_name === fieldName) || [];
+    const profileValuesList = profileValues?.[fieldName] || [];
+    
+    console.log(`🔍 useFieldOptions for ${fieldName} (updated at ${dataUpdatedAt}):`, {
+      managedOptionsCount: managedOptions.length,
+      managedOptions: managedOptions.map(opt => opt.option_value),
+      profileValuesCount: profileValuesList.length,
+      profileValues: profileValuesList
+    });
+    
+    // Merge and deduplicate - ensure no empty/null values
+    const allValues = [
+      ...managedOptions.map(opt => opt.option_value),
+      ...profileValuesList
+    ].filter(value => value && typeof value === 'string' && value.trim().length > 0);
+    
+    // Advanced deduplication: case-insensitive, trim whitespace, preserve original casing
+    const valueMap = new Map<string, string>();
+    
+    allValues.forEach(value => {
+      const normalizedKey = value.trim().toLowerCase();
+      if (!valueMap.has(normalizedKey)) {
+        valueMap.set(normalizedKey, value.trim());
+      }
+    });
+    
+    // Convert back to array and sort case-insensitively
+    const finalOptions = Array.from(valueMap.values()).sort((a, b) => 
+      a.localeCompare(b, undefined, { sensitivity: 'base' })
+    );
+    
+    console.log(`✅ Final options for ${fieldName}:`, finalOptions);
+    
+    return finalOptions;
+  }, [fieldName, allOptions, profileValues, dataUpdatedAt]);
 };
 
 // Add new system field option
