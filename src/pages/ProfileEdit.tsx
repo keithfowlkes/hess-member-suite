@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useFieldOptions, type SystemField } from '@/hooks/useSystemFieldOptions';
+import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Edit, Save, X, ArrowLeft } from 'lucide-react';
 
@@ -74,7 +74,7 @@ const ProfileEdit = () => {
     onChange: (value: string) => void;
     disabled: boolean;
   }) => {
-    const options = useFieldOptions(fieldName);
+    const options = useSimpleFieldOptions(fieldName);
     
     return (
       <div className="space-y-2">

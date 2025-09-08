@@ -42,7 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useMembers, Organization, CreateOrganizationData } from '@/hooks/useMembers';
-import { useFieldOptions } from '@/hooks/useSystemFieldOptions';
+import { useSimpleFieldOptions } from '@/hooks/useSimpleSystemFieldOptions';
 import { CalendarIcon, User, Building2, Mail, Phone, MapPin, Database, Monitor, Trash2, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -140,7 +140,7 @@ function SystemFieldsSection({ profileForm }: SystemFieldsSectionProps) {
   return (
     <div className="grid grid-cols-2 gap-4">
       {systemFields.map(({ key, label }) => {
-        const options = useFieldOptions(key as any);
+        const options = useSimpleFieldOptions(key as any);
         
         return (
           <FormField

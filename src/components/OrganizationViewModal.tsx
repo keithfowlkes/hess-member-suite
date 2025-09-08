@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFieldOptions, type SystemField } from '@/hooks/useSystemFieldOptions';
+import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
 import { 
   Building2, 
   User, 
@@ -61,7 +61,7 @@ const SystemFieldSelect = ({
   value: string;
   onChange: (value: string) => void;
 }) => {
-  const options = useFieldOptions(fieldName);
+  const options = useSimpleFieldOptions(fieldName);
   
   return (
     <Select value={value || "none"} onValueChange={(val) => onChange(val === "none" ? "" : val)}>

@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Edit, Save, X } from 'lucide-react';
-import { useFieldOptions, type SystemField } from '@/hooks/useSystemFieldOptions';
+import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
 
 interface ProfileData {
   id: string;
@@ -77,7 +77,7 @@ const Profile = () => {
     onChange: (value: string) => void;
     disabled: boolean;
   }) => {
-    const options = useFieldOptions(fieldName);
+    const options = useSimpleFieldOptions(fieldName);
     
     return (
       <div className="space-y-2">

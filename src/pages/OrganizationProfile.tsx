@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { useOrganizationProfile, OrganizationProfile } from '@/hooks/useOrganizationProfile';
-import { useFieldOptions, type SystemField } from '@/hooks/useSystemFieldOptions';
+import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
 import { Loader2, Edit, Save, X, ArrowLeft, Building2, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -36,7 +36,7 @@ const OrganizationProfilePage = () => {
     onChange: (value: string) => void;
     disabled: boolean;
   }) => {
-    const options = useFieldOptions(fieldName);
+    const options = useSimpleFieldOptions(fieldName);
     
     return (
       <div className="space-y-2">

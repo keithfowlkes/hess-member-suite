@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { useSystemSetting } from '@/hooks/useSystemSettings';
-import { useFieldOptions, type SystemField } from '@/hooks/useSystemFieldOptions';
+import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useCreateReassignmentRequest } from '@/hooks/useReassignmentRequests';
 
@@ -93,7 +93,7 @@ export default function Auth() {
     onCustomValueChange: (value: string) => void;
     required?: boolean;
   }) => {
-    const options = useFieldOptions(fieldName);
+    const options = useSimpleFieldOptions(fieldName);
     
     return (
       <div className="space-y-3">
