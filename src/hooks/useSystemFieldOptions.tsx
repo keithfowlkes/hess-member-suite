@@ -130,6 +130,13 @@ export const useFieldOptions = (fieldName: SystemField) => {
   const managedOptions = allOptions?.filter(opt => opt.field_name === fieldName) || [];
   const profileValuesList = profileValues?.[fieldName] || [];
   
+  console.log(`🔍 useFieldOptions for ${fieldName}:`, {
+    managedOptionsCount: managedOptions.length,
+    managedOptions: managedOptions.map(opt => opt.option_value),
+    profileValuesCount: profileValuesList.length,
+    profileValues: profileValuesList
+  });
+  
   // Merge and deduplicate - ensure no empty/null values
   const allValues = [
     ...managedOptions.map(opt => opt.option_value),
@@ -147,9 +154,13 @@ export const useFieldOptions = (fieldName: SystemField) => {
   });
   
   // Convert back to array and sort case-insensitively
-  return Array.from(valueMap.values()).sort((a, b) => 
+  const finalOptions = Array.from(valueMap.values()).sort((a, b) => 
     a.localeCompare(b, undefined, { sensitivity: 'base' })
   );
+  
+  console.log(`✅ Final options for ${fieldName}:`, finalOptions);
+  
+  return finalOptions;
 };
 
 // Add new system field option
