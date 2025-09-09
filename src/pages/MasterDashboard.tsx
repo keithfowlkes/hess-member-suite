@@ -946,10 +946,14 @@ const MasterDashboard = () => {
                                     <Button
                                       size="sm"
                                       onClick={async () => {
-                                        const success = await approveProfileEditRequest(request.id);
-                                        if (success) {
-                                          // Refetch data to update the UI
-                                          window.location.reload();
+                                        try {
+                                          const success = await approveProfileEditRequest(request.id);
+                                          if (success) {
+                                            // The query invalidation in the hook should handle UI refresh
+                                            // No need for window.location.reload()
+                                          }
+                                        } catch (error) {
+                                          console.error('Error approving profile edit request:', error);
                                         }
                                       }}
                                       className="bg-green-600 hover:bg-green-700 text-white"
