@@ -106,6 +106,51 @@ export function useOrganizationProfile(profileId?: string) {
     }
   };
 
+  const submitOrganizationProfileEditRequest = async (
+    updates: {
+      organization?: Partial<OrganizationProfile['organization']>;
+      profile?: Partial<OrganizationProfile['profile']>;
+    }
+  ) => {
+    if (!data) return false;
+
+    try {
+      console.log('Submitting organization profile edit request:', updates);
+      
+      // Create the edit request instead of direct update
+      const { error } = await supabase
+        .from('organization_profile_edit_requests')
+        .insert({
+          organization_id: data.organization.id,
+          original_organization_data: data.organization,
+          updated_organization_data: updates.organization ? { ...data.organization, ...updates.organization } : data.organization,
+          original_profile_data: data.profile,
+          updated_profile_data: updates.profile ? { ...data.profile, ...updates.profile } : data.profile
+        });
+
+      if (error) {
+        console.error('Error creating edit request:', error);
+        throw error;
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Profile edit request submitted for admin approval'
+      });
+
+      return true;
+    } catch (error: any) {
+      console.error('Error in submitOrganizationProfileEditRequest:', error);
+      toast({
+        title: 'Error submitting request',
+        description: error.message,
+        variant: 'destructive'
+      });
+      return false;
+    }
+  };
+
+  // Keep the direct update function for admin use
   const updateOrganizationProfile = async (
     updates: {
       organization?: Partial<OrganizationProfile['organization']>;
@@ -205,6 +250,7 @@ export function useOrganizationProfile(profileId?: string) {
     data,
     loading,
     updateOrganizationProfile,
+    submitOrganizationProfileEditRequest,
     getUserOrganization,
     refetch: fetchOrganizationProfile
   };

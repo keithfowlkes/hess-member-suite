@@ -56,6 +56,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
 import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
 import { useReassignmentRequests, useApproveReassignmentRequest, useRejectReassignmentRequest, useDeleteReassignmentRequest } from '@/hooks/useReassignmentRequests';
+import { useOrganizationProfileEditRequests, useApproveOrganizationProfileEditRequest, useRejectOrganizationProfileEditRequest } from '@/hooks/useOrganizationProfileEditRequests';
 import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
 
 // Components
@@ -107,10 +108,13 @@ const MasterDashboard = () => {
   } = useOrganizationApprovals();
   const { invitations, loading: invitationsLoading } = useOrganizationInvitations();
   const { data: memberInfoUpdateRequests = [], isLoading: memberInfoUpdateLoading, refetch: refetchRequests } = useReassignmentRequests();
+  const { requests: profileEditRequests, loading: profileEditRequestsLoading } = useOrganizationProfileEditRequests();
+  const { approveRequest: approveProfileEditRequest } = useApproveOrganizationProfileEditRequest();
+  const { rejectRequest: rejectProfileEditRequest } = useRejectOrganizationProfileEditRequest();
   const { pendingRegistrations, loading: pendingRegistrationsLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
   
   // Calculate pending counts
-  const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length;
+  const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length;
   const activeInvitationsCount = invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length;
   const totalOrganizationActions = pendingApprovalsCount + activeInvitationsCount;
   const approveMemberInfoUpdate = useApproveReassignmentRequest();
@@ -185,10 +189,10 @@ const MasterDashboard = () => {
   const adminStats = [
     {
       title: 'Pending Approvals',
-      value: pendingOrganizations.length + pendingRegistrations.length,
+      value: pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length,
       icon: Clock,
       color: 'text-orange-600',
-      description: 'Organizations & registrations awaiting review'
+      description: 'Organizations, registrations & profile edits awaiting review'
     },
     {
       title: 'Active Invitations',
@@ -653,14 +657,14 @@ const MasterDashboard = () => {
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl font-semibold">Pending Applications & Updates</h2>
                       <div className="flex items-center gap-2">
-                        {(pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length) > 0 && (
+                        {(pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length) > 0 && (
                           <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
                             <AlertCircle className="h-4 w-4" />
-                            <span className="font-medium">{pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length} Pending Review</span>
+                            <span className="font-medium">{pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length} Pending Review</span>
                           </div>
                         )}
                         <Badge variant="secondary" className="text-sm">
-                          {filteredPendingOrganizations.length + filteredPendingRegistrations.length + memberInfoUpdateRequests.length} of {pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length} shown
+                          {filteredPendingOrganizations.length + filteredPendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length} of {pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length} shown
                         </Badge>
                       </div>
                     </div>
@@ -676,13 +680,13 @@ const MasterDashboard = () => {
                       />
                     </div>
 
-                    {(approvalsLoading || pendingRegistrationsLoading) ? (
+                    {(approvalsLoading || pendingRegistrationsLoading || profileEditRequestsLoading) ? (
                       <Card>
                         <CardContent className="p-6">
                           <div className="text-center">Loading pending applications...</div>
                         </CardContent>
                       </Card>
-                    ) : (filteredPendingOrganizations.length === 0 && filteredPendingRegistrations.length === 0 && memberInfoUpdateRequests.length === 0) ? (
+                    ) : (filteredPendingOrganizations.length === 0 && filteredPendingRegistrations.length === 0 && memberInfoUpdateRequests.length === 0 && profileEditRequests.length === 0) ? (
                       <Card>
                         <CardContent className="p-6">
                           <div className="text-center text-muted-foreground">
@@ -840,6 +844,96 @@ const MasterDashboard = () => {
                                      <Eye className="h-3 w-3" />
                                      Review Changes
                                    </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+
+                        {/* Organization Profile Edit Requests */}
+                        {profileEditRequests.map((request) => (
+                          <Card key={`profile-edit-${request.id}`} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-3">
+                                    <h3 className="text-lg font-semibold">
+                                      {request.organization?.name || 'Profile Update Request'}
+                                    </h3>
+                                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                      Profile Edit
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="text-sm text-muted-foreground space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <Users className="h-3 w-3" />
+                                      <span>Requested by: {request.requester_profile?.first_name} {request.requester_profile?.last_name}</span>
+                                    </div>
+                                    <div>
+                                      Email: {request.requester_profile?.email} | 
+                                      Status: {request.status}
+                                    </div>
+                                    <div>
+                                      Requested: {new Date(request.created_at).toLocaleDateString()}
+                                    </div>
+                                    {request.admin_notes && (
+                                      <div>
+                                        Admin Notes: {request.admin_notes}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      // Create a mock organization object for the dialog
+                                      const mockOrg = {
+                                        ...request.updated_organization_data,
+                                        profiles: request.updated_profile_data,
+                                        id: request.organization_id
+                                      };
+                                      setSelectedOrganization(mockOrg);
+                                      setShowApprovalDialog(true);
+                                    }}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                    Review Changes
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={async () => {
+                                      const success = await approveProfileEditRequest(request.id);
+                                      if (success) {
+                                        // Refetch data to update the UI
+                                        window.location.reload();
+                                      }
+                                    }}
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                  >
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={async () => {
+                                      const reason = prompt('Enter rejection reason:');
+                                      if (reason) {
+                                        const success = await rejectProfileEditRequest(request.id, reason);
+                                        if (success) {
+                                          window.location.reload();
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                    Reject
+                                  </Button>
                                 </div>
                               </div>
                             </CardContent>

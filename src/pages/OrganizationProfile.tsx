@@ -64,7 +64,7 @@ const OrganizationProfilePage = () => {
       </div>
     );
   };
-  const { data, loading, updateOrganizationProfile, getUserOrganization } = useOrganizationProfile(profileId);
+  const { data, loading, updateOrganizationProfile, submitOrganizationProfileEditRequest, getUserOrganization } = useOrganizationProfile(profileId);
   
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -116,7 +116,8 @@ const OrganizationProfilePage = () => {
 
     setSaving(true);
     
-    const success = await updateOrganizationProfile({
+    // All users submit edit requests for approval
+    const success = await submitOrganizationProfileEditRequest({
       organization: editedData.organization,
       profile: editedData.profile
     });

@@ -358,6 +358,62 @@ export type Database = {
           },
         ]
       }
+      organization_profile_edit_requests: {
+        Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          organization_id: string | null
+          original_organization_data: Json
+          original_profile_data: Json | null
+          requested_by: string | null
+          status: string
+          updated_at: string
+          updated_organization_data: Json
+          updated_profile_data: Json | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          organization_id?: string | null
+          original_organization_data: Json
+          original_profile_data?: Json | null
+          requested_by?: string | null
+          status?: string
+          updated_at?: string
+          updated_organization_data: Json
+          updated_profile_data?: Json | null
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          organization_id?: string | null
+          original_organization_data?: Json
+          original_profile_data?: Json | null
+          requested_by?: string | null
+          status?: string
+          updated_at?: string
+          updated_organization_data?: Json
+          updated_profile_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_profile_edit_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_reassignment_requests: {
         Row: {
           admin_notes: string | null
