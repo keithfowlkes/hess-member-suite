@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import PasswordReset from "./pages/PasswordReset";
 import MasterDashboard from "./pages/MasterDashboard";
 import Members from "./pages/Members";
 import MembershipFees from "./pages/MembershipFees";
@@ -34,6 +35,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/password-reset" element={<PasswordReset />} />
             <Route path="/dashboard" element={<ProtectedRoute><MasterDashboard /></ProtectedRoute>} />
             <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
             <Route path="/dashboards" element={<ProtectedRoute><Dashboards /></ProtectedRoute>} />
