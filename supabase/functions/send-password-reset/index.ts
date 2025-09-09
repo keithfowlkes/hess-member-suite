@@ -67,6 +67,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Extract token parameters from the Supabase reset link for our custom page
+    const resetUrl = new URL(resetData.properties.action_link);
+    const token = resetUrl.searchParams.get('token');
+    const type = resetUrl.searchParams.get('type');
+    
+    // Create our custom reset URL
+    const customResetUrl = `https://members.hessconsortium.app/password-reset?token=${token}&type=${type}`;
+
     // Create custom email content with login hint
     const loginHintSection = userProfile.login_hint ? `
       <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
@@ -91,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
         ${loginHintSection}
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetData.properties.action_link}" 
+          <a href="${customResetUrl}" 
              style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Reset Your Password
           </a>
@@ -103,8 +111,8 @@ const handler = async (req: Request): Promise<Response> => {
         
         <p style="color: #666; font-size: 14px;">
           If the button above doesn't work, you can copy and paste this link into your browser:<br>
-          <a href="${resetData.properties.action_link}" style="color: #2563eb; word-break: break-all;">
-            ${resetData.properties.action_link}
+          <a href="${customResetUrl}" style="color: #2563eb; word-break: break-all;">
+            ${customResetUrl}
           </a>
         </p>
         
