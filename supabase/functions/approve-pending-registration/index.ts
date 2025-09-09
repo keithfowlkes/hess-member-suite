@@ -123,24 +123,36 @@ serve(async (req) => {
         );
       }
 
-      // Send password reset email so user can set their password
-      const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'recovery',
-        email: pendingReg.email,
-      });
+      // Existing user - update their password to match what they provided in registration
+      const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
+        existingUser.id,
+        {
+          password: pendingReg.password_hash
+        }
+      );
 
-      if (resetError) {
-        console.warn('Could not send password reset email:', resetError);
-        // Don't fail the approval process if email fails
+      if (passwordError) {
+        console.warn('Could not update user password:', passwordError);
+        // Still send a password reset email as fallback
+        const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'recovery',
+          email: pendingReg.email,
+        });
+        if (resetError) {
+          console.warn('Could not send password reset email:', resetError);
+        }
+      } else {
+        console.log('User password updated to match registration password');
       }
 
       authUser = { user: updatedUser.user };
     } else {
       console.log(`Creating new user for email: ${pendingReg.email}`);
       
-      // Create the auth user with email confirmation and send password reset email
+      // Create the auth user with the password they provided during registration
       const { data: newUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: pendingReg.email,
+        password: pendingReg.password_hash, // Use the password they entered during registration
         email_confirm: true, // Skip email confirmation
         user_metadata: {
           first_name: pendingReg.first_name,
@@ -187,16 +199,8 @@ serve(async (req) => {
         );
       }
 
-      // Send password reset email so user can set their own password
-      const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'recovery',
-        email: pendingReg.email,
-      });
-
-      if (resetError) {
-        console.warn('Could not send password reset email:', resetError);
-        // Don't fail the approval process if email fails
-      }
+      // User can now log in with their original registration password
+      console.log(`User can now log in with the password they provided during registration`);
 
       authUser = { user: newUser.user };
     }
@@ -320,7 +324,7 @@ serve(async (req) => {
       // Don't return error here as user is already created
     }
 
-    // User can now log in directly with their original password
+    // User can now log in with the password they provided during registration
 
     // Send welcome email using organization-emails function
     try {
