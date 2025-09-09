@@ -18,20 +18,17 @@ export interface SystemAnalytics {
   alumniAdvancementCrms: SystemUsage[];
 }
 
-const processSystemData = (data: any[], field: string): SystemUsage[] => {
-  const counts: Record<string, number> = {};
+const processDatacubeData = (datacubeEntries: Array<{system_field: string, system_name: string, institution_count: number}>, field: string): SystemUsage[] => {
+  // Filter entries for this field
+  const fieldEntries = datacubeEntries.filter(entry => entry.system_field === field);
   
-  data.forEach(org => {
-    const value = org[field];
-    if (value && value.trim()) {
-      counts[value] = (counts[value] || 0) + 1;
-    }
-  });
-
-  // Convert to array and group small values into "Other"
-  let systemData = Object.entries(counts).map(([name, count]) => ({ name, count }));
+  // Convert to the expected format
+  let systemData = fieldEntries.map(entry => ({ 
+    name: entry.system_name, 
+    count: entry.institution_count 
+  }));
   
-  // Separate items with count >= 11 and < 11
+  // Separate items with count >= 11 and < 11 (maintain the same logic as before)
   const mainItems = systemData.filter(item => item.count >= 11);
   const smallItems = systemData.filter(item => item.count < 11);
   
@@ -48,39 +45,31 @@ const processSystemData = (data: any[], field: string): SystemUsage[] => {
 
 export const useSystemAnalytics = () => {
   return useQuery({
-    queryKey: ['system-analytics'],
+    queryKey: ['system-analytics-datacube'],
     queryFn: async () => {
+      // Fetch pre-computed analytics from the datacube
       const { data, error } = await supabase
-        .from('organizations')
-        .select(`
-          student_information_system,
-          financial_system,
-          financial_aid,
-          hcm_hr,
-          payroll_system,
-          housing_management,
-          learning_management,
-          admissions_crm,
-          alumni_advancement_crm
-        `)
-        .eq('membership_status', 'active')
-        .neq('name', 'Administrator');
+        .from('system_analytics_datacube')
+        .select('system_field, system_name, institution_count')
+        .order('institution_count', { ascending: false });
 
       if (error) throw error;
 
       const analytics: SystemAnalytics = {
-        studentInformationSystems: processSystemData(data, 'student_information_system'),
-        financialSystems: processSystemData(data, 'financial_system'),
-        learningManagementSystems: processSystemData(data, 'learning_management'),
-        financialAidSystems: processSystemData(data, 'financial_aid'),
-        hcmSystems: processSystemData(data, 'hcm_hr'),
-        payrollSystems: processSystemData(data, 'payroll_system'),
-        housingManagementSystems: processSystemData(data, 'housing_management'),
-        admissionsCrms: processSystemData(data, 'admissions_crm'),
-        alumniAdvancementCrms: processSystemData(data, 'alumni_advancement_crm'),
+        studentInformationSystems: processDatacubeData(data || [], 'student_information_system'),
+        financialSystems: processDatacubeData(data || [], 'financial_system'),
+        learningManagementSystems: processDatacubeData(data || [], 'learning_management'),
+        financialAidSystems: processDatacubeData(data || [], 'financial_aid'),
+        hcmSystems: processDatacubeData(data || [], 'hcm_hr'),
+        payrollSystems: processDatacubeData(data || [], 'payroll_system'),
+        housingManagementSystems: processDatacubeData(data || [], 'housing_management'),
+        admissionsCrms: processDatacubeData(data || [], 'admissions_crm'),
+        alumniAdvancementCrms: processDatacubeData(data || [], 'alumni_advancement_crm'),
       };
 
       return analytics;
     },
+    staleTime: 1000 * 60 * 30, // Consider data stale after 30 minutes
+    gcTime: 1000 * 60 * 60, // Keep in cache for 1 hour
   });
 };
