@@ -249,8 +249,18 @@ export default function Auth() {
     });
     
     if (error) {
+      console.log('Password reset error details:', error);
+      
       // Check if the error is because the email was not found
-      if (error.message === 'User not found' || error.status === 404) {
+      // The error might be in different formats, so check multiple conditions
+      const isUserNotFound = 
+        error.message === 'User not found' ||
+        error.status === 404 ||
+        (error.details && error.details === 'User not found') ||
+        (error.message && error.message.includes('Edge Function returned a non-2xx status code')) ||
+        error.statusCode === 404;
+      
+      if (isUserNotFound) {
         // Show alert dialog for email not found
         const result = window.confirm(
           `The email address "${resetEmail}" cannot be found in our member database.\n\n` +
@@ -260,6 +270,10 @@ export default function Auth() {
         if (result) {
           // Redirect to registration tab
           setActiveTab('signup');
+          setShowPasswordReset(false);
+          setResetEmail('');
+        } else {
+          // Just close the reset form if they don't want to register
           setShowPasswordReset(false);
           setResetEmail('');
         }
