@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
+import { Button } from '@/components/ui/button';
 import { AdminPasswordManager } from '@/components/AdminPasswordManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -403,10 +404,9 @@ export default function Settings() {
                               : '0%'
                             }
                           </p>
-          {/* Admin Password Management */}
-          {isAdmin && (
-            <AdminPasswordManager />
-          )}
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
