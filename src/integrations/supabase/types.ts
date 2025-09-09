@@ -1069,6 +1069,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fix_user_password_from_registration: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_secure_token: {
         Args: Record<PropertyKey, never>
         Returns: string

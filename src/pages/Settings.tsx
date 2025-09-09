@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
-import { Button } from '@/components/ui/button';
+import { AdminPasswordManager } from '@/components/AdminPasswordManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -403,9 +403,10 @@ export default function Settings() {
                               : '0%'
                             }
                           </p>
-                        </div>
-                      </div>
-                    </div>
+          {/* Admin Password Management */}
+          {isAdmin && (
+            <AdminPasswordManager />
+          )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -482,6 +483,9 @@ export default function Settings() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Admin Password Management */}
+                <AdminPasswordManager />
 
                 {/* reCAPTCHA Configuration */}
                 <Card>
