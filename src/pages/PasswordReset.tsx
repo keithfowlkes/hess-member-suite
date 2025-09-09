@@ -54,11 +54,6 @@ export default function PasswordReset() {
     );
   }
 
-  // If user is already logged in, redirect to home
-  if (user && !loading) {
-    return <Navigate to="/" replace />;
-  }
-
   // If token is invalid, show error page
   if (isValidToken === false) {
     return (
