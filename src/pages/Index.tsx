@@ -4,10 +4,8 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Navigate } from 'react-router-dom';
-import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, BarChart3 } from 'lucide-react';
-import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
+import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User } from 'lucide-react';
 import { useOrganizationProfile } from '@/hooks/useOrganizationProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { useState, useEffect } from 'react';
@@ -15,21 +13,8 @@ import { useState, useEffect } from 'react';
 const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
   const [userOrganization, setUserOrganization] = useState<any>(null);
-  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
-  const [chartsKey, setChartsKey] = useState(0);
   const { getUserOrganization } = useOrganizationProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
-
-  // Force charts to re-render when modal opens (optimized)
-  useEffect(() => {
-    if (showAnalyticsModal) {
-      // Minimal delay for modal transition, charts should render efficiently now with datacube
-      const timeout = setTimeout(() => {
-        setChartsKey(prev => prev + 1);
-      }, 50);
-      return () => clearTimeout(timeout);
-    }
-  }, [showAnalyticsModal]);
 
   // Fetch user's organization data
   useEffect(() => {
@@ -88,25 +73,6 @@ const Index = () => {
                   <LogOut className="h-4 w-4" />
                   Sign Out
                 </Button>
-                <Dialog open={showAnalyticsModal} onOpenChange={setShowAnalyticsModal}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <BarChart3 className="h-4 w-4" />
-                      Member Analytics
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Member Analytics</DialogTitle>
-                    </DialogHeader>
-                    <div key={`charts-${chartsKey}`}>
-                      <SystemAnalyticsDashboard />
-                    </div>
-                  </DialogContent>
-                </Dialog>
               </div>
             </div>
 

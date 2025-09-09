@@ -56,6 +56,7 @@ export function AppSidebar() {
   const memberItems = [
     { title: 'Dashboard', url: '/', icon: Home },
     { title: 'HESS Member Information', url: '/research-dashboard', icon: Search },
+    { title: 'Member Analytics', url: '/member-analytics', icon: BarChart3 },
     { title: 'My Invoices', url: '/invoices', icon: FileText },
     { title: 'Organization Profile', url: '/profile', icon: User },
   ];
