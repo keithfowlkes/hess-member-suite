@@ -16,8 +16,20 @@ const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
   const [userOrganization, setUserOrganization] = useState<any>(null);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [chartsKey, setChartsKey] = useState(0);
   const { getUserOrganization } = useOrganizationProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
+
+  // Force charts to re-render when modal opens
+  useEffect(() => {
+    if (showAnalyticsModal) {
+      // Small delay to ensure modal is fully rendered before charts calculate dimensions
+      const timeout = setTimeout(() => {
+        setChartsKey(prev => prev + 1);
+      }, 100);
+      return () => clearTimeout(timeout);
+    }
+  }, [showAnalyticsModal]);
 
   // Fetch user's organization data
   useEffect(() => {
@@ -90,7 +102,9 @@ const Index = () => {
                     <DialogHeader>
                       <DialogTitle>Member Analytics</DialogTitle>
                     </DialogHeader>
-                    <SystemAnalyticsDashboard />
+                    <div key={`charts-${chartsKey}`}>
+                      <SystemAnalyticsDashboard />
+                    </div>
                   </DialogContent>
                 </Dialog>
               </div>
