@@ -118,6 +118,7 @@ export function useCreateOrganizationProfileEditRequest() {
 
   const createRequest = async (data: {
     organizationId: string;
+    requestedBy: string;
     originalOrganizationData: any;
     updatedOrganizationData: any;
     originalProfileData?: any;
@@ -129,6 +130,7 @@ export function useCreateOrganizationProfileEditRequest() {
         .from('organization_profile_edit_requests')
         .insert({
           organization_id: data.organizationId,
+          requested_by: data.requestedBy,
           original_organization_data: data.originalOrganizationData,
           updated_organization_data: data.updatedOrganizationData,
           original_profile_data: data.originalProfileData,
