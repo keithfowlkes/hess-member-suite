@@ -73,8 +73,8 @@ const handler = async (req: Request): Promise<Response> => {
     const tokenHash = resetUrl.searchParams.get('token_hash');
     const type = resetUrl.searchParams.get('type');
     
-    // Use the redirectUrl from the request if provided, otherwise use the origin
-    const baseUrl = redirectUrl || 'https://members.hessconsortium.app';
+    // Use the redirectUrl from the request if provided, otherwise use the Lovable project URL
+    const baseUrl = redirectUrl || 'https://tyovnvuluyosjnabrzjc.lovableproject.com';
     const customResetUrl = `${baseUrl}/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
 
     // Create custom email content with login hint
