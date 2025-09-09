@@ -24,51 +24,50 @@ export interface OrganizationProfileEditRequest {
 
 export function useOrganizationProfileEditRequests() {
   const [requests, setRequests] = useState<OrganizationProfileEditRequest[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   const fetchRequests = async () => {
     try {
-      // Check if user is authenticated and has admin role
+      setLoading(true);
+      
+      // Debug: Check current user and role
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user?.email);
+      
       if (!user) {
-        setLoading(false);
+        console.log('No authenticated user found');
+        setRequests([]);
         return;
       }
 
-      // Check if user has admin role
-      const { data: userRoles } = await supabase
+      // Check user role
+      const { data: userRole } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
         .single();
-
-      if (userRoles?.role !== 'admin') {
-        setLoading(false);
+      
+      console.log('User role:', userRole?.role);
+      
+      if (userRole?.role !== 'admin') {
+        console.log('User is not admin, skipping profile edit requests fetch');
+        setRequests([]);
         return;
       }
 
       const { data, error } = await supabase
         .from('organization_profile_edit_requests')
-        .select(`
-          *,
-          organization:organizations!organization_id (
-            id,
-            name,
-            email,
-            membership_status
-          ),
-          requester_profile:profiles!requested_by (
-            id,
-            first_name,
-            last_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Profile edit requests loaded:', data?.length || 0);
       setRequests(data || []);
     } catch (error: any) {
       console.error('Error fetching profile edit requests:', error);
