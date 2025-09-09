@@ -179,12 +179,14 @@ export default function PasswordReset() {
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <img 
-            src="/lovable-uploads/95b9e225-2202-4407-bdb2-f95edf683d93.png" 
-            alt="HESS Consortium" 
-            className="mx-auto h-16 w-auto"
-          />
-          <h1 className="text-2xl font-bold tracking-tight">Reset Your Password</h1>
+          <div className="flex items-center justify-center gap-4">
+            <h1 className="text-2xl font-bold tracking-tight">Reset Your Password</h1>
+            <img 
+              src="/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" 
+              alt="HESS Consortium" 
+              className="h-8 w-auto"
+            />
+          </div>
           <p className="text-muted-foreground">
             Enter your new password below
           </p>

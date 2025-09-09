@@ -586,17 +586,26 @@ export default function Auth() {
           <TabsContent value="signin">
             <div className="bg-auth-form rounded-lg shadow-sm p-8">
               <div className="border-b border-gray-200 pb-4 mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  {isPasswordReset ? 'Set New Password' : showPasswordReset ? 'Reset Password' : 'Sign In'}
-                </h2>
-                <p className="text-gray-600 mt-1">
-                  {isPasswordReset 
-                    ? 'Please enter your new password'
-                    : showPasswordReset 
-                      ? 'Enter your email to receive password reset instructions'
-                      : 'Sign in to your HESS Consortium account'
-                  }
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      {isPasswordReset ? 'Set New Password' : showPasswordReset ? 'Reset Password' : 'Sign In'}
+                    </h2>
+                    <p className="text-gray-600 mt-1">
+                      {isPasswordReset 
+                        ? 'Please enter your new password'
+                        : showPasswordReset 
+                          ? 'Enter your email to receive password reset instructions'
+                          : 'Sign in to your HESS Consortium account'
+                      }
+                    </p>
+                  </div>
+                  <img 
+                    src="/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" 
+                    alt="HESS Consortium" 
+                    className="h-8 w-auto"
+                  />
+                </div>
               </div>
               
               {isPasswordReset ? (
