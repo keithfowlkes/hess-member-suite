@@ -242,8 +242,8 @@ export default function Auth() {
     // Use custom password reset edge function that includes login hint
     const { data, error } = await supabase.functions.invoke('send-password-reset', {
       body: { 
-        email: resetEmail,
-        redirectUrl: 'https://members.hessconsortium.app'
+        email: resetEmail
+        // Let the edge function use the system setting for redirect URL
       }
     });
     

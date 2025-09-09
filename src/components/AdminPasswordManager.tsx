@@ -28,7 +28,10 @@ export function AdminPasswordManager() {
     setIsLoading(true);
     try {
       const { error } = await supabase.functions.invoke('send-password-reset', {
-        body: { email: resetEmail }
+        body: { 
+          email: resetEmail
+          // Let the edge function use the system setting for redirect URL
+        }
       });
 
       if (error) throw error;
