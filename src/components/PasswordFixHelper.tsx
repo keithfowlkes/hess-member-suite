@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { fixUserPassword } from '@/utils/fixPassword';
 
 export function PasswordFixHelper() {
   const [isFixing, setIsFixing] = useState(false);
@@ -10,24 +10,16 @@ export function PasswordFixHelper() {
   const handleFixPassword = async () => {
     setIsFixing(true);
     try {
-      console.log('Calling change-user-password function...');
-      const { data, error } = await supabase.functions.invoke('change-user-password', {
-        body: { 
-          userId: '165183ef-3b36-420d-bb9e-a89e1f1e2a75',
-          newPassword: 'Tale2tell!!'
-        }
-      });
-
-      if (error) {
-        console.error('Password fix error:', error);
-        throw error;
+      const result = await fixUserPassword();
+      
+      if (result.success) {
+        toast({
+          title: "Password Fixed Successfully",
+          description: "fowlkes@thecoalition.us can now login with 'Tale2tell!!'"
+        });
+      } else {
+        throw new Error(result.error);
       }
-
-      console.log('Password fix success:', data);
-      toast({
-        title: "Password Fixed",
-        description: "fowlkes@thecoalition.us can now login with 'Tale2tell!!'"
-      });
     } catch (error: any) {
       console.error('Error fixing password:', error);
       toast({
