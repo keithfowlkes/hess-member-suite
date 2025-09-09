@@ -47,12 +47,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Get the password reset redirect URL from system settings
+    const { data: settingData } = await supabase
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_key', 'password_reset_redirect_url')
+      .single();
+
+    const baseResetUrl = settingData?.setting_value || 'https://members.hessconsortium.app';
+
     // Generate a password reset link using Supabase Auth
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: redirectUrl || `${new URL(req.url).origin}/password-reset`
+        redirectTo: redirectUrl || `${baseResetUrl}/password-reset`
       }
     });
 
@@ -73,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
     const tokenHash = resetUrl.searchParams.get('token_hash');
     const type = resetUrl.searchParams.get('type');
     
-    // Build the custom reset URL
+    // Build the custom reset URL using the system setting
     let customResetUrl;
     if (redirectUrl) {
       // If redirectUrl is provided and already includes the path, use it as-is with query params
@@ -84,8 +93,8 @@ const handler = async (req: Request): Promise<Response> => {
         customResetUrl = `${redirectUrl}/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
       }
     } else {
-      // Default to Lovable project URL
-      customResetUrl = `https://tyovnvuluyosjnabrzjc.lovableproject.com/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
+      // Use the system setting for the base URL
+      customResetUrl = `${baseResetUrl}/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
     }
 
     // Create custom email content with login hint

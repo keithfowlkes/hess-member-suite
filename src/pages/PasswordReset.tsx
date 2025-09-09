@@ -68,11 +68,11 @@ export default function PasswordReset() {
             <p className="text-muted-foreground">
               This password reset link is invalid or has expired.
             </p>
-            <Link to="/auth">
+            <a href="https://members.hessconsortium.app/auth">
               <Button className="w-full">
                 Back to Sign In
               </Button>
-            </Link>
+            </a>
           </CardContent>
         </Card>
       </div>
@@ -103,13 +103,14 @@ export default function PasswordReset() {
     setIsSubmitting(true);
     
     try {
-      // First verify the recovery token and authenticate the user
+      // For recovery tokens, use verifyOtp with the token_hash
       const { error: verifyError } = await supabase.auth.verifyOtp({
         token_hash: tokenHash!,
         type: 'recovery'
       });
 
       if (verifyError) {
+        console.error('Token verification error:', verifyError);
         toast({
           title: "Invalid or expired token",
           description: "This password reset link is invalid or has expired. Please request a new one.",
@@ -135,12 +136,13 @@ export default function PasswordReset() {
           description: "Your password has been reset. You can now sign in with your new password.",
         });
         
-        // Redirect to auth page after successful reset
+        // Redirect to production auth page after successful reset
         setTimeout(() => {
-          window.location.href = '/auth';
+          window.location.href = 'https://members.hessconsortium.app/auth';
         }, 2000);
       }
     } catch (error: any) {
+      console.error('Password reset error:', error);
       toast({
         title: "Password update failed",
         description: error.message || "An unexpected error occurred.",
@@ -243,9 +245,9 @@ export default function PasswordReset() {
             </form>
 
             <div className="mt-4 text-center">
-              <Link to="/auth" className="text-sm text-muted-foreground hover:text-primary">
+              <a href="https://members.hessconsortium.app/auth" className="text-sm text-muted-foreground hover:text-primary">
                 Back to Sign In
-              </Link>
+              </a>
             </div>
           </CardContent>
         </Card>

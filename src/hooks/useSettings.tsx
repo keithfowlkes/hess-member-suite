@@ -96,7 +96,7 @@ export function useSettings() {
       const { data, error } = await supabase.functions.invoke('send-password-reset', {
         body: { 
           email: email,
-          redirectUrl: 'https://members.hessconsortium.app/auth?reset=true'
+          redirectUrl: 'https://members.hessconsortium.app'
         }
       });
 
