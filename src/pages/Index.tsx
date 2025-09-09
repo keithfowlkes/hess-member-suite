@@ -4,8 +4,9 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Navigate } from 'react-router-dom';
-import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User } from 'lucide-react';
+import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, BarChart3 } from 'lucide-react';
 import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
 import { useOrganizationProfile } from '@/hooks/useOrganizationProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
@@ -14,6 +15,7 @@ import { useState, useEffect } from 'react';
 const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
   const [userOrganization, setUserOrganization] = useState<any>(null);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const { getUserOrganization } = useOrganizationProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
 
@@ -65,14 +67,33 @@ const Index = () => {
                   </p>
                 )}
               </div>
-              <Button
-                variant="outline"
-                onClick={signOut}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  onClick={signOut}
+                  className="flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+                <Dialog open={showAnalyticsModal} onOpenChange={setShowAnalyticsModal}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      Member Analytics
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Member Analytics</DialogTitle>
+                    </DialogHeader>
+                    <SystemAnalyticsDashboard />
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
 
             {/* Stats Grid */}
@@ -224,11 +245,6 @@ const Index = () => {
                   )}
                 </CardContent>
               </Card>
-            </div>
-
-            {/* System Usage Analytics */}
-            <div className="w-full overflow-hidden">
-              <SystemAnalyticsDashboard />
             </div>
           </div>
           
