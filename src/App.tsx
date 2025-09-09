@@ -18,7 +18,7 @@ import RegistrationConfirmation from "./pages/RegistrationConfirmation";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
-import OrganizationProfile from "./pages/OrganizationProfile";
+
 import Dashboards from "./pages/Dashboards";
 import ResearchDashboard from "./pages/ResearchDashboard";
 import MemberAnalytics from "./pages/MemberAnalytics";
@@ -49,7 +49,7 @@ const App = () => (
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/profile/:profileId" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
-            <Route path="/organization/:profileId" element={<ProtectedRoute><OrganizationProfile /></ProtectedRoute>} />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

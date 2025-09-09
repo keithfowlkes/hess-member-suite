@@ -6,14 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Navigate } from 'react-router-dom';
 import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User } from 'lucide-react';
-import { useOrganizationProfile } from '@/hooks/useOrganizationProfile';
+import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { useState, useEffect } from 'react';
 
 const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
   const [userOrganization, setUserOrganization] = useState<any>(null);
-  const { getUserOrganization } = useOrganizationProfile();
+  const { getUserOrganization } = useUnifiedProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
 
   // Fetch user's organization data
