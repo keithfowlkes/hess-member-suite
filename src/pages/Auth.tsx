@@ -41,6 +41,7 @@ export default function Auth() {
   const [resetEmail, setResetEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [activeTab, setActiveTab] = useState('signin');
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
   const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
   
@@ -248,11 +249,27 @@ export default function Auth() {
     });
     
     if (error) {
-      toast({
-        title: "Password reset failed",
-        description: error.message,
-        variant: "destructive"
-      });
+      // Check if the error is because the email was not found
+      if (error.message === 'User not found' || error.status === 404) {
+        // Show alert dialog for email not found
+        const result = window.confirm(
+          `The email address "${resetEmail}" cannot be found in our member database.\n\n` +
+          'Would you like to request a new account? Click OK to go to the New Member Registration page.'
+        );
+        
+        if (result) {
+          // Redirect to registration tab
+          setActiveTab('signup');
+          setShowPasswordReset(false);
+          setResetEmail('');
+        }
+      } else {
+        toast({
+          title: "Password reset failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
     } else {
       toast({
         title: "Reset email sent",
@@ -577,7 +594,7 @@ export default function Auth() {
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="w-full max-w-4xl mx-auto">
 
-        <Tabs defaultValue="signin" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6 bg-white">
             <TabsTrigger value="signin" className="text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Sign In</TabsTrigger>
             <TabsTrigger value="signup" className="text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">New Member Registration</TabsTrigger>
