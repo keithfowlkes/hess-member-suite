@@ -70,10 +70,11 @@ const handler = async (req: Request): Promise<Response> => {
     // Extract token parameters from the Supabase reset link for our custom page
     const resetUrl = new URL(resetData.properties.action_link);
     const token = resetUrl.searchParams.get('token');
+    const tokenHash = resetUrl.searchParams.get('token_hash');
     const type = resetUrl.searchParams.get('type');
     
-    // Create our custom reset URL
-    const customResetUrl = `https://members.hessconsortium.app/password-reset?token=${token}&type=${type}`;
+    // Create our custom reset URL with all required parameters
+    const customResetUrl = `https://members.hessconsortium.app/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
 
     // Create custom email content with login hint
     const loginHintSection = userProfile.login_hint ? `
