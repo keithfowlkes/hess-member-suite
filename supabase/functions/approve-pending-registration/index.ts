@@ -123,36 +123,40 @@ serve(async (req) => {
         );
       }
 
-      // Existing user - update their password to match what they provided in registration
-      const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
-        existingUser.id,
-        {
-          password: pendingReg.password_hash
-        }
-      );
-
-      if (passwordError) {
-        console.warn('Could not update user password:', passwordError);
-        // Still send a password reset email as fallback
-        const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-          type: 'recovery',
-          email: pendingReg.email,
+      // Use the change-user-password function to set the correct password
+      console.log('Setting password using change-user-password function...');
+      try {
+        const { error: passwordError } = await supabaseAdmin.functions.invoke('change-user-password', {
+          body: { 
+            userEmail: pendingReg.email,
+            newPassword: pendingReg.password_hash
+          }
         });
-        if (resetError) {
-          console.warn('Could not send password reset email:', resetError);
+
+        if (passwordError) {
+          console.warn('Could not update user password via function:', passwordError);
+          // Still send a password reset email as fallback
+          const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'recovery',
+            email: pendingReg.email,
+          });
+          if (resetError) {
+            console.warn('Could not send password reset email:', resetError);
+          }
+        } else {
+          console.log('User password updated successfully via change-user-password function');
         }
-      } else {
-        console.log('User password updated to match registration password');
+      } catch (functionError) {
+        console.warn('Error calling change-user-password function:', functionError);
       }
 
       authUser = { user: updatedUser.user };
     } else {
       console.log(`Creating new user for email: ${pendingReg.email}`);
       
-      // Create the auth user with the password they provided during registration
+      // Create the auth user without password first, then set it properly
       const { data: newUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: pendingReg.email,
-        password: pendingReg.password_hash, // Use the password they entered during registration
         email_confirm: true, // Skip email confirmation
         user_metadata: {
           first_name: pendingReg.first_name,
@@ -199,8 +203,24 @@ serve(async (req) => {
         );
       }
 
-      // User can now log in with their original registration password
-      console.log(`User can now log in with the password they provided during registration`);
+      // Now set the password using the change-user-password function
+      console.log('Setting password for new user using change-user-password function...');
+      try {
+        const { error: passwordError } = await supabaseAdmin.functions.invoke('change-user-password', {
+          body: { 
+            userEmail: pendingReg.email,
+            newPassword: pendingReg.password_hash
+          }
+        });
+
+        if (passwordError) {
+          console.warn('Could not set password for new user:', passwordError);
+        } else {
+          console.log('Password set successfully for new user');
+        }
+      } catch (functionError) {
+        console.warn('Error calling change-user-password function for new user:', functionError);
+      }
 
       authUser = { user: newUser.user };
     }
