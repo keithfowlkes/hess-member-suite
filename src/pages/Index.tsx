@@ -73,15 +73,20 @@ const Index = () => {
                   View your membership status and invoices
                 </p>
                 {user?.email && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Logged in as: 
+                  <div className="text-sm text-muted-foreground mt-1">
+                    <span>Logged in as: </span>
                     <a 
                       href={`mailto:${user.email}`}
-                      className="font-medium text-primary hover:underline ml-1"
+                      className="font-medium text-primary hover:underline"
                     >
                       {user.email}
                     </a>
-                  </p>
+                    {userOrganization?.name && (
+                      <span className="ml-2">
+                        • <span className="font-medium">{userOrganization.name}</span>
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
               <div className="flex flex-col gap-2">
