@@ -75,6 +75,7 @@ import {
   CheckCircle, 
   XCircle,
   Eye,
+  Edit,
   AlertCircle,
   RefreshCw,
   FileText, 
@@ -653,54 +654,56 @@ const MasterDashboard = () => {
                     <TabsTrigger value="users">User Management</TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="approvals" className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-semibold">Pending Applications & Updates</h2>
-                      <div className="flex items-center gap-2">
-                        {(pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length) > 0 && (
-                          <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
-                            <AlertCircle className="h-4 w-4" />
-                            <span className="font-medium">{pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length} Pending Review</span>
-                          </div>
-                        )}
-                        <Badge variant="secondary" className="text-sm">
-                          {filteredPendingOrganizations.length + filteredPendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length} of {pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length} shown
-                        </Badge>
+                  <TabsContent value="approvals" className="space-y-6">
+                    {/* New Member Applications Section */}
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-semibold">Pending New Member Applications</h2>
+                        <div className="flex items-center gap-2">
+                          {(pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length) > 0 && (
+                            <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
+                              <AlertCircle className="h-4 w-4" />
+                              <span className="font-medium">{pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length} Pending Review</span>
+                            </div>
+                          )}
+                          <Badge variant="secondary" className="text-sm">
+                            {filteredPendingOrganizations.length + filteredPendingRegistrations.length + memberInfoUpdateRequests.length} of {pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length} shown
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Search Bar */}
-                    <div className="relative max-w-md">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        placeholder="Search applications, contacts, or locations..."
-                        value={organizationSearchTerm}
-                        onChange={(e) => setOrganizationSearchTerm(e.target.value)}
-                        className="pl-10 bg-white"
-                      />
-                    </div>
+                      {/* Search Bar */}
+                      <div className="relative max-w-md">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input
+                          placeholder="Search applications, contacts, or locations..."
+                          value={organizationSearchTerm}
+                          onChange={(e) => setOrganizationSearchTerm(e.target.value)}
+                          className="pl-10 bg-white"
+                        />
+                      </div>
 
-                    {(approvalsLoading || pendingRegistrationsLoading || profileEditRequestsLoading) ? (
-                      <Card>
-                        <CardContent className="p-6">
-                          <div className="text-center">Loading pending applications...</div>
-                        </CardContent>
-                      </Card>
-                    ) : (filteredPendingOrganizations.length === 0 && filteredPendingRegistrations.length === 0 && memberInfoUpdateRequests.length === 0 && profileEditRequests.length === 0) ? (
-                      <Card>
-                        <CardContent className="p-6">
-                          <div className="text-center text-muted-foreground">
-                            <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            {organizationSearchTerm ? (
-                              <p>No applications match your search "{organizationSearchTerm}".</p>
-                            ) : (
-                              <p>No pending applications or updates.</p>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <div className="grid gap-4">
+                      {(approvalsLoading || pendingRegistrationsLoading) ? (
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="text-center">Loading pending applications...</div>
+                          </CardContent>
+                        </Card>
+                      ) : (filteredPendingOrganizations.length === 0 && filteredPendingRegistrations.length === 0 && memberInfoUpdateRequests.length === 0) ? (
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="text-center text-muted-foreground">
+                              <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                              {organizationSearchTerm ? (
+                                <p>No applications match your search "{organizationSearchTerm}".</p>
+                              ) : (
+                                <p>No pending new member applications.</p>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <div className="grid gap-4">
                         {/* Existing Organization Applications */}
                         {filteredPendingOrganizations.map((org) => (
                           <Card key={`org-${org.id}`} className="hover:shadow-md transition-shadow">
@@ -848,99 +851,136 @@ const MasterDashboard = () => {
                               </div>
                             </CardContent>
                           </Card>
-                        ))}
+                         ))}
+                        </div>
+                      )}
+                    </div>
 
-                        {/* Organization Profile Edit Requests */}
-                        {profileEditRequests.map((request) => (
-                          <Card key={`profile-edit-${request.id}`} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-3">
-                                    <h3 className="text-lg font-semibold">
-                                      {request.organization?.name || 'Profile Update Request'}
-                                    </h3>
-                                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                      Profile Edit
-                                    </Badge>
-                                  </div>
-                                  
-                                  <div className="text-sm text-muted-foreground space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <Users className="h-3 w-3" />
-                                      <span>Requested by: {request.requester_profile?.first_name} {request.requester_profile?.last_name}</span>
+                    {/* Profile Update Requests Section */}
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-semibold">Profile Update Requests</h2>
+                        <div className="flex items-center gap-2">
+                          {profileEditRequests.length > 0 && (
+                            <div className="flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                              <AlertCircle className="h-4 w-4" />
+                              <span className="font-medium">{profileEditRequests.length} Pending Review</span>
+                            </div>
+                          )}
+                          <Badge variant="secondary" className="text-sm">
+                            {profileEditRequests.length} profile updates
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {profileEditRequestsLoading ? (
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="text-center">Loading profile update requests...</div>
+                          </CardContent>
+                        </Card>
+                      ) : profileEditRequests.length === 0 ? (
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="text-center text-muted-foreground">
+                              <Edit className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                              <p>No pending profile update requests.</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <div className="grid gap-4">
+                          {profileEditRequests.map((request) => (
+                            <Card key={`profile-edit-${request.id}`} className="hover:shadow-md transition-shadow">
+                              <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-3">
+                                      <h3 className="text-lg font-semibold">
+                                        {request.organization?.name || 'Profile Update Request'}
+                                      </h3>
+                                      <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                        Profile Edit
+                                      </Badge>
                                     </div>
-                                    <div>
-                                      Email: {request.requester_profile?.email} | 
-                                      Status: {request.status}
-                                    </div>
-                                    <div>
-                                      Requested: {new Date(request.created_at).toLocaleDateString()}
-                                    </div>
-                                    {request.admin_notes && (
-                                      <div>
-                                        Admin Notes: {request.admin_notes}
+                                    
+                                    <div className="text-sm text-muted-foreground space-y-1">
+                                      <div className="flex items-center gap-2">
+                                        <Users className="h-3 w-3" />
+                                        <span>Requested by: {request.requester_profile?.first_name} {request.requester_profile?.last_name}</span>
                                       </div>
-                                    )}
+                                      <div>
+                                        Email: {request.requester_profile?.email} | 
+                                        Status: {request.status}
+                                      </div>
+                                      <div>
+                                        Requested: {new Date(request.created_at).toLocaleDateString()}
+                                      </div>
+                                      {request.admin_notes && (
+                                        <div>
+                                          Admin Notes: {request.admin_notes}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
 
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      // Create a mock organization object for the dialog
-                                      const mockOrg = {
-                                        ...request.updated_organization_data,
-                                        profiles: request.updated_profile_data,
-                                        id: request.organization_id
-                                      };
-                                      setSelectedOrganization(mockOrg);
-                                      setShowApprovalDialog(true);
-                                    }}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Eye className="h-3 w-3" />
-                                    Review Changes
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    onClick={async () => {
-                                      const success = await approveProfileEditRequest(request.id);
-                                      if (success) {
-                                        // Refetch data to update the UI
-                                        window.location.reload();
-                                      }
-                                    }}
-                                    className="bg-green-600 hover:bg-green-700 text-white"
-                                  >
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={async () => {
-                                      const reason = prompt('Enter rejection reason:');
-                                      if (reason) {
-                                        const success = await rejectProfileEditRequest(request.id, reason);
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        // Create a mock organization object for the dialog
+                                        const mockOrg = {
+                                          ...request.updated_organization_data,
+                                          profiles: request.updated_profile_data,
+                                          id: request.organization_id
+                                        };
+                                        setSelectedOrganization(mockOrg);
+                                        setShowApprovalDialog(true);
+                                      }}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                      Review Changes
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={async () => {
+                                        const success = await approveProfileEditRequest(request.id);
                                         if (success) {
+                                          // Refetch data to update the UI
                                           window.location.reload();
                                         }
-                                      }
-                                    }}
-                                  >
-                                    <XCircle className="h-3 w-3 mr-1" />
-                                    Reject
-                                  </Button>
+                                      }}
+                                      className="bg-green-600 hover:bg-green-700 text-white"
+                                    >
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={async () => {
+                                        const reason = prompt('Enter rejection reason:');
+                                        if (reason) {
+                                          const success = await rejectProfileEditRequest(request.id, reason);
+                                          if (success) {
+                                            window.location.reload();
+                                          }
+                                        }
+                                      }}
+                                    >
+                                      <XCircle className="h-3 w-3 mr-1" />
+                                      Reject
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="invitations" className="space-y-4">
