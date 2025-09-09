@@ -63,7 +63,7 @@ const Index = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 p-8">
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
@@ -129,11 +129,6 @@ const Index = () => {
                   </Card>
                 );
               })}
-            </div>
-
-            {/* Scroll hint text */}
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Please scroll down for more HESS institution information.</p>
             </div>
 
             {/* Member Totals */}
