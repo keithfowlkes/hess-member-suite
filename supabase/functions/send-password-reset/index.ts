@@ -73,8 +73,9 @@ const handler = async (req: Request): Promise<Response> => {
     const tokenHash = resetUrl.searchParams.get('token_hash');
     const type = resetUrl.searchParams.get('type');
     
-    // Create our custom reset URL with all required parameters
-    const customResetUrl = `https://members.hessconsortium.app/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
+    // Use the redirectUrl from the request if provided, otherwise use the origin
+    const baseUrl = redirectUrl || 'https://members.hessconsortium.app';
+    const customResetUrl = `${baseUrl}/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
 
     // Create custom email content with login hint
     const loginHintSection = userProfile.login_hint ? `
