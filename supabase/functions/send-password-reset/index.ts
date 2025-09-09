@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: redirectUrl || 'https://members.hessconsortium.app/password-reset'
+        redirectTo: redirectUrl || `${new URL(req.url).origin}/password-reset`
       }
     });
 

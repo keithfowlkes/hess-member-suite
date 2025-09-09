@@ -28,29 +28,15 @@ export default function PasswordReset() {
   // Verify token on component mount
   useEffect(() => {
     const verifyToken = async () => {
-      if (!token || !tokenHash || type !== 'recovery') {
+      if (!token || type !== 'recovery') {
         setIsValidToken(false);
         return;
       }
 
       try {
-        // Verify the recovery token
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: 'recovery'
-        });
-
-        if (error) {
-          console.error('Token verification failed:', error);
-          setIsValidToken(false);
-          toast({
-            title: "Invalid Reset Link",
-            description: "This password reset link is invalid or has expired. Please request a new one.",
-            variant: "destructive"
-          });
-        } else {
-          setIsValidToken(true);
-        }
+        // For recovery tokens, we can proceed directly to password reset
+        // The token will be validated when the password is actually updated
+        setIsValidToken(true);
       } catch (error) {
         console.error('Token verification error:', error);
         setIsValidToken(false);
@@ -58,7 +44,7 @@ export default function PasswordReset() {
     };
 
     verifyToken();
-  }, [token, tokenHash, type, toast]);
+  }, [token, type, toast]);
 
   if (loading || isValidToken === null) {
     return (
@@ -122,6 +108,22 @@ export default function PasswordReset() {
     setIsSubmitting(true);
     
     try {
+      // First verify the recovery token and authenticate the user
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        token_hash: token!, // Use the token directly as token_hash for recovery
+        type: 'recovery'
+      });
+
+      if (verifyError) {
+        toast({
+          title: "Invalid or expired token",
+          description: "This password reset link is invalid or has expired. Please request a new one.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Now update the password
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -149,9 +151,9 @@ export default function PasswordReset() {
         description: error.message || "An unexpected error occurred.",
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
   };
 
   return (
