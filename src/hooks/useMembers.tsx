@@ -289,6 +289,26 @@ export function useMembers() {
 
   useEffect(() => {
     fetchOrganizations();
+
+    // Set up real-time subscription for organization changes
+    const subscription = supabase
+      .channel('organizations_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'organizations' 
+        }, 
+        () => {
+          console.log('Organizations table changed, refreshing...');
+          fetchOrganizations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [fetchOrganizations]);
 
   return { 
