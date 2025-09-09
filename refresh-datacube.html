@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Refresh Analytics Datacube</title>
+</head>
+<body>
+    <h1>Refreshing Analytics Datacube...</h1>
+    <div id="status">Initiating refresh...</div>
+    
+    <script>
+        async function refreshDatacube() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                statusEl.textContent = 'Calling refresh function...';
+                
+                const response = await fetch('https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/refresh-analytics-datacube', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusEl.innerHTML = `
+                        <div style="color: green;">✅ Success!</div>
+                        <div>Processed ${result.entriesProcessed} entries</div>
+                        <div>${result.message}</div>
+                    `;
+                } else {
+                    statusEl.innerHTML = `<div style="color: red;">❌ Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                statusEl.innerHTML = `<div style="color: red;">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-start the refresh
+        refreshDatacube();
+    </script>
+</body>
+</html>
