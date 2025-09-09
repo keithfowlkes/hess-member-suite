@@ -992,6 +992,33 @@ export type Database = {
         }
         Relationships: []
       }
+      system_analytics_datacube: {
+        Row: {
+          created_at: string | null
+          id: string
+          institution_count: number
+          last_updated: string | null
+          system_field: string
+          system_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          institution_count?: number
+          last_updated?: string | null
+          system_field: string
+          system_name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          institution_count?: number
+          last_updated?: string | null
+          system_field?: string
+          system_name?: string
+        }
+        Relationships: []
+      }
       system_field_options: {
         Row: {
           created_at: string
