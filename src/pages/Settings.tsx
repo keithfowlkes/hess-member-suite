@@ -3,8 +3,6 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
 import { AdminPasswordManager } from '@/components/AdminPasswordManager';
-import { PasswordFixHelper } from '@/components/PasswordFixHelper';
-import { PasswordDiagnostic } from '@/components/PasswordDiagnostic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -485,12 +483,6 @@ export default function Settings() {
                     </div>
                   </CardContent>
                 </Card>
-
-                {/* Emergency Password Fix */}
-                <PasswordFixHelper />
-                
-                {/* Password Diagnostic Tool */}
-                <PasswordDiagnostic />
 
                 {/* Admin Password Management */}
                 <AdminPasswordManager />
