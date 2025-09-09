@@ -4,17 +4,21 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Navigate } from 'react-router-dom';
-import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle } from 'lucide-react';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
+import { useInvoices } from '@/hooks/useInvoices';
 import { useState, useEffect } from 'react';
 
 const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
+  const navigate = useNavigate();
   const [userOrganization, setUserOrganization] = useState<any>(null);
   const { getUserOrganization } = useUnifiedProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
+  const { invoices, loading: invoicesLoading } = useInvoices();
 
   // Fetch user's organization data
   useEffect(() => {
@@ -32,10 +36,25 @@ const Index = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
+  // Calculate outstanding balance from invoices
+  const outstandingBalance = invoices
+    .filter(invoice => invoice.status !== 'paid')
+    .reduce((total, invoice) => total + (invoice.prorated_amount || invoice.amount), 0);
+
+  const hasOutstandingBalance = outstandingBalance > 0;
+
   const memberStats = [
     { title: 'Membership Status', value: 'Active', icon: Building2, color: 'text-green-600' },
     { title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600' },
-    { title: 'Outstanding Balance', value: '$0', icon: DollarSign, color: 'text-green-600' },
+    { 
+      title: 'Outstanding Balance', 
+      value: `$${outstandingBalance.toFixed(2)}`, 
+      icon: DollarSign, 
+      color: hasOutstandingBalance ? 'text-red-600' : 'text-green-600',
+      isClickable: true,
+      hasAlert: hasOutstandingBalance,
+      onClick: () => navigate('/invoices')
+    },
   ];
 
   return (
@@ -81,16 +100,26 @@ const Index = () => {
               {memberStats.map((stat) => {
                 const Icon = stat.icon;
                 return (
-                  <Card key={stat.title}>
+                  <Card 
+                    key={stat.title}
+                    className={stat.isClickable ? "cursor-pointer hover:shadow-md transition-shadow" : ""}
+                    onClick={stat.onClick}
+                  >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
                         {stat.title}
+                        {stat.hasAlert && (
+                          <Badge variant="destructive" className="flex items-center gap-1 text-xs">
+                            <AlertTriangle className="h-3 w-3" />
+                            Alert
+                          </Badge>
+                        )}
                       </CardTitle>
                       <Icon className={`h-4 w-4 ${stat.color}`} />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold flex items-center gap-2">
-                        {stat.value}
+                        {invoicesLoading && stat.title === 'Outstanding Balance' ? '...' : stat.value}
                       </div>
                     </CardContent>
                   </Card>
