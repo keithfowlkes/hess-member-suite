@@ -83,10 +83,11 @@ const handler = async (req: Request): Promise<Response> => {
     const token = resetUrl.searchParams.get('token');
     const type = resetUrl.searchParams.get('type');
     
-    // Use hashed_token from the response data instead of trying to extract from URL
-    const tokenHash = resetData.properties.hashed_token || resetUrl.searchParams.get('token_hash');
+    // The token_hash is actually in the properties, not the URL params
+    const tokenHash = resetData.properties.hashed_token;
     
     console.log('Extracted parameters:', { token, tokenHash, type });
+    console.log('Action link URL:', resetData.properties.action_link);
     
     if (!token || !tokenHash) {
       console.error('Missing required token parameters:', { token, tokenHash });
