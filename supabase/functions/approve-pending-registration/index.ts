@@ -123,19 +123,17 @@ serve(async (req) => {
         );
       }
 
-      // Use the change-user-password function to set the correct password
-      console.log('Setting password using change-user-password function...');
+      // Set the user's password directly using admin API (password_hash contains plaintext password)
+      console.log('Setting user password...');
       try {
-        const { error: passwordError } = await supabaseAdmin.functions.invoke('change-user-password', {
-          body: { 
-            userEmail: pendingReg.email,
-            newPassword: pendingReg.password_hash
-          }
-        });
+        const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
+          existingUser.id,
+          { password: pendingReg.password_hash }
+        );
 
         if (passwordError) {
-          console.warn('Could not update user password via function:', passwordError);
-          // Still send a password reset email as fallback
+          console.warn('Could not set user password:', passwordError);
+          // Send a password reset email as fallback
           const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
             type: 'recovery',
             email: pendingReg.email,
@@ -144,10 +142,10 @@ serve(async (req) => {
             console.warn('Could not send password reset email:', resetError);
           }
         } else {
-          console.log('User password updated successfully via change-user-password function');
+          console.log('User password set successfully');
         }
-      } catch (functionError) {
-        console.warn('Error calling change-user-password function:', functionError);
+      } catch (passwordUpdateError) {
+        console.warn('Error setting user password:', passwordUpdateError);
       }
 
       authUser = { user: updatedUser.user };
@@ -203,23 +201,21 @@ serve(async (req) => {
         );
       }
 
-      // Now set the password using the change-user-password function
-      console.log('Setting password for new user using change-user-password function...');
+      // Set the password for the new user (password_hash contains plaintext password)
+      console.log('Setting password for new user...');
       try {
-        const { error: passwordError } = await supabaseAdmin.functions.invoke('change-user-password', {
-          body: { 
-            userEmail: pendingReg.email,
-            newPassword: pendingReg.password_hash
-          }
-        });
+        const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
+          newUser.user.id,
+          { password: pendingReg.password_hash }
+        );
 
         if (passwordError) {
           console.warn('Could not set password for new user:', passwordError);
         } else {
           console.log('Password set successfully for new user');
         }
-      } catch (functionError) {
-        console.warn('Error calling change-user-password function for new user:', functionError);
+      } catch (passwordUpdateError) {
+        console.warn('Error setting password for new user:', passwordUpdateError);
       }
 
       authUser = { user: newUser.user };

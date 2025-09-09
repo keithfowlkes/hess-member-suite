@@ -105,7 +105,7 @@ export default function PasswordReset() {
     try {
       // First verify the recovery token and authenticate the user
       const { error: verifyError } = await supabase.auth.verifyOtp({
-        token_hash: token!, // Use the token directly as token_hash for recovery
+        token_hash: tokenHash!,
         type: 'recovery'
       });
 

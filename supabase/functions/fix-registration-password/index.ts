@@ -118,7 +118,7 @@ serve(async (req) => {
 
     console.log('✅ User found, updating password...');
 
-    // Update user password using admin client
+    // Update user password using admin client (password_hash contains plaintext password)
     const { data, error } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
       password: pendingReg.password_hash
     });
