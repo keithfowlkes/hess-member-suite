@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +43,8 @@ export default function Auth() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [activeTab, setActiveTab] = useState('signin');
+  const [showEmailNotFoundDialog, setShowEmailNotFoundDialog] = useState(false);
+  const [emailNotFoundAddress, setEmailNotFoundAddress] = useState('');
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
   const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
   
@@ -261,22 +264,10 @@ export default function Auth() {
         error.statusCode === 404;
       
       if (isUserNotFound) {
-        // Show alert dialog for email not found
-        const result = window.confirm(
-          `The email address "${resetEmail}" cannot be found in our member database.\n\n` +
-          'Would you like to request a new account? Click OK to go to the New Member Registration page.'
-        );
-        
-        if (result) {
-          // Redirect to registration tab
-          setActiveTab('signup');
-          setShowPasswordReset(false);
-          setResetEmail('');
-        } else {
-          // Just close the reset form if they don't want to register
-          setShowPasswordReset(false);
-          setResetEmail('');
-        }
+        // Store the email and show the dialog
+        setEmailNotFoundAddress(resetEmail);
+        setShowEmailNotFoundDialog(true);
+        setShowPasswordReset(false);
       } else {
         toast({
           title: "Password reset failed",
@@ -1507,6 +1498,45 @@ export default function Auth() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Email Not Found Dialog */}
+      <AlertDialog open={showEmailNotFoundDialog} onOpenChange={setShowEmailNotFoundDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-semibold text-center">
+              Account Not Found
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center pt-2">
+              The email address "<strong>{emailNotFoundAddress}</strong>" cannot be found in our member database.
+              <br /><br />
+              Would you like to request a new account?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel 
+              onClick={() => {
+                setShowEmailNotFoundDialog(false);
+                setEmailNotFoundAddress('');
+                setResetEmail('');
+              }}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                setActiveTab('signup');
+                setShowEmailNotFoundDialog(false);
+                setEmailNotFoundAddress('');
+                setResetEmail('');
+              }}
+              className="w-full sm:w-auto"
+            >
+              New Member Registration
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
