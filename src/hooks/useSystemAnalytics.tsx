@@ -29,7 +29,13 @@ const processDatacubeData = (datacubeEntries: Array<{system_field: string, syste
     count: entry.institution_count 
   }));
   
-  // Separate items with count >= 11 and < 11 (maintain the same logic as before)
+  // For hardware fields, show all vendors regardless of count
+  if (field === 'primary_office_hardware') {
+    return systemData.sort((a, b) => b.count - a.count);
+  }
+  
+  // For other fields, maintain the existing logic
+  // Separate items with count >= 11 and < 11
   const mainItems = systemData.filter(item => item.count >= 11);
   const smallItems = systemData.filter(item => item.count < 11);
   
