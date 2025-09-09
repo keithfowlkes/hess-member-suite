@@ -20,13 +20,13 @@ const Index = () => {
   const { getUserOrganization } = useOrganizationProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
 
-  // Force charts to re-render when modal opens
+  // Force charts to re-render when modal opens (optimized)
   useEffect(() => {
     if (showAnalyticsModal) {
-      // Small delay to ensure modal is fully rendered before charts calculate dimensions
+      // Minimal delay for modal transition, charts should render efficiently now with datacube
       const timeout = setTimeout(() => {
         setChartsKey(prev => prev + 1);
-      }, 100);
+      }, 50);
       return () => clearTimeout(timeout);
     }
   }, [showAnalyticsModal]);
