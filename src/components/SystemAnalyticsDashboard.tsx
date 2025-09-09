@@ -76,7 +76,7 @@ export function SystemAnalyticsDashboard() {
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <div className="text-2xl font-bold text-foreground">
-          {data.reduce((sum, item) => sum + item.count, 0)} institutions
+          {data.reduce((sum, item) => sum + item.count, 0)} institutions{systemKey === 'primary_office_hardware' ? ' reporting' : ''}
         </div>
       </CardHeader>
       <CardContent className="pt-0">
