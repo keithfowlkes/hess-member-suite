@@ -50,7 +50,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: organizations, error: orgError } = await supabase
       .from('organizations')
       .select(`
-        id, name, 
+        id, name, student_fte,
         student_information_system,
         financial_system,
         learning_management, 
@@ -100,6 +100,28 @@ const handler = async (req: Request): Promise<Response> => {
           });
         }
       });
+    }
+
+    // Add organization totals
+    console.log('Adding organization totals...');
+    if (organizations) {
+      const totalOrganizations = organizations.length;
+      const totalStudentFte = organizations.reduce((sum, org) => {
+        return sum + (org.student_fte || 0);
+      }, 0);
+
+      datacubeEntries.push(
+        {
+          system_field: 'organization_totals',
+          system_name: 'total_organizations',
+          institution_count: totalOrganizations
+        },
+        {
+          system_field: 'organization_totals',
+          system_name: 'total_student_fte',
+          institution_count: totalStudentFte
+        }
+      );
     }
 
     console.log(`Generated ${datacubeEntries.length} datacube entries`);
