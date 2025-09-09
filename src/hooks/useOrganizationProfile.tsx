@@ -116,6 +116,8 @@ export function useOrganizationProfile(profileId?: string) {
 
     try {
       console.log('Submitting organization profile edit request:', updates);
+      console.log('Organization ID:', data.organization.id);
+      console.log('User ID (requested_by):', data.profile.user_id);
       
       // Create the edit request instead of direct update
       const { error } = await supabase
@@ -131,8 +133,11 @@ export function useOrganizationProfile(profileId?: string) {
 
       if (error) {
         console.error('Error creating edit request:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         throw error;
       }
+
+      console.log('Profile edit request created successfully!');
 
       toast({
         title: 'Success',
