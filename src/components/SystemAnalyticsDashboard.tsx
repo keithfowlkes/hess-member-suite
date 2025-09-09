@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { useSystemAnalytics, SystemUsage } from '@/hooks/useSystemAnalytics';
 import { InstitutionsModal } from '@/components/InstitutionsModal';
-import { PieChart as PieChartIcon, TrendingUp, BarChart3 } from 'lucide-react';
+import { PieChart as PieChartIcon, TrendingUp, BarChart3, Monitor } from 'lucide-react';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff'];
 
@@ -20,6 +20,7 @@ const SYSTEM_OPTIONS = [
   { key: 'housing_management', label: 'Housing Management', icon: PieChartIcon },
   { key: 'admissions_crm', label: 'Admissions CRM', icon: PieChartIcon },
   { key: 'alumni_advancement_crm', label: 'Alumni & Advancement CRM', icon: PieChartIcon },
+  { key: 'primary_office_hardware', label: 'Primary Office Hardware', icon: Monitor },
 ];
 
 const SYSTEM_DATA_MAP = [
@@ -32,6 +33,7 @@ const SYSTEM_DATA_MAP = [
   { key: 'housing_management', title: 'Housing Management' },
   { key: 'admissions_crm', title: 'Admissions CRM' },
   { key: 'alumni_advancement_crm', title: 'Alumni & Advancement CRM' },
+  { key: 'primary_office_hardware', title: 'Primary Office Hardware' },
 ];
 
 export function SystemAnalyticsDashboard() {
@@ -63,6 +65,7 @@ export function SystemAnalyticsDashboard() {
       'housing_management': analytics.housingManagementSystems,
       'admissions_crm': analytics.admissionsCrms,
       'alumni_advancement_crm': analytics.alumniAdvancementCrms,
+      'primary_office_hardware': analytics.primaryOfficeHardware,
     };
     
     return systemMap[systemKey] || [];

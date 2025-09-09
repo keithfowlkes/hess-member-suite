@@ -16,6 +16,7 @@ export interface SystemAnalytics {
   housingManagementSystems: SystemUsage[];
   admissionsCrms: SystemUsage[];
   alumniAdvancementCrms: SystemUsage[];
+  primaryOfficeHardware: SystemUsage[];
 }
 
 const processDatacubeData = (datacubeEntries: Array<{system_field: string, system_name: string, institution_count: number}>, field: string): SystemUsage[] => {
@@ -65,6 +66,7 @@ export const useSystemAnalytics = () => {
         housingManagementSystems: processDatacubeData(data || [], 'housing_management'),
         admissionsCrms: processDatacubeData(data || [], 'admissions_crm'),
         alumniAdvancementCrms: processDatacubeData(data || [], 'alumni_advancement_crm'),
+        primaryOfficeHardware: processDatacubeData(data || [], 'primary_office_hardware'),
       };
 
       return analytics;

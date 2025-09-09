@@ -33,6 +33,16 @@ const handler = async (req: Request): Promise<Response> => {
       'alumni_advancement_crm'
     ];
 
+    // Define the hardware fields to analyze (boolean fields)
+    const hardwareFields = [
+      'primary_office_apple',
+      'primary_office_asus',
+      'primary_office_dell',
+      'primary_office_hp',
+      'primary_office_microsoft',
+      'primary_office_other'
+    ];
+
     // Clear existing datacube data
     const { error: clearError } = await supabase
       .from('system_analytics_datacube')
@@ -59,7 +69,13 @@ const handler = async (req: Request): Promise<Response> => {
         payroll_system,
         housing_management,
         admissions_crm,
-        alumni_advancement_crm
+        alumni_advancement_crm,
+        primary_office_apple,
+        primary_office_asus,
+        primary_office_dell,
+        primary_office_hp,
+        primary_office_microsoft,
+        primary_office_other
       `)
       .eq('membership_status', 'active')
       .neq('name', 'Administrator');
@@ -100,6 +116,31 @@ const handler = async (req: Request): Promise<Response> => {
           });
         }
       });
+    }
+
+    // Process hardware fields (boolean fields)
+    for (const field of hardwareFields) {
+      let count = 0;
+      
+      organizations?.forEach(org => {
+        const fieldValue = org[field as keyof typeof org];
+        if (fieldValue === true) {
+          count++;
+        }
+      });
+
+      // Only add entry if there are organizations using this hardware
+      if (count > 0) {
+        // Convert field name to display name
+        const displayName = field.replace('primary_office_', '').replace('_', ' ')
+          .replace(/\b\w/g, l => l.toUpperCase());
+        
+        datacubeEntries.push({
+          system_field: 'primary_office_hardware',
+          system_name: displayName,
+          institution_count: count
+        });
+      }
     }
 
     // Add organization totals
