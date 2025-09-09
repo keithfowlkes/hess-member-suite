@@ -10,6 +10,7 @@ import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTrian
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { useInvoices } from '@/hooks/useInvoices';
+import MemberSystemMessages from '@/components/MemberSystemMessages';
 import { useState, useEffect } from 'react';
 
 const Index = () => {
@@ -94,6 +95,9 @@ const Index = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Member System Messages */}
+            <MemberSystemMessages />
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

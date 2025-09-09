@@ -64,6 +64,7 @@ import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDia
 import { InvitationManagementDialog } from '@/components/InvitationManagementDialog';
 import { MemberInfoUpdateRequestsDialog } from '@/components/MemberInfoUpdateRequestsDialog';
 import { PendingRegistrationApprovalDialog } from '@/components/PendingRegistrationApprovalDialog';
+import SystemMessageEditor from '@/components/SystemMessageEditor';
 import type { PendingRegistration } from '@/hooks/usePendingRegistrations';
 
 // Icons
@@ -1414,12 +1415,18 @@ const MasterDashboard = () => {
                   <p className="text-muted-foreground">Customize system messages and notifications</p>
                 </div>
 
-                <Tabs defaultValue="password-reset" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-3">
+                <Tabs defaultValue="system-messages" className="space-y-6">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="system-messages">System Messages</TabsTrigger>
                     <TabsTrigger value="password-reset">Password Reset</TabsTrigger>
                     <TabsTrigger value="cc-recipients">CC Recipients</TabsTrigger>
                     <TabsTrigger value="welcome-template">Welcome Template</TabsTrigger>
                   </TabsList>
+
+                  {/* System Messages Subtab */}
+                  <TabsContent value="system-messages" className="space-y-6">
+                    <SystemMessageEditor />
+                  </TabsContent>
 
                   {/* Password Reset Subtab */}
                   <TabsContent value="password-reset" className="space-y-6">
