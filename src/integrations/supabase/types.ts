@@ -1085,6 +1085,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_user_password_info: {
+        Args: { user_email: string }
+        Returns: {
+          auth_user_id: string
+          stored_password: string
+          user_exists: boolean
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
