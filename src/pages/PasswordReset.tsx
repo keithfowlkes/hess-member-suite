@@ -28,12 +28,26 @@ export default function PasswordReset() {
   // Verify token on component mount
   useEffect(() => {
     const verifyToken = async () => {
+      console.log('🔐 Password Reset Debug Info:');
+      console.log('Token from URL:', token);
+      console.log('Token Hash from URL:', tokenHash);
+      console.log('Type from URL:', type);
+      console.log('Full URL search params:', window.location.search);
+      
       if (!token || type !== 'recovery') {
+        console.log('❌ Invalid token parameters');
+        setIsValidToken(false);
+        return;
+      }
+
+      if (!tokenHash) {
+        console.log('❌ Missing token_hash parameter');
         setIsValidToken(false);
         return;
       }
 
       try {
+        console.log('✅ Token parameters look valid, proceeding...');
         // For recovery tokens, we can proceed directly to password reset
         // The token will be validated when the password is actually updated
         setIsValidToken(true);
@@ -44,7 +58,7 @@ export default function PasswordReset() {
     };
 
     verifyToken();
-  }, [token, type, toast]);
+  }, [token, type, tokenHash, toast]);
 
   if (loading || isValidToken === null) {
     return (
@@ -103,6 +117,9 @@ export default function PasswordReset() {
     setIsSubmitting(true);
     
     try {
+      console.log('🔄 Starting password reset process...');
+      console.log('Using token_hash:', tokenHash);
+      
       // For recovery tokens, use verifyOtp with the token_hash
       const { error: verifyError } = await supabase.auth.verifyOtp({
         token_hash: tokenHash!,
@@ -110,14 +127,16 @@ export default function PasswordReset() {
       });
 
       if (verifyError) {
-        console.error('Token verification error:', verifyError);
+        console.error('❌ Token verification error:', verifyError);
         toast({
           title: "Invalid or expired token",
-          description: "This password reset link is invalid or has expired. Please request a new one.",
+          description: `Token verification failed: ${verifyError.message}`,
           variant: "destructive"
         });
         return;
       }
+
+      console.log('✅ Token verified successfully, updating password...');
 
       // Now update the password
       const { error } = await supabase.auth.updateUser({
@@ -125,12 +144,14 @@ export default function PasswordReset() {
       });
       
       if (error) {
+        console.error('❌ Password update error:', error);
         toast({
           title: "Password update failed",
           description: error.message,
           variant: "destructive"
         });
       } else {
+        console.log('✅ Password updated successfully');
         toast({
           title: "Password updated successfully",
           description: "Your password has been reset. You can now sign in with your new password.",
@@ -142,7 +163,7 @@ export default function PasswordReset() {
         }, 2000);
       }
     } catch (error: any) {
-      console.error('Password reset error:', error);
+      console.error('❌ Password reset error:', error);
       toast({
         title: "Password update failed",
         description: error.message || "An unexpected error occurred.",
