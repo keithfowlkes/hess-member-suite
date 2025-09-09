@@ -77,10 +77,27 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Extract token parameters from the Supabase reset link for our custom page
+    console.log('Reset data structure:', JSON.stringify(resetData, null, 2));
+    
     const resetUrl = new URL(resetData.properties.action_link);
     const token = resetUrl.searchParams.get('token');
-    const tokenHash = resetUrl.searchParams.get('token_hash');
     const type = resetUrl.searchParams.get('type');
+    
+    // Use hashed_token from the response data instead of trying to extract from URL
+    const tokenHash = resetData.properties.hashed_token || resetUrl.searchParams.get('token_hash');
+    
+    console.log('Extracted parameters:', { token, tokenHash, type });
+    
+    if (!token || !tokenHash) {
+      console.error('Missing required token parameters:', { token, tokenHash });
+      return new Response(
+        JSON.stringify({ error: 'Failed to extract token parameters' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
     
     // Build the custom reset URL using the system setting
     let customResetUrl;
