@@ -12,78 +12,75 @@ export interface Institution {
 
 export const useInstitutionsBySystem = (systemField: string | null, systemName: string | null) => {
   return useQuery({
-    queryKey: ['institutions-by-system', systemField, systemName],
+    queryKey: ['institutions-by-system-optimized', systemField, systemName],
     queryFn: async (): Promise<Institution[]> => {
       if (!systemField || !systemName) return [];
 
-      // Handle "Other" case - get all institutions with count < 11 for that system
+      // Handle "Other" case - use datacube to identify small systems first
       if (systemName === 'Other') {
-        // First get all data to count occurrences
-        const { data: allData, error: allError } = await supabase
+        // Get small systems from datacube (count < 11)
+        const { data: systemCounts, error: countsError } = await supabase
+          .from('system_analytics_datacube')
+          .select('system_name')
+          .eq('system_field', systemField)
+          .lt('institution_count', 11);
+
+        if (countsError) throw countsError;
+        if (!systemCounts || systemCounts.length === 0) return [];
+
+        const smallSystemNames = systemCounts.map(entry => entry.system_name);
+
+        // Get organizations with optimized query - select only needed fields
+        const { data: allOrgs, error: orgsError } = await supabase
           .from('organizations')
-          .select('*')
+          .select('id, name, city, state, email, website, student_information_system, financial_system, learning_management, financial_aid, hcm_hr, payroll_system, housing_management, admissions_crm, alumni_advancement_crm')
           .eq('membership_status', 'active');
 
-        if (allError) throw allError;
-        if (!allData) return [];
+        if (orgsError) throw orgsError;
+        if (!allOrgs) return [];
 
-        // Count occurrences for the specific system field
-        const counts: Record<string, number> = {};
-        allData.forEach(org => {
+        // Filter for small systems
+        const filteredOrgs = allOrgs.filter(org => {
           const value = (org as any)[systemField];
-          if (value && typeof value === 'string' && value.trim()) {
-            counts[value] = (counts[value] || 0) + 1;
-          }
+          return value && smallSystemNames.includes(value);
         });
 
-        // Filter for systems with count < 11
-        const smallSystems = Object.entries(counts)
-          .filter(([, count]) => count < 11)
-          .map(([name]) => name);
-
-        if (smallSystems.length === 0) return [];
-
-        // Filter the data to get institutions using small systems
-        const filteredData = allData.filter(org => {
-          const value = (org as any)[systemField];
-          return value && smallSystems.includes(value);
-        });
-
-        return filteredData.map(org => ({
+        return filteredOrgs.map(org => ({
           id: org.id,
           name: org.name,
           city: org.city,
           state: org.state,
           email: org.email,
           website: org.website,
-        })) as Institution[];
+        }));
       }
 
-      // Regular case - exact match
-      // Get all data and filter in JavaScript to avoid TypeScript issues
-      const { data: allData, error } = await supabase
+      // Regular case - optimized query for specific system
+      const { data: allOrgs, error } = await supabase
         .from('organizations')
         .select('id, name, city, state, email, website, student_information_system, financial_system, learning_management, financial_aid, hcm_hr, payroll_system, housing_management, admissions_crm, alumni_advancement_crm')
         .eq('membership_status', 'active');
 
       if (error) throw error;
-      if (!allData) return [];
+      if (!allOrgs) return [];
 
-      // Filter the data based on the system field and name
-      const filteredData = allData.filter(org => {
+      // Filter by system field
+      const filteredOrgs = allOrgs.filter(org => {
         const value = (org as any)[systemField];
         return value === systemName;
       });
 
-      return filteredData.map(org => ({
+      return filteredOrgs.map(org => ({
         id: org.id,
         name: org.name,
         city: org.city,
         state: org.state,
         email: org.email,
         website: org.website,
-      })) as Institution[];
+      }));
     },
     enabled: !!(systemField && systemName),
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
   });
 };

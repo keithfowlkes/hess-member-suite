@@ -997,6 +997,7 @@ export type Database = {
           created_at: string | null
           id: string
           institution_count: number
+          institution_details: Json | null
           last_updated: string | null
           system_field: string
           system_name: string
@@ -1005,6 +1006,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           institution_count?: number
+          institution_details?: Json | null
           last_updated?: string | null
           system_field: string
           system_name: string
@@ -1013,6 +1015,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           institution_count?: number
+          institution_details?: Json | null
           last_updated?: string | null
           system_field?: string
           system_name?: string

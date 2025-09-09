@@ -124,41 +124,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Add institution details by system for faster modal loading
-    console.log('Adding institution details by system...');
-    if (organizations) {
-      for (const fieldKey of systemFields) {
-        const systemCounts: Record<string, any[]> = {};
-        
-        organizations.forEach(org => {
-          const systemValue = (org as any)[fieldKey];
-          if (systemValue && typeof systemValue === 'string' && systemValue.trim()) {
-            if (!systemCounts[systemValue]) {
-              systemCounts[systemValue] = [];
-            }
-            systemCounts[systemValue].push({
-              id: org.id,
-              name: org.name,
-              city: org.city,
-              state: org.state,
-              email: org.email,
-              website: org.website
-            });
-          }
-        });
-
-        // Store institution details for each system
-        for (const [systemName, institutions] of Object.entries(systemCounts)) {
-          datacubeEntries.push({
-            system_field: `${fieldKey}_institutions`,
-            system_name: systemName,
-            institution_count: institutions.length,
-            institution_details: institutions
-          });
-        }
-      }
-    }
-
     console.log(`Generated ${datacubeEntries.length} datacube entries`);
 
     // Insert new datacube data in batches
