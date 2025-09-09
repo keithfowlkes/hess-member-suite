@@ -238,12 +238,24 @@ const Profile = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Organization Profile</h1>
+                <h1 className="text-3xl font-bold text-foreground">User Profile</h1>
                 <p className="text-muted-foreground mt-2">
                   {canEdit 
-                    ? "Manage your organization's profile information" 
-                    : "View your organization's profile information"}
+                    ? "Manage your personal profile information" 
+                    : "View your personal profile information"}
                 </p>
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800 mb-2">
+                    <strong>Need to edit organization information for admin approval?</strong>
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => window.location.href = `/organization/${profile?.id}`}
+                    className="text-blue-700 border-blue-300 hover:bg-blue-100"
+                  >
+                    Go to Organization Profile Editor
+                  </Button>
+                </div>
               </div>
               
               {canEdit && (

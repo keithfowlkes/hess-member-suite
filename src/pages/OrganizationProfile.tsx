@@ -112,9 +112,18 @@ const OrganizationProfilePage = () => {
   };
 
   const handleSave = async () => {
-    if (!editedData || !data) return;
+    console.log('🚀 SAVE BUTTON CLICKED - Starting save process');
+    console.log('📋 Current page URL:', window.location.href);
+    console.log('📝 EditedData exists:', !!editedData);
+    console.log('📄 Data exists:', !!data);
+    
+    if (!editedData || !data) {
+      console.error('❌ Missing required data for save operation');
+      return;
+    }
 
     setSaving(true);
+    console.log('💾 Save state set to true, calling submitOrganizationProfileEditRequest...');
     
     // All users submit edit requests for approval
     const success = await submitOrganizationProfileEditRequest({
@@ -122,11 +131,17 @@ const OrganizationProfilePage = () => {
       profile: editedData.profile
     });
 
+    console.log('✅ Submit result:', success);
+
     if (success) {
+      console.log('🎉 Save successful, exiting edit mode');
       setIsEditing(false);
+    } else {
+      console.log('❌ Save failed, staying in edit mode');
     }
     
     setSaving(false);
+    console.log('💾 Save state set to false');
   };
 
   const handleCancel = () => {
