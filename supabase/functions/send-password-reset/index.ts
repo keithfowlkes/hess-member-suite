@@ -73,9 +73,20 @@ const handler = async (req: Request): Promise<Response> => {
     const tokenHash = resetUrl.searchParams.get('token_hash');
     const type = resetUrl.searchParams.get('type');
     
-    // Use the redirectUrl from the request if provided, otherwise use the Lovable project URL
-    const baseUrl = redirectUrl || 'https://tyovnvuluyosjnabrzjc.lovableproject.com';
-    const customResetUrl = `${baseUrl}/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
+    // Build the custom reset URL
+    let customResetUrl;
+    if (redirectUrl) {
+      // If redirectUrl is provided and already includes the path, use it as-is with query params
+      if (redirectUrl.includes('/password-reset')) {
+        customResetUrl = `${redirectUrl}?token=${token}&token_hash=${tokenHash}&type=${type}`;
+      } else {
+        // If redirectUrl doesn't include the path, append it
+        customResetUrl = `${redirectUrl}/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
+      }
+    } else {
+      // Default to Lovable project URL
+      customResetUrl = `https://tyovnvuluyosjnabrzjc.lovableproject.com/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
+    }
 
     // Create custom email content with login hint
     const loginHintSection = userProfile.login_hint ? `
