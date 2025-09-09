@@ -24,11 +24,30 @@ export interface OrganizationProfileEditRequest {
 
 export function useOrganizationProfileEditRequests() {
   const [requests, setRequests] = useState<OrganizationProfileEditRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const fetchRequests = async () => {
     try {
+      // Check if user is authenticated and has admin role
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      // Check if user has admin role
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (userRoles?.role !== 'admin') {
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('organization_profile_edit_requests')
         .select(`
