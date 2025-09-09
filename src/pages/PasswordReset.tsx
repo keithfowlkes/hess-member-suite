@@ -184,7 +184,7 @@ export default function PasswordReset() {
             <img 
               src="/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" 
               alt="HESS Consortium" 
-              className="h-8 w-auto"
+              className="h-12 w-auto"
             />
           </div>
           <p className="text-muted-foreground">
