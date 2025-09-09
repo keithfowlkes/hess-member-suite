@@ -122,6 +122,7 @@ export function useOrganizationProfile(profileId?: string) {
         .from('organization_profile_edit_requests')
         .insert({
           organization_id: data.organization.id,
+          requested_by: data.profile.user_id,
           original_organization_data: data.organization,
           updated_organization_data: updates.organization ? { ...data.organization, ...updates.organization } : data.organization,
           original_profile_data: data.profile,
