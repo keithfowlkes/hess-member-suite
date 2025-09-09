@@ -365,10 +365,10 @@ export type Database = {
           approved_by: string | null
           created_at: string
           id: string
-          organization_id: string | null
+          organization_id: string
           original_organization_data: Json
           original_profile_data: Json | null
-          requested_by: string | null
+          requested_by: string
           status: string
           updated_at: string
           updated_organization_data: Json
@@ -380,10 +380,10 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           id?: string
-          organization_id?: string | null
+          organization_id: string
           original_organization_data: Json
           original_profile_data?: Json | null
-          requested_by?: string | null
+          requested_by: string
           status?: string
           updated_at?: string
           updated_organization_data: Json
@@ -395,10 +395,10 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           id?: string
-          organization_id?: string | null
+          organization_id?: string
           original_organization_data?: Json
           original_profile_data?: Json | null
-          requested_by?: string | null
+          requested_by?: string
           status?: string
           updated_at?: string
           updated_organization_data?: Json
