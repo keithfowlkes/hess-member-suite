@@ -818,14 +818,14 @@ export default function Auth() {
                               This is member information update request
                             </label>
                             <p className="text-sm text-gray-600 mt-1">
-                              Check this if you're requesting to become the primary contact for an existing member institution.
+                              Check this if you're requesting an information update for an existing member institution.
                             </p>
                           </div>
                         </div>
                         {isReassignment && (
                           <div className="mt-3 p-3 bg-blue-50 rounded-md border-l-4 border-blue-400">
                             <p className="text-sm text-blue-800">
-                              <strong>Note:</strong> Your reassignment request will be reviewed by an administrator before approval.
+                              <strong>Note:</strong> Your information update request will be reviewed by an administrator before approval. You will not be able to log in until the request is approved.
                             </p>
                           </div>
                         )}
@@ -859,42 +859,75 @@ export default function Auth() {
                         <p className="text-xs text-gray-500">This will be your login email address</p>
                       </div>
                       
-                       {!isReassignment && (
-                         <>
-                           <div className="lg:col-span-2 space-y-2">
-                             <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
-                               Password <span className="text-red-500">*</span>
-                             </Label>
-                             <Input
-                               id="signup-password"
-                               type="password"
-                               placeholder="Create a secure password"
-                               value={signUpForm.password}
-                               onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                               className="h-11 bg-gray-50 border-gray-300 max-w-md"
-                               disabled={!signUpForm.isPrivateNonProfit}
-                               required
-                               minLength={6}
-                             />
-                             <p className="text-xs text-gray-500">Minimum 6 characters required</p>
-                           </div>
-                           <div className="lg:col-span-2 space-y-2">
-                             <Label htmlFor="signup-login-hint" className="text-gray-700 font-medium text-sm">
-                               Login Hint (Optional)
-                             </Label>
-                             <Input
-                               id="signup-login-hint"
-                               type="text"
-                               placeholder="e.g., Maiden name, pet name, etc."
-                               value={signUpForm.loginHint}
-                               onChange={(e) => setSignUpForm(prev => ({ ...prev, loginHint: e.target.value }))}
-                               className="h-11 bg-gray-50 border-gray-300 max-w-md"
-                               disabled={!signUpForm.isPrivateNonProfit}
-                             />
-                             <p className="text-xs text-gray-500">This hint will be included in password reset emails to help you remember your account</p>
-                           </div>
-                         </>
-                       )}
+                        {isReassignment ? (
+                          <>
+                            <div className="lg:col-span-2 space-y-2">
+                              <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
+                                New Contact Password <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-password"
+                                type="password"
+                                placeholder="Password for the new contact"
+                                value={signUpForm.password}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300 max-w-md"
+                                required
+                                minLength={6}
+                              />
+                              <p className="text-xs text-gray-500">This password will be set for the new contact after admin approval</p>
+                            </div>
+                            <div className="lg:col-span-2 space-y-2">
+                              <Label htmlFor="signup-login-hint" className="text-gray-700 font-medium text-sm">
+                                Login Hint (Optional)
+                              </Label>
+                              <Input
+                                id="signup-login-hint"
+                                type="text"
+                                placeholder="e.g., Maiden name, pet name, etc."
+                                value={signUpForm.loginHint}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, loginHint: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300 max-w-md"
+                              />
+                              <p className="text-xs text-gray-500">This hint will be included in password reset emails to help the new contact remember their account</p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="lg:col-span-2 space-y-2">
+                              <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
+                                Password <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-password"
+                                type="password"
+                                placeholder="Create a secure password"
+                                value={signUpForm.password}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300 max-w-md"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                                minLength={6}
+                              />
+                              <p className="text-xs text-gray-500">Minimum 6 characters required</p>
+                            </div>
+                            <div className="lg:col-span-2 space-y-2">
+                              <Label htmlFor="signup-login-hint" className="text-gray-700 font-medium text-sm">
+                                Login Hint (Optional)
+                              </Label>
+                              <Input
+                                id="signup-login-hint"
+                                type="text"
+                                placeholder="e.g., Maiden name, pet name, etc."
+                                value={signUpForm.loginHint}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, loginHint: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300 max-w-md"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                              <p className="text-xs text-gray-500">This hint will be included in password reset emails to help you remember your account</p>
+                            </div>
+                          </>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -1424,16 +1457,17 @@ export default function Auth() {
                 <Button 
                   type="submit" 
                   className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" 
-                  disabled={
-                    isSubmitting || 
-                    !signUpForm.isPrivateNonProfit || 
-                    (recaptchaEnabled && !signUpCaptcha) ||
-                    (isReassignment && !selectedOrganizationId)
-                  }
+                    disabled={
+                      isSubmitting || 
+                      !signUpForm.isPrivateNonProfit || 
+                      (recaptchaEnabled && !signUpCaptcha) ||
+                      (isReassignment && !selectedOrganizationId) ||
+                      (isReassignment && !signUpForm.password)
+                    }
                 >
                   {isSubmitting 
-                    ? (isReassignment ? 'Submitting request...' : 'Creating account...') 
-                    : (isReassignment ? 'Submit Reassignment Request' : 'Register Organization')
+                    ? (isReassignment ? 'Submitting update request...' : 'Creating account...') 
+                    : (isReassignment ? 'Submit Information Update Request' : 'Register Organization')
                   }
                 </Button>
                 </form>
