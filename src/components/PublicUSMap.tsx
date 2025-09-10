@@ -86,7 +86,7 @@ export function PublicUSMap() {
     fetchMemberLocations();
     
     // Set up real-time subscription for organizations table
-    const channel = supabase
+    const orgChannel = supabase
       .channel('public-map-organizations')
       .on(
         'postgres_changes',
@@ -101,8 +101,25 @@ export function PublicUSMap() {
       )
       .subscribe();
 
+    // Set up real-time subscription for map coordinates
+    const coordChannel = supabase
+      .channel('public-map-coordinates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'map_coordinates'
+        },
+        () => {
+          fetchMapCoordinates();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(orgChannel);
+      supabase.removeChannel(coordChannel);
     };
   }, []);
 
@@ -168,19 +185,34 @@ export function PublicUSMap() {
     return '#ef4444'; // red-500
   };
 
-  // Load saved coordinates from localStorage if available
+  // Load coordinates from database
   const [displayCoordinates, setDisplayCoordinates] = useState(stateCoordinates);
 
-  useEffect(() => {
-    const savedCoordinates = localStorage.getItem('usmap-state-coordinates');
-    if (savedCoordinates) {
-      try {
-        const parsed = JSON.parse(savedCoordinates);
-        setDisplayCoordinates(parsed);
-      } catch (error) {
-        console.error('Failed to load saved coordinates:', error);
+  const fetchMapCoordinates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('map_coordinates')
+        .select('state_code, x_coordinate, y_coordinate');
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const coords: { [key: string]: { x: number; y: number } } = {};
+        data.forEach(coord => {
+          coords[coord.state_code] = {
+            x: Number(coord.x_coordinate),
+            y: Number(coord.y_coordinate)
+          };
+        });
+        setDisplayCoordinates(coords);
       }
+    } catch (error) {
+      console.error('Error fetching map coordinates:', error);
     }
+  };
+
+  useEffect(() => {
+    fetchMapCoordinates();
   }, []);
 
   if (loading) {

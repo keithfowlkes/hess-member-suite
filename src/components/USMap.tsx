@@ -97,9 +97,10 @@ export function USMap() {
 
   useEffect(() => {
     fetchMemberLocations();
+    fetchMapCoordinates();
     
     // Set up real-time subscription for organizations table
-    const channel = supabase
+    const orgChannel = supabase
       .channel('usmap-organizations')
       .on(
         'postgres_changes',
@@ -114,8 +115,25 @@ export function USMap() {
       )
       .subscribe();
 
+    // Set up real-time subscription for map coordinates
+    const coordChannel = supabase
+      .channel('usmap-coordinates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'map_coordinates'
+        },
+        () => {
+          fetchMapCoordinates();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(orgChannel);
+      supabase.removeChannel(coordChannel);
     };
   }, []);
 
@@ -164,6 +182,29 @@ export function USMap() {
       console.error('Error fetching member locations:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMapCoordinates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('map_coordinates')
+        .select('state_code, x_coordinate, y_coordinate');
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const coords: { [key: string]: { x: number; y: number } } = {};
+        data.forEach(coord => {
+          coords[coord.state_code] = {
+            x: Number(coord.x_coordinate),
+            y: Number(coord.y_coordinate)
+          };
+        });
+        setEditableCoordinates(coords);
+      }
+    } catch (error) {
+      console.error('Error fetching map coordinates:', error);
     }
   };
 
@@ -241,19 +282,59 @@ export function USMap() {
     }
   };
 
-  const handleSavePositions = () => {
+  const handleSavePositions = async () => {
     try {
-      localStorage.setItem('usmap-state-coordinates', JSON.stringify(editableCoordinates));
+      const updates = Object.entries(editableCoordinates).map(([state, coords]) => ({
+        state_code: state,
+        x_coordinate: coords.x,
+        y_coordinate: coords.y,
+        updated_by: user?.id
+      }));
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('map_coordinates')
+          .upsert(update, { 
+            onConflict: 'state_code',
+            ignoreDuplicates: false 
+          });
+        
+        if (error) throw error;
+      }
+
       toast.success('State marker positions saved successfully!');
     } catch (error) {
+      console.error('Error saving positions:', error);
       toast.error('Failed to save positions');
     }
   };
 
-  const handleResetPositions = () => {
-    setEditableCoordinates(stateCoordinates);
-    localStorage.removeItem('usmap-state-coordinates');
-    toast.success('State marker positions reset to default');
+  const handleResetPositions = async () => {
+    try {
+      const updates = Object.entries(stateCoordinates).map(([state, coords]) => ({
+        state_code: state,
+        x_coordinate: coords.x,
+        y_coordinate: coords.y,
+        updated_by: user?.id
+      }));
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('map_coordinates')
+          .upsert(update, { 
+            onConflict: 'state_code',
+            ignoreDuplicates: false 
+          });
+        
+        if (error) throw error;
+      }
+
+      setEditableCoordinates(stateCoordinates);
+      toast.success('State marker positions reset to default');
+    } catch (error) {
+      console.error('Error resetting positions:', error);
+      toast.error('Failed to reset positions');
+    }
   };
 
   const handleToggleEditMode = () => {
@@ -265,18 +346,6 @@ export function USMap() {
     }
   };
 
-  // Load saved coordinates on mount
-  useEffect(() => {
-    const savedCoordinates = localStorage.getItem('usmap-state-coordinates');
-    if (savedCoordinates) {
-      try {
-        const parsed = JSON.parse(savedCoordinates);
-        setEditableCoordinates(parsed);
-      } catch (error) {
-        console.error('Failed to load saved coordinates:', error);
-      }
-    }
-  }, []);
 
   // No longer need coordinate conversion - using direct SVG coordinates
   const latLngToSVG = (lat: number, lng: number) => {

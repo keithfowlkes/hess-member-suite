@@ -314,6 +314,36 @@ export type Database = {
           },
         ]
       }
+      map_coordinates: {
+        Row: {
+          created_at: string
+          id: string
+          state_code: string
+          updated_at: string
+          updated_by: string | null
+          x_coordinate: number
+          y_coordinate: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          state_code: string
+          updated_at?: string
+          updated_by?: string | null
+          x_coordinate: number
+          y_coordinate: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          state_code?: string
+          updated_at?: string
+          updated_by?: string | null
+          x_coordinate?: number
+          y_coordinate?: number
+        }
+        Relationships: []
+      }
       organization_invitations: {
         Row: {
           created_at: string
