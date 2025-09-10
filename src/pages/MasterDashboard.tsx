@@ -947,10 +947,15 @@ const MasterDashboard = () => {
                                     </div>
                                     
                                     <div className="text-sm text-muted-foreground space-y-1">
-                                      <div className="flex items-center gap-2">
-                                        <Users className="h-3 w-3" />
-                                        <span>Requested by: {request.requester_profile?.first_name} {request.requester_profile?.last_name}</span>
-                                      </div>
+                                       <div className="flex items-center gap-2">
+                                         <Users className="h-3 w-3" />
+                                         <span>
+                                           Requested by: {request.requester_profile?.first_name} {request.requester_profile?.last_name}
+                                           {request.organization?.name && (
+                                             <span className="text-muted-foreground"> ({request.organization.name})</span>
+                                           )}
+                                         </span>
+                                       </div>
                                       <div>
                                         Email: {request.requester_profile?.email} | 
                                         Status: {request.status}

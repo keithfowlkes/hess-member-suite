@@ -58,7 +58,11 @@ export function useOrganizationProfileEditRequests() {
 
       const { data, error } = await supabase
         .from('organization_profile_edit_requests')
-        .select('*')
+        .select(`
+          *,
+          organization:organizations!organization_id(name),
+          requester_profile:profiles!requested_by(first_name, last_name, email)
+        `)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
