@@ -184,10 +184,7 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
       <!-- Header with Logo and Invoice Title -->
       <div class="invoice-header">
         <div class="logo-section">
-          ${template.logo_url ? 
-            `<img src="${embedded ? 'cid:logo' : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev/functions/v1/track-invoice-open?invoice_id=${templateData['{{INVOICE_NUMBER}}']}&logo_url=${encodeURIComponent(template.logo_url.startsWith('http') ? template.logo_url : `https://9f0afb12-d741-415b-9bbb-e40cfcba281a.sandbox.lovable.dev${template.logo_url}`)}`}" alt="Company Logo" style="max-height: 80px; width: auto;" onerror="this.style.display='none';" />` : 
-            ''
-          }
+          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS Consortium Logo" style="width: 150px; height: auto;">
           <div class="company-info">
             <h3>HESS Consortium</h3>
             <p>Higher Education Systems & Services Consortium</p>
@@ -400,11 +397,6 @@ serve(async (req) => {
       subject: subject,
       html: html,
     };
-
-    // Add attachment if logo is available
-    if (logoAttachment) {
-      emailPayload.attachments = [logoAttachment];
-    }
 
     const emailResponse = await resend.emails.send(emailPayload);
 
