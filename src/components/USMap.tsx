@@ -227,10 +227,11 @@ export function USMap() {
               </p>
             </CardHeader>
             <CardContent>
-              <div className="relative">
+              <div className="relative w-full">
                 <svg 
                   viewBox="0 0 900 500" 
-                  className="w-full h-auto border border-border rounded-lg bg-muted/30"
+                  className="w-full h-[500px] border border-border rounded-lg bg-muted/30"
+                  preserveAspectRatio="xMidYMid meet"
                 >
                   {/* US Map outline - simplified */}
                   <rect x="0" y="0" width="900" height="500" fill="#f8f9fa" stroke="#e5e7eb" />
