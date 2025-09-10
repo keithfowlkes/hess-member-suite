@@ -150,7 +150,7 @@ const MasterDashboard = () => {
   // Messages state
   const [passwordResetMessage, setPasswordResetMessage] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
-  const [profitUpdateMessage, setProfitUpdateMessage] = useState('');
+  const [profileUpdateMessage, setProfileUpdateMessage] = useState('');
   const [welcomeCcRecipients, setWelcomeCcRecipients] = useState<string[]>([]);
   const [newCcEmail, setNewCcEmail] = useState('');
   const [defaultRecipients, setDefaultRecipients] = useState<{[email: string]: boolean}>({
@@ -159,7 +159,7 @@ const MasterDashboard = () => {
   });
   const [savingMessage, setSavingMessage] = useState(false);
   const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
-  const [savingProfitUpdateMessage, setSavingProfitUpdateMessage] = useState(false);
+  const [savingProfileUpdateMessage, setSavingProfileUpdateMessage] = useState(false);
   const [savingCcRecipients, setSavingCcRecipients] = useState(false);
 
   // Stats for the overview section
@@ -299,10 +299,10 @@ const MasterDashboard = () => {
     setSavingWelcomeMessage(false);
   };
 
-  const handleSaveProfitUpdateMessage = async () => {
-    setSavingProfitUpdateMessage(true);
-    await updateSetting('profit_update_message_template', profitUpdateMessage);
-    setSavingProfitUpdateMessage(false);
+  const handleSaveProfileUpdateMessage = async () => {
+    setSavingProfileUpdateMessage(true);
+    await updateSetting('profile_update_message_template', profileUpdateMessage);
+    setSavingProfileUpdateMessage(false);
   };
 
   const handleSaveCcRecipients = async () => {
@@ -378,13 +378,13 @@ const MasterDashboard = () => {
       setWelcomeMessage(defaultTemplate);
     }
 
-    // Initialize profit update message
-    const profitUpdateSetting = settings.find(s => s.setting_key === 'profit_update_message_template');
-    if (profitUpdateSetting?.setting_value) {
-      setProfitUpdateMessage(profitUpdateSetting.setting_value);
+    // Initialize profile update message
+    const profileUpdateSetting = settings.find(s => s.setting_key === 'profile_update_message_template');
+    if (profileUpdateSetting?.setting_value) {
+      setProfileUpdateMessage(profileUpdateSetting.setting_value);
     } else {
-      // Set default profit update message template
-      const defaultProfitUpdateTemplate = `
+      // Set default profile update message template
+      const defaultProfileUpdateTemplate = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <center>
             <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:150px; height:auto;">
@@ -392,13 +392,13 @@ const MasterDashboard = () => {
           
           <p>Dear {{primary_contact_name}},</p>
           
-          <p>We hope this message finds you well. We wanted to update you on important profit-sharing information for {{organization_name}}.</p>
+          <p>Your profile update request for {{organization_name}} has been approved by our administration team.</p>
           
-          <p>As a valued member of the HESS Consortium, we are pleased to share details about your organization's participation in our collaborative purchasing and profit-sharing program.</p>
+          <p>The changes you requested have been applied to your organization's profile and are now active in our system.</p>
           
-          <p>For questions regarding this update or to discuss how to maximize your organization's benefits, please don't hesitate to contact us.</p>
+          <p>You can view your updated profile by logging into the HESS Consortium member portal.</p>
           
-          <p>Thank you for your continued membership and partnership with the HESS Consortium.</p>
+          <p>If you have any questions about your profile or membership, please don't hesitate to contact us.</p>
           
           <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/04/KeithFowlkesshortsig.png" alt="Keith Fowlkes Signature" style="margin: 20px 0;">
           
@@ -408,7 +408,7 @@ const MasterDashboard = () => {
           keith.fowlkes@hessconsortium.org | 859.516.3571</p>
         </div>
       `;
-      setProfitUpdateMessage(defaultProfitUpdateTemplate);
+      setProfileUpdateMessage(defaultProfileUpdateTemplate);
     }
 
     // Load CC recipients
@@ -1638,7 +1638,7 @@ const MasterDashboard = () => {
                     </Card>
                   </TabsContent>
 
-                  {/* Profit Update Messages Subtab */}
+                  {/* Profile Update Messages Subtab */}
                   <TabsContent value="profit-update" className="space-y-6">
                     <Card>
                       <CardHeader>
@@ -1649,12 +1649,12 @@ const MasterDashboard = () => {
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div>
-                          <Label htmlFor="profit-update-message">Profit Update Message Template</Label>
+                          <Label htmlFor="profile-update-message">Profile Update Message Template</Label>
                           <div className="mt-2">
                             <ReactQuill
                               theme="snow"
-                              value={profitUpdateMessage}
-                              onChange={setProfitUpdateMessage}
+                              value={profileUpdateMessage}
+                              onChange={setProfileUpdateMessage}
                               modules={{
                                 toolbar: [
                                   [{ 'header': [1, 2, 3, false] }],
@@ -1686,10 +1686,10 @@ const MasterDashboard = () => {
                           </div>
                         </div>
                         <Button 
-                          onClick={handleSaveProfitUpdateMessage}
-                          disabled={savingProfitUpdateMessage}
+                          onClick={handleSaveProfileUpdateMessage}
+                          disabled={savingProfileUpdateMessage}
                         >
-                          {savingProfitUpdateMessage ? "Saving..." : "Save Profit Update Message"}
+                          {savingProfileUpdateMessage ? "Saving..." : "Save Profile Update Message"}
                         </Button>
                       </CardContent>
                     </Card>
