@@ -154,299 +154,302 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              {currentData.name}
-              <Badge variant={currentData.membership_status === 'active' ? 'default' : 'secondary'}>
-                {currentData.membership_status}
-              </Badge>
-            </DialogTitle>
-            {canEdit && (
-              <div className="flex gap-2">
-                {isEditing ? (
-                  <>
-                    <Button size="sm" onClick={handleSave}>
-                      <Save className="h-4 w-4 mr-1" />
-                      Save
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={handleCancel}>
-                      <X className="h-4 w-4 mr-1" />
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <Button size="sm" onClick={handleEdit}>
-                    <Edit3 className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
+      <DialogContent className="max-w-4xl h-[85vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
+          <DialogTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            {currentData.name}
+            <Badge variant={currentData.membership_status === 'active' ? 'default' : 'secondary'}>
+              {currentData.membership_status}
+            </Badge>
+          </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
-            <TabsTrigger value="systems">Systems</TabsTrigger>
-            <TabsTrigger value="hardware">Hardware</TabsTrigger>
-          </TabsList>
+        <div className="flex-1 overflow-y-auto">
+          <Tabs defaultValue="overview" className="w-full h-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="contact">Contact</TabsTrigger>
+              <TabsTrigger value="systems">Systems</TabsTrigger>
+              <TabsTrigger value="hardware">Hardware</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    Organization Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    <Label>Organization Name</Label>
-                    {isEditing ? (
-                      <Input
-                        value={currentData.name}
-                        onChange={(e) => setEditData({...editData!, name: e.target.value})}
-                      />
-                    ) : (
-                      <p className="text-sm font-medium">{currentData.name}</p>
-                    )}
-                  </div>
-                  
-                  {currentData.website && (
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <a href={currentData.website} target="_blank" rel="noopener noreferrer" 
-                         className="text-sm text-primary hover:underline">
-                        {currentData.website}
-                      </a>
-                    </div>
-                  )}
-
-                  {profile?.student_fte && (
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{profile.student_fte.toLocaleString()} Student FTE</span>
-                    </div>
-                  )}
-
-                  {currentData.annual_fee_amount && (
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">${currentData.annual_fee_amount.toLocaleString()} Annual Fee</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    Address
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {currentData.address_line_1 && <p className="text-sm">{currentData.address_line_1}</p>}
-                  {currentData.address_line_2 && <p className="text-sm">{currentData.address_line_2}</p>}
-                  {(currentData.city || currentData.state || currentData.zip_code) && (
-                    <p className="text-sm">
-                      {[currentData.city, currentData.state, currentData.zip_code].filter(Boolean).join(', ')}
-                    </p>
-                  )}
-                  {currentData.country && <p className="text-sm">{currentData.country}</p>}
-                </CardContent>
-              </Card>
-            </div>
-
-            {currentData.notes && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Notes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isEditing ? (
-                    <Textarea
-                      value={currentData.notes || ''}
-                      onChange={(e) => setEditData({...editData!, notes: e.target.value})}
-                      rows={3}
-                    />
-                  ) : (
-                    <p className="text-sm whitespace-pre-wrap">{currentData.notes}</p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="contact" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Primary Contact
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {profile?.first_name && (
-                    <div>
-                      <Label>Name</Label>
-                      <p className="text-sm">{profile.first_name} {profile.last_name}</p>
-                    </div>
-                  )}
-                  {profile?.primary_contact_title && (
-                    <div>
-                      <Label>Title</Label>
-                      <p className="text-sm">{profile.primary_contact_title}</p>
-                    </div>
-                  )}
-                  {profile?.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <a 
-                        href={`mailto:${profile.email}`}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        {profile.email}
-                      </a>
-                    </div>
-                  )}
-                  {profile?.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{profile.phone}</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {(profile?.secondary_first_name || profile?.secondary_contact_email) && (
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <UserPlus className="h-4 w-4" />
-                      Secondary Contact
+                      <Building2 className="h-4 w-4" />
+                      Organization Details
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {profile.secondary_first_name && (
-                      <div>
-                        <Label>Name</Label>
-                        <p className="text-sm">{profile.secondary_first_name} {profile.secondary_last_name}</p>
-                      </div>
-                    )}
-                    {profile.secondary_contact_title && (
-                      <div>
-                        <Label>Title</Label>
-                        <p className="text-sm">{profile.secondary_contact_title}</p>
-                      </div>
-                    )}
-                    {profile.secondary_contact_email && (
+                    <div className="space-y-2">
+                      <Label>Organization Name</Label>
+                      {isEditing ? (
+                        <Input
+                          value={currentData.name}
+                          onChange={(e) => setEditData({...editData!, name: e.target.value})}
+                        />
+                      ) : (
+                        <p className="text-sm font-medium">{currentData.name}</p>
+                      )}
+                    </div>
+                    
+                    {currentData.website && (
                       <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <a 
-                          href={`mailto:${profile.secondary_contact_email}`}
-                          className="text-sm text-primary hover:underline"
-                        >
-                          {profile.secondary_contact_email}
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <a href={currentData.website} target="_blank" rel="noopener noreferrer" 
+                           className="text-sm text-primary hover:underline">
+                          {currentData.website}
                         </a>
+                      </div>
+                    )}
+
+                    {profile?.student_fte && (
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{profile.student_fte.toLocaleString()} Student FTE</span>
+                      </div>
+                    )}
+
+                    {currentData.annual_fee_amount && (
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">${currentData.annual_fee_amount.toLocaleString()} Annual Fee</span>
                       </div>
                     )}
                   </CardContent>
                 </Card>
-              )}
-            </div>
-          </TabsContent>
 
-          <TabsContent value="systems" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                { key: 'student_information_system', label: 'Student Information System', icon: Database },
-                { key: 'financial_system', label: 'Financial System', icon: DollarSign },
-                { key: 'financial_aid', label: 'Financial Aid', icon: CreditCard },
-                { key: 'hcm_hr', label: 'HCM/HR', icon: UserCheck },
-                { key: 'payroll_system', label: 'Payroll System', icon: DollarSign },
-                { key: 'purchasing_system', label: 'Purchasing System', icon: ShoppingCart },
-                { key: 'housing_management', label: 'Housing Management', icon: Home },
-                { key: 'learning_management', label: 'Learning Management', icon: GraduationCap },
-                { key: 'admissions_crm', label: 'Admissions CRM', icon: UserPlus },
-                { key: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM', icon: Award },
-              ].map(({ key, label, icon: Icon }) => {
-                const value = profile?.[key as keyof typeof profile] as string;
-                if (!value) return null;
-                
-                return (
-                  <Card key={key}>
-                    <CardContent className="pt-4">
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">{label}</p>
-                          <p className="text-sm text-muted-foreground">{value}</p>
-                        </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      Address
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {currentData.address_line_1 && <p className="text-sm">{currentData.address_line_1}</p>}
+                    {currentData.address_line_2 && <p className="text-sm">{currentData.address_line_2}</p>}
+                    {(currentData.city || currentData.state || currentData.zip_code) && (
+                      <p className="text-sm">
+                        {[currentData.city, currentData.state, currentData.zip_code].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                    {currentData.country && <p className="text-sm">{currentData.country}</p>}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {currentData.notes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {isEditing ? (
+                      <Textarea
+                        value={currentData.notes || ''}
+                        onChange={(e) => setEditData({...editData!, notes: e.target.value})}
+                        rows={3}
+                      />
+                    ) : (
+                      <p className="text-sm whitespace-pre-wrap">{currentData.notes}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="contact" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Primary Contact
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {profile?.first_name && (
+                      <div>
+                        <Label>Name</Label>
+                        <p className="text-sm">{profile.first_name} {profile.last_name}</p>
                       </div>
+                    )}
+                    {profile?.primary_contact_title && (
+                      <div>
+                        <Label>Title</Label>
+                        <p className="text-sm">{profile.primary_contact_title}</p>
+                      </div>
+                    )}
+                    {profile?.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <a 
+                          href={`mailto:${profile.email}`}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          {profile.email}
+                        </a>
+                      </div>
+                    )}
+                    {profile?.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{profile.phone}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {(profile?.secondary_first_name || profile?.secondary_contact_email) && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        Secondary Contact
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {profile.secondary_first_name && (
+                        <div>
+                          <Label>Name</Label>
+                          <p className="text-sm">{profile.secondary_first_name} {profile.secondary_last_name}</p>
+                        </div>
+                      )}
+                      {profile.secondary_contact_title && (
+                        <div>
+                          <Label>Title</Label>
+                          <p className="text-sm">{profile.secondary_contact_title}</p>
+                        </div>
+                      )}
+                      {profile.secondary_contact_email && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <a 
+                            href={`mailto:${profile.secondary_contact_email}`}
+                            className="text-sm text-primary hover:underline"
+                          >
+                            {profile.secondary_contact_email}
+                          </a>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
-                );
-              })}
-            </div>
+                )}
+              </div>
+            </TabsContent>
 
-            {profile?.other_software_comments && (
+            <TabsContent value="systems" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { key: 'student_information_system', label: 'Student Information System', icon: Database },
+                  { key: 'financial_system', label: 'Financial System', icon: DollarSign },
+                  { key: 'financial_aid', label: 'Financial Aid', icon: CreditCard },
+                  { key: 'hcm_hr', label: 'HCM/HR', icon: UserCheck },
+                  { key: 'payroll_system', label: 'Payroll System', icon: DollarSign },
+                  { key: 'purchasing_system', label: 'Purchasing System', icon: ShoppingCart },
+                  { key: 'housing_management', label: 'Housing Management', icon: Home },
+                  { key: 'learning_management', label: 'Learning Management', icon: GraduationCap },
+                  { key: 'admissions_crm', label: 'Admissions CRM', icon: UserPlus },
+                  { key: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM', icon: Award },
+                ].map(({ key, label, icon: Icon }) => {
+                  const value = profile?.[key as keyof typeof profile] as string;
+                  if (!value) return null;
+                  
+                  return (
+                    <Card key={key}>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-sm font-medium">{label}</p>
+                            <p className="text-sm text-muted-foreground">{value}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {profile?.other_software_comments && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Additional Software Comments</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm whitespace-pre-wrap">{profile.other_software_comments}</p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="hardware" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Additional Software Comments</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Monitor className="h-4 w-4" />
+                    Primary Office Hardware
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm whitespace-pre-wrap">{profile.other_software_comments}</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {[
+                      { key: 'primary_office_apple', label: 'Apple' },
+                      { key: 'primary_office_asus', label: 'ASUS' },
+                      { key: 'primary_office_dell', label: 'Dell' },
+                      { key: 'primary_office_hp', label: 'HP' },
+                      { key: 'primary_office_microsoft', label: 'Microsoft' },
+                      { key: 'primary_office_other', label: 'Other' },
+                    ].map(({ key, label }) => {
+                      const isSelected = profile?.[key as keyof typeof profile] as boolean;
+                      return (
+                        <div key={key} className="flex items-center space-x-2">
+                          <Switch checked={isSelected} disabled />
+                          <span className="text-sm">{label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {profile?.primary_office_other_details && (
+                    <div className="mt-4">
+                      <Label>Other Hardware Details</Label>
+                      <p className="text-sm text-muted-foreground mt-1">{profile.primary_office_other_details}</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            )}
-          </TabsContent>
+            </TabsContent>
+          </Tabs>
+        </div>
 
-          <TabsContent value="hardware" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Monitor className="h-4 w-4" />
-                  Primary Office Hardware
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {[
-                    { key: 'primary_office_apple', label: 'Apple' },
-                    { key: 'primary_office_asus', label: 'ASUS' },
-                    { key: 'primary_office_dell', label: 'Dell' },
-                    { key: 'primary_office_hp', label: 'HP' },
-                    { key: 'primary_office_microsoft', label: 'Microsoft' },
-                    { key: 'primary_office_other', label: 'Other' },
-                  ].map(({ key, label }) => {
-                    const isSelected = profile?.[key as keyof typeof profile] as boolean;
-                    return (
-                      <div key={key} className="flex items-center space-x-2">
-                        <Switch checked={isSelected} disabled />
-                        <span className="text-sm">{label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                {profile?.primary_office_other_details && (
-                  <div className="mt-4">
-                    <Label>Other Hardware Details</Label>
-                    <p className="text-sm text-muted-foreground mt-1">{profile.primary_office_other_details}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {canEdit && (
+          <div className="flex-shrink-0 border-t pt-4 mt-4">
+            <div className="flex justify-end gap-2">
+              {isEditing ? (
+                <>
+                  <Button onClick={handleSave}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save
+                  </Button>
+                  <Button variant="outline" onClick={handleCancel}>
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={handleEdit}>
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
