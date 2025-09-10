@@ -468,11 +468,11 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error(`Unknown email type: ${type}`);
     }
 
-    // For welcome_approved and profile_update_approved emails, get CC recipients from settings and add default ones
+    // For welcome_approved emails, get CC recipients from settings and add default ones
     let emailTo = [to];
     let cc: string[] = [];
     
-    if (type === 'welcome_approved' || type === 'profile_update_approved') {
+    if (type === 'welcome_approved') {
       try {
         console.log('Processing CC recipients for welcome_approved email...');
         // Get CC recipients from system settings
@@ -532,6 +532,15 @@ const handler = async (req: Request): Promise<Response> => {
         console.error('Error processing CC recipients:', ccProcessingError);
         // Use fallback CC recipients
         cc = ['keith.fowlkes@hessconsortium.org', 'gpechan@flagler.edu'];
+      }
+    }
+    
+    // For profile_update_approved emails, only add secondary email to main recipients (no CC)
+    if (type === 'profile_update_approved') {
+      console.log('Processing profile update approval email - no CC recipients');
+      if (secondaryEmail && secondaryEmail !== to) {
+        emailTo.push(secondaryEmail);
+        console.log('Added secondary email to recipients for profile update:', secondaryEmail);
       }
     }
 
