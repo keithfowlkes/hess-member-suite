@@ -58,11 +58,7 @@ export function useOrganizationProfileEditRequests() {
 
       const { data, error } = await supabase
         .from('organization_profile_edit_requests')
-        .select(`
-          *,
-          organization:organizations!organization_id(name),
-          requester_profile:profiles!requested_by(first_name, last_name, email)
-        `)
+        .select('*')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
@@ -71,8 +67,31 @@ export function useOrganizationProfileEditRequests() {
         throw error;
       }
       
-      console.log('Profile edit requests loaded:', data?.length || 0);
-      setRequests(data || []);
+      // Fetch additional data for each request
+      const enrichedData = await Promise.all((data || []).map(async (request) => {
+        // Get organization name
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('name')
+          .eq('id', request.organization_id)
+          .single();
+
+        // Get requester profile  
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email')
+          .eq('user_id', request.requested_by)
+          .single();
+
+        return {
+          ...request,
+          organization: orgData,
+          requester_profile: profileData
+        };
+      }));
+      
+      console.log('Profile edit requests loaded:', enrichedData?.length || 0);
+      setRequests(enrichedData || []);
     } catch (error: any) {
       console.error('Error fetching profile edit requests:', error);
       toast({
