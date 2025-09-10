@@ -150,6 +150,7 @@ const MasterDashboard = () => {
   // Messages state
   const [passwordResetMessage, setPasswordResetMessage] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [profitUpdateMessage, setProfitUpdateMessage] = useState('');
   const [welcomeCcRecipients, setWelcomeCcRecipients] = useState<string[]>([]);
   const [newCcEmail, setNewCcEmail] = useState('');
   const [defaultRecipients, setDefaultRecipients] = useState<{[email: string]: boolean}>({
@@ -158,6 +159,7 @@ const MasterDashboard = () => {
   });
   const [savingMessage, setSavingMessage] = useState(false);
   const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
+  const [savingProfitUpdateMessage, setSavingProfitUpdateMessage] = useState(false);
   const [savingCcRecipients, setSavingCcRecipients] = useState(false);
 
   // Stats for the overview section
@@ -297,6 +299,12 @@ const MasterDashboard = () => {
     setSavingWelcomeMessage(false);
   };
 
+  const handleSaveProfitUpdateMessage = async () => {
+    setSavingProfitUpdateMessage(true);
+    await updateSetting('profit_update_message_template', profitUpdateMessage);
+    setSavingProfitUpdateMessage(false);
+  };
+
   const handleSaveCcRecipients = async () => {
     setSavingCcRecipients(true);
     await updateSetting('welcome_message_cc_recipients', JSON.stringify(welcomeCcRecipients));
@@ -323,7 +331,7 @@ const MasterDashboard = () => {
     setWelcomeCcRecipients(welcomeCcRecipients.filter(recipient => recipient !== email));
   };
 
-  // Initialize password reset message, welcome message, and CC recipients when settings load
+  // Initialize password reset message, welcome message, profit update message, and CC recipients when settings load
   useEffect(() => {
     const passwordSetting = settings.find(s => s.setting_key === 'password_reset_message');
     if (passwordSetting?.setting_value) {
@@ -368,6 +376,39 @@ const MasterDashboard = () => {
         </div>
       `;
       setWelcomeMessage(defaultTemplate);
+    }
+
+    // Initialize profit update message
+    const profitUpdateSetting = settings.find(s => s.setting_key === 'profit_update_message_template');
+    if (profitUpdateSetting?.setting_value) {
+      setProfitUpdateMessage(profitUpdateSetting.setting_value);
+    } else {
+      // Set default profit update message template
+      const defaultProfitUpdateTemplate = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <center>
+            <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:150px; height:auto;">
+          </center>
+          
+          <p>Dear {{primary_contact_name}},</p>
+          
+          <p>We hope this message finds you well. We wanted to update you on important profit-sharing information for {{organization_name}}.</p>
+          
+          <p>As a valued member of the HESS Consortium, we are pleased to share details about your organization's participation in our collaborative purchasing and profit-sharing program.</p>
+          
+          <p>For questions regarding this update or to discuss how to maximize your organization's benefits, please don't hesitate to contact us.</p>
+          
+          <p>Thank you for your continued membership and partnership with the HESS Consortium.</p>
+          
+          <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/04/KeithFowlkesshortsig.png" alt="Keith Fowlkes Signature" style="margin: 20px 0;">
+          
+          <p>Keith Fowlkes, M.A., M.B.A.<br>
+          Executive Director and Founder<br>
+          The HESS Consortium<br>
+          keith.fowlkes@hessconsortium.org | 859.516.3571</p>
+        </div>
+      `;
+      setProfitUpdateMessage(defaultProfitUpdateTemplate);
     }
 
     // Load CC recipients
@@ -1416,11 +1457,12 @@ const MasterDashboard = () => {
                 </div>
 
                 <Tabs defaultValue="system-messages" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="system-messages">System Messages</TabsTrigger>
                     <TabsTrigger value="password-reset">Password Reset</TabsTrigger>
-                    <TabsTrigger value="cc-recipients">CC Recipients</TabsTrigger>
                     <TabsTrigger value="welcome-template">Welcome Template</TabsTrigger>
+                    <TabsTrigger value="profit-update">Profit Update</TabsTrigger>
+                    <TabsTrigger value="cc-recipients">CC Recipients</TabsTrigger>
                   </TabsList>
 
                   {/* System Messages Subtab */}
@@ -1591,6 +1633,143 @@ const MasterDashboard = () => {
                           disabled={savingWelcomeMessage}
                         >
                           {savingWelcomeMessage ? "Saving..." : "Save Welcome Message"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Profit Update Messages Subtab */}
+                  <TabsContent value="profit-update" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Profit Update Message for Member Organizations</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Customize the profit update email sent to member organizations. Use variables like {'{{'}`primary_contact_name`{'}}'} and {'{{'}`organization_name`{'}}'} for personalization.
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <Label htmlFor="profit-update-message">Profit Update Message Template</Label>
+                          <div className="mt-2">
+                            <ReactQuill
+                              theme="snow"
+                              value={profitUpdateMessage}
+                              onChange={setProfitUpdateMessage}
+                              modules={{
+                                toolbar: [
+                                  [{ 'header': [1, 2, 3, false] }],
+                                  ['bold', 'italic', 'underline', 'strike'],
+                                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                  [{ 'color': [] }, { 'background': [] }],
+                                  ['link', 'image'],
+                                  ['clean']
+                                ],
+                              }}
+                              formats={[
+                                'header', 'bold', 'italic', 'underline', 'strike',
+                                'list', 'bullet', 'color', 'background',
+                                'link', 'image'
+                              ]}
+                              style={{ minHeight: '300px' }}
+                            />
+                          </div>
+                          <div className="mt-4 p-3 bg-muted rounded-lg">
+                            <p className="text-sm font-medium mb-2">Available Variables:</p>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <code>{'{{'}`primary_contact_name`{'}}'}</code>
+                              <code>{'{{'}`organization_name`{'}}'}</code>
+                              <code>{'{{'}`secondary_contact_email`{'}}'}</code>
+                              <code>{'{{'}`student_fte`{'}}'}</code>
+                              <code>{'{{'}`address`{'}}'}</code>
+                              <code>{'{{'}`city`{'}}'}, {'{{'}`state`{'}}'} {'{{'}`zip_code`{'}}'}</code>
+                            </div>
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={handleSaveProfitUpdateMessage}
+                          disabled={savingProfitUpdateMessage}
+                        >
+                          {savingProfitUpdateMessage ? "Saving..." : "Save Profit Update Message"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* CC Recipients Subtab */}
+                  <TabsContent value="cc-recipients" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Welcome Message CC Recipients</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Configure recipients who will be CCed on welcome messages. Enable/disable default recipients and add additional ones.
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <Label>Default Recipients</Label>
+                          <p className="text-xs text-muted-foreground mb-2">Configure which default recipients should receive welcome messages</p>
+                          <div className="mt-2 space-y-2">
+                            {Object.entries(defaultRecipients).map(([email, enabled]) => (
+                              <div key={email} className="flex items-center justify-between p-2 border rounded-lg">
+                                <span className="text-sm">{email}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteDefaultRecipient(email)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label>Additional Recipients</Label>
+                          <div className="mt-2 space-y-2">
+                            {welcomeCcRecipients.map((email, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
+                                <span className="text-sm">{email}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveCcRecipient(email)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            ))}
+                            
+                            <div className="flex gap-2">
+                              <Input
+                                type="email"
+                                placeholder="Enter email address"
+                                value={newCcEmail}
+                                onChange={(e) => setNewCcEmail(e.target.value)}
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleAddCcRecipient();
+                                  }
+                                }}
+                              />
+                              <Button
+                                onClick={handleAddCcRecipient}
+                                disabled={!newCcEmail.trim() || welcomeCcRecipients.includes(newCcEmail.trim())}
+                              >
+                                Add
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Button 
+                          onClick={handleSaveCcRecipients}
+                          disabled={savingCcRecipients}
+                        >
+                          {savingCcRecipients ? "Saving..." : "Save CC Recipients"}
                         </Button>
                       </CardContent>
                     </Card>
