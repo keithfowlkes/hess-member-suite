@@ -136,10 +136,10 @@ export function USMap() {
   };
 
   const getMarkerSize = (count: number) => {
-    if (count === 1) return 8;
-    if (count <= 3) return 12;
-    if (count <= 5) return 16;
-    return 20;
+    if (count === 1) return 12;
+    if (count <= 3) return 16;
+    if (count <= 5) return 20;
+    return 24;
   };
 
   const getMarkerColor = (count: number) => {
@@ -149,10 +149,23 @@ export function USMap() {
     return '#ef4444'; // red-500
   };
 
-  // Convert lat/lng to SVG coordinates (simplified projection)
+  // Convert lat/lng to SVG coordinates (proper US projection)
   const latLngToSVG = (lat: number, lng: number) => {
-    const x = (lng + 180) * (800 / 360);
-    const y = (90 - lat) * (500 / 180);
+    // US bounds: roughly -125° to -65° longitude, 25° to 50° latitude
+    const minLng = -125;
+    const maxLng = -65;
+    const minLat = 25;
+    const maxLat = 50;
+    
+    // Add padding to the SVG space
+    const padding = 50;
+    const mapWidth = 900 - (padding * 2);
+    const mapHeight = 500 - (padding * 2);
+    
+    // Project coordinates to SVG space
+    const x = padding + ((lng - minLng) / (maxLng - minLng)) * mapWidth;
+    const y = padding + ((maxLat - lat) / (maxLat - minLat)) * mapHeight;
+    
     return { x, y };
   };
 
@@ -249,16 +262,16 @@ export function USMap() {
                         <circle
                           cx={svgCoords.x}
                           cy={svgCoords.y}
-                          r={getMarkerSize(data.count) * 1.5}
+                          r={getMarkerSize(data.count)}
                           fill={getMarkerColor(data.count)}
                           stroke="white"
-                          strokeWidth="3"
+                          strokeWidth="2"
                           className="cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => setSelectedState(selectedState === state ? null : state)}
                         />
                         <text
                           x={svgCoords.x}
-                          y={svgCoords.y + 5}
+                          y={svgCoords.y + 4}
                           textAnchor="middle"
                           className="text-sm font-bold fill-white pointer-events-none"
                         >
@@ -266,7 +279,7 @@ export function USMap() {
                         </text>
                         <text
                           x={svgCoords.x}
-                          y={svgCoords.y - getMarkerSize(data.count) * 1.5 - 12}
+                          y={svgCoords.y - getMarkerSize(data.count) - 8}
                           textAnchor="middle"
                           className="text-sm font-medium fill-foreground pointer-events-none"
                         >
