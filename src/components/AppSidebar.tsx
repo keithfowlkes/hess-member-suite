@@ -57,7 +57,7 @@ export function AppSidebar() {
     { title: 'Dashboard', url: '/', icon: Home },
     { title: 'HESS Member Information', url: '/research-dashboard', icon: Search },
     { title: 'Member Analytics', url: '/member-analytics', icon: BarChart3 },
-    { title: 'Member Map', url: '/public/map', icon: Map },
+    { title: 'Member Map', url: '/public-map', icon: Map },
     { title: 'My Invoices', url: '/invoices', icon: FileText },
     { title: 'Organization Profile', url: '/profile', icon: User },
   ];

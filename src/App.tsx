@@ -47,6 +47,7 @@ const App = () => (
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
             <Route path="/public/directory" element={<PublicDirectory />} />
             <Route path="/public/map" element={<PublicMap />} />
+            <Route path="/public-map" element={<PublicMap />} />
             <Route path="/registration-confirmation" element={<RegistrationConfirmation />} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
