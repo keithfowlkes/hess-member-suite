@@ -165,15 +165,24 @@ export function USMap() {
     if (!isEditMode || !isViewingAsAdmin) return;
     
     e.preventDefault();
-    const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+    const svgElement = e.currentTarget as SVGSVGElement;
+    const rect = svgElement.getBoundingClientRect();
     const coords = editableCoordinates[state];
+    
+    // Calculate scaling factors for SVG coordinate conversion
+    const scaleX = 900 / rect.width;
+    const scaleY = 500 / rect.height;
+    
+    // Convert mouse position to SVG coordinates
+    const mouseX = (e.clientX - rect.left) * scaleX;
+    const mouseY = (e.clientY - rect.top) * scaleY;
     
     setDragState({
       isDragging: true,
       state,
       offset: {
-        x: e.clientX - rect.left - coords.x,
-        y: e.clientY - rect.top - coords.y
+        x: mouseX - coords.x,
+        y: mouseY - coords.y
       }
     });
   };
@@ -182,13 +191,27 @@ export function USMap() {
     if (!dragState.isDragging || !dragState.state || !isEditMode) return;
     
     e.preventDefault();
-    const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-    const newX = e.clientX - rect.left - dragState.offset.x;
-    const newY = e.clientY - rect.top - dragState.offset.y;
+    const svgElement = e.currentTarget as SVGSVGElement;
+    const rect = svgElement.getBoundingClientRect();
+    
+    // Calculate scaling factors for SVG coordinate conversion
+    const scaleX = 900 / rect.width;
+    const scaleY = 500 / rect.height;
+    
+    // Convert mouse position to SVG coordinates
+    const mouseX = (e.clientX - rect.left) * scaleX;
+    const mouseY = (e.clientY - rect.top) * scaleY;
+    
+    // Calculate new position accounting for drag offset
+    const newX = mouseX - dragState.offset.x;
+    const newY = mouseY - dragState.offset.y;
     
     setEditableCoordinates(prev => ({
       ...prev,
-      [dragState.state!]: { x: Math.max(0, Math.min(900, newX)), y: Math.max(0, Math.min(500, newY)) }
+      [dragState.state!]: { 
+        x: Math.max(0, Math.min(900, newX)), 
+        y: Math.max(0, Math.min(500, newY)) 
+      }
     }));
   };
 
