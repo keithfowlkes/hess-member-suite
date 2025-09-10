@@ -234,9 +234,9 @@ export function USMap() {
                   {/* White background to remove checkerboard pattern */}
                   <rect x="0" y="0" width="900" height="500" fill="white" />
                   
-                  {/* Use the accurate US map as background */}
+                  {/* Use the new blue US map as background */}
                   <image 
-                    href="/lovable-uploads/b22afca1-e186-4515-b32e-334884c72aa4.png"
+                    href="/lovable-uploads/51a715af-5bba-45b3-91d7-cc25cff59cea.png"
                     x="0" 
                     y="0" 
                     width="900" 
