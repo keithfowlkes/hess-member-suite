@@ -230,7 +230,7 @@ export function USMap() {
               <div className="relative w-full">
                 <svg 
                   viewBox="0 0 900 500" 
-                  className="w-full h-[500px] border border-border rounded-lg bg-muted/30"
+                  className="w-full h-[600px] border border-border rounded-lg bg-muted/30"
                   preserveAspectRatio="xMidYMid meet"
                 >
                   {/* US Map outline - simplified */}
@@ -241,7 +241,7 @@ export function USMap() {
                     const coords = stateCoordinates[state];
                     if (!coords) return null;
                     
-                    // Convert coordinates to SVG space
+                    // Convert coordinates to SVG space (improved scaling)
                     const svgCoords = latLngToSVG(coords.y, -coords.x);
                     
                     return (
@@ -249,26 +249,26 @@ export function USMap() {
                         <circle
                           cx={svgCoords.x}
                           cy={svgCoords.y}
-                          r={getMarkerSize(data.count)}
+                          r={getMarkerSize(data.count) * 1.5}
                           fill={getMarkerColor(data.count)}
                           stroke="white"
-                          strokeWidth="2"
+                          strokeWidth="3"
                           className="cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => setSelectedState(selectedState === state ? null : state)}
                         />
                         <text
                           x={svgCoords.x}
-                          y={svgCoords.y + 4}
+                          y={svgCoords.y + 5}
                           textAnchor="middle"
-                          className="text-xs font-bold fill-white pointer-events-none"
+                          className="text-sm font-bold fill-white pointer-events-none"
                         >
                           {data.count}
                         </text>
                         <text
                           x={svgCoords.x}
-                          y={svgCoords.y - getMarkerSize(data.count) - 8}
+                          y={svgCoords.y - getMarkerSize(data.count) * 1.5 - 12}
                           textAnchor="middle"
-                          className="text-xs font-medium fill-foreground pointer-events-none"
+                          className="text-sm font-medium fill-foreground pointer-events-none"
                         >
                           {state}
                         </text>
@@ -276,29 +276,6 @@ export function USMap() {
                     );
                   })}
                 </svg>
-                
-                {/* Legend */}
-                <div className="absolute bottom-4 left-4 bg-background/95 p-3 rounded-lg border border-border shadow-lg">
-                  <h4 className="text-sm font-medium mb-2">Organizations per State</h4>
-                  <div className="space-y-1 text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span>1 organization</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                      <span>2-3 organizations</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-amber-500"></div>
-                      <span>4-5 organizations</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-red-500"></div>
-                      <span>6+ organizations</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
