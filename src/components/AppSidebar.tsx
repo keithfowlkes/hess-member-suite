@@ -104,11 +104,12 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <NavLink 
-                        to={item.url} 
-                        end 
-                        className={({ isActive }) => getNavCls({ isActive })}
-                      >
+                       <NavLink 
+                         to={item.url} 
+                         end 
+                         className={({ isActive }) => getNavCls({ isActive })}
+                         onClick={() => console.log('Navigating to:', item.url)}
+                       >
                         <Icon className="h-4 w-4" />
                         {!isCollapsed && (
                           <div className="flex items-center justify-between w-full">
