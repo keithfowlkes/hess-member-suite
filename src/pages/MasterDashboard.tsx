@@ -1461,7 +1461,7 @@ const MasterDashboard = () => {
                     <TabsTrigger value="system-messages">System Messages</TabsTrigger>
                     <TabsTrigger value="password-reset">Password Reset</TabsTrigger>
                     <TabsTrigger value="welcome-template">Welcome Template</TabsTrigger>
-                    <TabsTrigger value="profit-update">Profit Update</TabsTrigger>
+                    <TabsTrigger value="profit-update">Profile Update</TabsTrigger>
                     <TabsTrigger value="cc-recipients">CC Recipients</TabsTrigger>
                   </TabsList>
 
