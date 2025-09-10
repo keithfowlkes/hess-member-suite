@@ -75,7 +75,17 @@ export default function Auth() {
   
   // Get reCAPTCHA settings from database - wait for loading to complete
   const recaptchaSiteKey = isLoadingRecaptcha ? null : recaptchaSetting?.setting_value;
+  // Default to enabled if setting is not found or still loading
   const recaptchaEnabled = isLoadingRecaptchaEnabled ? true : (recaptchaEnabledSetting?.setting_value !== 'false');
+  
+  console.log('🔍 reCAPTCHA Debug:', {
+    isLoadingRecaptcha,
+    isLoadingRecaptchaEnabled,
+    recaptchaSiteKey: recaptchaSiteKey ? 'Present' : 'Missing',
+    recaptchaEnabled,
+    recaptchaSetting: recaptchaSetting?.setting_value,
+    recaptchaEnabledSetting: recaptchaEnabledSetting?.setting_value
+  });
 
   // System field select component
   const SystemFieldSelect = ({ 
@@ -338,9 +348,7 @@ export default function Auth() {
       selectedOrganizationId
     });
     
-    // Temporarily disable reCAPTCHA validation for debugging
-    // TODO: Re-enable after fixing reCAPTCHA issues
-    /*
+    
     if (recaptchaEnabled && !signUpCaptcha) {
       console.warn('reCAPTCHA validation failed or incomplete');
       toast({
@@ -350,7 +358,6 @@ export default function Auth() {
       });
       return;
     }
-    */
     
     console.log('✅ REGISTRATION DEBUG: Validation passed, setting submitting state');
     setIsSubmitting(true);
