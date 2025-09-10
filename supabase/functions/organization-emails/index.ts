@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: 'invitation' | 'approval' | 'rejection' | 'transfer' | 'welcome' | 'member_approval' | 'overdue_reminder' | 'welcome_approved';
+  type: 'invitation' | 'approval' | 'rejection' | 'transfer' | 'welcome' | 'member_approval' | 'overdue_reminder' | 'welcome_approved' | 'profile_update_approved';
   to: string;
   organizationName: string;
   token?: string;
@@ -380,15 +380,99 @@ const handler = async (req: Request): Promise<Response> => {
         }
         break;
 
+      case 'profile_update_approved':
+        subject = `Profile Update Approved - ${organizationName}`;
+        
+        try {
+          // Get the profile update message template from system settings
+          console.log('Fetching profile update message template from system settings...');
+          const { data: templateSetting, error: templateError } = await supabase
+            .from('system_settings')
+            .select('setting_value')
+            .eq('setting_key', 'profile_update_message_template')
+            .single();
+
+          if (templateError && templateError.code !== 'PGRST116') {
+            console.error('Error fetching profile update template setting:', templateError);
+            throw new Error(`Failed to fetch profile update template: ${templateError.message}`);
+          }
+
+          let profileUpdateTemplate = '';
+          if (templateSetting?.setting_value) {
+            profileUpdateTemplate = templateSetting.setting_value;
+            console.log('Using custom profile update template');
+          } else {
+            console.log('Using default profile update template');
+            // Fallback to default template if none exists
+            profileUpdateTemplate = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <center>
+                  <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+                </center>
+                
+                <p>Dear {{primary_contact_name}},</p>
+                
+                <p>Your profile update request for {{organization_name}} has been approved by our administration team.</p>
+                
+                <p>The changes you requested have been applied to your organization's profile and are now active in our system.</p>
+                
+                <p>You can view your updated profile by logging into the HESS Consortium member portal.</p>
+                
+                <p>If you have any questions about your profile or membership, please don't hesitate to contact us.</p>
+                
+                <p>Best regards,<br>
+                Keith Fowlkes, M.A., M.B.A.<br>
+                Executive Director and Founder<br>
+                The HESS Consortium<br>
+                keith.fowlkes@hessconsortium.org | 859.516.3571</p>
+              </div>
+            `;
+          }
+
+          // Replace template variables with actual values
+          console.log('Replacing profile update template variables...');
+          const primaryContactName = organizationData?.primary_contact_name || 'Member';
+          
+          html = profileUpdateTemplate
+            .replace(/{{primary_contact_name}}/g, primaryContactName)
+            .replace(/{{organization_name}}/g, organizationName)
+            .replace(/{{secondary_contact_email}}/g, organizationData?.secondary_contact_email || '')
+            .replace(/{{student_fte}}/g, organizationData?.student_fte?.toString() || '')
+            .replace(/{{address}}/g, organizationData?.address_line_1 || '')
+            .replace(/{{city}}/g, organizationData?.city || '')
+            .replace(/{{state}}/g, organizationData?.state || '')
+            .replace(/{{zip_code}}/g, organizationData?.zip_code || '')
+            .replace(/{{phone}}/g, organizationData?.phone || '')
+            .replace(/{{email}}/g, organizationData?.email || '')
+            .replace(/{{website}}/g, organizationData?.website || '');
+
+          console.log('Profile update email HTML prepared successfully');
+          
+        } catch (templateError) {
+          console.error('Error in profile_update_approved template processing:', templateError);
+          // Fallback to a simple template
+          html = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <center>
+                <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+              </center>
+              <p>Dear ${organizationData?.primary_contact_name || 'Member'},</p>
+              <p>Your profile update request for ${organizationName} has been approved and the changes have been applied.</p>
+              <p>Best regards,<br>Keith Fowlkes<br>Executive Director, HESS Consortium</p>
+            </div>
+          `;
+        }
+        break;
+
       default:
         throw new Error(`Unknown email type: ${type}`);
     }
 
-    // For welcome_approved emails, get CC recipients from settings and add default ones
+    // For welcome_approved and profile_update_approved emails, get CC recipients from settings and add default ones
     let emailTo = [to];
     let cc: string[] = [];
     
-    if (type === 'welcome_approved') {
+    if (type === 'welcome_approved' || type === 'profile_update_approved') {
       try {
         console.log('Processing CC recipients for welcome_approved email...');
         // Get CC recipients from system settings

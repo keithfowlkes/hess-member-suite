@@ -236,6 +236,72 @@ export function useApproveOrganizationProfileEditRequest() {
 
       if (approvalError) throw approvalError;
 
+      // Send profile update approval email
+      try {
+        console.log('Sending profile update approval email...');
+        
+        // Get organization and profile data for the email
+        const { data: orgData, error: orgError } = await supabase
+          .from('organizations')
+          .select('*, profiles!organizations_contact_person_id_fkey(*)')
+          .eq('id', request.organization_id)
+          .single();
+
+        if (orgError) {
+          console.error('Error fetching organization data for email:', orgError);
+        } else if (orgData) {
+          const profile = orgData.profiles;
+          const organizationData = {
+            primary_contact_name: `${profile.first_name} ${profile.last_name}`,
+            primary_contact_title: profile.primary_contact_title || orgData.primary_contact_title || '',
+            secondary_first_name: profile.secondary_first_name || orgData.secondary_first_name || '',
+            secondary_last_name: profile.secondary_last_name || orgData.secondary_last_name || '',
+            secondary_contact_title: profile.secondary_contact_title || orgData.secondary_contact_title || '',
+            secondary_contact_email: profile.secondary_contact_email || orgData.secondary_contact_email || '',
+            student_fte: profile.student_fte || orgData.student_fte,
+            address_line_1: orgData.address_line_1 || '',
+            city: orgData.city || '',
+            state: orgData.state || '',
+            zip_code: orgData.zip_code || '',
+            phone: orgData.phone || '',
+            email: orgData.email || profile.email,
+            website: orgData.website || '',
+            student_information_system: orgData.student_information_system || '',
+            financial_system: orgData.financial_system || '',
+            financial_aid: orgData.financial_aid || '',
+            hcm_hr: orgData.hcm_hr || '',
+            payroll_system: orgData.payroll_system || '',
+            purchasing_system: orgData.purchasing_system || '',
+            housing_management: orgData.housing_management || '',
+            learning_management: orgData.learning_management || '',
+            admissions_crm: orgData.admissions_crm || '',
+            alumni_advancement_crm: orgData.alumni_advancement_crm || '',
+            primary_office_apple: orgData.primary_office_apple || false,
+            primary_office_asus: orgData.primary_office_asus || false,
+            primary_office_dell: orgData.primary_office_dell || false,
+            primary_office_hp: orgData.primary_office_hp || false,
+            primary_office_microsoft: orgData.primary_office_microsoft || false,
+            primary_office_other: orgData.primary_office_other || false,
+            primary_office_other_details: orgData.primary_office_other_details || '',
+            other_software_comments: orgData.other_software_comments || '',
+          };
+
+          await supabase.functions.invoke('organization-emails', {
+            body: {
+              type: 'profile_update_approved',
+              to: profile.email,
+              organizationName: orgData.name,
+              secondaryEmail: organizationData.secondary_contact_email,
+              organizationData: organizationData
+            }
+          });
+          console.log('Profile update approval email sent successfully');
+        }
+      } catch (emailError) {
+        console.error('Error sending profile update approval email:', emailError);
+        // Don't fail the approval process if email fails
+      }
+
       // Invalidate relevant queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
       queryClient.invalidateQueries({ queryKey: ['members'] });
