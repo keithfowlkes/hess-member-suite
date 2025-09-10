@@ -43,15 +43,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (!mounted) return;
             
             try {
-              const { data } = await supabase
+              // Add timeout to prevent hanging
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+              
+              const { data, error } = await supabase
                 .from('user_roles')
                 .select('role')
                 .eq('user_id', session.user.id)
                 .eq('role', 'admin')
+                .abortSignal(controller.signal)
                 .single();
               
+              clearTimeout(timeoutId);
+              
               if (mounted) {
-                setIsAdmin(!!data);
+                setIsAdmin(!error && !!data);
               }
             } catch (error) {
               console.error('Error checking admin role:', error);
