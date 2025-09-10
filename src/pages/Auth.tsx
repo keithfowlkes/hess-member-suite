@@ -75,8 +75,9 @@ export default function Auth() {
   
   // Get reCAPTCHA settings from database - wait for loading to complete
   const recaptchaSiteKey = isLoadingRecaptcha ? null : recaptchaSetting?.setting_value;
-  // Default to enabled if setting is not found or still loading
-  const recaptchaEnabled = isLoadingRecaptchaEnabled ? true : (recaptchaEnabledSetting?.setting_value !== 'false');
+  // Default to enabled if setting is not found or still loading, but disable on preview domains
+  const isPreviewDomain = window.location.hostname.includes('lovableproject.com');
+  const recaptchaEnabled = isPreviewDomain ? false : (isLoadingRecaptchaEnabled ? true : (recaptchaEnabledSetting?.setting_value !== 'false'));
   
   console.log('🔍 reCAPTCHA Debug:', {
     isLoadingRecaptcha,
