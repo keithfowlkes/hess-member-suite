@@ -290,9 +290,10 @@ export function useMembers() {
   useEffect(() => {
     fetchOrganizations();
 
-    // Set up real-time subscription for organization changes
+    // Set up real-time subscription for organization changes with unique channel name
+    const channelName = `organizations_changes_${Math.random().toString(36).substr(2, 9)}`;
     const subscription = supabase
-      .channel('organizations_changes')
+      .channel(channelName)
       .on('postgres_changes', 
         { 
           event: '*', 
