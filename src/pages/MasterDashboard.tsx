@@ -1642,9 +1642,9 @@ const MasterDashboard = () => {
                   <TabsContent value="profit-update" className="space-y-6">
                     <Card>
                       <CardHeader>
-                        <CardTitle>Profit Update Message for Member Organizations</CardTitle>
+                        <CardTitle>Profile Update Message for Member Organizations</CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          Customize the profit update email sent to member organizations. Use variables like {'{{'}`primary_contact_name`{'}}'} and {'{{'}`organization_name`{'}}'} for personalization.
+                          Customize the profile update email sent to member organizations. Use variables like {'{{'}`primary_contact_name`{'}}'} and {'{{'}`organization_name`{'}}'} for personalization.
                         </p>
                       </CardHeader>
                       <CardContent className="space-y-4">
