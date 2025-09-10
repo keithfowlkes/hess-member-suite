@@ -25,56 +25,56 @@ interface StateData {
 
 // US State coordinates for positioning markers (shifted 2px left, 5px up)
 const stateCoordinates: { [key: string]: { x: number; y: number } } = {
-  'AL': { x: 598, y: 315 },
-  'AK': { x: 118, y: 395 }, // Alaska positioned bottom-left
-  'AZ': { x: 278, y: 275 },
-  'AR': { x: 518, y: 275 },
-  'CA': { x: 158, y: 235 },
-  'CO': { x: 398, y: 235 },
-  'CT': { x: 738, y: 175 },
-  'DE': { x: 718, y: 195 },
-  'FL': { x: 678, y: 375 },
-  'GA': { x: 638, y: 295 },
-  'HI': { x: 238, y: 375 }, // Hawaii positioned in Pacific
-  'ID': { x: 298, y: 155 },
-  'IL': { x: 558, y: 195 },
-  'IN': { x: 578, y: 185 },
-  'IA': { x: 518, y: 175 },
-  'KS': { x: 458, y: 235 },
-  'KY': { x: 598, y: 215 },
-  'LA': { x: 518, y: 335 },
-  'ME': { x: 758, y: 115 },
-  'MD': { x: 718, y: 185 },
-  'MA': { x: 738, y: 155 },
-  'MI': { x: 578, y: 155 },
-  'MN': { x: 498, y: 135 },
-  'MS': { x: 558, y: 315 },
-  'MO': { x: 518, y: 215 },
-  'MT': { x: 358, y: 135 },
-  'NE': { x: 438, y: 195 },
-  'NV': { x: 238, y: 195 },
-  'NH': { x: 738, y: 135 },
-  'NJ': { x: 718, y: 175 },
-  'NM': { x: 358, y: 275 },
-  'NY': { x: 698, y: 155 },
-  'NC': { x: 658, y: 255 },
-  'ND': { x: 438, y: 115 },
-  'OH': { x: 618, y: 175 },
-  'OK': { x: 458, y: 255 },
-  'OR': { x: 198, y: 135 },
-  'PA': { x: 678, y: 175 },
-  'RI': { x: 748, y: 165 },
-  'SC': { x: 658, y: 275 },
-  'SD': { x: 438, y: 155 },
-  'TN': { x: 598, y: 235 },
-  'TX': { x: 438, y: 315 },
-  'UT': { x: 318, y: 215 },
-  'VT': { x: 718, y: 135 },
-  'VA': { x: 678, y: 215 },
-  'WA': { x: 218, y: 95 },
-  'WV': { x: 658, y: 195 },
-  'WI': { x: 538, y: 135 },
-  'WY': { x: 358, y: 175 }
+  'AL': { x: 596, y: 310 },
+  'AK': { x: 116, y: 390 }, // Alaska positioned bottom-left
+  'AZ': { x: 276, y: 270 },
+  'AR': { x: 516, y: 270 },
+  'CA': { x: 156, y: 230 },
+  'CO': { x: 396, y: 230 },
+  'CT': { x: 736, y: 170 },
+  'DE': { x: 716, y: 190 },
+  'FL': { x: 676, y: 370 },
+  'GA': { x: 636, y: 290 },
+  'HI': { x: 236, y: 370 }, // Hawaii positioned in Pacific
+  'ID': { x: 296, y: 150 },
+  'IL': { x: 556, y: 190 },
+  'IN': { x: 576, y: 180 },
+  'IA': { x: 516, y: 170 },
+  'KS': { x: 456, y: 230 },
+  'KY': { x: 596, y: 210 },
+  'LA': { x: 516, y: 330 },
+  'ME': { x: 756, y: 110 },
+  'MD': { x: 716, y: 180 },
+  'MA': { x: 736, y: 150 },
+  'MI': { x: 576, y: 150 },
+  'MN': { x: 496, y: 130 },
+  'MS': { x: 556, y: 310 },
+  'MO': { x: 516, y: 210 },
+  'MT': { x: 356, y: 130 },
+  'NE': { x: 436, y: 190 },
+  'NV': { x: 236, y: 190 },
+  'NH': { x: 736, y: 130 },
+  'NJ': { x: 716, y: 170 },
+  'NM': { x: 356, y: 270 },
+  'NY': { x: 696, y: 150 },
+  'NC': { x: 656, y: 250 },
+  'ND': { x: 436, y: 110 },
+  'OH': { x: 616, y: 170 },
+  'OK': { x: 456, y: 250 },
+  'OR': { x: 196, y: 130 },
+  'PA': { x: 676, y: 170 },
+  'RI': { x: 746, y: 160 },
+  'SC': { x: 656, y: 270 },
+  'SD': { x: 436, y: 150 },
+  'TN': { x: 596, y: 230 },
+  'TX': { x: 436, y: 310 },
+  'UT': { x: 316, y: 210 },
+  'VT': { x: 716, y: 130 },
+  'VA': { x: 676, y: 210 },
+  'WA': { x: 216, y: 90 },
+  'WV': { x: 656, y: 190 },
+  'WI': { x: 536, y: 130 },
+  'WY': { x: 356, y: 170 }
 };
 
 export function USMap() {
@@ -231,6 +231,9 @@ export function USMap() {
                   className="w-full h-[600px] border border-border rounded-lg"
                   preserveAspectRatio="xMidYMid meet"
                 >
+                  {/* White background to remove checkerboard pattern */}
+                  <rect x="0" y="0" width="900" height="500" fill="white" />
+                  
                   {/* Use the accurate US map as background */}
                   <image 
                     href="/lovable-uploads/b22afca1-e186-4515-b32e-334884c72aa4.png"
