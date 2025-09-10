@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Building2, Users, Edit, Save, RotateCcw } from 'lucide-react';
+import { MapPin, Building2, Users, Edit, Save, RotateCcw, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -308,13 +308,20 @@ export function USMap() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button 
                   onClick={handleToggleEditMode}
                   variant={isEditMode ? "destructive" : "default"}
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   {isEditMode ? "Exit Edit Mode" : "Enter Edit Mode"}
+                </Button>
+                <Button 
+                  onClick={() => window.open('/public/map', '_blank')}
+                  variant="outline"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Preview Public Map
                 </Button>
                 {isEditMode && (
                   <>
