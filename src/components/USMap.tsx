@@ -467,18 +467,12 @@ export function USMap() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div className="text-center p-2 bg-primary/5 rounded">
                       <div className="text-lg font-bold text-primary">
                         {stateStats[selectedState].count}
                       </div>
                       <div className="text-xs text-muted-foreground">Organizations</div>
-                    </div>
-                    <div className="text-center p-2 bg-accent/10 rounded">
-                      <div className="text-lg font-bold text-foreground">
-                        {stateStats[selectedState].totalFTE.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Student FTE</div>
                     </div>
                   </div>
 
@@ -489,11 +483,6 @@ export function USMap() {
                         <div className="font-medium">{org.name}</div>
                         {org.city && (
                           <div className="text-muted-foreground text-xs">{org.city}</div>
-                        )}
-                        {(org.profiles?.student_fte || org.student_fte) && (
-                          <div className="text-xs">
-                            FTE: {(org.profiles?.student_fte || org.student_fte || 0).toLocaleString()}
-                          </div>
                         )}
                       </div>
                     ))}
