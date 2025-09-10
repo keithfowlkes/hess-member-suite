@@ -107,9 +107,12 @@ export function usePendingRegistrations() {
           description: "The registration has been approved and user account created successfully.",
         });
 
-        // Refresh the list
-        await fetchPendingRegistrations();
-        return { success: true, organizationId: data.organizationId };
+      // Immediately remove the approved item from the local state for instant UI update
+      setPendingRegistrations(prev => prev.filter(reg => reg.id !== registrationId));
+      
+      // Also refresh the list to ensure consistency
+      setTimeout(() => fetchPendingRegistrations(), 100);
+      return { success: true, organizationId: data.organizationId };
       }
 
       toast({
@@ -117,8 +120,11 @@ export function usePendingRegistrations() {
         description: "The registration has been approved and user account created successfully.",
       });
 
-      // Refresh the list
-      await fetchPendingRegistrations();
+      // Immediately remove the approved item from the local state for instant UI update
+      setPendingRegistrations(prev => prev.filter(reg => reg.id !== registrationId));
+      
+      // Also refresh the list to ensure consistency  
+      setTimeout(() => fetchPendingRegistrations(), 100);
       return true;
     } catch (error: any) {
       console.error('Error approving registration:', error);
@@ -160,8 +166,11 @@ export function usePendingRegistrations() {
         description: "The registration has been rejected.",
       });
 
-      // Refresh the list
-      await fetchPendingRegistrations();
+      // Immediately remove the rejected item from the local state for instant UI update
+      setPendingRegistrations(prev => prev.filter(reg => reg.id !== registrationId));
+      
+      // Also refresh the list to ensure consistency
+      setTimeout(() => fetchPendingRegistrations(), 100);
       return true;
     } catch (error: any) {
       console.error('Error rejecting registration:', error);
@@ -198,6 +207,44 @@ export function usePendingRegistrations() {
             title: "New Registration",
             description: "A new registration is pending approval.",
           });
+        }
+      )
+      .on('postgres_changes', 
+        { event: 'UPDATE', schema: 'public', table: 'pending_registrations' }, 
+        (payload) => {
+          console.log('🔔 PENDING DEBUG: Real-time UPDATE event received:', {
+            eventType: 'UPDATE',
+            old: payload.old,
+            new: payload.new,
+            email: payload.new?.email,
+            organization: payload.new?.organization_name,
+            status: payload.new?.approval_status
+          });
+          // Refresh the list to remove approved/rejected items from pending view
+          fetchPendingRegistrations();
+          
+          // Show notification for status changes
+          if (payload.new?.approval_status === 'approved') {
+            toast({
+              title: "Registration Approved",
+              description: `${payload.new.organization_name} has been approved.`,
+            });
+          } else if (payload.new?.approval_status === 'rejected') {
+            toast({
+              title: "Registration Rejected", 
+              description: `${payload.new.organization_name} has been rejected.`,
+            });
+          }
+        }
+      )
+      .on('postgres_changes', 
+        { event: 'DELETE', schema: 'public', table: 'pending_registrations' }, 
+        (payload) => {
+          console.log('🔔 PENDING DEBUG: Real-time DELETE event received:', {
+            eventType: 'DELETE',
+            payload: payload.old
+          });
+          fetchPendingRegistrations();
         }
       )
       .subscribe((status) => {
