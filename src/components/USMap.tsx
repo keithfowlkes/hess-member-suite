@@ -231,39 +231,105 @@ export function USMap() {
                   className="w-full h-[600px] border border-border rounded-lg bg-white"
                   preserveAspectRatio="xMidYMid meet"
                 >
-                  {/* US Map outline with state borders */}
-                  <g fill="none" stroke="#9CA3AF" strokeWidth="1.5">
-                    {/* Simplified US state outlines */}
-                    {/* Continental US outline */}
-                    <path d="M 200 120 L 750 120 L 750 100 L 780 100 L 780 380 L 720 400 L 680 420 L 600 420 L 500 400 L 400 420 L 300 400 L 250 380 L 200 360 L 180 300 L 160 250 L 160 180 Z" 
-                          fill="#f8f9fa" stroke="#9CA3AF" strokeWidth="2"/>
+                  {/* Accurate US Map outline */}
+                  <g fill="#f8f9fa" stroke="#9CA3AF" strokeWidth="1.5">
+                    {/* Continental United States outline */}
+                    <path d="M 200 180 
+                             L 220 160 
+                             L 250 140 
+                             L 280 130
+                             L 320 125
+                             L 360 120
+                             L 400 115
+                             L 450 110
+                             L 500 105
+                             L 550 110
+                             L 600 120
+                             L 650 130
+                             L 700 140
+                             L 750 150
+                             L 780 170
+                             L 790 190
+                             L 780 210
+                             L 770 230
+                             L 760 250
+                             L 750 270
+                             L 740 290
+                             L 720 310
+                             L 700 330
+                             L 680 350
+                             L 670 370
+                             L 680 390
+                             L 700 400
+                             L 650 410
+                             L 600 400
+                             L 550 390
+                             L 500 380
+                             L 480 360
+                             L 460 340
+                             L 440 360
+                             L 420 380
+                             L 400 390
+                             L 380 380
+                             L 360 370
+                             L 340 360
+                             L 320 350
+                             L 300 340
+                             L 280 330
+                             L 260 320
+                             L 240 310
+                             L 220 290
+                             L 210 270
+                             L 200 250
+                             L 190 230
+                             L 185 210
+                             L 190 190
+                             Z" 
+                          fill="#f8f9fa" 
+                          stroke="#6B7280" 
+                          strokeWidth="2"/>
                     
-                    {/* State boundary lines - major divisions */}
-                    {/* Vertical lines */}
-                    <line x1="240" y1="120" x2="240" y2="380" />
-                    <line x1="320" y1="120" x2="320" y2="380" />
-                    <line x1="400" y1="120" x2="400" y2="360" />
-                    <line x1="480" y1="120" x2="480" y2="360" />
-                    <line x1="560" y1="120" x2="560" y2="360" />
-                    <line x1="640" y1="120" x2="640" y2="320" />
-                    <line x1="700" y1="120" x2="700" y2="280" />
+                    {/* State boundary lines - simplified grid */}
+                    <g stroke="#D1D5DB" strokeWidth="1" opacity="0.7">
+                      {/* Major vertical divisions */}
+                      <line x1="280" y1="130" x2="280" y2="340" />
+                      <line x1="360" y1="120" x2="360" y2="370" />
+                      <line x1="440" y1="115" x2="440" y2="380" />
+                      <line x1="520" y1="110" x2="520" y2="380" />
+                      <line x1="600" y1="120" x2="600" y2="330" />
+                      <line x1="680" y1="140" x2="680" y2="310" />
+                      
+                      {/* Major horizontal divisions */}
+                      <line x1="220" y1="160" x2="750" y2="150" />
+                      <line x1="200" y1="200" x2="770" y2="190" />
+                      <line x1="210" y1="240" x2="760" y2="230" />
+                      <line x1="240" y1="280" x2="740" y2="270" />
+                      <line x1="280" y1="320" x2="700" y2="310" />
+                    </g>
                     
-                    {/* Horizontal lines */}
-                    <line x1="200" y1="160" x2="750" y2="160" />
-                    <line x1="200" y1="200" x2="720" y2="200" />
-                    <line x1="280" y1="240" x2="640" y2="240" />
-                    <line x1="320" y1="280" x2="680" y2="280" />
-                    <line x1="360" y1="320" x2="600" y2="320" />
+                    {/* Alaska */}
+                    <path d="M 70 380 
+                             L 140 380 
+                             L 150 390 
+                             L 145 410 
+                             L 140 430 
+                             L 120 440 
+                             L 100 435 
+                             L 80 430 
+                             L 70 420 
+                             L 65 400 
+                             Z" 
+                          fill="#f8f9fa" 
+                          stroke="#6B7280" 
+                          strokeWidth="2"/>
                     
-                    {/* Alaska outline */}
-                    <rect x="80" y="360" width="80" height="60" fill="#f8f9fa" stroke="#9CA3AF" strokeWidth="2" rx="8"/>
-                    <text x="120" y="385" textAnchor="middle" className="text-xs fill-gray-600">AK</text>
-                    
-                    {/* Hawaii outline */}
-                    <circle cx="220" cy="390" r="8" fill="#f8f9fa" stroke="#9CA3AF" strokeWidth="2"/>
-                    <circle cx="235" cy="395" r="6" fill="#f8f9fa" stroke="#9CA3AF" strokeWidth="2"/>
-                    <circle cx="250" cy="385" r="5" fill="#f8f9fa" stroke="#9CA3AF" strokeWidth="2"/>
-                    <text x="235" y="410" textAnchor="middle" className="text-xs fill-gray-600">HI</text>
+                    {/* Hawaii - chain of islands */}
+                    <g>
+                      <circle cx="220" cy="400" r="6" fill="#f8f9fa" stroke="#6B7280" strokeWidth="1.5"/>
+                      <circle cx="235" cy="405" r="5" fill="#f8f9fa" stroke="#6B7280" strokeWidth="1.5"/>
+                      <circle cx="248" cy="402" r="4" fill="#f8f9fa" stroke="#6B7280" strokeWidth="1.5"/>
+                      <circle cx="258" cy="398" r="3" fill="#f8f9fa" stroke="#6B7280" strokeWidth="1.5"/>
+                    </g>
                   </g>
                   
                   {/* State markers */}
@@ -280,22 +346,22 @@ export function USMap() {
                           fill={getMarkerColor(data.count)}
                           stroke="white"
                           strokeWidth="2"
-                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                          className="cursor-pointer hover:opacity-80 transition-opacity drop-shadow-sm"
                           onClick={() => setSelectedState(selectedState === state ? null : state)}
                         />
                         <text
                           x={coords.x}
-                          y={coords.y + 4}
+                          y={coords.y + 3}
                           textAnchor="middle"
-                          className="text-sm font-bold fill-white pointer-events-none"
+                          className="text-xs font-bold fill-white pointer-events-none"
                         >
                           {data.count}
                         </text>
                         <text
                           x={coords.x}
-                          y={coords.y - getMarkerSize(data.count) - 8}
+                          y={coords.y - getMarkerSize(data.count) - 6}
                           textAnchor="middle"
-                          className="text-sm font-medium fill-gray-700 pointer-events-none"
+                          className="text-xs font-medium fill-gray-700 pointer-events-none"
                         >
                           {state}
                         </text>
