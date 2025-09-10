@@ -4,7 +4,8 @@ import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDire
 import { PublicPageManager } from '@/components/PublicPageManager';
 import { USMap } from '@/components/USMap';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, Map } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Building2, Map, ExternalLink } from 'lucide-react';
 
 export default function PublicViews() {
   return (
@@ -41,7 +42,18 @@ export default function PublicViews() {
 
               <TabsContent value="map" className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-foreground mb-4">Member Location Map</h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-foreground">Member Location Map</h2>
+                    <Button 
+                      onClick={() => window.open('/public/map', '_blank')}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Open Public Map
+                    </Button>
+                  </div>
                   <p className="text-muted-foreground mb-6">
                     Interactive map showing the geographic distribution of HESS member organizations across the United States
                   </p>

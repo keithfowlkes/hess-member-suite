@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { MapPin, Building2, Users, Edit, Save, RotateCcw } from 'lucide-react';
+import { MapPin, Building2, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
 
 interface MemberLocation {
   id: string;
@@ -80,27 +76,18 @@ const stateCoordinates: { [key: string]: { x: number; y: number } } = {
   'WY': { x: 289, y: 157 }
 };
 
-export function USMap() {
+export function PublicUSMap() {
   const [memberLocations, setMemberLocations] = useState<MemberLocation[]>([]);
   const [stateStats, setStateStats] = useState<{ [key: string]: StateData }>({});
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editableCoordinates, setEditableCoordinates] = useState(stateCoordinates);
-  const [dragState, setDragState] = useState<{ isDragging: boolean; state: string | null; offset: { x: number; y: number } }>({
-    isDragging: false,
-    state: null,
-    offset: { x: 0, y: 0 }
-  });
-  
-  const { user, isAdmin, isViewingAsAdmin } = useAuth();
 
   useEffect(() => {
     fetchMemberLocations();
     
     // Set up real-time subscription for organizations table
     const channel = supabase
-      .channel('usmap-organizations')
+      .channel('public-map-organizations')
       .on(
         'postgres_changes',
         {
@@ -181,107 +168,20 @@ export function USMap() {
     return '#ef4444'; // red-500
   };
 
-  const handleMouseDown = (e: React.MouseEvent, state: string) => {
-    if (!isEditMode || !isViewingAsAdmin) return;
-    
-    e.preventDefault();
-    const svgElement = e.currentTarget as SVGSVGElement;
-    const rect = svgElement.getBoundingClientRect();
-    const coords = editableCoordinates[state];
-    
-    // Calculate scaling factors for SVG coordinate conversion
-    const scaleX = 900 / rect.width;
-    const scaleY = 500 / rect.height;
-    
-    // Convert mouse position to SVG coordinates
-    const mouseX = (e.clientX - rect.left) * scaleX;
-    const mouseY = (e.clientY - rect.top) * scaleY;
-    
-    setDragState({
-      isDragging: true,
-      state,
-      offset: {
-        x: mouseX - coords.x,
-        y: mouseY - coords.y
-      }
-    });
-  };
+  // Load saved coordinates from localStorage if available
+  const [displayCoordinates, setDisplayCoordinates] = useState(stateCoordinates);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragState.isDragging || !dragState.state || !isEditMode) return;
-    
-    e.preventDefault();
-    const svgElement = e.currentTarget as SVGSVGElement;
-    const rect = svgElement.getBoundingClientRect();
-    
-    // Calculate scaling factors for SVG coordinate conversion
-    const scaleX = 900 / rect.width;
-    const scaleY = 500 / rect.height;
-    
-    // Convert mouse position to SVG coordinates
-    const mouseX = (e.clientX - rect.left) * scaleX;
-    const mouseY = (e.clientY - rect.top) * scaleY;
-    
-    // Calculate new position accounting for drag offset
-    const newX = mouseX - dragState.offset.x;
-    const newY = mouseY - dragState.offset.y;
-    
-    setEditableCoordinates(prev => ({
-      ...prev,
-      [dragState.state!]: { 
-        x: Math.max(0, Math.min(900, newX)), 
-        y: Math.max(0, Math.min(500, newY)) 
-      }
-    }));
-  };
-
-  const handleMouseUp = () => {
-    if (dragState.isDragging) {
-      setDragState({ isDragging: false, state: null, offset: { x: 0, y: 0 } });
-    }
-  };
-
-  const handleSavePositions = () => {
-    try {
-      localStorage.setItem('usmap-state-coordinates', JSON.stringify(editableCoordinates));
-      toast.success('State marker positions saved successfully!');
-    } catch (error) {
-      toast.error('Failed to save positions');
-    }
-  };
-
-  const handleResetPositions = () => {
-    setEditableCoordinates(stateCoordinates);
-    localStorage.removeItem('usmap-state-coordinates');
-    toast.success('State marker positions reset to default');
-  };
-
-  const handleToggleEditMode = () => {
-    setIsEditMode(!isEditMode);
-    if (!isEditMode) {
-      toast.info('Edit mode enabled - drag markers to reposition them');
-    } else {
-      toast.info('Edit mode disabled');
-    }
-  };
-
-  // Load saved coordinates on mount
   useEffect(() => {
     const savedCoordinates = localStorage.getItem('usmap-state-coordinates');
     if (savedCoordinates) {
       try {
         const parsed = JSON.parse(savedCoordinates);
-        setEditableCoordinates(parsed);
+        setDisplayCoordinates(parsed);
       } catch (error) {
         console.error('Failed to load saved coordinates:', error);
       }
     }
   }, []);
-
-  // No longer need coordinate conversion - using direct SVG coordinates
-  const latLngToSVG = (lat: number, lng: number) => {
-    return { x: lng, y: lat };
-  };
 
   if (loading) {
     return (
@@ -292,53 +192,8 @@ export function USMap() {
   }
 
   return (
-      <div className="space-y-6">
-        {/* Admin Controls */}
-        {isViewingAsAdmin && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Edit className="h-5 w-5" />
-                  Admin Controls
-                </span>
-                <Badge variant={isEditMode ? "destructive" : "secondary"}>
-                  {isEditMode ? "Edit Mode" : "View Mode"}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handleToggleEditMode}
-                  variant={isEditMode ? "destructive" : "default"}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  {isEditMode ? "Exit Edit Mode" : "Enter Edit Mode"}
-                </Button>
-                {isEditMode && (
-                  <>
-                    <Button onClick={handleSavePositions} variant="outline">
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Positions
-                    </Button>
-                    <Button onClick={handleResetPositions} variant="outline">
-                      <RotateCcw className="h-4 w-4 mr-2" />
-                      Reset to Default
-                    </Button>
-                  </>
-                )}
-              </div>
-              {isEditMode && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Drag the state markers to reposition them to match the map underlay.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Statistics */}
+    <div className="space-y-6">
+      {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -395,10 +250,7 @@ export function USMap() {
                 Member Organization Locations
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                {isEditMode && isViewingAsAdmin 
-                  ? "Drag state markers to reposition them" 
-                  : "Click on a state marker to see organizations in that area"
-                }
+                Click on a state marker to see organizations in that area
               </p>
             </CardHeader>
             <CardContent>
@@ -407,14 +259,11 @@ export function USMap() {
                   viewBox="0 0 900 500" 
                   className="w-full h-[600px] border border-border rounded-lg"
                   preserveAspectRatio="xMidYMid meet"
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseUp}
                 >
                   {/* White background to remove checkerboard pattern */}
                   <rect x="0" y="0" width="900" height="500" fill="white" />
                   
-                  {/* Use the new blue US map as background */}
+                  {/* Use the US map as background */}
                   <image 
                     href="/lovable-uploads/e477a207-13fd-4e32-912f-3bfd45d9172e.png"
                     x="0" 
@@ -426,7 +275,7 @@ export function USMap() {
                   
                   {/* State markers */}
                   {Object.entries(stateStats).map(([state, data]) => {
-                    const coords = editableCoordinates[state];
+                    const coords = displayCoordinates[state];
                     if (!coords) return null;
                     
                     return (
@@ -438,13 +287,8 @@ export function USMap() {
                           fill={getMarkerColor(data.count)}
                           stroke="white"
                           strokeWidth="2"
-                          className={`transition-opacity drop-shadow-sm ${
-                            isEditMode && isViewingAsAdmin 
-                              ? 'cursor-move hover:opacity-80' 
-                              : 'cursor-pointer hover:opacity-80'
-                          }`}
-                          onClick={!isEditMode ? () => setSelectedState(selectedState === state ? null : state) : undefined}
-                          onMouseDown={isEditMode && isViewingAsAdmin ? (e) => handleMouseDown(e, state) : undefined}
+                          className="cursor-pointer hover:opacity-80 transition-opacity drop-shadow-sm"
+                          onClick={() => setSelectedState(selectedState === state ? null : state)}
                         />
                         <text
                           x={coords.x}

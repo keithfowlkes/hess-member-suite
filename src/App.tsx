@@ -14,6 +14,7 @@ import Members from "./pages/Members";
 import MembershipFees from "./pages/MembershipFees";
 import Invoices from "./pages/Invoices";
 import PublicDirectory from "./pages/PublicDirectory";
+import PublicMap from "./pages/PublicMap";
 import RegistrationConfirmation from "./pages/RegistrationConfirmation";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/membership-fees" element={<ProtectedRoute><MembershipFees /></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
             <Route path="/public/directory" element={<PublicDirectory />} />
+            <Route path="/public/map" element={<PublicMap />} />
             <Route path="/registration-confirmation" element={<RegistrationConfirmation />} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
