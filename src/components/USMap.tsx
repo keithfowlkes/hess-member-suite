@@ -236,7 +236,7 @@ export function USMap() {
                   
                   {/* Use the new blue US map as background */}
                   <image 
-                    href="/lovable-uploads/51a715af-5bba-45b3-91d7-cc25cff59cea.png"
+                    href="/lovable-uploads/e477a207-13fd-4e32-912f-3bfd45d9172e.png"
                     x="0" 
                     y="0" 
                     width="900" 
