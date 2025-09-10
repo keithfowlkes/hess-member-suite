@@ -23,58 +23,58 @@ interface StateData {
   organizations: MemberLocation[];
 }
 
-// US State coordinates for positioning markers (approximate center points)
+// US State coordinates for positioning markers (updated for accurate positioning)
 const stateCoordinates: { [key: string]: { x: number; y: number } } = {
-  'AL': { x: 86.79, y: 32.77 },
-  'AK': { x: 64.06, y: 64.00 },
-  'AZ': { x: 112.07, y: 34.05 },
-  'AR': { x: 92.19, y: 34.89 },
-  'CA': { x: 119.76, y: 36.77 },
-  'CO': { x: 105.31, y: 39.05 },
-  'CT': { x: 72.72, y: 41.76 },
-  'DE': { x: 75.50, y: 39.16 },
-  'FL': { x: 81.68, y: 27.76 },
-  'GA': { x: 83.44, y: 33.24 },
-  'HI': { x: 157.82, y: 21.30 },
-  'ID': { x: 114.74, y: 44.06 },
-  'IL': { x: 89.39, y: 40.63 },
-  'IN': { x: 86.14, y: 39.79 },
-  'IA': { x: 93.62, y: 42.03 },
-  'KS': { x: 98.48, y: 38.50 },
-  'KY': { x: 84.86, y: 37.83 },
-  'LA': { x: 91.96, y: 31.24 },
-  'ME': { x: 69.76, y: 45.36 },
-  'MD': { x: 76.64, y: 39.05 },
-  'MA': { x: 71.10, y: 42.40 },
-  'MI': { x: 84.54, y: 44.18 },
-  'MN': { x: 94.63, y: 46.39 },
-  'MS': { x: 89.39, y: 32.35 },
-  'MO': { x: 92.60, y: 38.57 },
-  'MT': { x: 110.36, y: 47.05 },
-  'NE': { x: 99.90, y: 41.49 },
-  'NV': { x: 117.22, y: 38.80 },
-  'NH': { x: 71.54, y: 43.68 },
-  'NJ': { x: 74.75, y: 40.22 },
-  'NM': { x: 106.24, y: 34.30 },
-  'NY': { x: 74.75, y: 42.65 },
-  'NC': { x: 79.80, y: 35.77 },
-  'ND': { x: 100.78, y: 47.41 },
-  'OH': { x: 82.99, y: 40.41 },
-  'OK': { x: 97.53, y: 35.58 },
-  'OR': { x: 120.55, y: 43.80 },
-  'PA': { x: 77.19, y: 40.87 },
-  'RI': { x: 71.42, y: 41.82 },
-  'SC': { x: 80.90, y: 33.83 },
-  'SD': { x: 100.34, y: 44.50 },
-  'TN': { x: 86.35, y: 35.86 },
-  'TX': { x: 97.75, y: 31.25 },
-  'UT': { x: 111.89, y: 39.32 },
-  'VT': { x: 72.58, y: 44.26 },
-  'VA': { x: 78.17, y: 37.77 },
-  'WA': { x: 121.49, y: 47.75 },
-  'WV': { x: 80.45, y: 38.60 },
-  'WI': { x: 89.63, y: 44.27 },
-  'WY': { x: 107.30, y: 42.75 }
+  'AL': { x: 600, y: 320 },
+  'AK': { x: 120, y: 400 }, // Alaska positioned bottom-left
+  'AZ': { x: 280, y: 280 },
+  'AR': { x: 520, y: 280 },
+  'CA': { x: 160, y: 240 },
+  'CO': { x: 400, y: 240 },
+  'CT': { x: 740, y: 180 },
+  'DE': { x: 720, y: 200 },
+  'FL': { x: 680, y: 380 },
+  'GA': { x: 640, y: 300 },
+  'HI': { x: 240, y: 380 }, // Hawaii positioned in Pacific
+  'ID': { x: 300, y: 160 },
+  'IL': { x: 560, y: 200 },
+  'IN': { x: 580, y: 190 },
+  'IA': { x: 520, y: 180 },
+  'KS': { x: 460, y: 240 },
+  'KY': { x: 600, y: 220 },
+  'LA': { x: 520, y: 340 },
+  'ME': { x: 760, y: 120 },
+  'MD': { x: 720, y: 190 },
+  'MA': { x: 740, y: 160 },
+  'MI': { x: 580, y: 160 },
+  'MN': { x: 500, y: 140 },
+  'MS': { x: 560, y: 320 },
+  'MO': { x: 520, y: 220 },
+  'MT': { x: 360, y: 140 },
+  'NE': { x: 440, y: 200 },
+  'NV': { x: 240, y: 200 },
+  'NH': { x: 740, y: 140 },
+  'NJ': { x: 720, y: 180 },
+  'NM': { x: 360, y: 280 },
+  'NY': { x: 700, y: 160 },
+  'NC': { x: 660, y: 260 },
+  'ND': { x: 440, y: 120 },
+  'OH': { x: 620, y: 180 },
+  'OK': { x: 460, y: 260 },
+  'OR': { x: 200, y: 140 },
+  'PA': { x: 680, y: 180 },
+  'RI': { x: 750, y: 170 },
+  'SC': { x: 660, y: 280 },
+  'SD': { x: 440, y: 160 },
+  'TN': { x: 600, y: 240 },
+  'TX': { x: 440, y: 320 },
+  'UT': { x: 320, y: 220 },
+  'VT': { x: 720, y: 140 },
+  'VA': { x: 680, y: 220 },
+  'WA': { x: 220, y: 100 },
+  'WV': { x: 660, y: 200 },
+  'WI': { x: 540, y: 140 },
+  'WY': { x: 360, y: 180 }
 };
 
 export function USMap() {
@@ -149,24 +149,9 @@ export function USMap() {
     return '#ef4444'; // red-500
   };
 
-  // Convert lat/lng to SVG coordinates (proper US projection)
+  // No longer need coordinate conversion - using direct SVG coordinates
   const latLngToSVG = (lat: number, lng: number) => {
-    // US bounds: roughly -125° to -65° longitude, 25° to 50° latitude
-    const minLng = -125;
-    const maxLng = -65;
-    const minLat = 25;
-    const maxLat = 50;
-    
-    // Add padding to the SVG space
-    const padding = 50;
-    const mapWidth = 900 - (padding * 2);
-    const mapHeight = 500 - (padding * 2);
-    
-    // Project coordinates to SVG space
-    const x = padding + ((lng - minLng) / (maxLng - minLng)) * mapWidth;
-    const y = padding + ((maxLat - lat) / (maxLat - minLat)) * mapHeight;
-    
-    return { x, y };
+    return { x: lng, y: lat };
   };
 
   if (loading) {
@@ -243,25 +228,54 @@ export function USMap() {
               <div className="relative w-full">
                 <svg 
                   viewBox="0 0 900 500" 
-                  className="w-full h-[600px] border border-border rounded-lg bg-muted/30"
+                  className="w-full h-[600px] border border-border rounded-lg bg-white"
                   preserveAspectRatio="xMidYMid meet"
                 >
-                  {/* US Map outline - simplified */}
-                  <rect x="0" y="0" width="900" height="500" fill="#f8f9fa" stroke="#e5e7eb" />
+                  {/* US Map outline with state borders */}
+                  <g fill="none" stroke="#9CA3AF" strokeWidth="1.5">
+                    {/* Simplified US state outlines */}
+                    {/* Continental US outline */}
+                    <path d="M 200 120 L 750 120 L 750 100 L 780 100 L 780 380 L 720 400 L 680 420 L 600 420 L 500 400 L 400 420 L 300 400 L 250 380 L 200 360 L 180 300 L 160 250 L 160 180 Z" 
+                          fill="#f8f9fa" stroke="#9CA3AF" strokeWidth="2"/>
+                    
+                    {/* State boundary lines - major divisions */}
+                    {/* Vertical lines */}
+                    <line x1="240" y1="120" x2="240" y2="380" />
+                    <line x1="320" y1="120" x2="320" y2="380" />
+                    <line x1="400" y1="120" x2="400" y2="360" />
+                    <line x1="480" y1="120" x2="480" y2="360" />
+                    <line x1="560" y1="120" x2="560" y2="360" />
+                    <line x1="640" y1="120" x2="640" y2="320" />
+                    <line x1="700" y1="120" x2="700" y2="280" />
+                    
+                    {/* Horizontal lines */}
+                    <line x1="200" y1="160" x2="750" y2="160" />
+                    <line x1="200" y1="200" x2="720" y2="200" />
+                    <line x1="280" y1="240" x2="640" y2="240" />
+                    <line x1="320" y1="280" x2="680" y2="280" />
+                    <line x1="360" y1="320" x2="600" y2="320" />
+                    
+                    {/* Alaska outline */}
+                    <rect x="80" y="360" width="80" height="60" fill="#f8f9fa" stroke="#9CA3AF" strokeWidth="2" rx="8"/>
+                    <text x="120" y="385" textAnchor="middle" className="text-xs fill-gray-600">AK</text>
+                    
+                    {/* Hawaii outline */}
+                    <circle cx="220" cy="390" r="8" fill="#f8f9fa" stroke="#9CA3AF" strokeWidth="2"/>
+                    <circle cx="235" cy="395" r="6" fill="#f8f9fa" stroke="#9CA3AF" strokeWidth="2"/>
+                    <circle cx="250" cy="385" r="5" fill="#f8f9fa" stroke="#9CA3AF" strokeWidth="2"/>
+                    <text x="235" y="410" textAnchor="middle" className="text-xs fill-gray-600">HI</text>
+                  </g>
                   
                   {/* State markers */}
                   {Object.entries(stateStats).map(([state, data]) => {
                     const coords = stateCoordinates[state];
                     if (!coords) return null;
                     
-                    // Convert coordinates to SVG space (improved scaling)
-                    const svgCoords = latLngToSVG(coords.y, -coords.x);
-                    
                     return (
                       <g key={state}>
                         <circle
-                          cx={svgCoords.x}
-                          cy={svgCoords.y}
+                          cx={coords.x}
+                          cy={coords.y}
                           r={getMarkerSize(data.count)}
                           fill={getMarkerColor(data.count)}
                           stroke="white"
@@ -270,18 +284,18 @@ export function USMap() {
                           onClick={() => setSelectedState(selectedState === state ? null : state)}
                         />
                         <text
-                          x={svgCoords.x}
-                          y={svgCoords.y + 4}
+                          x={coords.x}
+                          y={coords.y + 4}
                           textAnchor="middle"
                           className="text-sm font-bold fill-white pointer-events-none"
                         >
                           {data.count}
                         </text>
                         <text
-                          x={svgCoords.x}
-                          y={svgCoords.y - getMarkerSize(data.count) - 8}
+                          x={coords.x}
+                          y={coords.y - getMarkerSize(data.count) - 8}
                           textAnchor="middle"
-                          className="text-sm font-medium fill-foreground pointer-events-none"
+                          className="text-sm font-medium fill-gray-700 pointer-events-none"
                         >
                           {state}
                         </text>
