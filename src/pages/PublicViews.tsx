@@ -16,7 +16,7 @@ export default function PublicViews() {
             <div className="border-b border-border pb-4">
               <h1 className="text-3xl font-bold text-foreground">Public Views</h1>
               <p className="text-muted-foreground mt-2">
-                Manage and configure public-facing content and directories
+                Manage and configure public-facing content and directories for HESS Consortium
               </p>
             </div>
             
