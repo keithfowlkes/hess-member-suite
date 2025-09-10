@@ -272,6 +272,38 @@ export function useUnifiedProfile(userId?: string) {
 
   useEffect(() => {
     fetchUnifiedProfile();
+
+    // Set up real-time subscription for organization changes
+    const channelName = `unified_profile_org_changes_${Math.random().toString(36).substr(2, 9)}`;
+    const subscription = supabase
+      .channel(channelName)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'organizations' 
+        }, 
+        () => {
+          console.log('Organizations table changed, refreshing unified profile...');
+          fetchUnifiedProfile();
+        }
+      )
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'profiles' 
+        }, 
+        () => {
+          console.log('Profiles table changed, refreshing unified profile...');
+          fetchUnifiedProfile();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [userId]);
 
   return {
