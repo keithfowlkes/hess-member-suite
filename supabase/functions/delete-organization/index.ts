@@ -215,6 +215,19 @@ serve(async (req) => {
 
     console.log(`Successfully deleted organization ${organization.name} and all associated data`);
 
+    // Refresh the analytics datacube to update organization totals
+    console.log('Refreshing analytics datacube...');
+    try {
+      const { data: refreshData, error: refreshError } = await supabaseAdmin.functions.invoke('refresh-analytics-datacube');
+      if (refreshError) {
+        console.error('Error refreshing datacube:', refreshError);
+      } else {
+        console.log('Analytics datacube refreshed successfully');
+      }
+    } catch (refreshErr) {
+      console.error('Failed to refresh datacube:', refreshErr);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
