@@ -20,6 +20,7 @@ import { useFormFields, FormField } from '@/hooks/useFormFields';
 import { useToast } from '@/hooks/use-toast';
 import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDirectory';
 import { SimpleSystemFieldManager } from '@/components/SimpleSystemFieldManager';
+import { USMap } from '@/components/USMap';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
@@ -419,16 +420,39 @@ export default function Settings() {
                 <div>
                   <h2 className="text-2xl font-semibold">Public Views</h2>
                   <p className="text-muted-foreground mt-2">
-                    Manage and configure public-facing content and directories
+                    Manage and configure public-facing content and directories for HESS Consortium
                   </p>
                 </div>
                 
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-xl font-semibold text-foreground mb-4">Organization Directory</h3>
-                    <PublicOrganizationDirectory />
-                  </div>
-                </div>
+                <Tabs defaultValue="directory" className="space-y-6">
+                  <TabsList className="grid w-full grid-cols-2 max-w-md">
+                    <TabsTrigger value="directory" className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Organization Directory
+                    </TabsTrigger>
+                    <TabsTrigger value="map" className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      U.S. Map
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="directory" className="space-y-6">
+                    <div>
+                      <h3 className="text-xl font-semibold text-foreground mb-4">Organization Directory</h3>
+                      <PublicOrganizationDirectory />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="map" className="space-y-6">
+                    <div>
+                      <h3 className="text-xl font-semibold text-foreground mb-4">Member Location Map</h3>
+                      <p className="text-muted-foreground mb-6">
+                        Interactive map showing the geographic distribution of HESS member organizations across the United States
+                      </p>
+                      <USMap />
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </TabsContent>
 
               <TabsContent value="security" className="space-y-6">
