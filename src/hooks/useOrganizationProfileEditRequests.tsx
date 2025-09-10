@@ -335,6 +335,7 @@ export function useApproveOrganizationProfileEditRequest() {
 export function useRejectOrganizationProfileEditRequest() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const rejectRequest = async (requestId: string, adminNotes: string) => {
     setLoading(true);
@@ -348,6 +349,11 @@ export function useRejectOrganizationProfileEditRequest() {
         .eq('id', requestId);
 
       if (error) throw error;
+
+      // Invalidate relevant queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-profile-edit-requests'] });
 
       toast({
         title: 'Success',

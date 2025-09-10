@@ -110,7 +110,7 @@ const MasterDashboard = () => {
   } = useOrganizationApprovals();
   const { invitations, loading: invitationsLoading } = useOrganizationInvitations();
   const { data: memberInfoUpdateRequests = [], isLoading: memberInfoUpdateLoading, refetch: refetchRequests } = useReassignmentRequests();
-  const { requests: profileEditRequests, loading: profileEditRequestsLoading } = useOrganizationProfileEditRequests();
+  const { requests: profileEditRequests, loading: profileEditRequestsLoading, refetch: refetchProfileEditRequests } = useOrganizationProfileEditRequests();
   const { approveRequest: approveProfileEditRequest } = useApproveOrganizationProfileEditRequest();
   const { rejectRequest: rejectProfileEditRequest } = useRejectOrganizationProfileEditRequest();
   const { pendingRegistrations, loading: pendingRegistrationsLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
@@ -991,8 +991,8 @@ const MasterDashboard = () => {
                                         try {
                                           const success = await approveProfileEditRequest(request.id);
                                           if (success) {
-                                            // The query invalidation in the hook should handle UI refresh
-                                            // No need for window.location.reload()
+                                            // Force immediate refresh of the requests list
+                                            refetchProfileEditRequests();
                                           }
                                         } catch (error) {
                                           console.error('Error approving profile edit request:', error);
@@ -1011,7 +1011,8 @@ const MasterDashboard = () => {
                                         if (reason) {
                                           const success = await rejectProfileEditRequest(request.id, reason);
                                           if (success) {
-                                            window.location.reload();
+                                            // Force immediate refresh of the requests list
+                                            refetchProfileEditRequests();
                                           }
                                         }
                                       }}
