@@ -594,10 +594,10 @@ const handler = async (req: Request): Promise<Response> => {
     let emailResponse: any;
     try {
       if (type === 'analytics_feedback') {
-        // Use the simplest proven payload (mirrors working test-email)
+        // Use proven payload (matches working test-email) with array recipient
         emailResponse = await resend.emails.send({
           from: "HESS Consortium <support@members.hessconsortium.app>",
-          to: to, // single recipient string
+          to: [to],
           subject,
           html,
         });
