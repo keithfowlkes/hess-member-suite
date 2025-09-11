@@ -224,19 +224,50 @@ serve(async (req) => {
     insertPayload.contact_person_id = newContactProfileId ?? null;
     // As new member: membership fields use defaults (pending, etc.)
 
-    const { data: newOrg, error: insertOrgErr } = await supabaseAdmin
-      .from('organizations')
-      .insert(insertPayload)
-      .select('id, name')
-      .maybeSingle();
+    const finalDesiredName: string = (newOrgData?.name ?? existingOrg.name ?? 'Organization');
+    let usedTempName = false;
 
-    if (insertOrgErr) {
+    // Try inserting with the final desired name first
+    let newOrg: { id: string; name: string } | null = null;
+    let insertOrgErr: any = null;
+    {
+      const { data, error } = await supabaseAdmin
+        .from('organizations')
+        .insert(insertPayload)
+        .select('id, name')
+        .maybeSingle();
+      newOrg = data as any;
+      insertOrgErr = error;
+    }
+
+    // Handle unique name conflict by inserting with a temporary unique name, then rename later
+    if (insertOrgErr && (insertOrgErr.code === '23505' || `${insertOrgErr.message}`.toLowerCase().includes('unique') )) {
+      console.warn('[APPROVE-REASSIGNMENT] Name conflict detected. Retrying insert with temporary name');
+      const tempName = `${finalDesiredName}__reassign_${Math.random().toString(36).slice(-6)}`;
+      const tempPayload = { ...insertPayload, name: tempName };
+      const { data: data2, error: err2 } = await supabaseAdmin
+        .from('organizations')
+        .insert(tempPayload)
+        .select('id, name')
+        .maybeSingle();
+      if (err2) {
+        console.error('[APPROVE-REASSIGNMENT] Failed inserting with temporary name', err2);
+        return new Response(
+          JSON.stringify({ error: `Failed to insert new organization: ${err2.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      usedTempName = true;
+      newOrg = data2 as any;
+      console.log('[APPROVE-REASSIGNMENT] Inserted new organization with temporary name', newOrg?.id);
+    } else if (insertOrgErr) {
       console.error('[APPROVE-REASSIGNMENT] Failed inserting new organization', insertOrgErr);
       return new Response(
         JSON.stringify({ error: `Failed to insert new organization: ${insertOrgErr.message}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
 
     console.log('[APPROVE-REASSIGNMENT] Created new organization', newOrg?.name, newOrg?.id);
 
@@ -266,6 +297,20 @@ serve(async (req) => {
         .delete()
         .eq('organization_id', orgId);
       if (invtDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting invitations', invtDelErr2);
+
+      // Delete any custom software entries linked to this org
+      const { error: cseDelErr } = await supabaseAdmin
+        .from('custom_software_entries')
+        .delete()
+        .eq('organization_id', orgId);
+      if (cseDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting custom software entries', cseDelErr);
+
+      // Delete any profile edit requests linked to this org
+      const { error: perDelErr } = await supabaseAdmin
+        .from('organization_profile_edit_requests')
+        .delete()
+        .eq('organization_id', orgId);
+      if (perDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting profile edit requests', perDelErr);
 
       const { error: xferDelErr2 } = await supabaseAdmin
         .from('organization_transfer_requests')
@@ -309,6 +354,20 @@ serve(async (req) => {
       }
     } catch (cleanupErr) {
       console.error('[APPROVE-REASSIGNMENT] Cleanup step error', cleanupErr);
+    }
+
+    // If we inserted with a temporary name, rename to the final desired name now
+    if (usedTempName && newOrg?.id) {
+      const { error: renameErr } = await supabaseAdmin
+        .from('organizations')
+        .update({ name: finalDesiredName })
+        .eq('id', newOrg.id);
+      if (renameErr) {
+        console.error('[APPROVE-REASSIGNMENT] Failed to rename organization to final name', renameErr);
+      } else {
+        console.log('[APPROVE-REASSIGNMENT] Renamed organization to final name');
+        newOrg = { ...(newOrg as any), name: finalDesiredName } as any;
+      }
     }
 
     // 8) Send the "Member Information Update Request approved" email (NOT new member approval)
