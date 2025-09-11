@@ -463,6 +463,8 @@ export default function Auth() {
 
         // Redirect to confirmation page
         navigate('/registration-confirmation?type=reassignment');
+        setIsSubmitting(false);
+        return; // Exit early for reassignment flow
       } catch (error: any) {
         toast({
           title: "Member information update request failed",
@@ -474,6 +476,8 @@ export default function Auth() {
           signUpCaptchaRef.current?.reset();
           setSignUpCaptcha(null);
         }
+        setIsSubmitting(false);
+        return; // Exit early on error
       }
     } else {
       // Normal registration - prepare form data with custom "Other" values
