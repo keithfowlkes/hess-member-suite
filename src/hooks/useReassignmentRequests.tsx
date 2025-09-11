@@ -238,8 +238,15 @@ export const useApproveReassignmentRequest = () => {
       return data;
     },
     onSuccess: () => {
+      // Invalidate all queries that could affect badge counts and listings
       queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-registrations'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-invitations'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-profile-edit-requests'] });
+      
       toast({
         title: "Success",
         description: "Member information update request approved and user account created successfully.",
@@ -272,7 +279,15 @@ export const useRejectReassignmentRequest = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidate all queries that could affect badge counts and listings
       queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-registrations'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-invitations'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-profile-edit-requests'] });
+      
       toast({
         title: "Success",
         description: "Member information update request rejected and removed.",
@@ -302,7 +317,15 @@ export const useDeleteReassignmentRequest = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidate all queries that could affect badge counts and listings
       queryClient.invalidateQueries({ queryKey: ['reassignment-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-registrations'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-invitations'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-profile-edit-requests'] });
+      
       toast({
         title: "Success",
         description: "Member information update request deleted.",
