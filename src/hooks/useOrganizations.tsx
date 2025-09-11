@@ -36,6 +36,7 @@ export const useOrganizations = () => {
         .select('id, name')
         .eq('membership_status', 'active')
         .eq('organization_type', 'member')
+        .not('name', 'ilike', '%Administrator%')
         .order('name');
 
       if (error) throw error;
