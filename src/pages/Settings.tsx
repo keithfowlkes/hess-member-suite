@@ -3,6 +3,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
 import { AdminPasswordManager } from '@/components/AdminPasswordManager';
+import { AdminUsersTab } from '@/components/AdminUsersTab';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -312,11 +313,12 @@ export default function Settings() {
             </div>
 
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="forms">Registration Forms</TabsTrigger>
                 <TabsTrigger value="public">Public Views</TabsTrigger>
                 <TabsTrigger value="security">Security Settings</TabsTrigger>
+                <TabsTrigger value="admin-users">Admin Users</TabsTrigger>
                 <TabsTrigger value="system">System Info</TabsTrigger>
               </TabsList>
 
@@ -602,6 +604,14 @@ export default function Settings() {
                     </Button>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="admin-users" className="space-y-6">
+                <AdminUsersTab 
+                  users={users} 
+                  updateUserRole={updateUserRole} 
+                  loading={loading}
+                />
               </TabsContent>
 
               <TabsContent value="system" className="space-y-6">
