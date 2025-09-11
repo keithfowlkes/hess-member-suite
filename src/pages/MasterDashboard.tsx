@@ -156,8 +156,7 @@ const MasterDashboard = () => {
   const [welcomeCcRecipients, setWelcomeCcRecipients] = useState<string[]>([]);
   const [newCcEmail, setNewCcEmail] = useState('');
   const [defaultRecipients, setDefaultRecipients] = useState<{[email: string]: boolean}>({
-    'keith.fowlkes@hessconsortium.org': true,
-    'gpechan@flagler.edu': true
+    'keith.fowlkes@hessconsortium.org': true
   });
   const [savingMessage, setSavingMessage] = useState(false);
   const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
@@ -463,8 +462,7 @@ const MasterDashboard = () => {
       } catch (error) {
         console.error('Error parsing default recipients:', error);
         setDefaultRecipients({
-          'keith.fowlkes@hessconsortium.org': true,
-          'gpechan@flagler.edu': true
+          'keith.fowlkes@hessconsortium.org': true
         });
       }
     }

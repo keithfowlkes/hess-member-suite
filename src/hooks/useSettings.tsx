@@ -185,8 +185,7 @@ export function useSettings() {
     try {
       const { error } = await supabase
         .from('system_settings')
-        .update({ setting_value: value })
-        .eq('setting_key', settingKey);
+        .upsert({ setting_key: settingKey, setting_value: value }, { onConflict: 'setting_key' });
 
       if (error) throw error;
 

@@ -493,13 +493,15 @@ const handler = async (req: Request): Promise<Response> => {
           .eq('setting_key', 'welcome_message_default_recipients')
           .single();
 
-        let defaultCcRecipients = ['keith.fowlkes@hessconsortium.org', 'gpechan@flagler.edu']; // fallback
+        let defaultCcRecipients = ['keith.fowlkes@hessconsortium.org']; // fallback
         
         if (defaultRecipientsSetting?.setting_value && !defaultRecipientsError) {
           try {
             const defaultRecipientsConfig = JSON.parse(defaultRecipientsSetting.setting_value);
-            // Only include recipients that exist in the configuration (not deleted)
-            defaultCcRecipients = Object.keys(defaultRecipientsConfig);
+            // Include only recipients explicitly enabled (true)
+            defaultCcRecipients = Object.entries(defaultRecipientsConfig)
+              .filter(([_, enabled]) => !!enabled)
+              .map(([email]) => email);
             console.log('Using configured default CC recipients:', defaultCcRecipients);
           } catch (error) {
             console.error('Error parsing default recipients config:', error);
@@ -531,7 +533,7 @@ const handler = async (req: Request): Promise<Response> => {
       } catch (ccProcessingError) {
         console.error('Error processing CC recipients:', ccProcessingError);
         // Use fallback CC recipients
-        cc = ['keith.fowlkes@hessconsortium.org', 'gpechan@flagler.edu'];
+        cc = ['keith.fowlkes@hessconsortium.org'];
       }
     }
     
