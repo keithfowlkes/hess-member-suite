@@ -298,6 +298,29 @@ serve(async (req) => {
         .eq('organization_id', orgId);
       if (invtDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting invitations', invtDelErr2);
 
+      // Remove any lingering pending registrations that match this org or contact
+      try {
+        if (newContactEmail) {
+          const { error: prEmailDelErr } = await supabaseAdmin
+            .from('pending_registrations')
+            .delete()
+            .eq('email', newContactEmail)
+            .eq('approval_status', 'pending');
+          if (prEmailDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting pending registrations by email', prEmailDelErr);
+        }
+        const desiredName = (newOrg?.name || finalDesiredName || newOrgData?.name || '').trim();
+        if (desiredName) {
+          const { error: prOrgDelErr } = await supabaseAdmin
+            .from('pending_registrations')
+            .delete()
+            .eq('organization_name', desiredName)
+            .eq('approval_status', 'pending');
+          if (prOrgDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting pending registrations by org name', prOrgDelErr);
+        }
+      } catch (prCleanupErr) {
+        console.error('[APPROVE-REASSIGNMENT] Error cleaning up pending registrations', prCleanupErr);
+      }
+
       // Delete any custom software entries linked to this org
       const { error: cseDelErr } = await supabaseAdmin
         .from('custom_software_entries')

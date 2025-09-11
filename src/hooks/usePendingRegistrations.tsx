@@ -77,7 +77,30 @@ export function usePendingRegistrations() {
         count: data?.length || 0,
         registrations: data?.map(r => ({ id: r.id, email: r.email, organization: r.organization_name, created_at: r.created_at }))
       });
-      setPendingRegistrations((data || []) as PendingRegistration[]);
+
+      // Filter out registrations for organizations that already exist
+      let registrations = (data || []) as PendingRegistration[];
+      try {
+        const orgNames = Array.from(new Set(registrations.map(r => r.organization_name).filter(Boolean))) as string[];
+        if (orgNames.length > 0) {
+          const { data: existingOrgs, error: orgsErr } = await supabase
+            .from('organizations')
+            .select('name')
+            .in('name', orgNames);
+          if (orgsErr) {
+            console.warn('⚠️ PENDING DEBUG: Could not check existing organizations:', orgsErr);
+          } else {
+            const existingSet = new Set((existingOrgs || []).map((o: any) => o.name));
+            const before = registrations.length;
+            registrations = registrations.filter(r => !existingSet.has(r.organization_name));
+            console.log('✅ PENDING DEBUG: Filtered duplicates present in organizations:', { before, after: registrations.length });
+          }
+        }
+      } catch (filterErr) {
+        console.warn('⚠️ PENDING DEBUG: Error while filtering duplicates against organizations:', filterErr);
+      }
+
+      setPendingRegistrations(registrations);
     } catch (error) {
       console.error('❌ PENDING DEBUG: Unexpected error:', error);
     } finally {
