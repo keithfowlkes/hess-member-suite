@@ -20,10 +20,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
+        auth: { autoRefreshToken: false, persistSession: false }
       }
     )
 
@@ -42,7 +39,74 @@ serve(async (req) => {
       throw new Error('User with this email already exists');
     }
 
-    // Create the auth user
+    // Determine or create a serialized Administrator organization name
+    const { data: existingAdminOrgs, error: fetchAdminOrgsError } = await supabaseAdmin
+      .from('organizations')
+      .select('name')
+      .eq('organization_type', 'system')
+      .ilike('name', 'Administrator%');
+
+    if (fetchAdminOrgsError) {
+      console.error('❌ Error fetching admin orgs:', fetchAdminOrgsError);
+      throw fetchAdminOrgsError;
+    }
+
+    let nextIndex = 1;
+    let hasBase = false;
+    for (const org of (existingAdminOrgs || [])) {
+      if (org.name === 'Administrator') {
+        hasBase = true;
+        nextIndex = Math.max(nextIndex, 2);
+      } else {
+        const match = org.name.match(/^Administrator\s*#(\d+)$/i);
+        if (match) {
+          const n = parseInt(match[1], 10);
+          if (!isNaN(n)) nextIndex = Math.max(nextIndex, n + 1);
+        }
+      }
+    }
+
+    const adminOrgName = hasBase ? `Administrator #${nextIndex}` : 'Administrator';
+    console.log(`🏢 Using administrator organization name: ${adminOrgName}`);
+
+    // Ensure the organization exists
+    let adminOrgId: string | undefined;
+    const { data: existingExact, error: existExactErr } = await supabaseAdmin
+      .from('organizations')
+      .select('id')
+      .eq('name', adminOrgName)
+      .maybeSingle();
+
+    if (existExactErr) {
+      console.error('❌ Error checking exact admin org:', existExactErr);
+      throw existExactErr;
+    }
+
+    if (!existingExact) {
+      const { data: newOrg, error: orgError } = await supabaseAdmin
+        .from('organizations')
+        .insert({
+          name: adminOrgName,
+          email: 'admin@system.local',
+          membership_status: 'active',
+          annual_fee_amount: 0,
+          country: 'United States',
+          organization_type: 'system'
+        })
+        .select('id')
+        .single();
+      if (orgError) {
+        console.error('❌ Error creating admin org:', orgError);
+        throw orgError;
+      }
+      adminOrgId = newOrg.id;
+      console.log(`✅ Administrator organization created with ID: ${adminOrgId}`);
+    } else {
+      adminOrgId = existingExact.id;
+      console.log(`✅ Using existing Administrator organization: ${adminOrgId}`);
+    }
+
+    // Create the auth user (profile and any org insertion will be handled by DB trigger using metadata)
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -50,7 +114,7 @@ serve(async (req) => {
       user_metadata: {
         first_name: firstName,
         last_name: lastName,
-        organization: 'System Administrator',
+        organization: adminOrgName,
         isExternalUser: true
       }
     });
@@ -66,49 +130,6 @@ serve(async (req) => {
 
     console.log(`✅ Auth user created with ID: ${authData.user.id}`);
 
-    // Ensure administrator organization exists
-    let adminOrgId;
-    const { data: adminOrg, error: orgSelectError } = await supabaseAdmin
-      .from('organizations')
-      .select('id')
-      .eq('name', 'System Administrator')
-      .single();
-
-    if (orgSelectError && orgSelectError.code !== 'PGRST116') { // PGRST116 = not found
-      console.error('❌ Error checking admin org:', orgSelectError);
-      throw orgSelectError;
-    }
-
-    if (!adminOrg) {
-      console.log('🏢 Creating System Administrator organization');
-      const { data: newOrg, error: orgError } = await supabaseAdmin
-        .from('organizations')
-        .insert({
-          name: 'System Administrator',
-          email: 'admin@system.local',
-          membership_status: 'active',
-          annual_fee_amount: 0,
-          country: 'United States'
-        })
-        .select('id')
-        .single();
-
-      if (orgError) {
-        console.error('❌ Error creating admin org:', orgError);
-        throw orgError;
-      }
-
-      adminOrgId = newOrg.id;
-      console.log(`✅ System Administrator organization created with ID: ${adminOrgId}`);
-    } else {
-      adminOrgId = adminOrg.id;
-      console.log(`✅ Using existing System Administrator organization: ${adminOrgId}`);
-    }
-
-    // Profile will be created automatically by the handle_new_user trigger
-    // which reads metadata and inserts the profile and organization if needed.
-    // No manual profile insert here to avoid duplicates.
-
     // Set desired role explicitly (replace any default from trigger)
     const { error: deleteRolesError } = await supabaseAdmin
       .from('user_roles')
@@ -120,10 +141,7 @@ serve(async (req) => {
 
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
-      .insert({
-        user_id: authData.user.id,
-        role: role
-      });
+      .insert({ user_id: authData.user.id, role });
 
     if (roleError) {
       console.error('❌ Role assignment error:', roleError);
@@ -139,26 +157,18 @@ serve(async (req) => {
         success: true,
         message: `External user ${firstName} ${lastName} created successfully`,
         userId: authData.user.id,
-        email: email,
-        role: role
+        email,
+        role,
+        organization: adminOrgName
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
 
   } catch (error) {
     console.error('❌ Create external user error:', error);
     return new Response(
-      JSON.stringify({
-        error: error.message,
-        details: 'Failed to create external user'
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      }
+      JSON.stringify({ error: (error as any).message, details: 'Failed to create external user' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     )
   }
 })
