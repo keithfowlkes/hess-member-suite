@@ -18,6 +18,7 @@ import { useInvoices } from '@/hooks/useInvoices';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useResendInvoice } from '@/hooks/useResendInvoice';
+import { useSystemSettings, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
 import { setupDefaultInvoiceTemplate } from '@/utils/setupDefaultInvoiceTemplate';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { InvoiceDialog } from '@/components/InvoiceDialog';
@@ -64,6 +65,8 @@ export default function MembershipFees() {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const resendInvoice = useResendInvoice();
+  const { data: systemSettings } = useSystemSettings();
+  const updateSystemSetting = useUpdateSystemSetting();
   
   // Fee management states
   const [bulkFeeAmount, setBulkFeeAmount] = useState<string>('');
@@ -109,10 +112,26 @@ export default function MembershipFees() {
   const [proratedOrganizations, setProratedOrganizations] = useState<any[]>([]);
   const [updatingProrated, setUpdatingProrated] = useState<Set<string>>(new Set());
 
+  // Fee tier states
+  const [fullMemberFee, setFullMemberFee] = useState<string>('1000');
+  const [affiliateMemberFee, setAffiliateMemberFee] = useState<string>('500');
+  const [organizationFeeTiers, setOrganizationFeeTiers] = useState<Record<string, 'full' | 'affiliate'>>({});
+
   // Setup default invoice template with HESS logo on component mount
   React.useEffect(() => {
     setupDefaultInvoiceTemplate();
   }, []);
+
+  // Load fee tier settings on mount
+  React.useEffect(() => {
+    if (systemSettings) {
+      const fullFee = systemSettings.find(s => s.setting_key === 'full_member_fee')?.setting_value;
+      const affiliateFee = systemSettings.find(s => s.setting_key === 'affiliate_member_fee')?.setting_value;
+      
+      if (fullFee) setFullMemberFee(fullFee);
+      if (affiliateFee) setAffiliateMemberFee(affiliateFee);
+    }
+  }, [systemSettings]);
 
   // Create sample invoice data for preview
   const createSampleInvoice = (organization: any) => {
@@ -269,6 +288,48 @@ export default function MembershipFees() {
   const getProratedAmount = (organizationId: string): number | null => {
     const proratedOrg = proratedOrganizations.find(p => p.id === organizationId);
     return proratedOrg?.proratedAmount || null;
+  };
+
+  // Save fee tier settings
+  const handleSaveFeeTiers = async () => {
+    try {
+      await updateSystemSetting.mutateAsync({
+        settingKey: 'full_member_fee',
+        settingValue: fullMemberFee,
+        description: 'Annual fee amount for full members'
+      });
+      
+      await updateSystemSetting.mutateAsync({
+        settingKey: 'affiliate_member_fee', 
+        settingValue: affiliateMemberFee,
+        description: 'Annual fee amount for affiliate members'
+      });
+
+      toast({
+        title: "Success",
+        description: "Fee tier pricing updated successfully."
+      });
+    } catch (error) {
+      console.error('Error saving fee tiers:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save fee tier pricing.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Set organization fee tier
+  const setOrganizationFeeTier = (organizationId: string, tier: 'full' | 'affiliate') => {
+    setOrganizationFeeTiers(prev => ({
+      ...prev,
+      [organizationId]: tier
+    }));
+  };
+
+  // Get fee amount for tier
+  const getFeeAmountForTier = (tier: 'full' | 'affiliate'): number => {
+    return tier === 'full' ? parseFloat(fullMemberFee) : parseFloat(affiliateMemberFee);
   };
 
   // Calculate fee statistics
@@ -436,7 +497,10 @@ export default function MembershipFees() {
 
           // Check if there's a prorated amount set for this organization
           const proratedAmount = getProratedAmount(organizationId);
-          const invoiceAmount = proratedAmount || organization.annual_fee_amount || 1000;
+          // Check if organization has a specific fee tier set
+          const feeTier = organizationFeeTiers[organizationId];
+          const tierAmount = feeTier ? getFeeAmountForTier(feeTier) : null;
+          const invoiceAmount = proratedAmount || tierAmount || organization.annual_fee_amount || 1000;
 
           await createInvoice({
             organization_id: organizationId,
@@ -1117,6 +1181,58 @@ export default function MembershipFees() {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Annual Fee Tier Pricing Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                  <Card className="lg:col-span-2">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Annual Fee Tier Pricing
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="full-member-fee">Full Member Fee ($)</Label>
+                          <Input
+                            id="full-member-fee"
+                            type="number"
+                            placeholder="e.g., 1000"
+                            value={fullMemberFee}
+                            onChange={(e) => setFullMemberFee(e.target.value)}
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            Annual fee for full consortium members
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="affiliate-member-fee">Affiliate Member Fee ($)</Label>
+                          <Input
+                            id="affiliate-member-fee"
+                            type="number"
+                            placeholder="e.g., 500"
+                            value={affiliateMemberFee}
+                            onChange={(e) => setAffiliateMemberFee(e.target.value)}
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            Annual fee for affiliate members
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end pt-4 border-t">
+                        <Button 
+                          onClick={handleSaveFeeTiers}
+                          disabled={updateSystemSetting.isPending}
+                        >
+                          {updateSystemSetting.isPending ? "Saving..." : "Save Fee Tiers"}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
 
               <TabsContent value="invoices">
@@ -1277,10 +1393,11 @@ export default function MembershipFees() {
                     <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-4">
                       <div className="grid grid-cols-12 gap-2 p-2 font-medium text-sm text-muted-foreground border-b">
                         <div className="col-span-1"></div>
-                        <div className="col-span-4">Organization</div>
+                        <div className="col-span-3">Organization</div>
                         <div className="col-span-2">Status</div>
+                        <div className="col-span-2">Fee Tier</div>
                         <div className="col-span-2">Fee</div>
-                        <div className="col-span-3">Payment Status</div>
+                        <div className="col-span-2">Payment Status</div>
                       </div>
                       {organizations.map((org) => (
                         <div key={org.id} className="grid grid-cols-12 gap-2 items-center p-2 hover:bg-gray-50 rounded">
@@ -1291,7 +1408,7 @@ export default function MembershipFees() {
                               onCheckedChange={(checked) => handleSelectOrganization(org.id, checked as boolean)}
                             />
                           </div>
-                          <div className="col-span-4">
+                          <div className="col-span-3">
                             <Label htmlFor={`org-${org.id}`} className="text-sm cursor-pointer">
                               {org.name}
                             </Label>
@@ -1302,11 +1419,33 @@ export default function MembershipFees() {
                             </Badge>
                           </div>
                           <div className="col-span-2">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-7 text-xs">
+                                  {organizationFeeTiers[org.id] === 'full' ? 'Full Member' : 
+                                   organizationFeeTiers[org.id] === 'affiliate' ? 'Affiliate' : 
+                                   'Select Tier'}
+                                  <ChevronDown className="h-3 w-3 ml-1" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem onClick={() => setOrganizationFeeTier(org.id, 'full')}>
+                                  Full Member (${fullMemberFee})
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setOrganizationFeeTier(org.id, 'affiliate')}>
+                                  Affiliate (${affiliateMemberFee})
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                          <div className="col-span-2">
                             <span className="text-sm">
-                              ${org.annual_fee_amount?.toLocaleString() || '1,000'}
+                              ${organizationFeeTiers[org.id] ? 
+                                getFeeAmountForTier(organizationFeeTiers[org.id]).toLocaleString() : 
+                                (org.annual_fee_amount?.toLocaleString() || '1,000')}
                             </span>
                           </div>
-                          <div className="col-span-3">
+                          <div className="col-span-2">
                             <Badge className={getStatusColor(getPaymentStatus(org.id))}>
                               {getPaymentStatus(org.id)}
                             </Badge>
