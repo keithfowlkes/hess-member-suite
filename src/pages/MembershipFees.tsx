@@ -1379,25 +1379,59 @@ export default function MembershipFees() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="selectAll"
-                        checked={selectedOrganizations.size === organizations.length && organizations.length > 0}
-                        onCheckedChange={handleSelectAll}
-                      />
-                      <Label htmlFor="selectAll" className="text-sm font-medium">
-                        Select All Organizations ({organizations.length})
-                      </Label>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="selectAll"
+                          checked={selectedOrganizations.size === organizations.length && organizations.length > 0}
+                          onCheckedChange={handleSelectAll}
+                        />
+                        <Label htmlFor="selectAll" className="text-sm font-medium">
+                          Select All Organizations ({organizations.length})
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Label className="text-sm font-medium">Set Fee Tier for Selected:</Label>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" disabled={selectedOrganizations.size === 0}>
+                              Set Fee Tier
+                              <ChevronDown className="h-4 w-4 ml-1" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => {
+                              const newTiers = { ...organizationFeeTiers };
+                              selectedOrganizations.forEach(orgId => {
+                                newTiers[orgId] = 'full';
+                              });
+                              setOrganizationFeeTiers(newTiers);
+                            }}>
+                              Full Member (${fullMemberFee})
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const newTiers = { ...organizationFeeTiers };
+                              selectedOrganizations.forEach(orgId => {
+                                newTiers[orgId] = 'affiliate';
+                              });
+                              setOrganizationFeeTiers(newTiers);
+                            }}>
+                              Affiliate (${affiliateMemberFee})
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                     
                     <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-4">
                       <div className="grid grid-cols-12 gap-2 p-2 font-medium text-sm text-muted-foreground border-b">
                         <div className="col-span-1"></div>
-                        <div className="col-span-3">Organization</div>
+                        <div className="col-span-4">Organization</div>
                         <div className="col-span-2">Status</div>
-                        <div className="col-span-2">Fee Tier</div>
-                        <div className="col-span-2">Fee</div>
-                        <div className="col-span-2">Payment Status</div>
+                        <div className="col-span-2">Current Fee</div>
+                        <div className="col-span-2">Assigned Tier</div>
+                        <div className="col-span-1">Payment Status</div>
                       </div>
                       {organizations.map((org) => (
                         <div key={org.id} className="grid grid-cols-12 gap-2 items-center p-2 hover:bg-gray-50 rounded">
@@ -1408,7 +1442,7 @@ export default function MembershipFees() {
                               onCheckedChange={(checked) => handleSelectOrganization(org.id, checked as boolean)}
                             />
                           </div>
-                          <div className="col-span-3">
+                          <div className="col-span-4">
                             <Label htmlFor={`org-${org.id}`} className="text-sm cursor-pointer">
                               {org.name}
                             </Label>
@@ -1419,33 +1453,18 @@ export default function MembershipFees() {
                             </Badge>
                           </div>
                           <div className="col-span-2">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-7 text-xs">
-                                  {organizationFeeTiers[org.id] === 'full' ? 'Full Member' : 
-                                   organizationFeeTiers[org.id] === 'affiliate' ? 'Affiliate' : 
-                                   'Select Tier'}
-                                  <ChevronDown className="h-3 w-3 ml-1" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenuItem onClick={() => setOrganizationFeeTier(org.id, 'full')}>
-                                  Full Member (${fullMemberFee})
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setOrganizationFeeTier(org.id, 'affiliate')}>
-                                  Affiliate (${affiliateMemberFee})
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                          <div className="col-span-2">
                             <span className="text-sm">
-                              ${organizationFeeTiers[org.id] ? 
-                                getFeeAmountForTier(organizationFeeTiers[org.id]).toLocaleString() : 
-                                (org.annual_fee_amount?.toLocaleString() || '1,000')}
+                              ${org.annual_fee_amount?.toLocaleString() || '1,000'}
                             </span>
                           </div>
                           <div className="col-span-2">
+                            <Badge variant={organizationFeeTiers[org.id] ? "default" : "secondary"} className="text-xs">
+                              {organizationFeeTiers[org.id] === 'full' ? 'Full Member' : 
+                               organizationFeeTiers[org.id] === 'affiliate' ? 'Affiliate' : 
+                               'No Tier Set'}
+                            </Badge>
+                          </div>
+                          <div className="col-span-1">
                             <Badge className={getStatusColor(getPaymentStatus(org.id))}>
                               {getPaymentStatus(org.id)}
                             </Badge>
