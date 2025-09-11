@@ -45,8 +45,23 @@ export default function Auth() {
   const [activeTab, setActiveTab] = useState(() => {
     // Check URL parameter for tab selection
     const tab = searchParams.get('tab');
+    console.log('🔍 Tab URL parameter:', tab);
+    console.log('🎯 Setting activeTab to:', tab === 'register' ? 'signup' : 'signin');
     return tab === 'register' ? 'signup' : 'signin';
   });
+  
+  // Also listen for URL changes after mount
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    console.log('🔄 URL changed, tab parameter:', tab);
+    if (tab === 'register') {
+      console.log('🎯 Switching to signup tab');
+      setActiveTab('signup');
+    } else {
+      console.log('🎯 Switching to signin tab');
+      setActiveTab('signin');
+    }
+  }, [searchParams]);
   const [showEmailNotFoundDialog, setShowEmailNotFoundDialog] = useState(false);
   const [emailNotFoundAddress, setEmailNotFoundAddress] = useState('');
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
@@ -606,6 +621,9 @@ export default function Auth() {
       setSignUpForm(prev => ({ ...prev, organization: selectedOrg.name }));
     }
   };
+
+  console.log('🎮 Current activeTab state:', activeTab);
+  console.log('🔍 Current URL searchParams:', Object.fromEntries(searchParams));
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
