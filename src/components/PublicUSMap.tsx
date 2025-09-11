@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin, Building2, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -281,9 +282,27 @@ export function PublicUSMap() {
                 <MapPin className="h-5 w-5" />
                 Member Organization Locations
               </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Click on a state marker to see organizations in that area
-              </p>
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Click on a state marker to see organizations in that area
+                </p>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium">Select State:</label>
+                  <Select value={selectedState || ""} onValueChange={(value) => setSelectedState(value || null)}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Choose..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All States</SelectItem>
+                      {Object.keys(stateStats).sort().map((state) => (
+                        <SelectItem key={state} value={state}>
+                          {state} ({stateStats[state].count})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="relative w-full">
