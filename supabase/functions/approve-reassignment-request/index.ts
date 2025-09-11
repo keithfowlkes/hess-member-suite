@@ -101,74 +101,9 @@ serve(async (req) => {
 
     console.log('[APPROVE-REASSIGNMENT] Existing organization:', existingOrg.name);
 
-    // 3) DELETE existing org and its related information (treat as full replacement)
-    // Do NOT delete this reassignment request row; we will mark it approved after.
+    // Deletion steps moved after creating the new organization and updating the request
+    // to avoid foreign key constraint violations with organization_reassignment_requests.
 
-    // 3a) Delete invoices
-    const { error: invDelErr } = await supabaseAdmin
-      .from('invoices')
-      .delete()
-      .eq('organization_id', orgId);
-    if (invDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting invoices', invDelErr);
-
-    // 3b) Delete invitations
-    const { error: invtDelErr } = await supabaseAdmin
-      .from('organization_invitations')
-      .delete()
-      .eq('organization_id', orgId);
-    if (invtDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting invitations', invtDelErr);
-
-    // 3c) Delete transfer requests
-    const { error: xferDelErr } = await supabaseAdmin
-      .from('organization_transfer_requests')
-      .delete()
-      .eq('organization_id', orgId);
-    if (xferDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting transfer requests', xferDelErr);
-
-    // IMPORTANT: We keep organization_reassignment_requests so this approval record remains.
-
-    // 3d) Delete the organization record itself
-    const { error: delOrgErr } = await supabaseAdmin
-      .from('organizations')
-      .delete()
-      .eq('id', orgId);
-    if (delOrgErr) {
-      console.error('[APPROVE-REASSIGNMENT] Failed deleting organization', delOrgErr);
-      return new Response(
-        JSON.stringify({ error: `Failed deleting organization: ${delOrgErr.message}` }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    console.log('[APPROVE-REASSIGNMENT] Deleted organization');
-
-    // 3e) Delete the previous contact user + roles + profile (if any)
-    const oldUserId: string | null = existingOrg.profiles?.user_id ?? null;
-    if (oldUserId) {
-      // delete roles
-      const { error: roleDelErr } = await supabaseAdmin
-        .from('user_roles')
-        .delete()
-        .eq('user_id', oldUserId);
-      if (roleDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting user roles', roleDelErr);
-
-      // delete auth user
-      const { error: authDelErr } = await supabaseAdmin.auth.admin.deleteUser(oldUserId);
-      if (authDelErr) {
-        if (authDelErr.message?.includes('User not found') || (authDelErr as any).code === 'user_not_found') {
-          console.log('[APPROVE-REASSIGNMENT] Old auth user already deleted');
-        } else {
-          console.error('[APPROVE-REASSIGNMENT] Failed deleting auth user', authDelErr);
-        }
-      }
-
-      // ensure profile is gone (manual cleanup)
-      const { error: profDelErr } = await supabaseAdmin
-        .from('profiles')
-        .delete()
-        .eq('user_id', oldUserId);
-      if (profDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting old profile', profDelErr);
-      else console.log('[APPROVE-REASSIGNMENT] Deleted old profile');
-    }
 
     // 4) CREATE NEW contact (as if new member) when registration data provided
     let newContactProfileId: string | null = null;
@@ -312,11 +247,71 @@ serve(async (req) => {
         status: 'approved',
         approved_by: adminUserId,
         approved_at: new Date().toISOString(),
+        organization_id: newOrg?.id ?? orgId, // re-point request to new org to avoid FK issues
       })
       .eq('id', requestId);
     if (updReqErr) console.error('[APPROVE-REASSIGNMENT] Failed updating request status', updReqErr);
 
-    // 7) Send the "Member Information Update Request approved" email (NOT new member approval)
+    // 7) Cleanup old organization and its related data now that request points to new org
+    try {
+      console.log('[APPROVE-REASSIGNMENT] Starting cleanup of old organization', orgId);
+      const { error: invDelErr2 } = await supabaseAdmin
+        .from('invoices')
+        .delete()
+        .eq('organization_id', orgId);
+      if (invDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting invoices', invDelErr2);
+
+      const { error: invtDelErr2 } = await supabaseAdmin
+        .from('organization_invitations')
+        .delete()
+        .eq('organization_id', orgId);
+      if (invtDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting invitations', invtDelErr2);
+
+      const { error: xferDelErr2 } = await supabaseAdmin
+        .from('organization_transfer_requests')
+        .delete()
+        .eq('organization_id', orgId);
+      if (xferDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting transfer requests', xferDelErr2);
+
+      const { error: delOrgErr2 } = await supabaseAdmin
+        .from('organizations')
+        .delete()
+        .eq('id', orgId);
+      if (delOrgErr2) {
+        console.error('[APPROVE-REASSIGNMENT] Failed deleting old organization', delOrgErr2);
+      } else {
+        console.log('[APPROVE-REASSIGNMENT] Deleted old organization');
+      }
+
+      const oldUserId: string | null = existingOrg.profiles?.user_id ?? null;
+      if (oldUserId) {
+        const { error: roleDelErr2 } = await supabaseAdmin
+          .from('user_roles')
+          .delete()
+          .eq('user_id', oldUserId);
+        if (roleDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting user roles', roleDelErr2);
+
+        const { error: authDelErr2 } = await supabaseAdmin.auth.admin.deleteUser(oldUserId);
+        if (authDelErr2) {
+          if (authDelErr2.message?.includes('User not found') || (authDelErr2 as any).code === 'user_not_found') {
+            console.log('[APPROVE-REASSIGNMENT] Old auth user already deleted');
+          } else {
+            console.error('[APPROVE-REASSIGNMENT] Failed deleting auth user', authDelErr2);
+          }
+        }
+
+        const { error: profDelErr2 } = await supabaseAdmin
+          .from('profiles')
+          .delete()
+          .eq('user_id', oldUserId);
+        if (profDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting old profile', profDelErr2);
+        else console.log('[APPROVE-REASSIGNMENT] Deleted old profile');
+      }
+    } catch (cleanupErr) {
+      console.error('[APPROVE-REASSIGNMENT] Cleanup step error', cleanupErr);
+    }
+
+    // 8) Send the "Member Information Update Request approved" email (NOT new member approval)
     try {
       await supabaseAdmin.functions.invoke('organization-emails', {
         body: {
