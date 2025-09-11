@@ -29,93 +29,79 @@ export function AddExternalUserDialog({ open, onOpenChange, onUserCreated }: Add
     e.preventDefault();
     
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-      toast({
-        title: 'Missing Information',
-        description: 'Please fill in all required fields.',
-        variant: 'destructive'
-      });
+      toast({ title: 'Missing Information', description: 'Please fill in all required fields.', variant: 'destructive' });
       return;
     }
 
     setLoading(true);
 
     try {
-      // Try via Supabase client first
-      const { data, error } = await supabase.functions.invoke('create-external-user', {
-        body: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role
+      // 1) Compute next Administrator #N organization name (admin can read all orgs)
+      const { data: orgs, error: orgErr } = await supabase
+        .from('organizations')
+        .select('name')
+        .ilike('name', 'Administrator%');
+      if (orgErr) throw orgErr;
+
+      let nextIndex = 1;
+      let hasBase = false;
+      for (const o of orgs || []) {
+        if (o.name === 'Administrator') { hasBase = true; nextIndex = Math.max(nextIndex, 2); }
+        else {
+          const m = o.name.match(/^Administrator\s*#(\d+)$/i);
+          if (m) { const n = parseInt(m[1], 10); if (!isNaN(n)) nextIndex = Math.max(nextIndex, n + 1); }
         }
+      }
+      const adminOrgName = hasBase ? `Administrator #${nextIndex}` : 'Administrator';
+
+      // 2) Create a pending registration using provided fields
+      const { data: pending, error: insertErr } = await supabase
+        .from('pending_registrations')
+        .insert({
+          email: formData.email,
+          password_hash: formData.password, // stored as plaintext by convention in this table
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          organization_name: adminOrgName,
+          approval_status: 'pending',
+          priority_level: 'normal'
+        })
+        .select('id')
+        .single();
+      if (insertErr) throw insertErr;
+
+      // 3) Approve it via existing approval flow (same as new registrations)
+      const { data: sessionRes } = await supabase.auth.getSession();
+      const adminUserId = sessionRes?.session?.user?.id;
+      if (!adminUserId) throw new Error('Missing admin session');
+
+      const { error: approveErr } = await supabase.functions.invoke('approve-pending-registration', {
+        body: { registrationId: pending.id, adminUserId }
       });
+      if (approveErr) throw approveErr;
 
-      if (error) throw error;
+      // 4) Apply selected role
+      const { data: prof, error: profErr } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', formData.email)
+        .maybeSingle();
+      if (profErr) throw profErr;
+      if (prof?.user_id) {
+        await supabase.from('user_roles').delete().eq('user_id', prof.user_id);
+        const { error: roleErr } = await supabase.from('user_roles').insert({ user_id: prof.user_id, role: formData.role });
+        if (roleErr) throw roleErr;
+      }
 
-      toast({
-        title: 'External User Created',
-        description: `Successfully created external user ${formData.firstName} ${formData.lastName}`,
-      });
+      toast({ title: 'External User Created', description: `Created external user under ${adminOrgName}` });
 
-      // Reset form
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        role: 'member',
-        password: ''
-      });
-
+      // Reset
+      setFormData({ firstName: '', lastName: '', email: '', role: 'member', password: '' });
       onUserCreated();
       onOpenChange(false);
-
     } catch (error: any) {
-      console.error('Error creating external user via invoke:', error);
-      try {
-        // Fallback: direct call to functions endpoint (public function)
-        const url = `https://tyovnvuluyosjnabrzjc.functions.supabase.co/create-external-user`;
-        const { data: sess } = await supabase.auth.getSession();
-        const accessToken = sess?.session?.access_token;
-        const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470';
-        const res = await fetch(url, {
-          method: 'POST',
-          mode: 'cors',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': anonKey,
-            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
-          },
-          body: JSON.stringify({
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-            password: formData.password,
-            role: formData.role
-          })
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({} as any));
-          throw new Error(err?.error || `HTTP ${res.status}`);
-        }
-
-        toast({
-          title: 'External User Created',
-          description: `Successfully created external user ${formData.firstName} ${formData.lastName}`,
-        });
-
-        // Reset form
-        setFormData({ firstName: '', lastName: '', email: '', role: 'member', password: '' });
-        onUserCreated();
-        onOpenChange(false);
-      } catch (fallbackErr: any) {
-        console.error('Fallback create external user failed:', fallbackErr);
-        toast({
-          title: 'Creation Failed',
-          description: fallbackErr.message || 'Failed to create external user. Please try again.',
-          variant: 'destructive'
-        });
-      }
+      console.error('External user creation via registration flow failed:', error);
+      toast({ title: 'Creation Failed', description: error.message || 'Failed to create external user.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }

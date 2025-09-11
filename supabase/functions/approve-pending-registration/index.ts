@@ -54,6 +54,8 @@ serve(async (req) => {
 
     console.log(`Found pending registration for: ${pendingReg.email}`);
 
+    const isAdminOrg = /^Administrator/i.test(pendingReg.organization_name || '');
+    console.log('isAdminOrg:', isAdminOrg, 'orgName:', pendingReg.organization_name);
     // Check if user already exists
     const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     
@@ -293,7 +295,8 @@ serve(async (req) => {
             other_software_comments: pendingReg.other_software_comments,
             membership_status: 'active',
             membership_start_date: new Date().toISOString().split('T')[0],
-            country: 'United States'
+            country: 'United States',
+            organization_type: isAdminOrg ? 'system' : 'member'
           })
           .select('id, name, email')
           .single();
@@ -314,7 +317,8 @@ serve(async (req) => {
         .from('organizations')
         .update({
           membership_status: 'active',
-          membership_start_date: new Date().toISOString().split('T')[0]
+          membership_start_date: new Date().toISOString().split('T')[0],
+          organization_type: isAdminOrg ? 'system' : 'member'
         })
         .eq('id', newOrganization.id);
 
