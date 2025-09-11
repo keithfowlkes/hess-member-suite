@@ -461,10 +461,10 @@ export default function Settings() {
                 {/* User Management Cleanup */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      User Management
-                    </CardTitle>
+                     <CardTitle className="flex items-center gap-2">
+                       <Users className="w-4 h-4" />
+                       Admin User Assignments
+                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
                       Clean up orphaned user profiles and manage user data integrity
                     </p>
