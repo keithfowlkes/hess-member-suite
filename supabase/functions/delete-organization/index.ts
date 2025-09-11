@@ -136,7 +136,70 @@ serve(async (req) => {
       }
     }
 
-    // 6. Delete the organization (this will cascade to profiles via the foreign key)
+    // 6. Delete ALL profiles and auth users linked to this organization by name
+    const { data: orgProfiles, error: orgProfilesError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, user_id, email')
+      .eq('organization', organization.name);
+
+    if (orgProfilesError) {
+      console.error('Error fetching organization profiles:', orgProfilesError);
+    } else if (orgProfiles && orgProfiles.length > 0) {
+      for (const p of orgProfiles) {
+        try {
+          // Remove roles first
+          if (p.user_id) {
+            const { error: delRoleErr } = await supabaseAdmin
+              .from('user_roles')
+              .delete()
+              .eq('user_id', p.user_id);
+            if (delRoleErr) console.error('Error deleting roles for user:', p.user_id, delRoleErr);
+
+            // Delete auth user (may already be deleted)
+            const { error: delAuthErr } = await supabaseAdmin.auth.admin.deleteUser(p.user_id);
+            if (delAuthErr) {
+              if (delAuthErr.message?.includes('User not found') || (delAuthErr as any).code === 'user_not_found') {
+                console.log('Auth user already deleted for', p.user_id);
+              } else {
+                console.error('Error deleting auth user:', p.user_id, delAuthErr);
+              }
+            }
+          }
+
+          // Ensure profile row is removed
+          const { error: delProfErr } = await supabaseAdmin
+            .from('profiles')
+            .delete()
+            .eq('id', p.id);
+          if (delProfErr) {
+            console.error('Error deleting profile record:', p.id, delProfErr);
+          }
+        } catch (loopErr) {
+          console.error('Error while deleting profile/user:', p, loopErr);
+        }
+      }
+
+      // Delete any pending registrations for these organization emails
+      const emails = orgProfiles.map((p: any) => p.email).filter(Boolean);
+      if (emails.length > 0) {
+        const { data: delRegs2, error: pendErr2 } = await supabaseAdmin
+          .from('pending_registrations')
+          .delete()
+          .in('email', emails)
+          .select('id');
+        if (pendErr2) {
+          console.error('Error deleting pending regs by email list:', pendErr2);
+        } else {
+          deletedItems.push(`${delRegs2?.length || 0} pending registrations (by org)`);
+          console.log(`Deleted ${delRegs2?.length || 0} pending registrations by org`);
+        }
+      }
+
+      deletedItems.push(`${orgProfiles.length} profiles and linked auth users`);
+      console.log(`Deleted ${orgProfiles.length} profiles and their auth users for organization ${organization.name}`);
+    }
+
+    // 7. Delete the organization record last
     const { error: deleteOrgError } = await supabaseAdmin
       .from('organizations')
       .delete()
@@ -153,7 +216,8 @@ serve(async (req) => {
     deletedItems.push('organization record');
     console.log('Deleted organization record');
 
-    // 7. Delete user roles and auth user if user exists
+    // 8. Delete user roles and auth user if user exists (contact person, if not already handled)
+
     if (userId) {
       // Delete user roles first
       const { data: deletedRoles, error: roleError } = await supabaseAdmin

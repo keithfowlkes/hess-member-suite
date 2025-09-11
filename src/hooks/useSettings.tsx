@@ -573,6 +573,24 @@ export function useSettings() {
     };
 
     loadData();
+
+    // Realtime refresh for Users list (profiles and user_roles)
+    const channelName = `settings_users_changes_${Math.random().toString(36).slice(2)}`;
+    const channel = supabase
+      .channel(channelName)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        console.log('Profiles changed, refreshing users...');
+        fetchUsers();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, () => {
+        console.log('User roles changed, refreshing users...');
+        fetchUsers();
+      })
+      .subscribe();
+
+    return () => {
+      try { channel.unsubscribe(); } catch (e) {}
+    };
   }, []);
 
   // Add a cleanup function for orphaned profiles
