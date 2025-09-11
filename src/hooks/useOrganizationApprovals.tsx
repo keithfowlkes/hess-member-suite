@@ -105,7 +105,9 @@ export const useOrganizationApprovals = () => {
         console.warn('⚠️ ORG APPROVALS: Error during targeted duplicate cleanup:', cleanupErr);
       }
 
-      setPendingOrganizations(pending);
+      // Hide any temporary reassignment placeholder orgs from UI
+      const cleaned = (pending || []).filter(o => !/__reassign_/.test(o.name));
+      setPendingOrganizations(cleaned);
     } catch (error: any) {
       console.error('Error fetching pending organizations:', error);
       toast({
