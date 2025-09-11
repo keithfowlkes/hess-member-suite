@@ -4,7 +4,7 @@ project_id = "tyovnvuluyosjnabrzjc"
 verify_jwt = true
 
 [functions.approve-pending-registration]
-verify_jwt = true
+verify_jwt = false
 
 [functions.approve-reassignment-request]
 verify_jwt = true
