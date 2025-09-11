@@ -87,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     switch (type) {
       case 'analytics_feedback':
-        subject = `Member Analytics Dashboard Feedback`;
+        subject = memberName ? `Member Analytics Feedback from ${memberName}` : `Member Analytics Dashboard Feedback`;
         html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #333; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">
@@ -576,13 +576,24 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const emailResponse = await resend.emails.send({
+    // Log recipients and subject for debugging
+    console.log('Sending email via Resend', { to: emailTo, cc, subject, type });
+
+    // Build email options and include reply_to for feedback
+    const emailOptions: any = {
       from: "HESS Consortium <support@members.hessconsortium.app>",
       to: emailTo,
       cc: cc.length > 0 ? cc : undefined,
       subject,
       html,
-    });
+    };
+
+    if (type === 'analytics_feedback' && memberEmail) {
+      emailOptions.reply_to = memberEmail;
+      console.log('Added reply_to for analytics_feedback:', memberEmail);
+    }
+
+    const emailResponse = await resend.emails.send(emailOptions);
 
     console.log("Email sent successfully:", emailResponse);
 
