@@ -635,6 +635,33 @@ export function useSettings() {
     }
   };
 
+  const cleanupSpecificUser = async (email: string) => {
+    try {
+      console.log(`🗑️ Cleaning up specific user: ${email}`);
+      setLoading(true);
+      
+      // First, try to use the existing deleteUserByEmail function
+      await deleteUserByEmail(email);
+      
+      // Force refresh the users list
+      await fetchUsers();
+      
+      toast({
+        title: 'User Cleaned Up',
+        description: `Successfully removed all traces of ${email} from the system.`,
+      });
+    } catch (error: any) {
+      console.error('❌ Specific user cleanup error:', error);
+      toast({
+        title: 'Cleanup Failed',
+        description: error.message || `Failed to cleanup user ${email}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Add a direct deletion function for specific users
   const deleteSpecificUser = async (email: string) => {
     try {
@@ -711,6 +738,7 @@ export function useSettings() {
     resetUserPassword,
     changeUserPassword,
     updateSetting,
-    cleanupOrphanedProfiles
+    cleanupOrphanedProfiles,
+    cleanupSpecificUser
   };
 }

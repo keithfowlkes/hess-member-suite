@@ -99,7 +99,7 @@ import { format } from 'date-fns';
 const MasterDashboard = () => {
   const { user, signOut } = useAuth();
   const { stats: dashboardStats, loading: statsLoading } = useDashboardStats();
-  const { users, stats, settings, loading: settingsLoading, updateUserRole, deleteUser, deleteUserByEmail, resetUserPassword, changeUserPassword, updateSetting } = useSettings();
+  const { users, stats, settings, loading: settingsLoading, updateUserRole, deleteUser, deleteUserByEmail, resetUserPassword, changeUserPassword, updateSetting, cleanupOrphanedProfiles, cleanupSpecificUser } = useSettings();
   
   // Organization management hooks
   const { 
@@ -161,6 +161,25 @@ const MasterDashboard = () => {
   const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
   const [savingProfileUpdateMessage, setSavingProfileUpdateMessage] = useState(false);
   const [savingCcRecipients, setSavingCcRecipients] = useState(false);
+
+  // Cleanup specific problematic user on mount
+  useEffect(() => {
+    const cleanupOrphanedJKFowlkes = async () => {
+      const orphanedUser = users.find(u => u.email === 'jkfowlkes@gmail.com' && u.organization === 'J.K. Fowlkes University');
+      if (orphanedUser) {
+        console.log('🧹 Found orphaned J.K. Fowlkes user, cleaning up...');
+        try {
+          await cleanupSpecificUser('jkfowlkes@gmail.com');
+        } catch (error) {
+          console.error('Failed to cleanup orphaned J.K. Fowlkes user:', error);
+        }
+      }
+    };
+
+    if (users.length > 0 && !settingsLoading) {
+      cleanupOrphanedJKFowlkes();
+    }
+  }, [users, settingsLoading, cleanupSpecificUser]);
 
   // Stats for the overview section
   const mainStats = [
