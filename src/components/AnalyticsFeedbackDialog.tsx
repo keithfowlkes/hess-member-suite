@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MessageSquare, Send, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AnalyticsFeedbackDialogProps {
@@ -19,6 +20,45 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Pre-populate form fields when dialog opens and user is available
+  useEffect(() => {
+    if (open && user) {
+      // Fetch user profile to get name information
+      const fetchUserProfile = async () => {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, email')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (profile) {
+            const fullName = [profile.first_name, profile.last_name]
+              .filter(Boolean)
+              .join(' ') || '';
+            setName(fullName);
+            setEmail(profile.email || user.email || '');
+          } else {
+            // Fallback to user email if no profile found
+            setEmail(user.email || '');
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          // Fallback to user email if profile fetch fails
+          setEmail(user.email || '');
+        }
+      };
+
+      fetchUserProfile();
+    } else if (!open) {
+      // Reset form when dialog closes
+      setName('');
+      setEmail('');
+      setMessage('');
+    }
+  }, [open, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
