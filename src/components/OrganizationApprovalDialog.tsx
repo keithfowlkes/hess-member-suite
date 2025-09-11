@@ -10,6 +10,7 @@ import { PendingOrganization } from '@/hooks/useOrganizationApprovals';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { UnifiedComparisonModal } from './UnifiedComparisonModal';
 
 interface OrganizationApprovalDialogProps {
   open: boolean;
@@ -110,6 +111,43 @@ export const OrganizationApprovalDialog = ({
   }, [originalData, organization, isUpdate]);
 
   const hasChanges = Object.keys(getChanges).length > 0;
+
+  // Convert changes to the format expected by UnifiedComparisonModal
+  const comparisonData = useMemo(() => {
+    if (!hasChanges || !isUpdate) return { originalData: organization };
+
+    const organizationChanges = [];
+    const profileChanges = [];
+
+    Object.entries(getChanges).forEach(([field, change]) => {
+      const label = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      if (field.startsWith('profile_')) {
+        profileChanges.push({
+          field: field.replace('profile_', ''),
+          label: label.replace('Profile ', ''),
+          oldValue: change.old,
+          newValue: change.new,
+          type: field.includes('email') ? 'email' : 'text'
+        });
+      } else {
+        organizationChanges.push({
+          field,
+          label,
+          oldValue: change.old,
+          newValue: change.new,
+          type: field.includes('fee') ? 'currency' : 'text'
+        });
+      }
+    });
+
+    return {
+      organizationChanges,
+      profileChanges,
+      originalData: originalData,
+      updatedData: organization
+    };
+  }, [getChanges, hasChanges, isUpdate, originalData, organization]);
 
   // Calculate prorated fee based on membership start date
   const calculateProratedFee = (annualFee: number): number => {
@@ -398,150 +436,45 @@ export const OrganizationApprovalDialog = ({
   if (!organization) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            Review Organization {isUpdate ? 'Update' : 'Application'}
-          </DialogTitle>
-        </DialogHeader>
-
-        {isUpdate && hasChanges ? (
-          <Tabs defaultValue="changes" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="changes" className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Changes ({Object.keys(getChanges).length})
-              </TabsTrigger>
-              <TabsTrigger value="current">Current Information</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="changes" className="space-y-4">
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">{organization.name}</h3>
-                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                    Organization Update
-                  </Badge>
-                </div>
-
-                <div className="space-y-4">
-                  {Object.entries(getChanges).map(([field, change]) => (
-                    <div key={field} className="border-l-4 border-orange-400 pl-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <ArrowRight className="h-4 w-4 text-orange-600" />
-                        <span className="font-medium text-sm">
-                          {field.replace(/_/g, ' ').replace(/profile /, '').toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div className="bg-red-50 border border-red-200 rounded p-3">
-                          <div className="text-red-700 font-medium mb-1">Before:</div>
-                          <div className="text-red-800">
-                            {change.old === null || change.old === undefined ? 
-                              <span className="text-muted-foreground italic">Not set</span> : 
-                              String(change.old)
-                            }
-                          </div>
-                        </div>
-                        <div className="bg-green-50 border border-green-200 rounded p-3">
-                          <div className="text-green-700 font-medium mb-1">After:</div>
-                          <div className="text-green-800">
-                            {change.new === null || change.new === undefined ? 
-                              <span className="text-muted-foreground italic">Not set</span> : 
-                              String(change.new)
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="current" className="space-y-4">
-              {renderOrganizationDetails()}
-            </TabsContent>
-          </Tabs>
-        ) : (
-          <div className="space-y-4">
-            {renderOrganizationDetails()}
-          </div>
-        )}
-
-        {/* Admin Actions - Always shown regardless of tab */}
-        <div className="space-y-4 border-t pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="admin-message">
-              Admin Message (Optional)
-            </Label>
-            <Textarea
-              id="admin-message"
-              placeholder={showRejectForm ? "Optional message to include in rejection email..." : "Optional message to include in approval email..."}
-              value={adminMessage}
-              onChange={(e) => setAdminMessage(e.target.value)}
-              className="min-h-[100px]"
-            />
-          </div>
-
-          <div className="flex gap-3">
-            {!showRejectForm ? (
-              <>
-                <Button
-                  onClick={handleApprove}
-                  disabled={isApproving || isApprovingWithInvoice}
-                  className="flex items-center gap-2"
-                >
-                  <CheckCircle className="h-4 w-4" />
-                  {isApproving ? 'Approving...' : `Approve ${isUpdate ? 'Update' : 'Organization'}`}
-                </Button>
-                {!isUpdate && (
-                  <Button
-                    onClick={handleApproveWithInvoice}
-                    disabled={isApproving || isApprovingWithInvoice}
-                    variant="default"
-                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                  >
-                    <DollarSign className="h-4 w-4" />
-                    {isApprovingWithInvoice ? 'Creating Invoice...' : `Approve & Send Prorated Invoice ($${getProratedFee().toLocaleString()})`}
-                  </Button>
-                )}
-                <Button
-                  onClick={() => setShowRejectForm(true)}
-                  variant="destructive"
-                  className="flex items-center gap-2"
-                >
-                  <XCircle className="h-4 w-4" />
-                  Reject {isUpdate ? 'Update' : 'Organization'}
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  onClick={handleReject}
-                  disabled={isRejecting}
-                  variant="destructive"
-                  className="flex items-center gap-2"
-                >
-                  <XCircle className="h-4 w-4" />
-                  {isRejecting ? 'Rejecting...' : 'Confirm Rejection'}
-                </Button>
-                <Button
-                  onClick={() => {
-                    setShowRejectForm(false);
-                    setAdminMessage('');
-                  }}
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
-              </>
+    <UnifiedComparisonModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={`Review Organization ${isUpdate ? 'Update' : 'Application'} - ${organization?.name}`}
+      data={comparisonData}
+      showActions={true}
+      actionNotes={adminMessage}
+      onActionNotesChange={setAdminMessage}
+      onApprove={handleApprove}
+      onReject={showRejectForm ? handleReject : () => setShowRejectForm(true)}
+      isSubmitting={isApproving || isApprovingWithInvoice || isRejecting}
+    >
+      <div className="flex gap-3 mt-4">
+        {!showRejectForm ? (
+          <>
+            {!isUpdate && (
+              <Button
+                onClick={handleApproveWithInvoice}
+                disabled={isApproving || isApprovingWithInvoice}
+                variant="default"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+              >
+                <DollarSign className="h-4 w-4" />
+                {isApprovingWithInvoice ? 'Creating Invoice...' : `Approve & Send Prorated Invoice ($${getProratedFee().toLocaleString()})`}
+              </Button>
             )}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </>
+        ) : (
+          <Button
+            onClick={() => {
+              setShowRejectForm(false);
+              setAdminMessage('');
+            }}
+            variant="outline"
+          >
+            Cancel Rejection
+          </Button>
+        )}
+      </div>
+    </UnifiedComparisonModal>
   );
 };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Dialog,
@@ -37,7 +37,8 @@ import {
   useDeleteReassignmentRequest,
   type MemberInfoUpdateRequest 
 } from '@/hooks/useReassignmentRequests';
-import { CheckCircle, XCircle, Eye, Trash2, AlertTriangle } from 'lucide-react';
+import { UnifiedComparisonModal } from '@/components/UnifiedComparisonModal';
+import { CheckCircle, XCircle, Eye, Trash2, AlertTriangle, User, Building2, Mail, Monitor } from 'lucide-react';
 
 interface MemberInfoUpdateRequestsDialogProps {
   open: boolean;
@@ -56,6 +57,70 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
   const [showDetails, setShowDetails] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Generate comparison data for the unified modal
+  const comparisonData = useMemo(() => {
+    if (!selectedRequest) return {};
+
+    const organizationChanges = [];
+    const contactChanges = [];
+
+    // Compare organization data if available
+    if (selectedRequest.new_organization_data && selectedRequest.organizations) {
+      const newData = selectedRequest.new_organization_data as Record<string, any>;
+      const currentData = selectedRequest.organizations as Record<string, any>;
+
+      // Organization field mappings
+      const orgFields = [
+        { field: 'name', label: 'Organization Name' },
+        { field: 'address_line_1', label: 'Address Line 1' },
+        { field: 'address_line_2', label: 'Address Line 2' },
+        { field: 'city', label: 'City' },
+        { field: 'state', label: 'State' },
+        { field: 'zip_code', label: 'ZIP Code' },
+        { field: 'phone', label: 'Phone' },
+        { field: 'student_fte', label: 'Student FTE', type: 'text' },
+        { field: 'student_information_system', label: 'Student Information System' },
+        { field: 'financial_system', label: 'Financial System' },
+        { field: 'financial_aid', label: 'Financial Aid System' },
+        { field: 'hcm_hr', label: 'HCM/HR System' },
+        { field: 'payroll_system', label: 'Payroll System' },
+        { field: 'purchasing_system', label: 'Purchasing System' },
+        { field: 'housing_management', label: 'Housing Management System' },
+        { field: 'learning_management', label: 'Learning Management System' },
+        { field: 'admissions_crm', label: 'Admissions CRM' },
+        { field: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM' },
+      ];
+
+      orgFields.forEach(({ field, label, type }) => {
+        if (newData[field] !== undefined && newData[field] !== currentData[field]) {
+          organizationChanges.push({
+            field,
+            label,
+            oldValue: currentData[field],
+            newValue: newData[field],
+            type: type as any
+          });
+        }
+      });
+    }
+
+    // Contact change (primary contact email change)
+    contactChanges.push({
+      field: 'primary_contact_email',
+      label: 'Primary Contact Email',
+      oldValue: selectedRequest.organizations?.profiles?.email,
+      newValue: selectedRequest.new_contact_email,
+      type: 'email' as const
+    });
+
+    return {
+      organizationChanges,
+      contactChanges,
+      originalData: selectedRequest.organizations,
+      updatedData: selectedRequest.new_organization_data
+    };
+  }, [selectedRequest]);
 
   const handleApprove = async () => {
     if (!selectedRequest) return;
@@ -115,164 +180,20 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
         </DialogHeader>
 
         {showDetails && selectedRequest ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Request Details</h3>
-              <Button variant="outline" onClick={() => setShowDetails(false)}>
-                Back to List
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Current Organization Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Current Organization Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50">
-                      <span className="font-medium text-sm">Organization Name:</span>
-                      <span className="text-sm text-muted-foreground col-span-2">
-                        {selectedRequest.organizations?.name || 'Not set'}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50">
-                      <span className="font-medium text-sm">Primary Contact:</span>
-                      <span className="text-sm text-muted-foreground col-span-2">
-                        {selectedRequest.organizations?.profiles?.first_name && selectedRequest.organizations?.profiles?.last_name
-                          ? `${selectedRequest.organizations.profiles.first_name} ${selectedRequest.organizations.profiles.last_name}`
-                          : 'Not set'
-                        }
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50">
-                      <span className="font-medium text-sm">Contact Email:</span>
-                      <span className="text-sm text-muted-foreground col-span-2">
-                        {selectedRequest.organizations?.profiles?.email || 'Not set'}
-                      </span>
-                    </div>
-                     <div className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50">
-                       <span className="font-medium text-sm">Location:</span>
-                       <span className="text-sm text-muted-foreground col-span-2">
-                         {(selectedRequest.organizations as any)?.city && (selectedRequest.organizations as any)?.state
-                           ? `${(selectedRequest.organizations as any).city}, ${(selectedRequest.organizations as any).state}`
-                           : 'Not set'
-                         }
-                       </span>
-                     </div>
-                     <div className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50">
-                       <span className="font-medium text-sm">Student FTE:</span>
-                       <span className="text-sm text-muted-foreground col-span-2">
-                         {(selectedRequest.organizations as any)?.student_fte?.toLocaleString() || 'Not set'}
-                       </span>
-                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* New Organization Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Updated Organization Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {selectedRequest.new_organization_data ? (
-                    <div className="space-y-2">
-                      {Object.entries(selectedRequest.new_organization_data as Record<string, any>)
-                        .filter(([key, value]) => value !== null && value !== undefined && value !== '')
-                        .map(([key, value]) => {
-                          const displayKey = key
-                            .replace(/_/g, ' ')
-                            .replace(/\b\w/g, l => l.toUpperCase());
-                          
-                          let displayValue = value;
-                          if (typeof value === 'boolean') {
-                            displayValue = value ? 'Yes' : 'No';
-                          } else if (Array.isArray(value)) {
-                            displayValue = value.join(', ');
-                          } else if (typeof value === 'object') {
-                            displayValue = JSON.stringify(value, null, 2);
-                          }
-                          
-                          return (
-                            <div key={key} className="grid grid-cols-3 gap-2 py-2 border-b border-muted/50 last:border-0">
-                              <span className="font-medium text-sm">{displayKey}:</span>
-                              <span className="text-sm text-muted-foreground col-span-2 break-words">
-                                {String(displayValue)}
-                              </span>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">No updated organization data provided</div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Contact Change Summary */}
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle className="text-base">Contact Change Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-muted/30 rounded-md p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="font-medium">Current Contact:</span>
-                        <div className="text-muted-foreground mt-1">
-                          {selectedRequest.organizations?.profiles?.email || 'No current contact'}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="font-medium">Requested New Contact:</span>
-                        <div className="text-muted-foreground mt-1">
-                          {selectedRequest.new_contact_email}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {selectedRequest.status === 'pending' && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Admin Notes (optional)</Label>
-                  <Textarea
-                    id="notes"
-                    placeholder="Add any notes about this decision..."
-                    value={actionNotes}
-                    onChange={(e) => setActionNotes(e.target.value)}
-                  />
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleApprove}
-                    className="flex-1"
-                    disabled={approveRequest.isPending}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Approve & Replace Organization
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleReject}
-                    className="flex-1"
-                    disabled={rejectRequest.isPending}
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Reject Request
-                  </Button>
-                </div>
-              </div>
-            )}
-
+          <UnifiedComparisonModal
+            open={showDetails}
+            onOpenChange={setShowDetails}
+            title={`Member Information Update Request - ${selectedRequest.organizations?.name || 'Unknown Organization'}`}
+            data={comparisonData}
+            showActions={selectedRequest.status === 'pending'}
+            actionNotes={actionNotes}
+            onActionNotesChange={setActionNotes}
+            onApprove={handleApprove}
+            onReject={handleReject}
+            isSubmitting={approveRequest.isPending || rejectRequest.isPending}
+          >
             {selectedRequest.admin_notes && (
-              <Card>
+              <Card className="mt-4">
                 <CardHeader>
                   <CardTitle className="text-base">Admin Notes</CardTitle>
                 </CardHeader>
@@ -281,7 +202,7 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
                 </CardContent>
               </Card>
             )}
-          </div>
+          </UnifiedComparisonModal>
         ) : (
           <div className="space-y-4">
             {isLoading ? (
