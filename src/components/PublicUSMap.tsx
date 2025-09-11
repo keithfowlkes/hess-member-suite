@@ -288,12 +288,11 @@ export function PublicUSMap() {
                 </p>
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium">Select State:</label>
-                  <Select value={selectedState || ""} onValueChange={(value) => setSelectedState(value || null)}>
+                  <Select value={selectedState ?? undefined} onValueChange={(value) => setSelectedState(value)}>
                     <SelectTrigger className="w-32">
                       <SelectValue placeholder="Choose..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All States</SelectItem>
                       {Object.keys(stateStats).sort().map((state) => (
                         <SelectItem key={state} value={state}>
                           {state} ({stateStats[state].count})
