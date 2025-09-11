@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { useSystemAnalytics, SystemUsage } from '@/hooks/useSystemAnalytics';
 import { InstitutionsModal } from '@/components/InstitutionsModal';
-import { PieChart as PieChartIcon, TrendingUp, BarChart3, Monitor } from 'lucide-react';
+import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
+import { PieChart as PieChartIcon, TrendingUp, BarChart3, Monitor, MessageSquare } from 'lucide-react';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff'];
 
@@ -44,6 +45,7 @@ export function SystemAnalyticsDashboard() {
   const [selectedSystemField, setSelectedSystemField] = useState<string | null>(null);
   const [selectedSystemName, setSelectedSystemName] = useState<string | null>(null);
   const [selectedSystemDisplayName, setSelectedSystemDisplayName] = useState<string | null>(null);
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
 
   const handleSystemClick = (systemField: string, systemName: string, systemDisplayName: string) => {
     setSelectedSystemField(systemField);
@@ -208,6 +210,15 @@ export function SystemAnalyticsDashboard() {
               Distribution of software systems across active member institutions
             </p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setFeedbackDialogOpen(true)}
+            className="gap-2"
+          >
+            <MessageSquare className="h-4 w-4" />
+            What would you like to see?
+          </Button>
         </div>
         
         <div className="flex flex-wrap items-center gap-4">
@@ -270,6 +281,11 @@ export function SystemAnalyticsDashboard() {
         systemField={selectedSystemField}
         systemName={selectedSystemName}
         systemDisplayName={selectedSystemDisplayName}
+      />
+      
+      <AnalyticsFeedbackDialog
+        open={feedbackDialogOpen}
+        onOpenChange={setFeedbackDialogOpen}
       />
     </Card>
   );
