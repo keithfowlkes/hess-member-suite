@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Shield, Users, Crown, Search, UserCheck } from 'lucide-react';
+import { Shield, Users, Crown, Search, UserCheck, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AddExternalUserDialog } from './AddExternalUserDialog';
 
 interface User {
   id: string;
@@ -25,11 +26,13 @@ interface AdminUsersTabProps {
   users: User[];
   updateUserRole: (userId: string, newRole: 'admin' | 'member') => Promise<void>;
   loading?: boolean;
+  onUserCreated?: () => void;
 }
 
-export function AdminUsersTab({ users, updateUserRole, loading }: AdminUsersTabProps) {
+export function AdminUsersTab({ users, updateUserRole, loading, onUserCreated }: AdminUsersTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'member'>('all');
+  const [showAddExternalUser, setShowAddExternalUser] = useState(false);
   const { toast } = useToast();
 
   const filteredUsers = users.filter(user => {
@@ -158,16 +161,25 @@ export function AdminUsersTab({ users, updateUserRole, loading }: AdminUsersTabP
                 />
               </div>
             </div>
-            <Select value={roleFilter} onValueChange={(value: 'all' | 'admin' | 'member') => setRoleFilter(value)}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">Admin Only</SelectItem>
-                <SelectItem value="member">Member Only</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowAddExternalUser(true)}
+                className="whitespace-nowrap"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add External User
+              </Button>
+              <Select value={roleFilter} onValueChange={(value: 'all' | 'admin' | 'member') => setRoleFilter(value)}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Filter by role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="admin">Admin Only</SelectItem>
+                  <SelectItem value="member">Member Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Users List */}
@@ -287,6 +299,15 @@ export function AdminUsersTab({ users, updateUserRole, loading }: AdminUsersTabP
           </div>
         </CardContent>
       </Card>
+
+      <AddExternalUserDialog
+        open={showAddExternalUser}
+        onOpenChange={setShowAddExternalUser}
+        onUserCreated={() => {
+          onUserCreated?.();
+          setShowAddExternalUser(false);
+        }}
+      />
     </div>
   );
 }

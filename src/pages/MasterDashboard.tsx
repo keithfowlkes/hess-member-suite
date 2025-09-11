@@ -64,6 +64,7 @@ import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDia
 import { InvitationManagementDialog } from '@/components/InvitationManagementDialog';
 import { MemberInfoUpdateRequestsDialog } from '@/components/MemberInfoUpdateRequestsDialog';
 import { PendingRegistrationApprovalDialog } from '@/components/PendingRegistrationApprovalDialog';
+import { AddExternalUserDialog } from '@/components/AddExternalUserDialog';
 import SystemMessageEditor from '@/components/SystemMessageEditor';
 import type { PendingRegistration } from '@/hooks/usePendingRegistrations';
 
@@ -85,6 +86,7 @@ import {
   Loader2,
   Shield, 
   UserMinus, 
+  UserPlus,
   BarChart3,
   KeyRound,
   Lock,
@@ -161,6 +163,7 @@ const MasterDashboard = () => {
   const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
   const [savingProfileUpdateMessage, setSavingProfileUpdateMessage] = useState(false);
   const [savingCcRecipients, setSavingCcRecipients] = useState(false);
+  const [showAddExternalUser, setShowAddExternalUser] = useState(false);
 
   // Cleanup specific problematic user on mount
   useEffect(() => {
@@ -1327,14 +1330,23 @@ const MasterDashboard = () => {
                     </div>
 
                     {/* Search Bar for Users */}
-                    <div className="relative max-w-md">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        placeholder="Search users by email or role..."
-                        value={userSearchTerm}
-                        onChange={(e) => setUserSearchTerm(e.target.value)}
-                        className="pl-10 bg-white"
-                      />
+                    <div className="flex gap-4 items-center">
+                      <div className="relative max-w-md flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input
+                          placeholder="Search users by email or role..."
+                          value={userSearchTerm}
+                          onChange={(e) => setUserSearchTerm(e.target.value)}
+                          className="pl-10 bg-white"
+                        />
+                      </div>
+                      <Button
+                        onClick={() => setShowAddExternalUser(true)}
+                        className="whitespace-nowrap"
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add External User
+                      </Button>
                     </div>
 
                     <Card>
@@ -2124,6 +2136,15 @@ const MasterDashboard = () => {
         registration={selectedPendingRegistration}
         onApprove={approveRegistration}
         onReject={rejectRegistration}
+      />
+
+      <AddExternalUserDialog
+        open={showAddExternalUser}
+        onOpenChange={setShowAddExternalUser}
+        onUserCreated={() => {
+          // Refresh the page to update users list
+          window.location.reload();
+        }}
       />
     </SidebarProvider>
   );
