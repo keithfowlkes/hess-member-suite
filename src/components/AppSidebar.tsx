@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
 import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
 import { useReassignmentRequests } from '@/hooks/useReassignmentRequests';
+import { useOrganizationProfileEditRequests } from '@/hooks/useOrganizationProfileEditRequests';
 import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
 import { AdminCustomEntriesNotification } from '@/components/AdminCustomEntriesNotification';
 import { Button } from '@/components/ui/button';
@@ -33,13 +34,15 @@ export function AppSidebar() {
   const { pendingOrganizations } = useOrganizationApprovals();
   const { invitations } = useOrganizationInvitations();
   const { data: memberInfoUpdateRequests = [] } = useReassignmentRequests();
+  const { requests: profileEditRequests = [] } = useOrganizationProfileEditRequests();
   const { pendingRegistrations } = usePendingRegistrations();
   
-  // Calculate total pending actions including new registrations and member info updates
+  // Calculate total pending actions including all types of pending requests
   const activeInvitations = invitations?.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()) || [];
   const totalPendingActions = (pendingOrganizations?.length || 0) + 
                              activeInvitations.length + 
                              memberInfoUpdateRequests.length + 
+                             profileEditRequests.length +
                              (pendingRegistrations?.length || 0);
   
   console.log('Sidebar render - isAdmin:', isAdmin, 'isViewingAsAdmin:', isViewingAsAdmin);
