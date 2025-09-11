@@ -397,6 +397,8 @@ serve(async (req) => {
         console.log('[APPROVE-REASSIGNMENT] Old organization already deleted during conflict resolution');
       }
 
+      // Clean up the old user if it exists
+      if (existingOrg?.profiles?.user_id) {
         const oldUserId: string | null = existingOrg.profiles?.user_id ?? null;
         if (oldUserId) {
           const { error: roleDelErr2 } = await supabaseAdmin
