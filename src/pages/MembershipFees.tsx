@@ -1454,7 +1454,9 @@ export default function MembershipFees() {
                           </div>
                           <div className="col-span-2">
                             <span className="text-sm">
-                              ${org.annual_fee_amount?.toLocaleString() || '1,000'}
+                              ${organizationFeeTiers[org.id] ? 
+                                getFeeAmountForTier(organizationFeeTiers[org.id]).toLocaleString() : 
+                                (org.annual_fee_amount?.toLocaleString() || '1,000')}
                             </span>
                           </div>
                           <div className="col-span-2">
