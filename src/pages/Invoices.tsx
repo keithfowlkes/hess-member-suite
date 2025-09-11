@@ -207,7 +207,7 @@ export default function Invoices() {
                                 {invoice.organizations.name}
                               </div>
                             )}
-                            <div className="flex items-center">
+                            <div className={`flex items-center ${invoice.status === 'overdue' ? 'text-red-600' : ''}`}>
                               <Calendar className="h-4 w-4 mr-1" />
                               Due: {format(new Date(invoice.due_date), 'MMM dd, yyyy')}
                             </div>
