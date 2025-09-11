@@ -16,7 +16,8 @@ interface FeedbackRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
+  console.log('Analytics feedback function called');
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -33,6 +34,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { name, email, message }: FeedbackRequest = await req.json();
+    console.log('Feedback request:', { name, email, message: message.substring(0, 100) + '...' });
 
     // Validate required fields
     if (!name?.trim() || !email?.trim() || !message?.trim()) {
@@ -45,9 +47,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send email to admins
+    // Send email to admins using the same pattern as working functions
     const emailResponse = await resend.emails.send({
-      from: "Member Analytics Feedback <onboarding@resend.dev>",
+      from: "HESS Consortium <support@members.hessconsortium.app>",
       to: ["keith.fowlkes@hessconsortium.org"], // Admin email
       subject: "Member Analytics Dashboard Feedback",
       html: `
@@ -103,9 +105,12 @@ ${message}
 
   } catch (error: any) {
     console.error("Error in send-analytics-feedback function:", error);
+    console.error("Error stack:", error.stack);
+    console.error("Error details:", JSON.stringify(error, null, 2));
     
-    // Handle specific Resend errors
+    // Handle specific Resend errors with more detailed logging
     if (error.message?.includes('API key')) {
+      console.error("Resend API key error - check if RESEND_API_KEY is properly configured");
       return new Response(
         JSON.stringify({ error: "Email service configuration error" }),
         {
@@ -116,6 +121,7 @@ ${message}
     }
 
     if (error.message?.includes('rate limit')) {
+      console.error("Resend rate limit reached");
       return new Response(
         JSON.stringify({ error: "Too many requests. Please try again later." }),
         {
@@ -126,7 +132,11 @@ ${message}
     }
 
     return new Response(
-      JSON.stringify({ error: "Failed to send feedback" }),
+      JSON.stringify({ 
+        error: "Failed to send feedback",
+        details: error.message,
+        type: error.constructor.name
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
