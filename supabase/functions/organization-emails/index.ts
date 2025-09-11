@@ -595,21 +595,36 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send(emailOptions);
 
-    console.log("Email sent successfully:", emailResponse);
+    if ((emailResponse as any)?.error) {
+      console.error('Resend send error:', (emailResponse as any).error);
+      return new Response(JSON.stringify({ 
+        error: 'Resend delivery failed', 
+        details: (emailResponse as any).error?.message || 'unknown'
+      }), {
+        status: 502,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
 
+    console.log("Email sent successfully:", emailResponse);
+    
     // Log the email action in audit log
     await supabase.from('audit_log').insert({
       action: `email_sent_${type}`,
       entity_type: 'email',
-      details: { to, organizationName, type }
+      details: { to, organizationName, type, messageId: (emailResponse as any)?.data?.id }
     });
 
-    return new Response(JSON.stringify(emailResponse), {
+    return new Response(JSON.stringify({
+      success: true,
+      messageId: (emailResponse as any)?.data?.id
+    }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
         ...corsHeaders,
       },
+    });
     });
   } catch (error: any) {
     console.error("Error in organization-emails function:", error);
