@@ -143,7 +143,7 @@ export function AdminUsersTab({ users, updateUserRole, loading }: AdminUsersTabP
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>User Management</CardTitle>
+          <CardTitle>Admin User Assignments</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
