@@ -592,6 +592,7 @@ export type Database = {
             | null
           name: string
           notes: string | null
+          organization_type: string | null
           other_software_comments: string | null
           payroll_system: string | null
           phone: string | null
@@ -639,6 +640,7 @@ export type Database = {
             | null
           name: string
           notes?: string | null
+          organization_type?: string | null
           other_software_comments?: string | null
           payroll_system?: string | null
           phone?: string | null
@@ -686,6 +688,7 @@ export type Database = {
             | null
           name?: string
           notes?: string | null
+          organization_type?: string | null
           other_software_comments?: string | null
           payroll_system?: string | null
           phone?: string | null
