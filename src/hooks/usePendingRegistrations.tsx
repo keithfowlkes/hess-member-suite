@@ -86,8 +86,7 @@ export function usePendingRegistrations() {
         if (orgNames.length > 0) {
           const { data: existingOrgs, error: orgsErr } = await supabase
             .from('organizations')
-            .select('name')
-            .in('name', orgNames);
+            .select('name');
           if (orgsErr) {
             console.warn('⚠️ PENDING DEBUG: Could not check existing organizations:', orgsErr);
           } else {
