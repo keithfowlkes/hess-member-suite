@@ -78,7 +78,27 @@ export function AddExternalUserDialog({ open, onOpenChange, onUserCreated }: Add
       const { error: approveErr } = await supabase.functions.invoke('approve-pending-registration', {
         body: { registrationId: pending.id, adminUserId }
       });
-      if (approveErr) throw approveErr;
+      if (approveErr) {
+        // Fallback to direct functions URL
+        const url = `https://tyovnvuluyosjnabrzjc.functions.supabase.co/approve-pending-registration`;
+        const { data: sess } = await supabase.auth.getSession();
+        const accessToken = sess?.session?.access_token;
+        const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470';
+        const res = await fetch(url, {
+          method: 'POST',
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': anonKey,
+            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
+          },
+          body: JSON.stringify({ registrationId: pending.id, adminUserId })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({} as any));
+          throw new Error(err?.error || `HTTP ${res.status}`);
+        }
+      }
 
       // 4) Apply selected role
       const { data: prof, error: profErr } = await supabase
