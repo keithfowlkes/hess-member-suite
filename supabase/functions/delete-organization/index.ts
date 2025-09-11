@@ -195,7 +195,39 @@ serve(async (req) => {
         }
       } else {
         deletedItems.push('auth user');
-        console.log('Deleted auth user (profile should cascade delete)');
+        console.log('Deleted auth user');
+      }
+
+      // Ensure profile is deleted regardless of auth cascade behavior
+      try {
+        if (organization.contact_person_id) {
+          const { data: deletedProfilesById, error: delByIdErr } = await supabaseAdmin
+            .from('profiles')
+            .delete()
+            .eq('id', organization.contact_person_id)
+            .select('id');
+          if (delByIdErr) {
+            console.error('Error deleting profile by id:', delByIdErr);
+          } else if (deletedProfilesById && deletedProfilesById.length > 0) {
+            deletedItems.push(`${deletedProfilesById.length} profiles`);
+            console.log(`Deleted ${deletedProfilesById.length} profiles by id`);
+          }
+        }
+        if (userId) {
+          const { data: deletedProfilesByUser, error: delByUserErr } = await supabaseAdmin
+            .from('profiles')
+            .delete()
+            .eq('user_id', userId)
+            .select('id');
+          if (delByUserErr) {
+            console.error('Error deleting profile by user_id:', delByUserErr);
+          } else if (deletedProfilesByUser && deletedProfilesByUser.length > 0) {
+            deletedItems.push(`${deletedProfilesByUser.length} profiles`);
+            console.log(`Deleted ${deletedProfilesByUser.length} profiles by user_id`);
+          }
+        }
+      } catch (profileCleanupErr) {
+        console.error('Profile cleanup error:', profileCleanupErr);
       }
     }
 
