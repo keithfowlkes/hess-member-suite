@@ -42,26 +42,16 @@ export default function Auth() {
   const [resetEmail, setResetEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [activeTab, setActiveTab] = useState(() => {
-    // Check URL parameter for tab selection
-    const tab = searchParams.get('tab');
-    console.log('🔍 Tab URL parameter:', tab);
-    console.log('🎯 Setting activeTab to:', tab === 'register' ? 'signup' : 'signin');
-    return tab === 'register' ? 'signup' : 'signin';
-  });
-  
-  // Also listen for URL changes after mount
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    console.log('🔄 URL changed, tab parameter:', tab);
-    if (tab === 'register') {
-      console.log('🎯 Switching to signup tab');
-      setActiveTab('signup');
-    } else {
-      console.log('🎯 Switching to signin tab');
-      setActiveTab('signin');
+  const initialTab = React.useMemo(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search)
+      const t = sp.get('tab')?.toLowerCase()
+      return t === 'register' || t === 'signup' ? 'signup' : 'signin'
+    } catch {
+      return 'signin'
     }
-  }, [searchParams]);
+  }, [])
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [showEmailNotFoundDialog, setShowEmailNotFoundDialog] = useState(false);
   const [emailNotFoundAddress, setEmailNotFoundAddress] = useState('');
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
