@@ -105,27 +105,19 @@ serve(async (req) => {
       console.log(`✅ Using existing System Administrator organization: ${adminOrgId}`);
     }
 
-    // Create the profile
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        user_id: authData.user.id,
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
-        organization: 'System Administrator'
-      });
+    // Profile will be created automatically by the handle_new_user trigger
+    // which reads metadata and inserts the profile and organization if needed.
+    // No manual profile insert here to avoid duplicates.
 
-    if (profileError) {
-      console.error('❌ Profile creation error:', profileError);
-      // Clean up auth user if profile creation fails
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      throw profileError;
+    // Set desired role explicitly (replace any default from trigger)
+    const { error: deleteRolesError } = await supabaseAdmin
+      .from('user_roles')
+      .delete()
+      .eq('user_id', authData.user.id);
+    if (deleteRolesError) {
+      console.warn('⚠️ Role cleanup warning (non-fatal):', deleteRolesError);
     }
 
-    console.log(`✅ Profile created for user: ${authData.user.id}`);
-
-    // Assign user role
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
       .insert({
@@ -135,7 +127,7 @@ serve(async (req) => {
 
     if (roleError) {
       console.error('❌ Role assignment error:', roleError);
-      // Clean up auth user and profile if role assignment fails
+      // Clean up auth user if role assignment fails
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       throw roleError;
     }

@@ -29,7 +29,7 @@ export function useDashboardStats() {
       const { data: orgStats, error: orgError } = await supabase
         .from('organizations')
         .select('membership_status, annual_fee_amount, student_fte')
-        .neq('name', 'Administrator');
+        .eq('organization_type', 'member');
 
       if (orgError) {
         console.error('Organization stats error:', orgError);

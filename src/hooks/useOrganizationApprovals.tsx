@@ -71,7 +71,7 @@ export const useOrganizationApprovals = () => {
           )
         `)
         .eq('membership_status', 'pending')
-        .neq('name', 'Administrator')
+        .eq('organization_type', 'member')
         .order('created_at', { ascending: false });
 
       if (error) throw error;

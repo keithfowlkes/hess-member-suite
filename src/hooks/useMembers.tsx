@@ -107,7 +107,7 @@ export function useMembers() {
           )
         `)
         .eq('membership_status', 'active')
-        .neq('name', 'Administrator')
+        .eq('organization_type', 'member')
         .order('name');
 
       if (error) throw error;
