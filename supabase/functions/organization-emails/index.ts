@@ -625,7 +625,6 @@ const handler = async (req: Request): Promise<Response> => {
         ...corsHeaders,
       },
     });
-    });
   } catch (error: any) {
     console.error("Error in organization-emails function:", error);
     return new Response(
