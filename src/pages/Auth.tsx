@@ -170,7 +170,7 @@ export default function Auth() {
     );
   };
   
-  const [signUpForm, setSignUpForm] = useState({ 
+  const initialSignUpFormState = { 
     isPrivateNonProfit: false,
     email: '', 
     password: '', 
@@ -217,7 +217,9 @@ export default function Auth() {
     primaryOfficeOtherDetails: '',
     otherSoftwareComments: '',
     loginHint: ''
-  });
+  };
+
+  const [signUpForm, setSignUpForm] = useState(initialSignUpFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (loading) {
@@ -461,10 +463,20 @@ export default function Auth() {
           }
         });
 
-        // Redirect to confirmation page
-        navigate('/registration-confirmation?type=reassignment');
-        setIsSubmitting(false);
-        return; // Exit early for reassignment flow
+        // Redirect to confirmation page  
+        console.log('📍 REASSIGNMENT DEBUG: Navigating to: /registration-confirmation?type=reassignment');
+        
+        // Reset form state before navigation
+        setSignUpForm(initialSignUpFormState);
+        
+        try {
+          navigate('/registration-confirmation?type=reassignment', { replace: true });
+          console.log('✅ REASSIGNMENT DEBUG: Navigate call completed successfully');
+          setIsSubmitting(false);
+          return; // Exit early for reassignment flow
+        } catch (error) {
+          console.error('❌ REASSIGNMENT DEBUG: Navigate call failed:', error);
+        }
       } catch (error: any) {
         toast({
           title: "Member information update request failed",
@@ -609,8 +621,18 @@ export default function Auth() {
         }
         
         console.log('🔄 REGISTRATION DEBUG: About to redirect to confirmation page');
+        console.log('📍 REGISTRATION DEBUG: Navigating to: /registration-confirmation?type=pending');
+        
+        // Reset form state before navigation
+        setSignUpForm(initialSignUpFormState);
+        
         // Redirect to confirmation page
-        navigate('/registration-confirmation?type=pending');
+        try {
+          navigate('/registration-confirmation?type=pending', { replace: true });
+          console.log('✅ REGISTRATION DEBUG: Navigate call completed successfully');
+        } catch (error) {
+          console.error('❌ REGISTRATION DEBUG: Navigate call failed:', error);
+        }
       }
     }
     console.log('🏁 REGISTRATION DEBUG: Setting submitting to false and finishing');
