@@ -115,7 +115,11 @@ export default function MembershipFees() {
   // Fee tier states
   const [fullMemberFee, setFullMemberFee] = useState<string>('1000');
   const [affiliateMemberFee, setAffiliateMemberFee] = useState<string>('500');
-  const [organizationFeeTiers, setOrganizationFeeTiers] = useState<Record<string, 'full' | 'affiliate'>>({});
+  const [organizationFeeTiers, setOrganizationFeeTiers] = useState<Record<string, string>>({});
+  const [additionalFeeTiers, setAdditionalFeeTiers] = useState<Array<{id: string, name: string, amount: string}>>([]);
+  const [addTierModalOpen, setAddTierModalOpen] = useState(false);
+  const [newTierName, setNewTierName] = useState('');
+  const [newTierAmount, setNewTierAmount] = useState('');
 
   // Setup default invoice template with HESS logo on component mount
   React.useEffect(() => {
@@ -127,9 +131,17 @@ export default function MembershipFees() {
     if (systemSettings) {
       const fullFee = systemSettings.find(s => s.setting_key === 'full_member_fee')?.setting_value;
       const affiliateFee = systemSettings.find(s => s.setting_key === 'affiliate_member_fee')?.setting_value;
+      const additionalTiers = systemSettings.find(s => s.setting_key === 'additional_fee_tiers')?.setting_value;
       
       if (fullFee) setFullMemberFee(fullFee);
       if (affiliateFee) setAffiliateMemberFee(affiliateFee);
+      if (additionalTiers) {
+        try {
+          setAdditionalFeeTiers(JSON.parse(additionalTiers));
+        } catch (error) {
+          console.error('Error parsing additional fee tiers:', error);
+        }
+      }
     }
   }, [systemSettings]);
 
@@ -305,6 +317,14 @@ export default function MembershipFees() {
         description: 'Annual fee amount for affiliate members'
       });
 
+      if (additionalFeeTiers.length > 0) {
+        await updateSystemSetting.mutateAsync({
+          settingKey: 'additional_fee_tiers',
+          settingValue: JSON.stringify(additionalFeeTiers),
+          description: 'Additional custom fee tiers'
+        });
+      }
+
       toast({
         title: "Success",
         description: "Fee tier pricing updated successfully."
@@ -320,7 +340,7 @@ export default function MembershipFees() {
   };
 
   // Set organization fee tier
-  const setOrganizationFeeTier = (organizationId: string, tier: 'full' | 'affiliate') => {
+  const setOrganizationFeeTier = (organizationId: string, tier: string) => {
     setOrganizationFeeTiers(prev => ({
       ...prev,
       [organizationId]: tier
@@ -328,8 +348,59 @@ export default function MembershipFees() {
   };
 
   // Get fee amount for tier
-  const getFeeAmountForTier = (tier: 'full' | 'affiliate'): number => {
-    return tier === 'full' ? parseFloat(fullMemberFee) : parseFloat(affiliateMemberFee);
+  const getFeeAmountForTier = (tier: string): number => {
+    if (tier === 'full') return parseFloat(fullMemberFee);
+    if (tier === 'affiliate') return parseFloat(affiliateMemberFee);
+    
+    const additionalTier = additionalFeeTiers.find(t => t.id === tier);
+    return additionalTier ? parseFloat(additionalTier.amount) : 0;
+  };
+
+  // Add new fee tier
+  const handleAddFeeTier = () => {
+    if (!newTierName || !newTierAmount) {
+      toast({
+        title: "Invalid Input",
+        description: "Please provide both tier name and amount.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const newTier = {
+      id: `custom_${Date.now()}`,
+      name: newTierName,
+      amount: newTierAmount
+    };
+
+    setAdditionalFeeTiers(prev => [...prev, newTier]);
+    setNewTierName('');
+    setNewTierAmount('');
+    setAddTierModalOpen(false);
+  };
+
+  // Remove fee tier
+  const handleRemoveFeeTier = (tierId: string) => {
+    setAdditionalFeeTiers(prev => prev.filter(tier => tier.id !== tierId));
+    // Remove tier assignments for this tier
+    setOrganizationFeeTiers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(orgId => {
+        if (updated[orgId] === tierId) {
+          delete updated[orgId];
+        }
+      });
+      return updated;
+    });
+  };
+
+  // Get tier display name
+  const getTierDisplayName = (tier: string): string => {
+    if (tier === 'full') return 'Full Member';
+    if (tier === 'affiliate') return 'Affiliate';
+    
+    const additionalTier = additionalFeeTiers.find(t => t.id === tier);
+    return additionalTier ? additionalTier.name : 'Unknown Tier';
   };
 
   // Calculate fee statistics
@@ -1100,8 +1171,42 @@ export default function MembershipFees() {
                           </p>
                         </div>
                       </div>
+
+                      {/* Additional Fee Tiers */}
+                      {additionalFeeTiers.length > 0 && (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium">Additional Fee Tiers</h4>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {additionalFeeTiers.map((tier) => (
+                              <div key={tier.id} className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">{tier.name}</div>
+                                  <div className="text-sm text-muted-foreground">${parseFloat(tier.amount).toLocaleString()}</div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveFeeTier(tier.id)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       
-                      <div className="flex justify-end pt-4 border-t">
+                      <div className="flex justify-between items-center pt-4 border-t">
+                        <Button 
+                          variant="outline"
+                          onClick={() => setAddTierModalOpen(true)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Fee Tier
+                        </Button>
                         <Button 
                           onClick={handleSaveFeeTiers}
                           disabled={updateSystemSetting.isPending}
@@ -1461,9 +1566,7 @@ export default function MembershipFees() {
                           </div>
                           <div className="col-span-2">
                             <Badge variant={organizationFeeTiers[org.id] ? "default" : "secondary"} className="text-xs">
-                              {organizationFeeTiers[org.id] === 'full' ? 'Full Member' : 
-                               organizationFeeTiers[org.id] === 'affiliate' ? 'Affiliate' : 
-                               'No Tier Set'}
+                              {organizationFeeTiers[org.id] ? getTierDisplayName(organizationFeeTiers[org.id]) : 'No Tier Set'}
                             </Badge>
                           </div>
                           <div className="col-span-1">
@@ -1916,6 +2019,51 @@ export default function MembershipFees() {
             onClose={() => setPendingModalOpen(false)}
             organizations={organizations}
           />
+
+          {/* Add Fee Tier Modal */}
+          <Dialog open={addTierModalOpen} onOpenChange={setAddTierModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Fee Tier</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tier-name">Tier Name</Label>
+                  <Input
+                    id="tier-name"
+                    placeholder="e.g., Associate Member"
+                    value={newTierName}
+                    onChange={(e) => setNewTierName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tier-amount">Annual Fee Amount ($)</Label>
+                  <Input
+                    id="tier-amount"
+                    type="number"
+                    placeholder="e.g., 750"
+                    value={newTierAmount}
+                    onChange={(e) => setNewTierAmount(e.target.value)}
+                  />
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setAddTierModalOpen(false);
+                      setNewTierName('');
+                      setNewTierAmount('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddFeeTier}>
+                    Add Tier
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </main>
       </div>
     </SidebarProvider>
