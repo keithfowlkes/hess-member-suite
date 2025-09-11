@@ -492,6 +492,17 @@ const MasterDashboard = () => {
       user.email.toLowerCase().includes(searchLower) ||
       user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower)
     );
+  }).sort((a, b) => {
+    // Sort by role first (admin before member), then by email
+    const roleA = a.user_roles?.[0]?.role || 'member';
+    const roleB = b.user_roles?.[0]?.role || 'member';
+    
+    if (roleA !== roleB) {
+      return roleA === 'admin' ? -1 : 1;
+    }
+    
+    // Then sort by email
+    return a.email.localeCompare(b.email);
   });
 
   if (statsLoading || settingsLoading) {

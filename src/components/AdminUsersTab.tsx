@@ -45,6 +45,17 @@ export function AdminUsersTab({ users, updateUserRole, loading, onUserCreated }:
     const matchesRole = roleFilter === 'all' || currentRole === roleFilter;
     
     return matchesSearch && matchesRole;
+  }).sort((a, b) => {
+    // Sort by role first (admin before member), then by email
+    const roleA = a.user_roles?.[0]?.role || 'member';
+    const roleB = b.user_roles?.[0]?.role || 'member';
+    
+    if (roleA !== roleB) {
+      return roleA === 'admin' ? -1 : 1;
+    }
+    
+    // Then sort by email
+    return a.email.localeCompare(b.email);
   });
 
   const adminCount = users.filter(user => user.user_roles?.[0]?.role === 'admin').length;
