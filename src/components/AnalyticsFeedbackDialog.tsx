@@ -75,6 +75,7 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
     setIsLoading(true);
 
     try {
+      // Primary path: dedicated feedback function
       const { error } = await supabase.functions.invoke('send-analytics-feedback', {
         body: {
           name: name.trim(),
@@ -99,12 +100,40 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
       onOpenChange(false);
 
     } catch (error) {
-      console.error('Error sending feedback:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send feedback. Please try again later.",
-        variant: "destructive"
-      });
+      console.error('Primary feedback send failed, attempting fallback via test-email:', error);
+
+      // Fallback path: use the already-deployed test-email function
+      try {
+        const subject = 'Member Analytics Dashboard Feedback';
+        const combined = `Feedback submitted from Member Analytics page.\n\nName: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
+
+        const { error: fallbackError } = await supabase.functions.invoke('test-email', {
+          body: {
+            to: 'keith.fowlkes@hessconsortium.org',
+            subject,
+            message: combined
+          }
+        });
+
+        if (fallbackError) throw fallbackError;
+
+        toast({
+          title: "Feedback Sent!",
+          description: "Thanks for your feedback. It was sent successfully.",
+        });
+
+        setName('');
+        setEmail('');
+        setMessage('');
+        onOpenChange(false);
+      } catch (fallbackErr) {
+        console.error('Fallback send via test-email also failed:', fallbackErr);
+        toast({
+          title: "Error",
+          description: "Failed to send feedback. Please try again later.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsLoading(false);
     }
