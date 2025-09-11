@@ -1593,6 +1593,41 @@ export default function MembershipFees() {
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          disabled={selectedOrganizations.size === 0 || !Object.keys(organizationFeeTiers).some(orgId => selectedOrganizations.has(orgId))}
+                          onClick={async () => {
+                            try {
+                              const updates = [];
+                              for (const orgId of selectedOrganizations) {
+                                if (organizationFeeTiers[orgId]) {
+                                  const feeAmount = getFeeAmountForTier(organizationFeeTiers[orgId]);
+                                  updates.push(updateOrganization(orgId, { annual_fee_amount: feeAmount }));
+                                }
+                              }
+                              await Promise.all(updates);
+                              const clearedTiers = { ...organizationFeeTiers };
+                              selectedOrganizations.forEach(orgId => {
+                                delete clearedTiers[orgId];
+                              });
+                              setOrganizationFeeTiers(clearedTiers);
+                              toast({
+                                title: "Success",
+                                description: `Updated fees for ${selectedOrganizations.size} organization${selectedOrganizations.size !== 1 ? 's' : ''}.`
+                              });
+                            } catch (error) {
+                              toast({
+                                title: "Error",
+                                description: "Failed to save fee changes.",
+                                variant: "destructive"
+                              });
+                            }
+                          }}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Save
+                        </Button>
                       </div>
                     </div>
                     
