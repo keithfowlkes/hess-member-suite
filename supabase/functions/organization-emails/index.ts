@@ -588,10 +588,8 @@ const handler = async (req: Request): Promise<Response> => {
       html,
     };
 
-    if (type === 'analytics_feedback' && memberEmail) {
-      emailOptions.reply_to = memberEmail;
-      console.log('Added reply_to for analytics_feedback:', memberEmail);
-    }
+    // For analytics_feedback we keep the payload minimal (match invoice delivery)
+    // No reply_to to avoid provider rejections
 
     const emailResponse = await resend.emails.send(emailOptions);
 
