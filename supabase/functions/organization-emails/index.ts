@@ -11,12 +11,13 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: 'invitation' | 'approval' | 'rejection' | 'transfer' | 'welcome' | 'member_approval' | 'overdue_reminder' | 'welcome_approved' | 'profile_update_approved';
+  type: 'invitation' | 'approval' | 'rejection' | 'transfer' | 'welcome' | 'member_approval' | 'overdue_reminder' | 'welcome_approved' | 'profile_update_approved' | 'analytics_feedback';
   to: string;
-  organizationName: string;
+  organizationName?: string;
   token?: string;
   adminMessage?: string;
   memberName?: string;
+  memberEmail?: string;
   secondaryEmail?: string;
   organizationData?: {
     primary_contact_name: string;
@@ -85,6 +86,35 @@ const handler = async (req: Request): Promise<Response> => {
     let html: string;
 
     switch (type) {
+      case 'analytics_feedback':
+        subject = `Member Analytics Dashboard Feedback`;
+        html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">
+              Member Analytics Dashboard Feedback
+            </h2>
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #495057; margin: 0 0 15px 0;">Feedback Details</h3>
+              <p><strong>Name:</strong> ${memberName || 'Unknown'}</p>
+              ${typeof (memberEmail as string | undefined) === 'string' ? `<p><strong>Email:</strong> ${(memberEmail as string)}</p>` : ''}
+              <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+            <div style="background-color: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
+              <h3 style="color: #495057; margin: 0 0 15px 0;">Analytics Request</h3>
+              <div style="white-space: pre-wrap; color: #212529; line-height: 1.6;">${adminMessage || ''}</div>
+            </div>
+            <div style="background-color: #e7f3ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
+              <p style="margin: 0; color: #0c4a6e;">
+                <strong>Note:</strong> This feedback was submitted through the Member Analytics dashboard.
+              </p>
+            </div>
+            <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+            <p style="color: #6c757d; font-size: 14px; text-align: center;">
+              This message was sent from the HESS Consortium Member Analytics Dashboard
+            </p>
+          </div>
+        `;
+        break;
       case 'invitation':
         subject = `Invitation to manage ${organizationName} - HESS Consortium`;
         html = `

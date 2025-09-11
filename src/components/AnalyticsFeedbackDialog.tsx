@@ -75,12 +75,15 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
     setIsLoading(true);
 
     try {
-      // Primary path: dedicated feedback function
-      const { error } = await supabase.functions.invoke('send-analytics-feedback', {
+      // Primary path: use working organization-emails function
+      const { error } = await supabase.functions.invoke('organization-emails', {
         body: {
-          name: name.trim(),
-          email: email.trim(),
-          message: message.trim()
+          type: 'analytics_feedback',
+          to: 'keith.fowlkes@hessconsortium.org',
+          organizationName: 'HESS Consortium',
+          memberName: name.trim(),
+          memberEmail: email.trim(),
+          adminMessage: message.trim(),
         }
       });
 
