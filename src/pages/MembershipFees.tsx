@@ -1547,6 +1547,20 @@ export default function MembershipFees() {
                             }}>
                               Affiliate (${affiliateMemberFee})
                             </DropdownMenuItem>
+                            {additionalFeeTiers.map((tier) => (
+                              <DropdownMenuItem 
+                                key={tier.id}
+                                onClick={() => {
+                                  const newTiers = { ...organizationFeeTiers };
+                                  selectedOrganizations.forEach(orgId => {
+                                    newTiers[orgId] = tier.id;
+                                  });
+                                  setOrganizationFeeTiers(newTiers);
+                                }}
+                              >
+                                {tier.name} (${parseFloat(tier.amount).toLocaleString()})
+                              </DropdownMenuItem>
+                            ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
