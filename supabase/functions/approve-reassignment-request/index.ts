@@ -86,16 +86,7 @@ serve(async (req) => {
           user_metadata: {
             first_name: userData.first_name,
             last_name: userData.last_name,
-            organization: newOrgData?.name,
-            isPrivateNonProfit: userData.is_private_nonprofit,
-            // Include all organization data in metadata for handle_new_user trigger
-            ...Object.keys(newOrgData || {}).reduce((acc, key) => {
-              const value = (newOrgData as any)[key];
-              // Convert snake_case to camelCase for metadata
-              const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-              (acc as any)[camelKey] = (value ?? '').toString();
-              return acc;
-            }, {} as Record<string, any>)
+            isPrivateNonProfit: userData.is_private_nonprofit
           }
         });
 
@@ -160,10 +151,42 @@ serve(async (req) => {
         (updateFields as any).contact_person_id = newProfileId;
       }
 
-      // Update the organization with safe fields
+      // Replace organization data (full overwrite semantics with preserved admin fields)
+      const { data: existingOrg } = await supabaseAdmin
+        .from('organizations')
+        .select('membership_status, membership_start_date, membership_end_date, annual_fee_amount')
+        .eq('id', reassignmentReq.organization_id)
+        .maybeSingle();
+
+      const replaceableKeys = [
+        'name','student_fte','address_line_1','address_line_2','city','state','zip_code','phone','email','website',
+        'primary_contact_title','secondary_first_name','secondary_last_name','secondary_contact_title','secondary_contact_email',
+        'student_information_system','financial_system','financial_aid','hcm_hr','payroll_system','purchasing_system',
+        'housing_management','learning_management','admissions_crm','alumni_advancement_crm','primary_office_apple',
+        'primary_office_asus','primary_office_dell','primary_office_hp','primary_office_microsoft','primary_office_other',
+        'primary_office_other_details','other_software_comments','contact_person_id'
+      ];
+
+      // Start with nulls for all replaceable keys, then apply submitted data
+      const replacement: Record<string, any> = Object.fromEntries(
+        replaceableKeys.map((k) => [k, null])
+      );
+      for (const [k, v] of Object.entries(updateFields)) {
+        if (replaceableKeys.includes(k)) replacement[k] = v;
+      }
+      if (newProfileId) replacement.contact_person_id = newProfileId;
+
+      const finalUpdate = {
+        ...replacement,
+        membership_status: existingOrg?.membership_status ?? 'pending',
+        membership_start_date: existingOrg?.membership_start_date ?? null,
+        membership_end_date: existingOrg?.membership_end_date ?? null,
+        annual_fee_amount: existingOrg?.annual_fee_amount ?? null,
+      };
+
       const { error: updateOrgError } = await supabaseAdmin
         .from('organizations')
-        .update(updateFields)
+        .update(finalUpdate)
         .eq('id', reassignmentReq.organization_id);
 
       if (updateOrgError) {
@@ -188,9 +211,40 @@ serve(async (req) => {
         Object.entries(newOrgData).filter(([k]) => allowedKeys.includes(k))
       );
 
+      // Replace organization data (full overwrite semantics, preserve admin fields)
+      const { data: existingOrg2 } = await supabaseAdmin
+        .from('organizations')
+        .select('membership_status, membership_start_date, membership_end_date, annual_fee_amount')
+        .eq('id', reassignmentReq.organization_id)
+        .maybeSingle();
+
+      const replaceableKeys2 = [
+        'name','student_fte','address_line_1','address_line_2','city','state','zip_code','phone','email','website',
+        'primary_contact_title','secondary_first_name','secondary_last_name','secondary_contact_title','secondary_contact_email',
+        'student_information_system','financial_system','financial_aid','hcm_hr','payroll_system','purchasing_system',
+        'housing_management','learning_management','admissions_crm','alumni_advancement_crm','primary_office_apple',
+        'primary_office_asus','primary_office_dell','primary_office_hp','primary_office_microsoft','primary_office_other',
+        'primary_office_other_details','other_software_comments','contact_person_id'
+      ];
+
+      const replacement2: Record<string, any> = Object.fromEntries(
+        replaceableKeys2.map((k) => [k, null])
+      );
+      for (const [k, v] of Object.entries(updateFields)) {
+        if (replaceableKeys2.includes(k)) replacement2[k] = v as any;
+      }
+
+      const finalUpdate2 = {
+        ...replacement2,
+        membership_status: existingOrg2?.membership_status ?? 'pending',
+        membership_start_date: existingOrg2?.membership_start_date ?? null,
+        membership_end_date: existingOrg2?.membership_end_date ?? null,
+        annual_fee_amount: existingOrg2?.annual_fee_amount ?? null,
+      };
+
       const { error: updateOrgError } = await supabaseAdmin
         .from('organizations')
-        .update(updateFields)
+        .update(finalUpdate2)
         .eq('id', reassignmentReq.organization_id);
 
       if (updateOrgError) {
