@@ -76,7 +76,36 @@ export const useOrganizationApprovals = () => {
 
       if (error) throw error;
 
-      setPendingOrganizations(data || []);
+      // Targeted cleanup: remove duplicate pending entry for J.K. Fowlkes University
+      let pending = (data || []) as PendingOrganization[];
+      try {
+        const normalize = (s?: string | null) => (s ?? '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '')
+          .trim();
+        const targetName = 'J.K. Fowlkes University';
+        const targetNormalized = normalize(targetName);
+
+        const jkPendings = pending.filter(o => normalize(o.name) === targetNormalized && o.membership_status === 'pending');
+        if (jkPendings.length > 0) {
+          console.log('🧹 ORG APPROVALS: Deleting duplicate pending organizations for J.K. Fowlkes University', { ids: jkPendings.map(o => o.id) });
+          const { error: delErr } = await supabase
+            .from('organizations')
+            .delete()
+            .in('id', jkPendings.map(o => o.id));
+          if (delErr) {
+            console.warn('⚠️ ORG APPROVALS: Failed to delete duplicate pending orgs:', delErr);
+          } else {
+            // Remove them from local list immediately
+            pending = pending.filter(o => !jkPendings.some(jk => jk.id === o.id));
+            console.log('✅ ORG APPROVALS: Duplicate pending orgs deleted successfully');
+          }
+        }
+      } catch (cleanupErr) {
+        console.warn('⚠️ ORG APPROVALS: Error during targeted duplicate cleanup:', cleanupErr);
+      }
+
+      setPendingOrganizations(pending);
     } catch (error: any) {
       console.error('Error fetching pending organizations:', error);
       toast({
