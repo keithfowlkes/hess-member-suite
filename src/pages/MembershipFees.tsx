@@ -120,6 +120,8 @@ export default function MembershipFees() {
   const [addTierModalOpen, setAddTierModalOpen] = useState(false);
   const [newTierName, setNewTierName] = useState('');
   const [newTierAmount, setNewTierAmount] = useState('');
+  const [deleteTierConfirmOpen, setDeleteTierConfirmOpen] = useState(false);
+  const [tierToDelete, setTierToDelete] = useState<string | null>(null);
 
   // Setup default invoice template with HESS logo on component mount
   React.useEffect(() => {
@@ -392,6 +394,25 @@ export default function MembershipFees() {
       });
       return updated;
     });
+    
+    toast({
+      title: "Success",
+      description: "Fee tier deleted successfully."
+    });
+  };
+
+  // Confirm delete fee tier
+  const confirmDeleteFeeTier = (tierId: string) => {
+    setTierToDelete(tierId);
+    setDeleteTierConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (tierToDelete) {
+      handleRemoveFeeTier(tierToDelete);
+      setTierToDelete(null);
+      setDeleteTierConfirmOpen(false);
+    }
   };
 
   // Get tier display name
@@ -1180,19 +1201,21 @@ export default function MembershipFees() {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {additionalFeeTiers.map((tier) => (
-                              <div key={tier.id} className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
+                              <div key={tier.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                                 <div className="flex-1">
                                   <div className="font-medium text-sm">{tier.name}</div>
                                   <div className="text-sm text-muted-foreground">${parseFloat(tier.amount).toLocaleString()}</div>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveFeeTier(tier.id)}
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => confirmDeleteFeeTier(tier.id)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -2019,6 +2042,38 @@ export default function MembershipFees() {
             onClose={() => setPendingModalOpen(false)}
             organizations={organizations}
           />
+
+          {/* Delete Fee Tier Confirmation Dialog */}
+          <Dialog open={deleteTierConfirmOpen} onOpenChange={setDeleteTierConfirmOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Fee Tier</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to delete this fee tier? This action cannot be undone. 
+                  Any organizations currently assigned to this tier will have their tier assignment removed.
+                </p>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setDeleteTierConfirmOpen(false);
+                      setTierToDelete(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleConfirmDelete}
+                  >
+                    Delete Tier
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Add Fee Tier Modal */}
           <Dialog open={addTierModalOpen} onOpenChange={setAddTierModalOpen}>
