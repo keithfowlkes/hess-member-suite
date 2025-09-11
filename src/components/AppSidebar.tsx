@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search, Map } from 'lucide-react';
+import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search, Map, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
 import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
 import { useReassignmentRequests } from '@/hooks/useReassignmentRequests';
 import { useOrganizationProfileEditRequests } from '@/hooks/useOrganizationProfileEditRequests';
 import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
+import { useUnreadMessageCount } from '@/hooks/useUserMessages';
 import { AdminCustomEntriesNotification } from '@/components/AdminCustomEntriesNotification';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +37,7 @@ export function AppSidebar() {
   const { data: memberInfoUpdateRequests = [] } = useReassignmentRequests();
   const { requests: profileEditRequests = [] } = useOrganizationProfileEditRequests();
   const { pendingRegistrations } = usePendingRegistrations();
+  const { data: unreadMessageCount = 0 } = useUnreadMessageCount();
   
   // Calculate total pending actions including all types of pending requests
   const activeInvitations = invitations?.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()) || [];
@@ -50,6 +52,7 @@ export function AppSidebar() {
   const adminItems = [
     { title: 'Master Dashboard', url: '/dashboard', icon: Home },
     { title: 'Member Organizations', url: '/members', icon: Users },
+    { title: 'User Messages', url: '/user-messages', icon: MessageSquare, badge: unreadMessageCount },
     { title: 'Dashboards', url: '/dashboards', icon: BarChart3 },
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
     { title: 'Organization Profile', url: '/profile', icon: User },
@@ -103,6 +106,7 @@ export function AppSidebar() {
               {items.map((item) => {
                 const Icon = item.icon;
                 const showMasterDashboardBadge = isViewingAsAdmin && item.title === 'Master Dashboard' && totalPendingActions > 0;
+                const showUserMessagesBadge = isViewingAsAdmin && item.title === 'User Messages' && (item as any).badge > 0;
                 
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -123,6 +127,14 @@ export function AppSidebar() {
                                 className="h-4 w-4 p-0 flex items-center justify-center text-xs ml-auto"
                               >
                                 {totalPendingActions}
+                              </Badge>
+                            )}
+                            {showUserMessagesBadge && (
+                              <Badge 
+                                variant="destructive" 
+                                className="h-4 w-4 p-0 flex items-center justify-center text-xs ml-auto"
+                              >
+                                {(item as any).badge}
                               </Badge>
                             )}
                           </div>

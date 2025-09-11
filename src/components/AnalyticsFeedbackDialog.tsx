@@ -75,23 +75,20 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
     setIsLoading(true);
 
     try {
-      // Send via proven test-email function (uses Resend successfully)
-      const subject = 'Member Analytics Dashboard Feedback';
-      const combined = `Feedback submitted from Member Analytics page.\n\nName: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
-
-      const { error } = await supabase.functions.invoke('test-email', {
-        body: {
-          to: 'keith.fowlkes@hessconsortium.org',
-          subject,
-          message: combined
-        }
-      });
+      // Save to database instead of email
+      const { error } = await (supabase as any)
+        .from('user_messages')
+        .insert([{
+          name: name.trim(),
+          email: email.trim(),
+          message: message.trim()
+        }]);
 
       if (error) throw error;
 
       toast({
         title: "Feedback Sent!",
-        description: "Thanks for your feedback. It was sent successfully.",
+        description: "Thank you for your feedback. We'll review your suggestions for improving the Member Analytics dashboard.",
       });
 
       setName('');
@@ -99,10 +96,10 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
       setMessage('');
       onOpenChange(false);
     } catch (err) {
-      console.error('Sending feedback failed:', err);
+      console.error('Error saving feedback:', err);
       toast({
         title: "Error",
-        description: "Failed to send feedback. Please try again later.",
+        description: "Failed to submit feedback. Please try again later.",
         variant: "destructive"
       });
     } finally {

@@ -24,6 +24,7 @@ import ProfileEdit from "./pages/ProfileEdit";
 import Dashboards from "./pages/Dashboards";
 import ResearchDashboard from "./pages/ResearchDashboard";
 import MemberAnalytics from "./pages/MemberAnalytics";
+import UserMessages from "./pages/UserMessages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/password-reset" element={<PasswordReset />} />
             <Route path="/dashboard" element={<ProtectedRoute><MasterDashboard /></ProtectedRoute>} />
             <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
+            <Route path="/user-messages" element={<ProtectedRoute><UserMessages /></ProtectedRoute>} />
             <Route path="/dashboards" element={<ProtectedRoute><Dashboards /></ProtectedRoute>} />
             <Route path="/research-dashboard" element={<ProtectedRoute><ResearchDashboard /></ProtectedRoute>} />
             <Route path="/member-analytics" element={<ProtectedRoute><MemberAnalytics /></ProtectedRoute>} />
