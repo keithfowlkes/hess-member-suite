@@ -28,13 +28,25 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Dynamically determine basename when the app is hosted under a subpath (e.g., /new/join-the-hess-consortium)
+const baseName = (() => {
+  try {
+    const path = window.location.pathname || '';
+    // Known external mount path for public registration
+    const knownBase = '/new/join-the-hess-consortium';
+    return path.startsWith(knownBase) ? knownBase : '/';
+  } catch {
+    return '/';
+  }
+})();
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename={baseName}>
           <Routes>
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/auth" element={<Auth />} />
