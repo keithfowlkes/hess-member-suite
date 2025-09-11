@@ -1061,6 +1061,58 @@ export default function MembershipFees() {
               </TabsList>
 
               <TabsContent value="overview">
+                {/* Annual Fee Tier Pricing Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  <Card className="lg:col-span-2">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Annual Fee Tier Pricing
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="full-member-fee">Full Member Fee ($)</Label>
+                          <Input
+                            id="full-member-fee"
+                            type="number"
+                            placeholder="e.g., 1000"
+                            value={fullMemberFee}
+                            onChange={(e) => setFullMemberFee(e.target.value)}
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            Annual fee for full consortium members
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="affiliate-member-fee">Affiliate Member Fee ($)</Label>
+                          <Input
+                            id="affiliate-member-fee"
+                            type="number"
+                            placeholder="e.g., 500"
+                            value={affiliateMemberFee}
+                            onChange={(e) => setAffiliateMemberFee(e.target.value)}
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            Annual fee for affiliate members
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end pt-4 border-t">
+                        <Button 
+                          onClick={handleSaveFeeTiers}
+                          disabled={updateSystemSetting.isPending}
+                        >
+                          {updateSystemSetting.isPending ? "Saving..." : "Save Fee Tiers"}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Fee Update Section */}
                   <Card>
@@ -1176,58 +1228,6 @@ export default function MembershipFees() {
                         >
                           <DollarSign className="h-4 w-4 mr-2" />
                           Mark All Invoices Paid
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Annual Fee Tier Pricing Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                  <Card className="lg:col-span-2">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5" />
-                        Annual Fee Tier Pricing
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label htmlFor="full-member-fee">Full Member Fee ($)</Label>
-                          <Input
-                            id="full-member-fee"
-                            type="number"
-                            placeholder="e.g., 1000"
-                            value={fullMemberFee}
-                            onChange={(e) => setFullMemberFee(e.target.value)}
-                          />
-                          <p className="text-sm text-muted-foreground">
-                            Annual fee for full consortium members
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="affiliate-member-fee">Affiliate Member Fee ($)</Label>
-                          <Input
-                            id="affiliate-member-fee"
-                            type="number"
-                            placeholder="e.g., 500"
-                            value={affiliateMemberFee}
-                            onChange={(e) => setAffiliateMemberFee(e.target.value)}
-                          />
-                          <p className="text-sm text-muted-foreground">
-                            Annual fee for affiliate members
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-end pt-4 border-t">
-                        <Button 
-                          onClick={handleSaveFeeTiers}
-                          disabled={updateSystemSetting.isPending}
-                        >
-                          {updateSystemSetting.isPending ? "Saving..." : "Save Fee Tiers"}
                         </Button>
                       </div>
                     </CardContent>
