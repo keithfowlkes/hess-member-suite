@@ -36,6 +36,7 @@ export const useReassignmentRequests = () => {
       const { data, error } = await supabase
         .from('organization_reassignment_requests')
         .select('*')
+        .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
