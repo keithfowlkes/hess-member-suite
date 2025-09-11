@@ -9,13 +9,19 @@ interface ProfessionalInvoiceProps {
 
 export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoiceProps) {
   const { getDefaultTemplate } = useInvoiceTemplates();
-  const activeTemplate = template || getDefaultTemplate();
+  const fallbackTemplate = {
+    id: 'fallback',
+    name: 'Default Template',
+    logo_url: undefined,
+    header_content: '',
+    footer_content: '',
+    custom_styles: {},
+    is_default: true,
+    created_at: '',
+    updated_at: ''
+  };
+  const activeTemplate = template || getDefaultTemplate() || fallbackTemplate;
 
-  if (!activeTemplate) {
-    return <div>Loading template...</div>;
-  }
-
-  // Template variable replacements
   const templateData = {
     '{{LOGO}}': activeTemplate.logo_url ? `<img src="${activeTemplate.logo_url}" alt="Logo" style="max-height: 80px;" />` : '',
     '{{INVOICE_NUMBER}}': invoice.invoice_number,
