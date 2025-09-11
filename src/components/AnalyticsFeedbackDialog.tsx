@@ -75,73 +75,40 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
     setIsLoading(true);
 
     try {
-      // Primary path: use working organization-emails function
-      const { error } = await supabase.functions.invoke('organization-emails', {
+      // Send via proven test-email function (uses Resend successfully)
+      const subject = 'Member Analytics Dashboard Feedback';
+      const combined = `Feedback submitted from Member Analytics page.\n\nName: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
+
+      const { error } = await supabase.functions.invoke('test-email', {
         body: {
-          type: 'analytics_feedback',
           to: 'keith.fowlkes@hessconsortium.org',
-          organizationName: 'HESS Consortium',
-          memberName: name.trim(),
-          memberEmail: email.trim(),
-          adminMessage: message.trim(),
+          subject,
+          message: combined
         }
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Feedback Sent!",
-        description: "Thank you for your feedback. We'll review your suggestions for improving the Member Analytics dashboard."
+        description: "Thanks for your feedback. It was sent successfully.",
       });
 
-      // Reset form
       setName('');
       setEmail('');
       setMessage('');
       onOpenChange(false);
-
-    } catch (error) {
-      console.error('Primary feedback send failed, attempting fallback via test-email:', error);
-
-      // Fallback path: use the already-deployed test-email function
-      try {
-        const subject = 'Member Analytics Dashboard Feedback';
-        const combined = `Feedback submitted from Member Analytics page.\n\nName: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
-
-        const { error: fallbackError } = await supabase.functions.invoke('test-email', {
-          body: {
-            to: 'keith.fowlkes@hessconsortium.org',
-            subject,
-            message: combined
-          }
-        });
-
-        if (fallbackError) throw fallbackError;
-
-        toast({
-          title: "Feedback Sent!",
-          description: "Thanks for your feedback. It was sent successfully.",
-        });
-
-        setName('');
-        setEmail('');
-        setMessage('');
-        onOpenChange(false);
-      } catch (fallbackErr) {
-        console.error('Fallback send via test-email also failed:', fallbackErr);
-        toast({
-          title: "Error",
-          description: "Failed to send feedback. Please try again later.",
-          variant: "destructive"
-        });
-      }
+    } catch (err) {
+      console.error('Sending feedback failed:', err);
+      toast({
+        title: "Error",
+        description: "Failed to send feedback. Please try again later.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
