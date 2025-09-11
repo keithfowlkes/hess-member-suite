@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,7 @@ export default function Auth() {
   const { user, signIn, signUp, loading } = useAuth();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { data: organizations = [] } = useOrganizations();
   const createReassignmentRequest = useCreateReassignmentRequest();
   const { data: recaptchaSetting, isLoading: isLoadingRecaptcha } = useSystemSetting('recaptcha_site_key');
@@ -461,7 +462,7 @@ export default function Auth() {
         });
 
         // Redirect to confirmation page
-        window.location.href = '/registration-confirmation?type=reassignment';
+        navigate('/registration-confirmation?type=reassignment');
       } catch (error: any) {
         toast({
           title: "Member information update request failed",
@@ -605,7 +606,7 @@ export default function Auth() {
         
         console.log('🔄 REGISTRATION DEBUG: About to redirect to confirmation page');
         // Redirect to confirmation page
-        window.location.href = '/registration-confirmation?type=pending';
+        navigate('/registration-confirmation?type=pending');
       }
     }
     console.log('🏁 REGISTRATION DEBUG: Setting submitting to false and finishing');
