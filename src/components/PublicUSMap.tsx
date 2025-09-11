@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { MapPin, Building2, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { OrganizationDetailsDialog } from '@/components/OrganizationDetailsDialog';
+import { OrganizationInfoModal } from '@/components/OrganizationInfoModal';
 
 interface MemberLocation {
   id: string;
@@ -221,8 +221,19 @@ export function PublicUSMap() {
       const { data, error } = await supabase
         .from('organizations')
         .select(`
-          *,
-          profiles:contact_person_id (*)
+          id,
+          name,
+          city,
+          state,
+          email,
+          student_fte,
+          membership_status,
+          profiles:contact_person_id (
+            first_name,
+            last_name,
+            email,
+            student_fte
+          )
         `)
         .eq('id', organizationId)
         .single();
@@ -443,11 +454,10 @@ export function PublicUSMap() {
         </div>
       </div>
 
-      <OrganizationDetailsDialog
+      <OrganizationInfoModal
         organization={selectedOrganization}
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        canEdit={false}
       />
     </div>
   );
