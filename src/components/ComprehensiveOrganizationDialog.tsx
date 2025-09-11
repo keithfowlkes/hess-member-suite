@@ -509,15 +509,16 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
             {organization ? 'Organization & Member Details' : 'Add New Organization'}
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="organization" className="w-full">
+        <div className="flex-1 overflow-y-auto pr-2">
+          <Tabs defaultValue="organization" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="organization">Organization</TabsTrigger>
             <TabsTrigger value="contact" disabled={!organization?.profiles}>Primary Contact</TabsTrigger>
@@ -1091,8 +1092,9 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
             </>
           )}
         </Tabs>
+        </div>
 
-        <div className="flex justify-between items-center pt-4 border-t">
+        <div className="flex justify-between items-center pt-4 border-t flex-shrink-0">
           <div className="flex gap-2">
             {organization && isAdmin && (
               <>
