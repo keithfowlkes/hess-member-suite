@@ -122,6 +122,7 @@ export default function MembershipFees() {
   const [newTierAmount, setNewTierAmount] = useState('');
   const [deleteTierConfirmOpen, setDeleteTierConfirmOpen] = useState(false);
   const [tierToDelete, setTierToDelete] = useState<string | null>(null);
+  const [organizationSearchTerm, setOrganizationSearchTerm] = useState('');
 
   // Setup default invoice template with HESS logo on component mount
   React.useEffect(() => {
@@ -428,6 +429,13 @@ export default function MembershipFees() {
     const additionalTier = additionalFeeTiers.find(t => t.id === tier);
     return additionalTier ? additionalTier.name : 'Unknown Tier';
   };
+
+  // Filter organizations based on search term
+  const filteredOrganizations = organizations.filter(org =>
+    org.name.toLowerCase().includes(organizationSearchTerm.toLowerCase()) ||
+    org.email?.toLowerCase().includes(organizationSearchTerm.toLowerCase()) ||
+    org.membership_status.toLowerCase().includes(organizationSearchTerm.toLowerCase())
+  );
 
   // Calculate fee statistics
   const calculateStats = (): FeesStats => {
@@ -1512,15 +1520,32 @@ export default function MembershipFees() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {/* Search Field */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Search organizations by name, email, or status..."
+                        value={organizationSearchTerm}
+                        onChange={(e) => setOrganizationSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="selectAll"
-                          checked={selectedOrganizations.size === organizations.length && organizations.length > 0}
-                          onCheckedChange={handleSelectAll}
+                          checked={selectedOrganizations.size === filteredOrganizations.length && filteredOrganizations.length > 0}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedOrganizations(new Set(filteredOrganizations.map(org => org.id)));
+                            } else {
+                              setSelectedOrganizations(new Set());
+                            }
+                          }}
                         />
                         <Label htmlFor="selectAll" className="text-sm font-medium">
-                          Select All Organizations ({organizations.length})
+                          Select All Organizations ({filteredOrganizations.length}{organizationSearchTerm && ` of ${organizations.length}`})
                         </Label>
                       </div>
                       
@@ -1580,7 +1605,7 @@ export default function MembershipFees() {
                         <div className="col-span-2">Assigned Tier</div>
                         <div className="col-span-1">Payment Status</div>
                       </div>
-                      {organizations.map((org) => (
+                      {filteredOrganizations.map((org) => (
                         <div key={org.id} className="grid grid-cols-12 gap-2 items-center p-2 hover:bg-gray-50 rounded">
                           <div className="col-span-1">
                             <Checkbox
@@ -1623,6 +1648,7 @@ export default function MembershipFees() {
                     <div className="flex justify-between items-center pt-4 border-t">
                       <p className="text-sm text-muted-foreground">
                         {selectedOrganizations.size} organization{selectedOrganizations.size !== 1 ? 's' : ''} selected
+                        {organizationSearchTerm && ` (${filteredOrganizations.length} shown of ${organizations.length} total)`}
                       </p>
                       <div className="flex space-x-2">
                         <Button 
