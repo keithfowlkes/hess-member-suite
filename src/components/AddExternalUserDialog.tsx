@@ -40,7 +40,7 @@ export function AddExternalUserDialog({ open, onOpenChange, onUserCreated }: Add
     setLoading(true);
 
     try {
-      // Create the user through Supabase edge function
+      // Try via Supabase client first
       const { data, error } = await supabase.functions.invoke('create-external-user', {
         body: {
           firstName: formData.firstName,
@@ -71,12 +71,43 @@ export function AddExternalUserDialog({ open, onOpenChange, onUserCreated }: Add
       onOpenChange(false);
 
     } catch (error: any) {
-      console.error('Error creating external user:', error);
-      toast({
-        title: 'Creation Failed',
-        description: error.message || 'Failed to create external user. Please try again.',
-        variant: 'destructive'
-      });
+      console.error('Error creating external user via invoke:', error);
+      try {
+        // Fallback: direct call to functions endpoint (public function)
+        const url = `https://tyovnvuluyosjnabrzjc.functions.supabase.co/create-external-user`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role
+          })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({} as any));
+          throw new Error(err?.error || `HTTP ${res.status}`);
+        }
+
+        toast({
+          title: 'External User Created',
+          description: `Successfully created external user ${formData.firstName} ${formData.lastName}`,
+        });
+
+        // Reset form
+        setFormData({ firstName: '', lastName: '', email: '', role: 'member', password: '' });
+        onUserCreated();
+        onOpenChange(false);
+      } catch (fallbackErr: any) {
+        console.error('Fallback create external user failed:', fallbackErr);
+        toast({
+          title: 'Creation Failed',
+          description: fallbackErr.message || 'Failed to create external user. Please try again.',
+          variant: 'destructive'
+        });
+      }
     } finally {
       setLoading(false);
     }
