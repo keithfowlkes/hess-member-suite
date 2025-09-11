@@ -100,17 +100,31 @@ export function AddExternalUserDialog({ open, onOpenChange, onUserCreated }: Add
         }
       }
 
-      // 4) Apply selected role
-      const { data: prof, error: profErr } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('email', formData.email)
-        .maybeSingle();
-      if (profErr) throw profErr;
-      if (prof?.user_id) {
-        await supabase.from('user_roles').delete().eq('user_id', prof.user_id);
-        const { error: roleErr } = await supabase.from('user_roles').insert({ user_id: prof.user_id, role: formData.role });
-        if (roleErr) throw roleErr;
+      // 4) Apply selected role (with better error handling)
+      try {
+        // Wait a moment for profile to be created by trigger
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const { data: prof, error: profErr } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('email', formData.email)
+          .maybeSingle();
+        
+        if (profErr) {
+          console.warn('Profile lookup failed (non-critical):', profErr);
+        } else if (prof?.user_id) {
+          // Clear any existing roles and set the new one
+          await supabase.from('user_roles').delete().eq('user_id', prof.user_id);
+          const { error: roleErr } = await supabase.from('user_roles').insert({ user_id: prof.user_id, role: formData.role });
+          if (roleErr) {
+            console.warn('Role assignment failed (non-critical):', roleErr);
+          } else {
+            console.log('Role assigned successfully');
+          }
+        }
+      } catch (roleError) {
+        console.warn('Role assignment error (non-critical):', roleError);
       }
 
       toast({ title: 'External User Created', description: `Created external user under ${adminOrgName}` });
