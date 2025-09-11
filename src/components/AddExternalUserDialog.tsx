@@ -75,9 +75,17 @@ export function AddExternalUserDialog({ open, onOpenChange, onUserCreated }: Add
       try {
         // Fallback: direct call to functions endpoint (public function)
         const url = `https://tyovnvuluyosjnabrzjc.functions.supabase.co/create-external-user`;
+        const { data: sess } = await supabase.auth.getSession();
+        const accessToken = sess?.session?.access_token;
+        const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470';
         const res = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': anonKey,
+            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
+          },
           body: JSON.stringify({
             firstName: formData.firstName,
             lastName: formData.lastName,
