@@ -13,12 +13,16 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
+import { MemberInvoiceViewModal } from '@/components/MemberInvoiceViewModal';
+import { Invoice } from '@/hooks/useInvoices';
 
 export default function Invoices() {
   const { invoices, loading, markAsPaid, sendInvoice } = useInvoices();
   const { isViewingAsAdmin } = useAuth();
   const resendInvoice = useResendInvoice();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   // Filter invoices based on user role
   const filteredInvoices = invoices.filter(invoice => {
@@ -118,6 +122,11 @@ export default function Invoices() {
     }
   };
 
+  const handleViewInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setIsViewModalOpen(true);
+  };
+
   if (loading) {
     return (
       <SidebarProvider>
@@ -177,7 +186,8 @@ export default function Invoices() {
               {filteredInvoices.map((invoice) => (
                 <Card 
                   key={invoice.id} 
-                  className="hover:shadow-md transition-shadow"
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => !isViewingAsAdmin && handleViewInvoice(invoice)}
                 >
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
@@ -256,10 +266,21 @@ export default function Invoices() {
                             <Button
                               size="sm"
                               variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewInvoice(invoice);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View Invoice
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={(e) => generatePDF(invoice, e)}
                             >
                               <Download className="h-4 w-4 mr-1" />
-                              Print PDF
+                              Download PDF
                             </Button>
                           </div>
                         )}
@@ -288,6 +309,12 @@ export default function Invoices() {
               </div>
             )}
           </div>
+
+          <MemberInvoiceViewModal
+            open={isViewModalOpen}
+            onOpenChange={setIsViewModalOpen}
+            invoice={selectedInvoice}
+          />
         </main>
       </div>
     </SidebarProvider>
