@@ -53,6 +53,15 @@ export default function Auth() {
   }, [])
   const [activeTab, setActiveTab] = useState(initialTab)
   const [showEmailNotFoundDialog, setShowEmailNotFoundDialog] = useState(false);
+  
+  // Ensure URL param forces tab selection after mount as well
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search)
+    const t = sp.get('tab')?.toLowerCase()
+    if (t === 'register' || t === 'signup') {
+      setActiveTab('signup')
+    }
+  }, [])
   const [emailNotFoundAddress, setEmailNotFoundAddress] = useState('');
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
   const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
