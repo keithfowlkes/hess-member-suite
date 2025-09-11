@@ -78,10 +78,11 @@ export function usePendingRegistrations() {
         registrations: data?.map(r => ({ id: r.id, email: r.email, organization: r.organization_name, created_at: r.created_at }))
       });
 
-      // Filter out registrations for organizations that already exist
-      let registrations = (data || []) as PendingRegistration[];
+      // Filter out and delete pending registrations for organizations that already exist
+      const original = (data || []) as PendingRegistration[];
+      let registrations = [...original];
       try {
-        const orgNames = Array.from(new Set(registrations.map(r => r.organization_name).filter(Boolean))) as string[];
+        const orgNames = Array.from(new Set(original.map(r => r.organization_name).filter(Boolean))) as string[];
         if (orgNames.length > 0) {
           const { data: existingOrgs, error: orgsErr } = await supabase
             .from('organizations')
@@ -90,14 +91,31 @@ export function usePendingRegistrations() {
           if (orgsErr) {
             console.warn('⚠️ PENDING DEBUG: Could not check existing organizations:', orgsErr);
           } else {
-            const existingSet = new Set((existingOrgs || []).map((o: any) => o.name));
+            const normalize = (s?: string | null) => (s ?? '').trim().toLowerCase();
+            const existingSet = new Set((existingOrgs || []).map((o: any) => normalize(o.name)));
+
+            const duplicatesToDelete = original.filter(r => existingSet.has(normalize(r.organization_name)));
+            if (duplicatesToDelete.length > 0) {
+              console.log('🧹 PENDING DEBUG: Deleting duplicates present in organizations:', { ids: duplicatesToDelete.map(d => d.id), count: duplicatesToDelete.length });
+              const { error: delErr } = await supabase
+                .from('pending_registrations')
+                .delete()
+                .in('id', duplicatesToDelete.map(d => d.id))
+                .eq('approval_status', 'pending');
+              if (delErr) {
+                console.warn('⚠️ PENDING DEBUG: Failed to delete duplicates:', delErr);
+              } else {
+                console.log('✅ PENDING DEBUG: Deleted duplicate pending registrations successfully');
+              }
+            }
+
             const before = registrations.length;
-            registrations = registrations.filter(r => !existingSet.has(r.organization_name));
+            registrations = registrations.filter(r => !existingSet.has(normalize(r.organization_name)));
             console.log('✅ PENDING DEBUG: Filtered duplicates present in organizations:', { before, after: registrations.length });
           }
         }
       } catch (filterErr) {
-        console.warn('⚠️ PENDING DEBUG: Error while filtering duplicates against organizations:', filterErr);
+        console.warn('⚠️ PENDING DEBUG: Error while filtering/deleting duplicates against organizations:', filterErr);
       }
 
       setPendingRegistrations(registrations);
