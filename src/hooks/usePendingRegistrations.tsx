@@ -92,7 +92,7 @@ export function usePendingRegistrations() {
           } else {
             const normalize = (s?: string | null) => (s ?? '')
               .toLowerCase()
-              .replace(/[^a-z0-9]/g, '') // remove spaces & punctuation for robust matching
+              .replace(/[^a-z0-9]/g, '')
               .trim();
             const existingSet = new Set((existingOrgs || []).map((o: any) => normalize(o.name)));
 
@@ -111,9 +111,26 @@ export function usePendingRegistrations() {
               }
             }
 
+            // Targeted cleanup for known duplicate: J.K. Fowlkes University
+            const targetName = 'J.K. Fowlkes University';
+            const targetNormalized = normalize(targetName);
+            const jkDuplicates = original.filter(r => normalize(r.organization_name) === targetNormalized);
+            if (jkDuplicates.length > 0) {
+              console.log('🧹 PENDING DEBUG: Force-deleting known duplicate registrations for J.K. Fowlkes University', { ids: jkDuplicates.map(d => d.id) });
+              const { error: jkDelErr } = await supabase
+                .from('pending_registrations')
+                .delete()
+                .in('id', jkDuplicates.map(d => d.id));
+              if (jkDelErr) {
+                console.warn('⚠️ PENDING DEBUG: Failed to force-delete J.K. Fowlkes University duplicates:', jkDelErr);
+              } else {
+                console.log('✅ PENDING DEBUG: Force-deleted J.K. Fowlkes University duplicates');
+              }
+            }
+
             const before = registrations.length;
-            registrations = registrations.filter(r => !existingSet.has(normalize(r.organization_name)));
-            console.log('✅ PENDING DEBUG: Filtered duplicates present in organizations:', { before, after: registrations.length });
+            registrations = registrations.filter(r => !existingSet.has(normalize(r.organization_name)) && normalize(r.organization_name) !== targetNormalized);
+            console.log('✅ PENDING DEBUG: Filtered duplicates present in organizations and targeted name:', { before, after: registrations.length });
           }
         }
       } catch (filterErr) {
