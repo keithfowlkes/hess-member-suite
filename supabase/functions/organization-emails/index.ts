@@ -591,7 +591,23 @@ const handler = async (req: Request): Promise<Response> => {
     // For analytics_feedback we keep the payload minimal (match invoice delivery)
     // No reply_to to avoid provider rejections
 
-    const emailResponse = await resend.emails.send(emailOptions);
+    let emailResponse: any;
+    try {
+      if (type === 'analytics_feedback') {
+        // Use the simplest proven payload (mirrors working test-email)
+        emailResponse = await resend.emails.send({
+          from: "HESS Consortium <support@members.hessconsortium.app>",
+          to: to, // single recipient string
+          subject,
+          html,
+        });
+      } else {
+        emailResponse = await resend.emails.send(emailOptions);
+      }
+    } catch (providerErr) {
+      console.error('Resend provider threw', providerErr);
+      return new Response(JSON.stringify({ error: 'Resend provider error', details: String((providerErr as any)?.message || providerErr) }), { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
 
     if ((emailResponse as any)?.error) {
       console.error('Resend send error:', (emailResponse as any).error);
