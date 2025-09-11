@@ -379,6 +379,11 @@ export default function MembershipFees() {
     setNewTierName('');
     setNewTierAmount('');
     setAddTierModalOpen(false);
+    
+    toast({
+      title: "Success",
+      description: `Fee tier "${newTierName}" added successfully.`
+    });
   };
 
   // Remove fee tier
@@ -1521,7 +1526,7 @@ export default function MembershipFees() {
                       
                       <div className="flex items-center space-x-2">
                         <Label className="text-sm font-medium">Set Fee Tier for Selected:</Label>
-                        <DropdownMenu>
+                        <DropdownMenu key={`fee-tiers-${additionalFeeTiers.length}-${fullMemberFee}-${affiliateMemberFee}`}>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" disabled={selectedOrganizations.size === 0}>
                               Set Fee Tier
