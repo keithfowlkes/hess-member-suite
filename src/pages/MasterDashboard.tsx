@@ -349,10 +349,16 @@ const MasterDashboard = () => {
     }
   };
 
-  const handleRemoveCcRecipient = (email: string) => {
-    setWelcomeCcRecipients(welcomeCcRecipients.filter(recipient => recipient !== email));
+  const handleRemoveCcRecipient = async (email: string) => {
+    const updated = welcomeCcRecipients.filter(recipient => recipient !== email);
+    setWelcomeCcRecipients(updated);
+    try {
+      setSavingCcRecipients(true);
+      await updateSetting('welcome_message_cc_recipients', JSON.stringify(updated));
+    } finally {
+      setSavingCcRecipients(false);
+    }
   };
-
   // Initialize password reset message, welcome message, profit update message, and CC recipients when settings load
   useEffect(() => {
     const passwordSetting = settings.find(s => s.setting_key === 'password_reset_message');
