@@ -91,7 +91,10 @@ export function usePendingRegistrations() {
           if (orgsErr) {
             console.warn('⚠️ PENDING DEBUG: Could not check existing organizations:', orgsErr);
           } else {
-            const normalize = (s?: string | null) => (s ?? '').trim().toLowerCase();
+            const normalize = (s?: string | null) => (s ?? '')
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, '') // remove spaces & punctuation for robust matching
+              .trim();
             const existingSet = new Set((existingOrgs || []).map((o: any) => normalize(o.name)));
 
             const duplicatesToDelete = original.filter(r => existingSet.has(normalize(r.organization_name)));
