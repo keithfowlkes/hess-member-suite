@@ -20,13 +20,13 @@ serve(async (req) => {
       {
         auth: {
           autoRefreshToken: false,
-          persistSession: false
-        }
+          persistSession: false,
+        },
       }
     );
 
     const { requestId, adminUserId } = await req.json();
-    
+
     if (!requestId || !adminUserId) {
       return new Response(
         JSON.stringify({ error: 'Missing requestId or adminUserId' }),
@@ -34,304 +34,290 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Processing approval for reassignment request: ${requestId} by admin: ${adminUserId}`);
+    console.log(`[APPROVE-REASSIGNMENT] Start requestId=${requestId} adminUserId=${adminUserId}`);
 
-    // Get the reassignment request
-    const { data: reassignmentReq, error: fetchError } = await supabaseAdmin
+    // 1) Load reassignment request
+    const { data: reassignmentReq, error: reqErr } = await supabaseAdmin
       .from('organization_reassignment_requests')
       .select('*')
       .eq('id', requestId)
       .maybeSingle();
 
-    if (fetchError || !reassignmentReq) {
-      console.error('Error fetching reassignment request:', fetchError);
+    if (reqErr || !reassignmentReq) {
+      console.error('[APPROVE-REASSIGNMENT] Request not found', reqErr);
       return new Response(
         JSON.stringify({ error: 'Reassignment request not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Found reassignment request for: ${reassignmentReq.new_contact_email}`);
+    const orgId: string = reassignmentReq.organization_id;
+    const newOrgData = reassignmentReq.new_organization_data || {};
+    const registration = reassignmentReq.user_registration_data || null;
+    const newContactEmail: string = reassignmentReq.new_contact_email;
 
-    // Create the auth user if user registration data is provided
-    if (reassignmentReq.user_registration_data) {
-      const userData = reassignmentReq.user_registration_data;
-      const newOrgData = reassignmentReq.new_organization_data || {};
+    console.log('[APPROVE-REASSIGNMENT] Loaded request with orgId', orgId);
 
-      // Only update columns that exist on organizations table
-      const allowedKeys = [
-        'name','student_fte','address_line_1','address_line_2','city','state','zip_code','phone','email','website',
-        'primary_contact_title','secondary_first_name','secondary_last_name','secondary_contact_title','secondary_contact_email',
-        'student_information_system','financial_system','financial_aid','hcm_hr','payroll_system','purchasing_system',
-        'housing_management','learning_management','admissions_crm','alumni_advancement_crm','primary_office_apple',
-        'primary_office_asus','primary_office_dell','primary_office_hp','primary_office_microsoft','primary_office_other',
-        'primary_office_other_details','other_software_comments'
-      ];
-      const updateFields = Object.fromEntries(
-        Object.entries(newOrgData).filter(([k]) => allowedKeys.includes(k))
+    // 2) Load existing organization + current primary contact
+    const { data: existingOrg, error: orgErr } = await supabaseAdmin
+      .from('organizations')
+      .select('id, name, contact_person_id, profiles:contact_person_id(id, user_id, email, first_name, last_name)')
+      .eq('id', orgId)
+      .maybeSingle();
+
+    if (orgErr || !existingOrg) {
+      console.error('[APPROVE-REASSIGNMENT] Organization not found', orgErr);
+      return new Response(
+        JSON.stringify({ error: 'Organization not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
 
-      let targetAuthUserId: string | null = null;
+    console.log('[APPROVE-REASSIGNMENT] Existing organization:', existingOrg.name);
 
-      // Check if user already exists
-      const { data: existingUser } = await supabaseAdmin.auth.admin.getUserByEmail(userData.email);
-      
-      if (!existingUser.user) {
-        console.log(`Creating auth user for: ${userData.email}`);
-        // Create the auth user
-        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-          email: userData.email,
-          password: Math.random().toString(36).slice(-8) + 'A1!', // Temporary password
-          email_confirm: true, // Skip email confirmation
+    // 3) DELETE existing org and its related information (treat as full replacement)
+    // Do NOT delete this reassignment request row; we will mark it approved after.
+
+    // 3a) Delete invoices
+    const { error: invDelErr } = await supabaseAdmin
+      .from('invoices')
+      .delete()
+      .eq('organization_id', orgId);
+    if (invDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting invoices', invDelErr);
+
+    // 3b) Delete invitations
+    const { error: invtDelErr } = await supabaseAdmin
+      .from('organization_invitations')
+      .delete()
+      .eq('organization_id', orgId);
+    if (invtDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting invitations', invtDelErr);
+
+    // 3c) Delete transfer requests
+    const { error: xferDelErr } = await supabaseAdmin
+      .from('organization_transfer_requests')
+      .delete()
+      .eq('organization_id', orgId);
+    if (xferDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting transfer requests', xferDelErr);
+
+    // IMPORTANT: We keep organization_reassignment_requests so this approval record remains.
+
+    // 3d) Delete the organization record itself
+    const { error: delOrgErr } = await supabaseAdmin
+      .from('organizations')
+      .delete()
+      .eq('id', orgId);
+    if (delOrgErr) {
+      console.error('[APPROVE-REASSIGNMENT] Failed deleting organization', delOrgErr);
+      return new Response(
+        JSON.stringify({ error: `Failed deleting organization: ${delOrgErr.message}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    console.log('[APPROVE-REASSIGNMENT] Deleted organization');
+
+    // 3e) Delete the previous contact user + roles + profile (if any)
+    const oldUserId: string | null = existingOrg.profiles?.user_id ?? null;
+    if (oldUserId) {
+      // delete roles
+      const { error: roleDelErr } = await supabaseAdmin
+        .from('user_roles')
+        .delete()
+        .eq('user_id', oldUserId);
+      if (roleDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting user roles', roleDelErr);
+
+      // delete auth user
+      const { error: authDelErr } = await supabaseAdmin.auth.admin.deleteUser(oldUserId);
+      if (authDelErr) {
+        if (authDelErr.message?.includes('User not found') || (authDelErr as any).code === 'user_not_found') {
+          console.log('[APPROVE-REASSIGNMENT] Old auth user already deleted');
+        } else {
+          console.error('[APPROVE-REASSIGNMENT] Failed deleting auth user', authDelErr);
+        }
+      }
+
+      // ensure profile is gone (manual cleanup)
+      const { error: profDelErr } = await supabaseAdmin
+        .from('profiles')
+        .delete()
+        .eq('user_id', oldUserId);
+      if (profDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting old profile', profDelErr);
+      else console.log('[APPROVE-REASSIGNMENT] Deleted old profile');
+    }
+
+    // 4) CREATE NEW contact (as if new member) when registration data provided
+    let newContactProfileId: string | null = null;
+    if (registration) {
+      // Try to find existing profile by email first
+      const { data: existingProfile, error: existProfErr } = await supabaseAdmin
+        .from('profiles')
+        .select('id, user_id')
+        .eq('email', newContactEmail)
+        .maybeSingle();
+      if (existProfErr) console.warn('[APPROVE-REASSIGNMENT] Error checking existing profile', existProfErr);
+
+      let newUserId: string | null = existingProfile?.user_id ?? null;
+
+      if (!newUserId) {
+        console.log('[APPROVE-REASSIGNMENT] Creating new auth user for', newContactEmail);
+        const tempPassword = `${Math.random().toString(36).slice(-8)}Aa!1`;
+        const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+          email: newContactEmail,
+          password: tempPassword,
+          email_confirm: true,
           user_metadata: {
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            isPrivateNonProfit: userData.is_private_nonprofit
-          }
+            first_name: registration.first_name,
+            last_name: registration.last_name,
+            isPrivateNonProfit: registration.is_private_nonprofit,
+            organization: newOrgData?.name ?? '',
+          },
         });
-
-        if (authError) {
-          console.error('Error creating auth user:', authError);
+        if (createErr) {
+          console.error('[APPROVE-REASSIGNMENT] Failed creating auth user', createErr);
           return new Response(
-            JSON.stringify({ error: `Failed to create user account: ${authError.message}` }),
+            JSON.stringify({ error: `Failed to create new contact user: ${createErr.message}` }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
+        newUserId = created.user?.id ?? null;
 
-        targetAuthUserId = authUser.user?.id ?? null;
-        console.log(`Created auth user: ${targetAuthUserId} for email: ${userData.email}`);
+        // Give triggers a moment to insert profile
+        await new Promise((r) => setTimeout(r, 1500));
+      }
 
-        // Wait briefly for triggers to run
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Fetch/create profile for that user
+      if (newUserId) {
+        const { data: prof, error: profErr } = await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .eq('user_id', newUserId)
+          .maybeSingle();
+        if (profErr) console.warn('[APPROVE-REASSIGNMENT] Error fetching profile for new user', profErr);
+
+        if (prof?.id) {
+          newContactProfileId = prof.id;
+        } else {
+          // Create minimal profile if trigger didn't create it
+          const { data: insertedProf, error: insertProfErr } = await supabaseAdmin
+            .from('profiles')
+            .insert({
+              user_id: newUserId,
+              first_name: registration.first_name ?? '',
+              last_name: registration.last_name ?? '',
+              email: newContactEmail,
+              organization: newOrgData?.name ?? '',
+            })
+            .select('id')
+            .maybeSingle();
+          if (insertProfErr) {
+            console.error('[APPROVE-REASSIGNMENT] Failed inserting profile', insertProfErr);
+            return new Response(
+              JSON.stringify({ error: `Failed to create new contact profile: ${insertProfErr.message}` }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          newContactProfileId = insertedProf?.id ?? null;
+        }
 
         // Send password reset email so user can set their password
         try {
           const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
             type: 'recovery',
-            email: userData.email,
+            email: newContactEmail,
             options: {
-              // Prefer configured app base URL if set, otherwise fall back to request origin
               redirectTo: (await (async () => {
                 const origin = req.headers.get('origin') || 'https://members.hessconsortium.app';
                 return `${origin}/auth`;
-              })())
-            }
+              })()),
+            },
           });
-
-          if (resetError) {
-            console.error('Error sending password reset email:', resetError);
-          } else {
-            console.log('Sent password reset email');
-          }
-        } catch (emailError) {
-          console.error('Error with password reset email:', emailError);
+          if (resetError) console.error('[APPROVE-REASSIGNMENT] Password reset email failed', resetError);
+        } catch (emailErr) {
+          console.error('[APPROVE-REASSIGNMENT] Password reset email exception', emailErr);
         }
-      } else {
-        targetAuthUserId = existingUser.user.id;
-        console.log(`User already exists for: ${userData.email} (${targetAuthUserId})`);
-      }
-
-      // Find the profile for the (new/existing) auth user
-      let newProfileId: string | null = null;
-      if (targetAuthUserId) {
-        const { data: profileRow, error: profileErr } = await supabaseAdmin
-          .from('profiles')
-          .select('id, first_name, last_name')
-          .eq('user_id', targetAuthUserId)
-          .maybeSingle();
-
-        if (profileErr) {
-          console.error('Error fetching new profile:', profileErr);
-        }
-        newProfileId = profileRow?.id ?? null;
-      }
-
-      // If we have a profile id, assign as new contact_person_id
-      if (newProfileId) {
-        (updateFields as any).contact_person_id = newProfileId;
-      }
-
-      // Replace organization data (full overwrite semantics with preserved admin fields)
-      const { data: existingOrg } = await supabaseAdmin
-        .from('organizations')
-        .select('membership_status, membership_start_date, membership_end_date, annual_fee_amount')
-        .eq('id', reassignmentReq.organization_id)
-        .maybeSingle();
-
-      const replaceableKeys = [
-        'name','student_fte','address_line_1','address_line_2','city','state','zip_code','phone','email','website',
-        'primary_contact_title','secondary_first_name','secondary_last_name','secondary_contact_title','secondary_contact_email',
-        'student_information_system','financial_system','financial_aid','hcm_hr','payroll_system','purchasing_system',
-        'housing_management','learning_management','admissions_crm','alumni_advancement_crm','primary_office_apple',
-        'primary_office_asus','primary_office_dell','primary_office_hp','primary_office_microsoft','primary_office_other',
-        'primary_office_other_details','other_software_comments','contact_person_id'
-      ];
-
-      // Start with nulls for all replaceable keys, then apply submitted data
-      const replacement: Record<string, any> = Object.fromEntries(
-        replaceableKeys.map((k) => [k, null])
-      );
-      for (const [k, v] of Object.entries(updateFields)) {
-        if (replaceableKeys.includes(k)) replacement[k] = v;
-      }
-      if (newProfileId) replacement.contact_person_id = newProfileId;
-
-      const finalUpdate = {
-        ...replacement,
-        membership_status: existingOrg?.membership_status ?? 'pending',
-        membership_start_date: existingOrg?.membership_start_date ?? null,
-        membership_end_date: existingOrg?.membership_end_date ?? null,
-        annual_fee_amount: existingOrg?.annual_fee_amount ?? null,
-      };
-
-      const { error: updateOrgError } = await supabaseAdmin
-        .from('organizations')
-        .update(finalUpdate)
-        .eq('id', reassignmentReq.organization_id);
-
-      if (updateOrgError) {
-        console.error('Error updating organization:', updateOrgError);
-        return new Response(
-          JSON.stringify({ error: `Failed to update organization: ${updateOrgError.message}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
       }
     } else {
-      // Update the organization data without creating a user
-      const newOrgData = reassignmentReq.new_organization_data || {};
-      const allowedKeys = [
-        'name','student_fte','address_line_1','address_line_2','city','state','zip_code','phone','email','website',
-        'primary_contact_title','secondary_first_name','secondary_last_name','secondary_contact_title','secondary_contact_email',
-        'student_information_system','financial_system','financial_aid','hcm_hr','payroll_system','purchasing_system',
-        'housing_management','learning_management','admissions_crm','alumni_advancement_crm','primary_office_apple',
-        'primary_office_asus','primary_office_dell','primary_office_hp','primary_office_microsoft','primary_office_other',
-        'primary_office_other_details','other_software_comments'
-      ];
-      const updateFields = Object.fromEntries(
-        Object.entries(newOrgData).filter(([k]) => allowedKeys.includes(k))
-      );
-
-      // Replace organization data (full overwrite semantics, preserve admin fields)
-      const { data: existingOrg2 } = await supabaseAdmin
-        .from('organizations')
-        .select('membership_status, membership_start_date, membership_end_date, annual_fee_amount')
-        .eq('id', reassignmentReq.organization_id)
+      // If no registration provided, try to link to an existing profile by email (optional)
+      const { data: prof, error: profErr } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('email', newContactEmail)
         .maybeSingle();
-
-      const replaceableKeys2 = [
-        'name','student_fte','address_line_1','address_line_2','city','state','zip_code','phone','email','website',
-        'primary_contact_title','secondary_first_name','secondary_last_name','secondary_contact_title','secondary_contact_email',
-        'student_information_system','financial_system','financial_aid','hcm_hr','payroll_system','purchasing_system',
-        'housing_management','learning_management','admissions_crm','alumni_advancement_crm','primary_office_apple',
-        'primary_office_asus','primary_office_dell','primary_office_hp','primary_office_microsoft','primary_office_other',
-        'primary_office_other_details','other_software_comments','contact_person_id'
-      ];
-
-      const replacement2: Record<string, any> = Object.fromEntries(
-        replaceableKeys2.map((k) => [k, null])
-      );
-      for (const [k, v] of Object.entries(updateFields)) {
-        if (replaceableKeys2.includes(k)) replacement2[k] = v as any;
-      }
-
-      const finalUpdate2 = {
-        ...replacement2,
-        membership_status: existingOrg2?.membership_status ?? 'pending',
-        membership_start_date: existingOrg2?.membership_start_date ?? null,
-        membership_end_date: existingOrg2?.membership_end_date ?? null,
-        annual_fee_amount: existingOrg2?.annual_fee_amount ?? null,
-      };
-
-      const { error: updateOrgError } = await supabaseAdmin
-        .from('organizations')
-        .update(finalUpdate2)
-        .eq('id', reassignmentReq.organization_id);
-
-      if (updateOrgError) {
-        console.error('Error updating organization:', updateOrgError);
-        return new Response(
-          JSON.stringify({ error: `Failed to update organization: ${updateOrgError.message}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      if (profErr) console.warn('[APPROVE-REASSIGNMENT] Profile lookup by email failed', profErr);
+      newContactProfileId = prof?.id ?? null;
     }
 
-    // Update the reassignment request status
-    const { error: updateError } = await supabaseAdmin
+    // 5) INSERT the new organization record with the new information (as if new member)
+    const allowedOrgKeys = [
+      'name','student_fte','address_line_1','address_line_2','city','state','zip_code','phone','email','website',
+      'primary_contact_title','secondary_first_name','secondary_last_name','secondary_contact_title','secondary_contact_email',
+      'student_information_system','financial_system','financial_aid','hcm_hr','payroll_system','purchasing_system',
+      'housing_management','learning_management','admissions_crm','alumni_advancement_crm','primary_office_apple',
+      'primary_office_asus','primary_office_dell','primary_office_hp','primary_office_microsoft','primary_office_other',
+      'primary_office_other_details','other_software_comments',
+    ];
+
+    const insertPayload: Record<string, any> = Object.fromEntries(
+      Object.entries(newOrgData || {}).filter(([k]) => allowedOrgKeys.includes(k))
+    );
+
+    insertPayload.contact_person_id = newContactProfileId ?? null;
+    // As new member: membership fields use defaults (pending, etc.)
+
+    const { data: newOrg, error: insertOrgErr } = await supabaseAdmin
+      .from('organizations')
+      .insert(insertPayload)
+      .select('id, name')
+      .maybeSingle();
+
+    if (insertOrgErr) {
+      console.error('[APPROVE-REASSIGNMENT] Failed inserting new organization', insertOrgErr);
+      return new Response(
+        JSON.stringify({ error: `Failed to insert new organization: ${insertOrgErr.message}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('[APPROVE-REASSIGNMENT] Created new organization', newOrg?.name, newOrg?.id);
+
+    // 6) Mark the reassignment request approved
+    const { error: updReqErr } = await supabaseAdmin
       .from('organization_reassignment_requests')
       .update({
         status: 'approved',
         approved_by: adminUserId,
-        approved_at: new Date().toISOString()
+        approved_at: new Date().toISOString(),
       })
       .eq('id', requestId);
+    if (updReqErr) console.error('[APPROVE-REASSIGNMENT] Failed updating request status', updReqErr);
 
-    if (updateError) {
-      console.error('Error updating reassignment request status:', updateError);
-      // Don't return error here as user is already created
-    }
-
-    // Send profile update approval email only
+    // 7) Send the "Member Information Update Request approved" email (NOT new member approval)
     try {
-      const orgDataForEmail = reassignmentReq.new_organization_data || {};
-      const primaryContactName = `${reassignmentReq.user_registration_data?.first_name || ''} ${reassignmentReq.user_registration_data?.last_name || ''}`.trim() || 'Member';
       await supabaseAdmin.functions.invoke('organization-emails', {
         body: {
           type: 'profile_update_approved',
-          to: reassignmentReq.new_contact_email,
-          organizationName: orgDataForEmail?.name || 'Organization',
-          secondaryEmail: orgDataForEmail?.secondary_contact_email,
+          to: newContactEmail,
+          organizationName: newOrg?.name || newOrgData?.name || 'Organization',
           organizationData: {
-            primary_contact_name: primaryContactName,
-            secondary_first_name: orgDataForEmail?.secondary_first_name,
-            secondary_last_name: orgDataForEmail?.secondary_last_name,
-            secondary_contact_title: orgDataForEmail?.secondary_contact_title,
-            secondary_contact_email: orgDataForEmail?.secondary_contact_email,
-            primary_contact_title: orgDataForEmail?.primary_contact_title,
-            student_fte: orgDataForEmail?.student_fte,
-            address_line_1: orgDataForEmail?.address_line_1,
-            city: orgDataForEmail?.city,
-            state: orgDataForEmail?.state,
-            zip_code: orgDataForEmail?.zip_code,
-            phone: orgDataForEmail?.phone,
-            email: orgDataForEmail?.email,
-            website: orgDataForEmail?.website,
-            student_information_system: orgDataForEmail?.student_information_system,
-            financial_system: orgDataForEmail?.financial_system,
-            financial_aid: orgDataForEmail?.financial_aid,
-            hcm_hr: orgDataForEmail?.hcm_hr,
-            payroll_system: orgDataForEmail?.payroll_system,
-            purchasing_system: orgDataForEmail?.purchasing_system,
-            housing_management: orgDataForEmail?.housing_management,
-            learning_management: orgDataForEmail?.learning_management,
-            admissions_crm: orgDataForEmail?.admissions_crm,
-            alumni_advancement_crm: orgDataForEmail?.alumni_advancement_crm,
-            primary_office_apple: orgDataForEmail?.primary_office_apple,
-            primary_office_asus: orgDataForEmail?.primary_office_asus,
-            primary_office_dell: orgDataForEmail?.primary_office_dell,
-            primary_office_hp: orgDataForEmail?.primary_office_hp,
-            primary_office_microsoft: orgDataForEmail?.primary_office_microsoft,
-            primary_office_other: orgDataForEmail?.primary_office_other,
-            primary_office_other_details: orgDataForEmail?.primary_office_other_details,
-            other_software_comments: orgDataForEmail?.other_software_comments,
-          }
-        }
+            primary_contact_name: registration ? `${registration.first_name ?? ''} ${registration.last_name ?? ''}`.trim() : 'Member',
+            ...newOrgData,
+          },
+        },
       });
-      console.log('Sent profile update approval email');
-    } catch (emailError) {
-      console.error('Error sending profile update approval email:', emailError);
+      console.log('[APPROVE-REASSIGNMENT] Sent profile_update_approved email');
+    } catch (emailErr) {
+      console.error('[APPROVE-REASSIGNMENT] Email send failed', emailErr);
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Reassignment request approved successfully',
+      JSON.stringify({
+        success: true,
+        message: 'Organization replaced and request approved',
+        newOrganizationId: newOrg?.id,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error) {
-    console.error('Unexpected error:', error);
+    console.error('[APPROVE-REASSIGNMENT] Unexpected error', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
