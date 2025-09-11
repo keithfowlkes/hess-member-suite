@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { MapPin, Building2, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { OrganizationDetailsDialog } from '@/components/OrganizationDetailsDialog';
 
 interface MemberLocation {
   id: string;
@@ -82,6 +84,8 @@ export function PublicUSMap() {
   const [stateStats, setStateStats] = useState<{ [key: string]: StateData }>({});
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedOrganization, setSelectedOrganization] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchMemberLocations();
@@ -209,6 +213,26 @@ export function PublicUSMap() {
       }
     } catch (error) {
       console.error('Error fetching map coordinates:', error);
+    }
+  };
+
+  const handleOrganizationClick = async (organizationId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select(`
+          *,
+          profiles:contact_person_id (*)
+        `)
+        .eq('id', organizationId)
+        .single();
+
+      if (error) throw error;
+
+      setSelectedOrganization(data);
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error('Error fetching organization details:', error);
     }
   };
 
@@ -394,7 +418,13 @@ export function PublicUSMap() {
                     <h4 className="font-medium">Organizations:</h4>
                     {stateStats[selectedState].organizations.map((org) => (
                       <div key={org.id} className="p-2 bg-muted/50 rounded text-sm">
-                        <div className="font-medium">{org.name}</div>
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto font-medium text-left justify-start"
+                          onClick={() => handleOrganizationClick(org.id)}
+                        >
+                          {org.name}
+                        </Button>
                         {org.city && (
                           <div className="text-muted-foreground text-xs">{org.city}</div>
                         )}
@@ -412,6 +442,13 @@ export function PublicUSMap() {
           </Card>
         </div>
       </div>
+
+      <OrganizationDetailsDialog
+        organization={selectedOrganization}
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        canEdit={false}
+      />
     </div>
   );
 }
