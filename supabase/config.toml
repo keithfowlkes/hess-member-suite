@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.create-external-user]
 verify_jwt = false
+
+[functions.send-analytics-feedback]
+verify_jwt = true
