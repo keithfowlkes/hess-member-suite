@@ -41,8 +41,7 @@ serve(async (req) => {
       .from('organization_reassignment_requests')
       .select('*')
       .eq('id', requestId)
-      .eq('status', 'pending')
-      .single();
+      .maybeSingle();
 
     if (fetchError || !reassignmentReq) {
       console.error('Error fetching reassignment request:', fetchError);

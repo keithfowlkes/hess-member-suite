@@ -188,6 +188,7 @@ export const useCreateReassignmentRequest = () => {
           new_contact_email: data.new_contact_email,
           new_organization_data: data.new_organization_data,
           user_registration_data: data.user_registration_data,
+          status: 'pending',
           original_organization_data: null, // Not needed with simpler approach
           requested_by: null, // Not needed - will be handled on approval
         })
