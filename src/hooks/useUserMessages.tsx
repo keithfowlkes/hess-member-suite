@@ -93,6 +93,37 @@ export function useMarkMessageAsRead() {
   });
 }
 
+export function useDeleteUserMessage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (messageId: string) => {
+      const { error } = await (supabase as any)
+        .from('user_messages')
+        .delete()
+        .eq('id', messageId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-messages'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-message-count'] });
+      toast({
+        title: "Message Deleted",
+        description: "The message has been deleted successfully.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete message. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+}
+
 export function useMarkAllMessagesAsRead() {
   const queryClient = useQueryClient();
 

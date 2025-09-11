@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageSquare, Eye, EyeOff, Calendar, User, Mail, Trash2, CheckCheck } from 'lucide-react';
+import { MessageSquare, Calendar, User, Mail, Trash2, CheckCheck, Reply } from 'lucide-react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,14 +9,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
-import { useUserMessages, useMarkMessageAsRead, useMarkAllMessagesAsRead } from '@/hooks/useUserMessages';
+import { useUserMessages, useMarkMessageAsRead, useMarkAllMessagesAsRead, useDeleteUserMessage } from '@/hooks/useUserMessages';
 import { format } from 'date-fns';
 
 export default function UserMessages() {
   const { data: messages = [], isLoading } = useUserMessages();
   const markAsRead = useMarkMessageAsRead();
   const markAllAsRead = useMarkAllMessagesAsRead();
+  const deleteMessage = useDeleteUserMessage();
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const unreadCount = messages.filter(msg => !msg.is_read).length;
 
@@ -37,9 +39,20 @@ export default function UserMessages() {
 
   const handleViewMessage = (message: any) => {
     setSelectedMessage(message);
+    setIsDialogOpen(true);
     if (!message.is_read) {
       handleMarkAsRead(message.id);
     }
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    if (window.confirm('Are you sure you want to delete this message?')) {
+      deleteMessage.mutate(messageId);
+    }
+  };
+
+  const handleReplyToMessage = (email: string) => {
+    window.location.href = `mailto:${email}`;
   };
 
   if (isLoading) {
@@ -100,8 +113,8 @@ export default function UserMessages() {
             ) : (
               <div className="space-y-4">
                 {messages.map((message) => (
-                  <Card key={message.id} className={`transition-all hover:shadow-md ${!message.is_read ? 'border-primary/50 bg-primary/5' : ''}`}>
-                    <CardContent className="p-6">
+                  <Card key={message.id} className={`transition-all hover:shadow-md cursor-pointer ${!message.is_read ? 'border-primary/50 bg-primary/5' : ''}`}>
+                    <CardContent className="p-6" onClick={() => handleViewMessage(message)}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-3">
@@ -127,69 +140,33 @@ export default function UserMessages() {
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-2 ml-4">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleViewMessage(message)}
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                View
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2">
-                                  <MessageSquare className="h-5 w-5" />
-                                  User Message
-                                </DialogTitle>
-                              </DialogHeader>
-                              
-                              {selectedMessage && (
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-                                    <div>
-                                      <label className="text-sm font-medium text-muted-foreground">Name</label>
-                                      <p className="text-foreground">{selectedMessage.user_name}</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-sm font-medium text-muted-foreground">Email</label>
-                                      <p className="text-foreground">{selectedMessage.user_email}</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-sm font-medium text-muted-foreground">Submitted</label>
-                                      <p className="text-foreground">{format(new Date(selectedMessage.created_at), 'PPpp')}</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-sm font-medium text-muted-foreground">Status</label>
-                                      <Badge variant={selectedMessage.is_read ? "secondary" : "destructive"}>
-                                        {selectedMessage.is_read ? "Read" : "Unread"}
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                  
-                                  <Separator />
-                                  
-                                  <div>
-                                    <label className="text-sm font-medium text-muted-foreground mb-2 block">Message</label>
-                                    <ScrollArea className="max-h-64 p-4 bg-muted/30 rounded-lg">
-                                      <p className="text-foreground whitespace-pre-wrap">{selectedMessage.message}</p>
-                                    </ScrollArea>
-                                  </div>
-                                </div>
-                              )}
-                            </DialogContent>
-                          </Dialog>
+                        <div className="flex items-center gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReplyToMessage(message.user_email)}
+                            title="Reply via email"
+                          >
+                            <Reply className="h-4 w-4" />
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteMessage(message.id)}
+                            title="Delete message"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                           
                           {!message.is_read && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleMarkAsRead(message.id)}
+                              title="Mark as read"
                             >
-                              <EyeOff className="h-4 w-4" />
+                              <CheckCheck className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
@@ -202,6 +179,73 @@ export default function UserMessages() {
           </div>
         </main>
       </div>
+      
+      {/* Message View Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              User Message
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedMessage && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Name</label>
+                  <p className="text-foreground">{selectedMessage.user_name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Email</label>
+                  <p className="text-foreground">{selectedMessage.user_email}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Submitted</label>
+                  <p className="text-foreground">{format(new Date(selectedMessage.created_at), 'PPpp')}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <Badge variant={selectedMessage.is_read ? "secondary" : "destructive"}>
+                    {selectedMessage.is_read ? "Read" : "Unread"}
+                  </Badge>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">Message</label>
+                <ScrollArea className="max-h-64 p-4 bg-muted/30 rounded-lg">
+                  <p className="text-foreground whitespace-pre-wrap">{selectedMessage.message}</p>
+                </ScrollArea>
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  onClick={() => handleReplyToMessage(selectedMessage.user_email)}
+                  className="flex items-center gap-2"
+                >
+                  <Reply className="h-4 w-4" />
+                  Reply via Email
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    handleDeleteMessage(selectedMessage.id);
+                    setIsDialogOpen(false);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Message
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }
