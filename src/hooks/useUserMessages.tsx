@@ -4,11 +4,11 @@ import { toast } from '@/hooks/use-toast';
 
 export interface UserMessage {
   id: string;
-  name: string;
-  email: string;
+  user_name: string;
+  user_email: string;
   message: string;
   created_at: string;
-  read_at: string | null;
+  is_read: boolean;
 }
 
 export function useUserMessages() {
@@ -33,7 +33,7 @@ export function useUnreadMessageCount() {
       const { count, error } = await (supabase as any)
         .from('user_messages')
         .select('*', { count: 'exact', head: true })
-        .is('read_at', null);
+        .eq('is_read', false);
 
       if (error) throw error;
       return count || 0;
@@ -45,7 +45,7 @@ export function useCreateUserMessage() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { name: string; email: string; message: string }) => {
+    mutationFn: async (data: { user_name: string; user_email: string; message: string }) => {
       const { error } = await (supabase as any)
         .from('user_messages')
         .insert([data]);
@@ -78,7 +78,7 @@ export function useMarkMessageAsRead() {
     mutationFn: async (messageId: string) => {
       const { error } = await (supabase as any)
         .from('user_messages')
-        .update({ read_at: new Date().toISOString() })
+        .update({ is_read: true })
         .eq('id', messageId);
 
       if (error) throw error;
@@ -100,8 +100,8 @@ export function useMarkAllMessagesAsRead() {
     mutationFn: async () => {
       const { error } = await (supabase as any)
         .from('user_messages')
-        .update({ read_at: new Date().toISOString() })
-        .is('read_at', null);
+        .update({ is_read: true })
+        .eq('is_read', false);
 
       if (error) throw error;
     },

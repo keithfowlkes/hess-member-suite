@@ -18,7 +18,7 @@ export default function UserMessages() {
   const markAllAsRead = useMarkAllMessagesAsRead();
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
 
-  const unreadCount = messages.filter(msg => !msg.read_at).length;
+  const unreadCount = messages.filter(msg => !msg.is_read).length;
 
   const handleMarkAsRead = (messageId: string) => {
     markAsRead.mutate(messageId);
@@ -37,7 +37,7 @@ export default function UserMessages() {
 
   const handleViewMessage = (message: any) => {
     setSelectedMessage(message);
-    if (!message.read_at) {
+    if (!message.is_read) {
       handleMarkAsRead(message.id);
     }
   };
@@ -100,24 +100,24 @@ export default function UserMessages() {
             ) : (
               <div className="space-y-4">
                 {messages.map((message) => (
-                  <Card key={message.id} className={`transition-all hover:shadow-md ${!message.read_at ? 'border-primary/50 bg-primary/5' : ''}`}>
+                  <Card key={message.id} className={`transition-all hover:shadow-md ${!message.is_read ? 'border-primary/50 bg-primary/5' : ''}`}>
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-3">
                             <div className="flex items-center gap-2">
                               <User className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium text-foreground">{message.name}</span>
+                              <span className="font-medium text-foreground">{message.user_name}</span>
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <Mail className="h-4 w-4" />
-                              <span className="text-sm">{message.email}</span>
+                              <span className="text-sm">{message.user_email}</span>
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <Calendar className="h-4 w-4" />
                               <span className="text-sm">{format(new Date(message.created_at), 'MMM dd, yyyy hh:mm a')}</span>
                             </div>
-                            {!message.read_at && (
+                            {!message.is_read && (
                               <Badge variant="destructive">New</Badge>
                             )}
                           </div>
@@ -152,11 +152,11 @@ export default function UserMessages() {
                                   <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
                                     <div>
                                       <label className="text-sm font-medium text-muted-foreground">Name</label>
-                                      <p className="text-foreground">{selectedMessage.name}</p>
+                                      <p className="text-foreground">{selectedMessage.user_name}</p>
                                     </div>
                                     <div>
                                       <label className="text-sm font-medium text-muted-foreground">Email</label>
-                                      <p className="text-foreground">{selectedMessage.email}</p>
+                                      <p className="text-foreground">{selectedMessage.user_email}</p>
                                     </div>
                                     <div>
                                       <label className="text-sm font-medium text-muted-foreground">Submitted</label>
@@ -164,8 +164,8 @@ export default function UserMessages() {
                                     </div>
                                     <div>
                                       <label className="text-sm font-medium text-muted-foreground">Status</label>
-                                      <Badge variant={selectedMessage.read_at ? "secondary" : "destructive"}>
-                                        {selectedMessage.read_at ? "Read" : "Unread"}
+                                      <Badge variant={selectedMessage.is_read ? "secondary" : "destructive"}>
+                                        {selectedMessage.is_read ? "Read" : "Unread"}
                                       </Badge>
                                     </div>
                                   </div>
@@ -183,7 +183,7 @@ export default function UserMessages() {
                             </DialogContent>
                           </Dialog>
                           
-                          {!message.read_at && (
+                          {!message.is_read && (
                             <Button
                               variant="ghost"
                               size="sm"
