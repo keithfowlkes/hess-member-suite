@@ -334,14 +334,17 @@ const MasterDashboard = () => {
     setSavingCcRecipients(false);
   };
 
-  const handleDeleteDefaultRecipient = (email: string) => {
-    setDefaultRecipients(prev => {
-      const updated = { ...prev };
-      delete updated[email];
-      return updated;
-    });
+  const handleDeleteDefaultRecipient = async (email: string) => {
+    const updated = { ...defaultRecipients };
+    delete updated[email];
+    setDefaultRecipients(updated);
+    try {
+      setSavingCcRecipients(true);
+      await updateSetting('welcome_message_default_recipients', JSON.stringify(updated));
+    } finally {
+      setSavingCcRecipients(false);
+    }
   };
-
   const handleAddCcRecipient = () => {
     if (newCcEmail.trim() && !welcomeCcRecipients.includes(newCcEmail.trim())) {
       setWelcomeCcRecipients([...welcomeCcRecipients, newCcEmail.trim()]);
