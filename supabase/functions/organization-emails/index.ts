@@ -77,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { type, to, organizationName, token, adminMessage, memberName, secondaryEmail, organizationData, transferDetails, invoiceData }: EmailRequest = await req.json();
+    const { type, to, organizationName, token, adminMessage, memberName, memberEmail, secondaryEmail, organizationData, transferDetails, invoiceData }: EmailRequest = await req.json();
     console.log('Email request:', { type, to, organizationName });
 
     const appUrl = Deno.env.get('SUPABASE_URL')?.replace('//', '//app.');
@@ -96,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #495057; margin: 0 0 15px 0;">Feedback Details</h3>
               <p><strong>Name:</strong> ${memberName || 'Unknown'}</p>
-              ${typeof (memberEmail as string | undefined) === 'string' ? `<p><strong>Email:</strong> ${(memberEmail as string)}</p>` : ''}
+              ${memberEmail ? `<p><strong>Email:</strong> ${memberEmail}</p>` : ''}
               <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
             </div>
             <div style="background-color: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
