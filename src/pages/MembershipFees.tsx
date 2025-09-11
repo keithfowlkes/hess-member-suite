@@ -22,6 +22,7 @@ import { setupDefaultInvoiceTemplate } from '@/utils/setupDefaultInvoiceTemplate
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { InvoiceDialog } from '@/components/InvoiceDialog';
 import { InvoiceTemplateEditor } from '@/components/InvoiceTemplateEditor';
+import { PendingOrganizationsModal } from '@/components/PendingOrganizationsModal';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   DollarSign, 
@@ -99,6 +100,9 @@ export default function MembershipFees() {
   // Overdue modal states
   const [overdueModalOpen, setOverdueModalOpen] = useState(false);
   const [sendingReminders, setSendingReminders] = useState<Set<string>>(new Set());
+
+  // Pending modal states
+  const [pendingModalOpen, setPendingModalOpen] = useState(false);
 
   // Prorated fee states
   const [standardRenewalDate, setStandardRenewalDate] = useState<Date>(new Date(new Date().getFullYear(), 11, 31)); // Dec 31st by default
@@ -920,7 +924,10 @@ export default function MembershipFees() {
               </Card>
               
               {/* Pending Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-yellow-50 border-amber-100/50 hover:shadow-md hover:shadow-amber-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card 
+                className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-yellow-50 border-amber-100/50 hover:shadow-md hover:shadow-amber-100/20 transition-all duration-300 hover:scale-105 group cursor-pointer"
+                onClick={() => setPendingModalOpen(true)}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-500/10"></div>
                 <CardContent className="relative p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -928,7 +935,7 @@ export default function MembershipFees() {
                       <TrendingUp className="h-4 w-4 text-white" />
                     </div>
                     <div className="text-xs font-medium text-amber-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      In Review
+                      Click to View
                     </div>
                   </div>
                   <div>
@@ -1742,6 +1749,13 @@ export default function MembershipFees() {
               </div>
             </div>
           )}
+
+          {/* Pending Organizations Modal */}
+          <PendingOrganizationsModal
+            isOpen={pendingModalOpen}
+            onClose={() => setPendingModalOpen(false)}
+            organizations={organizations}
+          />
         </main>
       </div>
     </SidebarProvider>
