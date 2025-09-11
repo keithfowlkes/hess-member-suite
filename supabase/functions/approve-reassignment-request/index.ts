@@ -25,11 +25,37 @@ serve(async (req) => {
       }
     );
 
-    const { requestId, adminUserId } = await req.json();
+    // Also initialize a user-aware client to resolve caller from JWT if provided
+    const supabaseUser = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization') ?? '' },
+        },
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
 
-    if (!requestId || !adminUserId) {
+    const { requestId, adminUserId: adminUserIdFromBody } = await req.json();
+
+    // Resolve admin user from body or JWT; only requestId is strictly required
+    let adminUserId = adminUserIdFromBody ?? null;
+    try {
+      const { data: { user } } = await supabaseUser.auth.getUser();
+      if (!adminUserId && user?.id) {
+        adminUserId = user.id;
+      }
+    } catch (_e) {
+      console.warn('[APPROVE-REASSIGNMENT] Could not resolve admin user from JWT');
+    }
+
+    if (!requestId) {
       return new Response(
-        JSON.stringify({ error: 'Missing requestId or adminUserId' }),
+        JSON.stringify({ error: 'Missing requestId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
