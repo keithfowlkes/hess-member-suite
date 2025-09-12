@@ -165,6 +165,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          created_at: string
+          email_type: string
+          id: string
+          recipient: string
+          result_data: Json | null
+          sent_at: string
+          subject: string
+          success: boolean
+        }
+        Insert: {
+          created_at?: string
+          email_type: string
+          id?: string
+          recipient: string
+          result_data?: Json | null
+          sent_at?: string
+          subject: string
+          success?: boolean
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          id?: string
+          recipient?: string
+          result_data?: Json | null
+          sent_at?: string
+          subject?: string
+          success?: boolean
+        }
+        Relationships: []
+      }
       form_field_configurations: {
         Row: {
           created_at: string
