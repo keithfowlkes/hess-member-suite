@@ -297,48 +297,47 @@ export default function Settings() {
     setEmailTestResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('centralized-email-delivery', {
-        body: {
-          type: emailTestData.emailType || 'test',
-          to: emailTestData.to.trim(),
-          subject: emailTestData.subject.trim(),
-          data: {
-            message: emailTestData.message.trim(),
-            organization_name: 'Test Organization',
-            primary_contact_name: 'Test User',
-            invoice_number: 'INV-TEST-001',
-            amount: '5000',
-            due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            custom_message: emailTestData.message.trim()
-          }
+      const payload = {
+        type: emailTestData.emailType || 'test',
+        to: emailTestData.to.trim(),
+        subject: emailTestData.subject.trim(),
+        data: {
+          message: emailTestData.message.trim(),
+          organization_name: 'Test Organization',
+          primary_contact_name: 'Test User',
+          invoice_number: 'INV-TEST-001',
+          amount: '5000',
+          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          custom_message: emailTestData.message.trim()
         }
+      };
+
+      const response = await fetch('https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/centralized-email-delivery', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470'
+        },
+        body: JSON.stringify(payload)
       });
 
-      if (error) {
-        console.error('Email test error:', error);
-        setEmailTestResult({
-          success: false,
-          message: error.message || 'Failed to send test email'
-        });
-        toast({
-          title: 'Email Test Failed',
-          description: error.message || 'Failed to send test email',
-          variant: 'destructive'
-        });
-      } else {
-        setEmailTestResult({
-          success: true,
-          message: data.message || 'Test email sent successfully',
-          timestamp: data.timestamp,
-          emailId: data.emailId,
-          recipients: data.recipients,
-          template: data.template
-        });
-        toast({
-          title: 'Email Test Successful',
-          description: `Test email sent successfully`,
-        });
+      const respJson = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(respJson?.error || `Edge function error (status ${response.status})`);
       }
+
+      setEmailTestResult({
+        success: true,
+        message: respJson?.message || 'Test email sent successfully',
+        timestamp: respJson?.timestamp,
+        emailId: respJson?.emailId,
+        recipients: respJson?.recipients,
+        template: respJson?.template
+      });
+      toast({
+        title: 'Email Test Successful',
+        description: `Test email sent successfully`,
+      });
     } catch (error: any) {
       console.error('Email test error:', error);
       setEmailTestResult({
