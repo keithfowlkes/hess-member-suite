@@ -45,14 +45,16 @@ export const useInstitutionsBySystem = (systemField: string | null, systemName: 
           return value && smallSystemNames.includes(value);
         });
 
-        return filteredOrgs.map(org => ({
-          id: org.id,
-          name: org.name,
-          city: org.city,
-          state: org.state,
-          email: org.email,
-          website: org.website,
-        }));
+        return filteredOrgs
+          .map(org => ({
+            id: org.id,
+            name: org.name,
+            city: org.city,
+            state: org.state,
+            email: org.email,
+            website: org.website,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
       }
 
       // Regular case - optimized query for specific system
@@ -70,14 +72,16 @@ export const useInstitutionsBySystem = (systemField: string | null, systemName: 
         return value === systemName;
       });
 
-      return filteredOrgs.map(org => ({
-        id: org.id,
-        name: org.name,
-        city: org.city,
-        state: org.state,
-        email: org.email,
-        website: org.website,
-      }));
+      return filteredOrgs
+        .map(org => ({
+          id: org.id,
+          name: org.name,
+          city: org.city,
+          state: org.state,
+          email: org.email,
+          website: org.website,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
     },
     enabled: !!(systemField && systemName),
     staleTime: 1000 * 60 * 30, // 30 minutes
