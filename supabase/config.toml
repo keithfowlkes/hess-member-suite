@@ -41,3 +41,6 @@ verify_jwt = true
 
 [functions.update-email-config]
 verify_jwt = true
+
+[functions.verify-email-config]
+verify_jwt = true

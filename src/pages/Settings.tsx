@@ -101,6 +101,38 @@ export default function Settings() {
   // Email sender setting
   const { data: emailFromSetting } = useSystemSetting('email_from');
 
+  // Email configuration verification
+  const [configVerificationResult, setConfigVerificationResult] = useState<any>(null);
+  const [configVerificationLoading, setConfigVerificationLoading] = useState(false);
+
+  const handleVerifyEmailConfig = async () => {
+    setConfigVerificationLoading(true);
+    setConfigVerificationResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-email-config');
+
+      if (error) {
+        console.error('Config verification error:', error);
+        setConfigVerificationResult({
+          success: false,
+          error: error.message || 'Failed to verify configuration'
+        });
+        return;
+      }
+
+      setConfigVerificationResult(data);
+    } catch (error: any) {
+      console.error('Config verification error:', error);
+      setConfigVerificationResult({
+        success: false,
+        error: error.message || 'Failed to verify configuration'
+      });
+    } finally {
+      setConfigVerificationLoading(false);
+    }
+  };
+
   // Email template helpers
   const getEmailTypeSubject = (type: string) => {
     const subjects: Record<string, string> = {
@@ -1011,7 +1043,7 @@ export default function Settings() {
                           <h3 className="text-lg font-semibold">Email System Configuration</h3>
                         </div>
                         
-                        {/* Current Configuration Status */}
+                         {/* Current Configuration Status */}
                         <Card className="bg-gradient-to-r from-background to-muted/20 border-l-4 border-l-primary">
                           <CardHeader className="pb-3">
                             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -1020,7 +1052,7 @@ export default function Settings() {
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="pt-0">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
                               <div className="space-y-1">
                                 <p className="text-muted-foreground">Provider</p>
                                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
@@ -1041,6 +1073,83 @@ export default function Settings() {
                                   Configured
                                 </Badge>
                               </div>
+                            </div>
+                            
+                            {/* Verification Section */}
+                            <div className="border-t pt-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <p className="text-sm font-medium">Configuration Verification</p>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={handleVerifyEmailConfig}
+                                  disabled={configVerificationLoading}
+                                >
+                                  {configVerificationLoading ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                      Verifying...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Shield className="w-4 h-4 mr-2" />
+                                      Verify Configuration
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                              
+                              {configVerificationResult && (
+                                <div className={`p-4 rounded-lg border text-sm space-y-2 ${
+                                  configVerificationResult.success 
+                                    ? 'bg-green-50 border-green-200' 
+                                    : 'bg-red-50 border-red-200'
+                                }`}>
+                                  <div className="flex items-center gap-2 font-medium">
+                                    {configVerificationResult.success ? (
+                                      <CheckCircle className="w-4 h-4 text-green-600" />
+                                    ) : (
+                                      <AlertCircle className="w-4 h-4 text-red-600" />
+                                    )}
+                                    {configVerificationResult.success ? 'Configuration Valid' : 'Configuration Issues Found'}
+                                  </div>
+                                  
+                                  {configVerificationResult.configuration && (
+                                    <div className="grid grid-cols-2 gap-4 text-xs">
+                                      <div>
+                                        <p><strong>API Key:</strong> {configVerificationResult.configuration.api_key_valid ? '✓ Valid' : '✗ Invalid'}</p>
+                                        <p><strong>Sender Source:</strong> {configVerificationResult.configuration.sender_source}</p>
+                                      </div>
+                                      <div>
+                                        <p><strong>Domain:</strong> {configVerificationResult.configuration.sender_domain || 'None'}</p>
+                                        <p><strong>Domain Verified:</strong> {configVerificationResult.configuration.domain_verified ? '✓ Yes' : '✗ No'}</p>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {configVerificationResult.configuration?.errors?.length > 0 && (
+                                    <div className="mt-2">
+                                      <p className="font-medium text-red-700">Errors:</p>
+                                      <ul className="list-disc list-inside text-red-600">
+                                        {configVerificationResult.configuration.errors.map((error: string, i: number) => (
+                                          <li key={i}>{error}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  
+                                  {configVerificationResult.recommendations?.length > 0 && (
+                                    <div className="mt-2">
+                                      <p className="font-medium text-blue-700">Recommendations:</p>
+                                      <ul className="list-disc list-inside text-blue-600">
+                                        {configVerificationResult.recommendations.map((rec: string, i: number) => (
+                                          <li key={i}>{rec}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
