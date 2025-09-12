@@ -61,6 +61,7 @@ import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
 
 // Components
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
+import { UnifiedComparisonModal } from '@/components/UnifiedComparisonModal';
 import { InvitationManagementDialog } from '@/components/InvitationManagementDialog';
 import { MemberInfoUpdateRequestsDialog } from '@/components/MemberInfoUpdateRequestsDialog';
 import { PendingRegistrationApprovalDialog } from '@/components/PendingRegistrationApprovalDialog';
@@ -134,6 +135,9 @@ const MasterDashboard = () => {
   const [showInvitationDialog, setShowInvitationDialog] = useState(false);
   const [showMemberInfoUpdateDialog, setShowMemberInfoUpdateDialog] = useState(false);
   const [showMemberInfoUpdateComparisonDialog, setShowMemberInfoUpdateComparisonDialog] = useState(false);
+  const [selectedProfileEditRequest, setSelectedProfileEditRequest] = useState(null);
+  const [showProfileEditComparisonDialog, setShowProfileEditComparisonDialog] = useState(false);
+  const [adminNotes, setAdminNotes] = useState('');
   
   // Search functionality
   const [organizationSearchTerm, setOrganizationSearchTerm] = useState('');
@@ -275,6 +279,122 @@ const MasterDashboard = () => {
       await deleteUser(userId, userEmail);
     } catch (error) {
       console.error('Delete user failed:', error);
+    }
+  };
+
+  // Create comparison data for profile edit requests
+  const createProfileEditComparisonData = (request) => {
+    if (!request) return { originalData: null };
+
+    const organizationChanges = [];
+    const profileChanges = [];
+
+    // Compare organization data
+    if (request.original_organization_data && request.updated_organization_data) {
+      const orgFields = [
+        { key: 'name', label: 'Organization Name' },
+        { key: 'address_line_1', label: 'Address' },
+        { key: 'city', label: 'City' },
+        { key: 'state', label: 'State' },
+        { key: 'zip_code', label: 'ZIP Code' },
+        { key: 'phone', label: 'Phone' },
+        { key: 'email', label: 'Email' },
+        { key: 'website', label: 'Website' },
+        { key: 'student_fte', label: 'Student FTE', type: 'number' },
+        { key: 'student_information_system', label: 'Student Information System' },
+        { key: 'financial_system', label: 'Financial System' },
+        { key: 'financial_aid', label: 'Financial Aid' },
+        { key: 'hcm_hr', label: 'HCM/HR System' },
+        { key: 'payroll_system', label: 'Payroll System' },
+        { key: 'purchasing_system', label: 'Purchasing System' },
+        { key: 'housing_management', label: 'Housing Management' },
+        { key: 'learning_management', label: 'Learning Management' },
+        { key: 'admissions_crm', label: 'Admissions CRM' },
+        { key: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM' }
+      ];
+
+      orgFields.forEach(field => {
+        const oldValue = request.original_organization_data[field.key];
+        const newValue = request.updated_organization_data[field.key];
+        if (oldValue !== newValue) {
+          organizationChanges.push({
+            field: field.key,
+            label: field.label,
+            oldValue: oldValue || '',
+            newValue: newValue || '',
+            ...(field.type && { type: field.type })
+          });
+        }
+      });
+    }
+
+    // Compare profile data
+    if (request.original_profile_data && request.updated_profile_data) {
+      const profileFields = [
+        { key: 'first_name', label: 'First Name' },
+        { key: 'last_name', label: 'Last Name' },
+        { key: 'email', label: 'Email' },
+        { key: 'phone', label: 'Phone' },
+        { key: 'primary_contact_title', label: 'Title' },
+        { key: 'secondary_first_name', label: 'Secondary Contact First Name' },
+        { key: 'secondary_last_name', label: 'Secondary Contact Last Name' },
+        { key: 'secondary_contact_title', label: 'Secondary Contact Title' },
+        { key: 'secondary_contact_email', label: 'Secondary Contact Email' }
+      ];
+
+      profileFields.forEach(field => {
+        const oldValue = request.original_profile_data[field.key];
+        const newValue = request.updated_profile_data[field.key];
+        if (oldValue !== newValue) {
+          profileChanges.push({
+            field: field.key,
+            label: field.label,
+            oldValue: oldValue || '',
+            newValue: newValue || ''
+          });
+        }
+      });
+    }
+
+    return {
+      organizationChanges,
+      profileChanges,
+      originalData: {
+        organization: request.original_organization_data,
+        profile: request.original_profile_data
+      },
+      updatedData: {
+        organization: request.updated_organization_data,
+        profile: request.updated_profile_data
+      }
+    };
+  };
+
+  const handleApproveProfileEdit = async () => {
+    if (!selectedProfileEditRequest) return;
+    
+    try {
+      await approveProfileEditRequest(selectedProfileEditRequest.id);
+      setShowProfileEditComparisonDialog(false);
+      setSelectedProfileEditRequest(null);
+      setAdminNotes('');
+      refetchProfileEditRequests();
+    } catch (error) {
+      console.error('Error approving profile edit request:', error);
+    }
+  };
+
+  const handleRejectProfileEdit = async () => {
+    if (!selectedProfileEditRequest) return;
+    
+    try {
+      await rejectProfileEditRequest(selectedProfileEditRequest.id, adminNotes || 'Rejected');
+      setShowProfileEditComparisonDialog(false);
+      setSelectedProfileEditRequest(null);
+      setAdminNotes('');
+      refetchProfileEditRequests();
+    } catch (error) {
+      console.error('Error rejecting profile edit request:', error);
     }
   };
 
@@ -975,25 +1095,20 @@ const MasterDashboard = () => {
                                   </div>
                                 </div>
 
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      // Create a mock organization object for the dialog
-                                      const mockOrg = {
-                                        ...request.updated_organization_data,
-                                        profiles: request.updated_profile_data,
-                                        id: request.organization_id
-                                      };
-                                      setSelectedOrganization(mockOrg);
-                                      setShowApprovalDialog(true);
-                                    }}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Eye className="h-3 w-3" />
-                                    Review Changes
-                                  </Button>
+                                 <div className="flex gap-2">
+                                   <Button
+                                     variant="outline"
+                                     size="sm"
+                                     onClick={() => {
+                                       setSelectedProfileEditRequest(request);
+                                       setShowProfileEditComparisonDialog(true);
+                                       setAdminNotes('');
+                                     }}
+                                     className="flex items-center gap-2"
+                                   >
+                                     <Eye className="h-3 w-3" />
+                                     Review Changes
+                                   </Button>
                                   <Button
                                     size="sm"
                                     onClick={async () => {
@@ -2051,6 +2166,22 @@ const MasterDashboard = () => {
           window.location.reload();
         }}
       />
+
+      {/* Profile Edit Request Comparison Modal */}
+      {selectedProfileEditRequest && (
+        <UnifiedComparisonModal
+          open={showProfileEditComparisonDialog}
+          onOpenChange={setShowProfileEditComparisonDialog}
+          title={`Organization Profile Update Request - ${selectedProfileEditRequest.organization?.name || 'Unknown Organization'}`}
+          data={createProfileEditComparisonData(selectedProfileEditRequest)}
+          showActions={selectedProfileEditRequest.status === 'pending'}
+          actionNotes={adminNotes}
+          onActionNotesChange={setAdminNotes}
+          onApprove={handleApproveProfileEdit}
+          onReject={handleRejectProfileEdit}
+          isSubmitting={false}
+        />
+      )}
     </SidebarProvider>
   );
 };
