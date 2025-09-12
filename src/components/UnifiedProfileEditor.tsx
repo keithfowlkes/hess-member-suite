@@ -183,6 +183,62 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         </div>
       </div>
 
+      {/* Personal Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Personal Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="first_name">First Name</Label>
+              <Input
+                id="first_name"
+                value={editedData.profile.first_name || ''}
+                onChange={(e) => updateProfileField('first_name', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="last_name">Last Name</Label>
+              <Input
+                id="last_name"
+                value={editedData.profile.last_name || ''}
+                onChange={(e) => updateProfileField('last_name', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                value={editedData.profile.email || ''}
+                onChange={(e) => updateProfileField('email', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={editedData.profile.phone || ''}
+                onChange={(e) => updateProfileField('phone', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="primary_contact_title">Title</Label>
+              <Input
+                id="primary_contact_title"
+                value={editedData.profile.primary_contact_title || ''}
+                onChange={(e) => updateProfileField('primary_contact_title', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Organization Information - Only show if user has an organization */}
       {editedData.organization && (
         <>
@@ -370,62 +426,6 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
           </Card>
         </>
       )}
-
-      {/* Personal Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="first_name">First Name</Label>
-              <Input
-                id="first_name"
-                value={editedData.profile.first_name || ''}
-                onChange={(e) => updateProfileField('first_name', e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
-            <div>
-              <Label htmlFor="last_name">Last Name</Label>
-              <Input
-                id="last_name"
-                value={editedData.profile.last_name || ''}
-                onChange={(e) => updateProfileField('last_name', e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={editedData.profile.email || ''}
-                onChange={(e) => updateProfileField('email', e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={editedData.profile.phone || ''}
-                onChange={(e) => updateProfileField('phone', e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
-            <div>
-              <Label htmlFor="primary_contact_title">Title</Label>
-              <Input
-                id="primary_contact_title"
-                value={editedData.profile.primary_contact_title || ''}
-                onChange={(e) => updateProfileField('primary_contact_title', e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Address Information */}
       <Card>
