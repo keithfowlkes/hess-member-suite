@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
 import { Resend } from "npm:resend@2.0.0";
@@ -87,7 +88,7 @@ const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3>Invoice Details:</h3>
           <p><strong>Invoice Number:</strong> {{invoice_number}}</p>
-          <p><strong>Amount:</strong> ${{amount}}</p>
+          <p><strong>Amount:</strong> $" + "{{amount}}</p>
           <p><strong>Due Date:</strong> {{due_date}}</p>
         </div>
         <p>Payment instructions and invoice are attached.</p>
@@ -112,7 +113,7 @@ const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
         <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 20px; margin: 20px 0;">
           <h3 style="color: #dc2626; margin: 0 0 10px 0;">Outstanding Invoice Details</h3>
           <p><strong>Invoice Number:</strong> {{invoice_number}}</p>
-          <p><strong>Amount Due:</strong> ${{amount}}</p>
+          <p><strong>Amount Due:</strong> $" + "{{amount}}</p>
           <p><strong>Original Due Date:</strong> {{due_date}}</p>
         </div>
         <p>Please contact us if you have any questions: billing@hessconsortium.org</p>

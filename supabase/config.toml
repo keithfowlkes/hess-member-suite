@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.send-analytics-feedback]
 verify_jwt = true
+
+[functions.centralized-email-delivery]
+verify_jwt = true
