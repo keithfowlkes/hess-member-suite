@@ -165,15 +165,27 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Send email using Resend
-    const emailResponse = await resend.emails.send({
-      from: "HESS Consortium <support@members.hessconsortium.app>",
+    // Send email using Resend with safe fallback sender
+    const fromAddress = Deno.env.get("RESEND_FROM") || "HESS Consortium <onboarding@resend.dev>";
+    const { data: sent, error: sendError } = await resend.emails.send({
+      from: fromAddress,
       to: [email],
       subject: "Reset Your HESS Consortium Password",
       html: html,
     });
 
-    console.log("Password reset email sent successfully:", emailResponse);
+    if (sendError) {
+      console.error("❌ Failed to send reset email:", sendError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to send reset email', details: sendError }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    console.log("✅ Password reset email sent:", sent);
 
     return new Response(
       JSON.stringify({ 
