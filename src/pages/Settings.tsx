@@ -135,26 +135,19 @@ export default function Settings() {
 
     setEmailConfigLoading(true);
     try {
-      // Update RESEND_FROM secret
-      const { error } = await supabase.functions.invoke('update-secret', {
-        body: { 
-          secretName: 'RESEND_FROM',
-          secretValue: resendFromEmail.trim()
-        }
-      });
-
-      if (error) throw error;
-
       toast({
-        title: 'Email Configuration Updated',
-        description: `From email address updated to ${resendFromEmail}`,
+        title: 'Manual Configuration Required',
+        description: 'Please update RESEND_FROM in your Supabase project settings under Edge Functions > Secrets.',
       });
+      
+      // Open Supabase secrets management in new tab
+      window.open('https://supabase.com/dashboard/project/tyovnvuluyosjnabrzjc/settings/functions', '_blank');
       
       setResendFromEmail(''); // Clear for security
     } catch (error: any) {
       toast({
-        title: 'Failed to update email configuration',
-        description: error.message,
+        title: 'Configuration Error',
+        description: 'Please update the secret manually in Supabase dashboard.',
         variant: 'destructive'
       });
     } finally {
@@ -175,26 +168,19 @@ export default function Settings() {
 
     setApiKeyLoading(true);
     try {
-      // Update RESEND_API_KEY secret
-      const { error } = await supabase.functions.invoke('update-secret', {
-        body: { 
-          secretName: 'RESEND_API_KEY',
-          secretValue: resendApiKey.trim()
-        }
-      });
-
-      if (error) throw error;
-
       toast({
-        title: 'API Key Updated',
-        description: 'Resend API key has been updated successfully',
+        title: 'Manual Configuration Required',
+        description: 'Please update RESEND_API_KEY in your Supabase project settings under Edge Functions > Secrets.',
       });
+      
+      // Open Supabase secrets management in new tab
+      window.open('https://supabase.com/dashboard/project/tyovnvuluyosjnabrzjc/settings/functions', '_blank');
       
       setResendApiKey(''); // Clear for security
     } catch (error: any) {
       toast({
-        title: 'Failed to update API key',
-        description: error.message,
+        title: 'Configuration Error',
+        description: 'Please update the secret manually in Supabase dashboard.',
         variant: 'destructive'
       });
     } finally {
@@ -930,13 +916,13 @@ export default function Settings() {
                                         Update Sender Email Address
                                       </AlertDialogTitle>
                                       <AlertDialogDescription className="space-y-2">
-                                        <p>You're about to change the sender email address to:</p>
-                                        <div className="bg-muted p-2 rounded font-mono text-sm">
+                                        You're about to change the sender email address to:
+                                        <code className="block bg-muted p-2 rounded font-mono text-sm mt-2">
                                           {resendFromEmail}
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">
-                                          This will affect all system emails. Ensure this domain is verified in your Resend account.
-                                        </p>
+                                        </code>
+                                        <span className="block text-xs text-muted-foreground mt-2">
+                                          This will affect all system emails. You'll need to update this manually in Supabase Edge Functions secrets.
+                                        </span>
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
@@ -1027,13 +1013,13 @@ export default function Settings() {
                                         Update Resend API Key
                                       </AlertDialogTitle>
                                       <AlertDialogDescription className="space-y-2">
-                                        <p>You're about to update the Resend API key.</p>
-                                        <div className="bg-muted p-2 rounded font-mono text-sm">
+                                        You're about to update the Resend API key.
+                                        <code className="block bg-muted p-2 rounded font-mono text-sm mt-2">
                                           {resendApiKey.substring(0, 8)}{'*'.repeat(Math.max(0, resendApiKey.length - 8))}
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">
-                                          This will replace the current API key. Ensure the new key has send permissions and is valid.
-                                        </p>
+                                        </code>
+                                        <span className="block text-xs text-muted-foreground mt-2">
+                                          This will replace the current API key. You'll need to update this manually in Supabase Edge Functions secrets.
+                                        </span>
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
