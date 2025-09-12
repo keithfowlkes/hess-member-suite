@@ -87,6 +87,8 @@ export default function Settings() {
     emailId?: string;
   } | null>(null);
   const [resendApiKey, setResendApiKey] = useState('');
+  const [resendFromEmail, setResendFromEmail] = useState('');
+  const [emailConfigLoading, setEmailConfigLoading] = useState(false);
   const [apiKeyLoading, setApiKeyLoading] = useState(false);
   
   // reCaptcha enable/disable state
@@ -109,6 +111,57 @@ export default function Settings() {
     });
   };
 
+  // Email configuration management
+  const handleUpdateEmailConfig = async () => {
+    if (!resendFromEmail.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid from email address.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(resendFromEmail)) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid email address format.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setEmailConfigLoading(true);
+    try {
+      // Update RESEND_FROM secret
+      const { error } = await supabase.functions.invoke('update-secret', {
+        body: { 
+          secretName: 'RESEND_FROM',
+          secretValue: resendFromEmail.trim()
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Email Configuration Updated',
+        description: `From email address updated to ${resendFromEmail}`,
+      });
+      
+      setResendFromEmail(''); // Clear for security
+    } catch (error: any) {
+      toast({
+        title: 'Failed to update email configuration',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setEmailConfigLoading(false);
+    }
+  };
+
   // Resend API key management
   const handleUpdateResendApiKey = async () => {
     if (!resendApiKey.trim()) {
@@ -120,12 +173,33 @@ export default function Settings() {
       return;
     }
 
-    toast({
-      title: 'API Key Ready',
-      description: 'Your API key is ready. I\'ll open the secure update modal for you.',
-    });
-    
-    setResendApiKey(''); // Clear for security
+    setApiKeyLoading(true);
+    try {
+      // Update RESEND_API_KEY secret
+      const { error } = await supabase.functions.invoke('update-secret', {
+        body: { 
+          secretName: 'RESEND_API_KEY',
+          secretValue: resendApiKey.trim()
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'API Key Updated',
+        description: 'Resend API key has been updated successfully',
+      });
+      
+      setResendApiKey(''); // Clear for security
+    } catch (error: any) {
+      toast({
+        title: 'Failed to update API key',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setApiKeyLoading(false);
+    }
   };
 
   // Email testing function
@@ -736,82 +810,138 @@ export default function Settings() {
                        )}
                        </div>
 
-                       {/* Resend API Key Management */}
-                       <div className="space-y-4 pt-4 border-t border-border">
-                         <div className="flex items-center gap-2 mb-2">
-                           <Key className="w-4 h-4" />
-                           <h4 className="font-medium">Resend API Key</h4>
-                         </div>
-                         
-                         <div className="space-y-2">
-                           <Label htmlFor="resend-api-key">Enter Resend API Key</Label>
-                           <Input
-                             id="resend-api-key"
-                             type="password"
-                             placeholder="re_xxxxxxxxxx"
-                             value={resendApiKey}
-                             onChange={(e) => setResendApiKey(e.target.value)}
-                           />
-                           <p className="text-xs text-muted-foreground">
-                             Get your API key from{' '}
-                             <a 
-                               href="https://resend.com/api-keys" 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               className="text-primary hover:underline"
-                             >
-                               Resend Dashboard
-                             </a>
-                           </p>
-                         </div>
+                        {/* Email Configuration Management */}
+                        <div className="space-y-4 pt-4 border-t border-border">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Mail className="w-4 h-4" />
+                            <h4 className="font-medium">Email Configuration</h4>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="resend-from-email">From Email Address</Label>
+                              <Input
+                                id="resend-from-email"
+                                type="email"
+                                placeholder="support@members.hessconsortium.app"
+                                value={resendFromEmail}
+                                onChange={(e) => setResendFromEmail(e.target.value)}
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                The email address that will appear as the sender for all system emails
+                              </p>
+                            </div>
 
-                         <AlertDialog>
-                           <AlertDialogTrigger asChild>
-                             <Button 
-                               disabled={apiKeyLoading || !resendApiKey.trim()}
-                               size="sm"
-                             >
-                               {apiKeyLoading ? (
-                                 <>
-                                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                   Updating...
-                                 </>
-                               ) : (
-                                 <>
-                                   <Save className="w-4 h-4 mr-2" />
-                                   Update API Key
-                                 </>
-                               )}
-                             </Button>
-                           </AlertDialogTrigger>
-                           <AlertDialogContent>
-                             <AlertDialogHeader>
-                               <AlertDialogTitle>Update Resend API Key</AlertDialogTitle>
-                               <AlertDialogDescription>
-                                 Are you sure you want to update the Resend API key? This will replace the current API key and may affect email functionality if the new key is invalid.
-                               </AlertDialogDescription>
-                             </AlertDialogHeader>
-                             <AlertDialogFooter>
-                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                               <AlertDialogAction onClick={handleUpdateResendApiKey}>
-                                 Yes, Update API Key
-                               </AlertDialogAction>
-                             </AlertDialogFooter>
-                           </AlertDialogContent>
-                         </AlertDialog>
-                       </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="resend-api-key">Resend API Key</Label>
+                              <Input
+                                id="resend-api-key"
+                                type="password"
+                                placeholder="re_xxxxxxxxxx"
+                                value={resendApiKey}
+                                onChange={(e) => setResendApiKey(e.target.value)}
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                Get your API key from{' '}
+                                <a 
+                                  href="https://resend.com/api-keys" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline"
+                                >
+                                  Resend Dashboard
+                                </a>
+                              </p>
+                            </div>
+                          </div>
 
-                        <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
-                        <h4 className="font-medium text-blue-900 mb-2">Email Configuration:</h4>
-                        <ul className="text-sm text-blue-800 space-y-1">
-                          <li><strong>From:</strong> info@hessconsortium.app</li>
-                          <li><strong>Service:</strong> Resend</li>
-                          <li><strong>Domain:</strong> hessconsortium.app</li>
-                        </ul>
-                        <p className="text-xs text-blue-700 mt-2">
-                          Make sure the domain is verified in your Resend account for successful delivery.
-                        </p>
-                      </div>
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  disabled={emailConfigLoading || !resendFromEmail.trim()}
+                                  size="sm"
+                                  variant="outline"
+                                >
+                                  {emailConfigLoading ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                      Updating...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Save className="w-4 h-4 mr-2" />
+                                      Update From Email
+                                    </>
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Update From Email Address</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to update the from email address? This will change the sender address for all system emails. Make sure the domain is verified in your Resend account.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={handleUpdateEmailConfig}>
+                                    Yes, Update From Email
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  disabled={apiKeyLoading || !resendApiKey.trim()}
+                                  size="sm"
+                                >
+                                  {apiKeyLoading ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                      Updating...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Save className="w-4 h-4 mr-2" />
+                                      Update API Key
+                                    </>
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Update Resend API Key</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to update the Resend API key? This will replace the current API key and may affect email functionality if the new key is invalid.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={handleUpdateResendApiKey}>
+                                    Yes, Update API Key
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+
+                          <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
+                            <h4 className="font-medium text-blue-900 mb-2">Email Configuration Requirements:</h4>
+                            <ul className="text-sm text-blue-800 space-y-1">
+                              <li><strong>Domain Verification:</strong> Verify your domain in Resend</li>
+                              <li><strong>API Key:</strong> Valid Resend API key with send permissions</li>
+                              <li><strong>From Address:</strong> Must use verified domain (e.g., @members.hessconsortium.app)</li>
+                              <li><strong>Testing:</strong> Use the test email feature above to verify configuration</li>
+                            </ul>
+                            <p className="text-xs text-blue-700 mt-2">
+                              <strong>Important:</strong> Domain verification is required for custom sender addresses. 
+                              Without verification, emails will use the Resend sandbox domain.
+                            </p>
+                          </div>
+                        </div>
                     </CardContent>
                   </Card>
                 </div>
