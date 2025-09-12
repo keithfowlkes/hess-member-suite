@@ -154,9 +154,14 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   { auth: { persistSession: false } }
-);
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+ );
+ 
+ const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+ 
+ console.log('[centralized-email-delivery] Initialized', {
+   hasApiKey: !!Deno.env.get('RESEND_API_KEY'),
+   supabaseUrlSet: !!Deno.env.get('SUPABASE_URL')
+ });
 
 function replaceTemplateVariables(content: string, data: Record<string, string>): string {
   let result = content;
