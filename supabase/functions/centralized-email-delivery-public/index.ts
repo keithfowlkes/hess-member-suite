@@ -152,13 +152,36 @@ serve(async (req: Request): Promise<Response> => {
       html: finalHtml,
     };
 
-    const emailResponse = await resend.emails.send(emailPayload);
-
-    if (emailResponse?.error) {
-      return new Response(JSON.stringify({ success: false, error: emailResponse.error.message }), { status: emailResponse.error.statusCode || 502, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    // Try send; on 403 (domain not verified), retry with Resend sandbox sender
+    let emailResponse = await resend.emails.send(emailPayload);
+    if (emailResponse?.error && emailResponse.error.statusCode === 403) {
+      const sandboxFrom = 'HESS Consortium <onboarding@resend.dev>';
+      const retryPayload = { ...emailPayload, from: sandboxFrom };
+      const retry = await resend.emails.send(retryPayload);
+      if (!retry.error) {
+        return new Response(
+          JSON.stringify({ success: true, message: 'Email sent (fallback sandbox sender)', emailId: retry.data?.id, timestamp: new Date().toISOString() }),
+          { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+      // If retry also failed, return original 403 error
+      return new Response(
+        JSON.stringify({ success: false, error: emailResponse.error.message, note: 'Domain likely not verified; sandbox fallback failed' }),
+        { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
     }
 
-    return new Response(JSON.stringify({ success: true, message: 'Email sent', emailId: emailResponse.data?.id, timestamp: new Date().toISOString() }), { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    if (emailResponse?.error) {
+      return new Response(
+        JSON.stringify({ success: false, error: emailResponse.error.message }),
+        { status: emailResponse.error.statusCode || 502, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, message: 'Email sent', emailId: emailResponse.data?.id, timestamp: new Date().toISOString() }),
+      { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
   } catch (error: any) {
     return new Response(JSON.stringify({ success: false, error: error.message || 'Unknown error' }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
   }
