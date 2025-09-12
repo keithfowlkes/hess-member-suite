@@ -46,8 +46,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Attempting to send test email to: ${to}`);
 
+    // Validate sender and fallback to Resend sandbox if misconfigured
+    const fromEnv = Deno.env.get('RESEND_FROM') || '';
+    const validFrom = /^(?:[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+|.+\s<[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+>)$/.test(fromEnv)
+      ? fromEnv
+      : 'HESS Consortium <onboarding@resend.dev>';
+
     const emailResponse = await resend.emails.send({
-      from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
+      from: validFrom,
       to: [to],
       subject: subject,
       html: `
@@ -60,7 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="background-color: #e8f4f8; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #333; margin-top: 0;">System Information</h3>
             <ul style="color: #666; line-height: 1.6;">
-              <li><strong>Sent from:</strong> support@members.hessconsortium.app</li>
+              <li><strong>Sent from:</strong> ${validFrom}</li>
               <li><strong>Email service:</strong> Resend</li>
               <li><strong>Timestamp:</strong> ${new Date().toISOString()}</li>
               <li><strong>Test ID:</strong> ${crypto.randomUUID()}</li>
@@ -77,19 +83,27 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    if (emailResponse?.error) {
+      console.error('❌ Resend rejected test email:', emailResponse.error);
+      return new Response(
+        JSON.stringify({ success: false, error: emailResponse.error.message }),
+        { status: emailResponse.error.statusCode || 502, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    console.log('✅ Test email accepted by Resend:', emailResponse.data);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Test email sent successfully",
+        message: 'Test email sent successfully',
         emailId: emailResponse.data?.id,
         timestamp: new Date().toISOString()
       }),
       {
         status: 200,
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           ...corsHeaders,
         },
       }
