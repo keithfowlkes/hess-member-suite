@@ -779,11 +779,17 @@ export default function MembershipFees() {
         </div>
       `;
 
-      const { data, error } = await supabase.functions.invoke('test-email', {
+      const { data, error } = await supabase.functions.invoke('centralized-email-delivery', {
         body: {
+          type: 'test',
           to: testEmailData.to.trim(),
           subject: testEmailData.subject.trim() || 'HESS Consortium - Test Invoice',
-          message: emailContent
+          data: {
+            message: emailContent,
+            test_id: Date.now().toString(),
+            from_email: 'support@members.hessconsortium.app',
+            timestamp: new Date().toISOString()
+          }
         }
       });
 
@@ -836,16 +842,18 @@ export default function MembershipFees() {
       const orgInvoices = invoices.filter(inv => inv.organization_id === organization.id);
       const latestInvoice = orgInvoices.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
 
-      const { data, error } = await supabase.functions.invoke('organization-emails', {
+      const { data, error } = await supabase.functions.invoke('centralized-email-delivery', {
         body: {
           type: 'overdue_reminder',
           to: organization.email,
-          organizationName: organization.name,
-          invoiceData: latestInvoice ? {
-            invoice_number: latestInvoice.invoice_number,
-            amount: latestInvoice.amount,
-            due_date: latestInvoice.due_date
-          } : null
+          subject: `HESS Consortium - Payment Reminder for ${organization.name}`,
+          data: {
+            organization_name: organization.name,
+            invoice_number: latestInvoice?.invoice_number || 'N/A',
+            amount: latestInvoice?.amount || '0',
+            due_date: latestInvoice?.due_date || new Date().toLocaleDateString(),
+            invoice_data: latestInvoice || null
+          }
         }
       });
 

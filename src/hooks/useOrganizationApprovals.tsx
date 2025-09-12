@@ -153,16 +153,19 @@ export const useOrganizationApprovals = () => {
       if (memberError) {
         console.error('Error fetching organization members:', memberError);
       } else if (memberProfiles && memberProfiles.length > 0) {
-        // Send approval emails to all members
+        // Send approval emails to all members using centralized system
         for (const member of memberProfiles) {
           try {
-            await supabase.functions.invoke('organization-emails', {
+            await supabase.functions.invoke('centralized-email-delivery', {
               body: {
                 type: 'member_approval',
                 to: member.email,
-                organizationName: org.name,
-                memberName: `${member.first_name} ${member.last_name}`,
-                adminMessage
+                subject: `HESS Consortium - ${org.name} Membership Approved`,
+                data: {
+                  organization_name: org.name,
+                  member_name: `${member.first_name} ${member.last_name}`,
+                  admin_message: adminMessage
+                }
               }
             });
           } catch (emailError) {
@@ -219,14 +222,17 @@ export const useOrganizationApprovals = () => {
           organizationDataKeys: Object.keys(organizationData)
         });
 
-        const { error: emailError } = await supabase.functions.invoke('organization-emails', {
+        const { error: emailError } = await supabase.functions.invoke('centralized-email-delivery', {
           body: {
             type: 'welcome_approved',
             to: org.profiles.email,
-            organizationName: org.name,
-            secondaryEmail: org.secondary_contact_email,
-            organizationData: organizationData,
-            adminMessage
+            subject: `Welcome to HESS Consortium - ${org.name}`,
+            data: {
+              organization_name: org.name,
+              secondary_email: org.secondary_contact_email,
+              admin_message: adminMessage,
+              ...organizationData
+            }
           }
         });
 
@@ -287,14 +293,17 @@ export const useOrganizationApprovals = () => {
 
       if (updateError) throw updateError;
 
-      // Send rejection email
+      // Send rejection email using centralized system
       if (org.profiles?.email) {
-        await supabase.functions.invoke('organization-emails', {
+        await supabase.functions.invoke('centralized-email-delivery', {
           body: {
             type: 'rejection',
             to: org.profiles.email,
-            organizationName: org.name,
-            adminMessage
+            subject: `HESS Consortium - Application Status Update for ${org.name}`,
+            data: {
+              organization_name: org.name,
+              admin_message: adminMessage
+            }
           }
         });
       }

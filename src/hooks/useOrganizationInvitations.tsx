@@ -76,13 +76,16 @@ export const useOrganizationInvitations = () => {
         .eq('id', organizationId)
         .single();
 
-      // Send invitation email
-      await supabase.functions.invoke('organization-emails', {
+      // Send invitation email using centralized system
+      await supabase.functions.invoke('centralized-email-delivery', {
         body: {
           type: 'invitation',
           to: email,
-          organizationName: org?.name || 'Unknown Organization',
-          token
+          subject: `HESS Consortium Organization Invitation - ${org?.name || 'Unknown Organization'}`,
+          data: {
+            organization_name: org?.name || 'Unknown Organization',
+            invitation_token: token
+          }
         }
       });
 
@@ -126,13 +129,16 @@ export const useOrganizationInvitations = () => {
         .update({ expires_at: expiresAt.toISOString() })
         .eq('id', invitationId);
 
-      // Resend email
-      await supabase.functions.invoke('organization-emails', {
+      // Resend email using centralized system
+      await supabase.functions.invoke('centralized-email-delivery', {
         body: {
           type: 'invitation',
           to: invitation.email,
-          organizationName: invitation.organizations.name,
-          token: invitation.invitation_token
+          subject: `HESS Consortium Organization Invitation - ${invitation.organizations.name}`,
+          data: {
+            organization_name: invitation.organizations.name,
+            invitation_token: invitation.invitation_token
+          }
         }
       });
 

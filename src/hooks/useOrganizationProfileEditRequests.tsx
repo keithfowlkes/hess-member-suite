@@ -309,13 +309,17 @@ export function useApproveOrganizationProfileEditRequest() {
             other_software_comments: orgData.other_software_comments || '',
           };
 
-          await supabase.functions.invoke('organization-emails', {
+          await supabase.functions.invoke('centralized-email-delivery', {
             body: {
               type: 'profile_update_approved',
               to: profile.email,
-              organizationName: orgData.name,
-              secondaryEmail: organizationData.secondary_contact_email,
-              organizationData: organizationData
+              subject: `HESS Consortium - Profile Update Approved for ${orgData.name}`,
+              data: {
+                organization_name: orgData.name,
+                secondary_email: organizationData.secondary_contact_email,
+                admin_notes: adminNotes,
+                ...organizationData
+              }
             }
           });
           console.log('Profile update approval email sent successfully');
