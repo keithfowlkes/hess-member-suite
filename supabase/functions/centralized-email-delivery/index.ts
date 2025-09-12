@@ -9,7 +9,16 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: 'test' | 'invoice' | 'organization' | 'password-reset' | 'overdue-reminder' | 'custom';
+  type:
+    | 'test'
+    | 'invoice'
+    | 'welcome'
+    | 'organization'
+    | 'password_reset'
+    | 'password-reset'
+    | 'overdue_reminder'
+    | 'overdue-reminder'
+    | 'custom';
   to: string | string[];
   subject?: string;
   template?: string;
@@ -121,6 +130,23 @@ const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
       </div>
     `,
     variables: ['organization_name', 'invoice_number', 'amount', 'due_date']
+  },
+
+  password_reset: {
+    id: 'password_reset',
+    name: 'Password Reset',
+    subject: 'HESS Consortium - Password Reset Request',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #2563eb;">Password Reset Request</h1>
+        <p>Hi {{user_name}},</p>
+        <p>We received a request to reset your password. Click the link below to set a new password:</p>
+        <p><a href="{{reset_link}}" style="color: #2563eb;">Reset your password</a></p>
+        <p>This link will expire in {{expiry_time}}.</p>
+        <p>If you did not request a password reset, please ignore this email.</p>
+      </div>
+    `,
+    variables: ['user_name', 'reset_link', 'expiry_time']
   }
 };
 
@@ -165,10 +191,11 @@ async function validateEmailDelivery(emailData: EmailRequest): Promise<{ valid: 
 
 async function logEmailActivity(emailData: EmailRequest, result: any, success: boolean) {
   try {
+    const typeKey = (emailData.type as string).replace(/-/g, '_').replace('organization', 'welcome');
     await supabase.from('email_logs').insert({
       email_type: emailData.type,
       recipient: Array.isArray(emailData.to) ? emailData.to.join(', ') : emailData.to,
-      subject: emailData.subject || EMAIL_TEMPLATES[emailData.type]?.subject || 'No Subject',
+      subject: emailData.subject || EMAIL_TEMPLATES[typeKey]?.subject || 'No Subject',
       success,
       result_data: result,
       sent_at: new Date().toISOString()
@@ -203,8 +230,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get email template
-    let template = EMAIL_TEMPLATES[emailRequest.type];
+    // Normalize type and get email template
+    const typeKeyBase = (emailRequest.type || 'test').toString().replace(/-/g, '_');
+    const typeKey = typeKeyBase === 'organization' ? 'welcome' : typeKeyBase;
+
+    let template = EMAIL_TEMPLATES[typeKey];
     if (!template && emailRequest.template) {
       // Custom template provided
       template = {
@@ -215,6 +245,7 @@ const handler = async (req: Request): Promise<Response> => {
         variables: []
       };
     }
+
 
     if (!template) {
       throw new Error(`No template found for email type: ${emailRequest.type}`);
@@ -254,8 +285,14 @@ const handler = async (req: Request): Promise<Response> => {
     const validFrom = /^(?:[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+|.+\s<[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+>)$/.test(fromCandidate)
       ? fromCandidate
       : 'HESS Consortium <onboarding@resend.dev>';
-      : 'HESS Consortium <onboarding@resend.dev>';
 
+    // Ensure API key is configured
+    if (!Deno.env.get('RESEND_API_KEY')) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Resend API key is not configured. Please set RESEND_API_KEY secret.' }),
+        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
     // Prepare email payload
     const emailPayload: any = {
       from: validFrom,
