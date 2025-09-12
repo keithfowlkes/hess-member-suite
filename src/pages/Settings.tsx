@@ -309,7 +309,10 @@ export default function Settings() {
           amount: '5000',
           due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
           custom_message: emailTestData.message.trim()
-        }
+        },
+        // Help diagnose and ensure sandbox path for tests
+        forceSandbox: true,
+        debug: true,
       };
 
       const response = await fetch('https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/centralized-email-delivery-public', {
@@ -323,7 +326,9 @@ export default function Settings() {
 
       const respJson = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(respJson?.error || `Edge function error (status ${response.status})`);
+        const details = respJson ? `: ${respJson.error || respJson.message || ''}` : '';
+        const meta = respJson ? ` [code=${respJson.statusCode || response.status}${respJson.name ? `, name=${respJson.name}` : ''}${respJson.correlationId ? `, id=${respJson.correlationId}` : ''}]` : ` [code=${response.status}]`;
+        throw new Error(`Edge Function error${details}${meta}`.trim());
       }
 
       setEmailTestResult({
