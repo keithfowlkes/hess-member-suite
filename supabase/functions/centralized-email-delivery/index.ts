@@ -287,9 +287,31 @@ const handler = async (req: Request): Promise<Response> => {
     } catch (_) {}
     const fromEnv = Deno.env.get('RESEND_FROM') || '';
     const fromCandidate = configuredFrom || fromEnv;
-    const validFrom = /^(?:[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+|.+\s<[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+>)$/.test(fromCandidate)
-      ? fromCandidate
-      : 'HESS Consortium <onboarding@resend.dev>';
+
+    // Validate basic format (supports "Name <email@domain>")
+    const emailMatch = fromCandidate.match(/<?([^<>@\s]+@[^<>@\s]+\.[^<>@\s]+)>?$/);
+    const candidateEmail = emailMatch ? emailMatch[1] : fromCandidate;
+    const hasValidFormat = /^(?:[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+|.+\s<[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+>)$/.test(fromCandidate);
+
+    // If domain is not verified in Resend, fall back to sandbox sender to avoid 403
+    let finalFrom = hasValidFormat ? fromCandidate : 'HESS Consortium <onboarding@resend.dev>';
+    try {
+      const apiKeyPresent = !!Deno.env.get('RESEND_API_KEY');
+      if (apiKeyPresent && candidateEmail.includes('@')) {
+        const domain = candidateEmail.split('@')[1];
+        const domainsResponse = await resend.domains.list();
+        const verified = Array.isArray(domainsResponse?.data?.data)
+          ? domainsResponse.data.data.some((d: any) => d.name === domain && d.status === 'verified')
+          : false;
+        console.log('[centralized-email-delivery] From check', { fromCandidate, candidateEmail, domain, verified });
+        if (!verified) {
+          finalFrom = 'HESS Consortium <onboarding@resend.dev>';
+        }
+      }
+    } catch (e) {
+      console.log('[centralized-email-delivery] Domain verification check failed, using candidate', { error: e?.message });
+    }
+
 
     // Ensure API key is configured
     if (!Deno.env.get('RESEND_API_KEY')) {
@@ -300,7 +322,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
     // Prepare email payload
     const emailPayload: any = {
-      from: validFrom,
+      from: finalFrom,
       to: Array.isArray(emailRequest.to) ? emailRequest.to : [emailRequest.to],
       subject: finalSubject,
       html: finalHtml,
