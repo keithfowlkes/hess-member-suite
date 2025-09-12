@@ -852,7 +852,7 @@ export default function Settings() {
                           </Card>
 
                           {/* Configuration Forms */}
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                             {/* From Email Configuration */}
                             <Card>
                               <CardHeader>
@@ -1049,7 +1049,7 @@ export default function Settings() {
                           </div>
 
                           {/* Quick Actions */}
-                          <Card className="border-dashed">
+                          <Card className="border-dashed col-span-1 xl:col-span-2">
                             <CardHeader className="pb-3">
                               <CardTitle className="text-sm font-medium flex items-center gap-2">
                                 <Settings2 className="w-4 h-4" />
@@ -1057,7 +1057,7 @@ export default function Settings() {
                               </CardTitle>
                             </CardHeader>
                             <CardContent>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                 <Button 
                                   variant="outline" 
                                   size="sm" 
