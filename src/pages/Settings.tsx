@@ -1165,46 +1165,59 @@ export default function Settings() {
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="new-from-email" className="text-sm font-medium">
-                                  From Email Address
-                                </Label>
-                                <div className="relative">
-                                  <Input
-                                    id="new-from-email"
-                                    type="email"
-                                    placeholder="support@members.hessconsortium.app"
-                                    value={resendFromEmail}
-                                    onChange={(e) => setResendFromEmail(e.target.value)}
-                                    className={`pr-10 ${
-                                      resendFromEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resendFromEmail) 
-                                        ? 'border-destructive focus:border-destructive' 
-                                        : resendFromEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resendFromEmail)
-                                        ? 'border-green-500 focus:border-green-500'
-                                        : ''
-                                    }`}
-                                  />
-                                  {resendFromEmail && (
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                                      {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resendFromEmail) ? (
-                                        <CheckCircle className="w-4 h-4 text-green-500" />
-                                      ) : (
-                                        <AlertCircle className="w-4 h-4 text-destructive" />
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                                  <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                                  <div>
-                                    <p>Domain must be verified in your Resend account</p>
-                                    <p className="text-primary hover:underline cursor-pointer" 
-                                       onClick={() => window.open('https://resend.com/domains', '_blank')}>
-                                      Verify domain at resend.com/domains →
+                                {/* Domain Configuration */}
+                                <div className="space-y-2 mb-4">
+                                  <Label className="text-sm font-medium">Email Domain Configuration</Label>
+                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                    <p className="text-sm text-blue-800 font-medium mb-1">
+                                      Configured Domain: members.hessconsortium.app
+                                    </p>
+                                    <p className="text-xs text-blue-600">
+                                      All system emails will be sent from addresses using this domain. Ensure this domain is verified in your Resend account.
                                     </p>
                                   </div>
                                 </div>
-                              </div>
+
+                                <div className="space-y-2">
+                                 <Label htmlFor="new-from-email" className="text-sm font-medium">
+                                   From Email Address
+                                 </Label>
+                                 <div className="relative">
+                                   <Input
+                                     id="new-from-email"
+                                     type="email"
+                                     placeholder="support@members.hessconsortium.app"
+                                     value={resendFromEmail}
+                                     onChange={(e) => setResendFromEmail(e.target.value)}
+                                     className={`pr-10 ${
+                                       resendFromEmail && !/^[^\s@]+@members\.hessconsortium\.app$/.test(resendFromEmail) 
+                                         ? 'border-destructive focus:border-destructive' 
+                                         : resendFromEmail && /^[^\s@]+@members\.hessconsortium\.app$/.test(resendFromEmail)
+                                         ? 'border-green-500 focus:border-green-500'
+                                         : ''
+                                     }`}
+                                   />
+                                   {resendFromEmail && (
+                                     <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                       {/^[^\s@]+@members\.hessconsortium\.app$/.test(resendFromEmail) ? (
+                                         <CheckCircle className="w-4 h-4 text-green-500" />
+                                       ) : (
+                                         <AlertCircle className="w-4 h-4 text-destructive" />
+                                       )}
+                                     </div>
+                                   )}
+                                 </div>
+                                 <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                                   <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                   <div>
+                                     <p>Must use the configured domain: members.hessconsortium.app</p>
+                                     <p className="text-primary hover:underline cursor-pointer" 
+                                        onClick={() => window.open('https://resend.com/domains', '_blank')}>
+                                       Verify domain at resend.com/domains →
+                                     </p>
+                                   </div>
+                                 </div>
+                               </div>
 
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
