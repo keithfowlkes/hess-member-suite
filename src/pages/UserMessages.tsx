@@ -111,70 +111,77 @@ export default function UserMessages() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
+              <div className="grid gap-3">
                 {messages.map((message) => (
-                  <Card key={message.id} className={`transition-all hover:shadow-md cursor-pointer ${!message.is_read ? 'border-primary/50 bg-primary/5' : ''}`}>
-                    <CardContent className="p-6" onClick={() => handleViewMessage(message)}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium text-foreground">{message.user_name}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Mail className="h-4 w-4" />
-                              <span className="text-sm">{message.user_email}</span>
-                            </div>
-                            {message.organization && (
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <Building2 className="h-4 w-4" />
-                                <span className="text-sm">{message.organization}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Calendar className="h-4 w-4" />
-                              <span className="text-sm">{format(new Date(message.created_at), 'MMM dd, yyyy hh:mm a')}</span>
-                            </div>
+                  <Card key={message.id} className={`transition-all hover:shadow-md cursor-pointer animate-fade-in ${!message.is_read ? 'border-primary/50 bg-primary/5' : ''}`}>
+                    <CardContent className="p-4" onClick={() => handleViewMessage(message)}>
+                      <div className="grid grid-cols-12 gap-4 items-start">
+                        {/* User Info & Status */}
+                        <div className="col-span-3 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                            <span className="font-medium text-foreground text-sm truncate">{message.user_name}</span>
                             {!message.is_read && (
-                              <Badge variant="destructive">New</Badge>
+                              <Badge variant="destructive" className="text-xs px-1.5 py-0">New</Badge>
                             )}
                           </div>
-                          
-                          <div className="text-foreground">
-                            <p className="line-clamp-3">{message.message}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Mail className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{message.user_email}</span>
                           </div>
+                          {message.organization && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Building2 className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{message.organization}</span>
+                            </div>
+                          )}
                         </div>
                         
-                        <div className="flex items-center gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleReplyToMessage(message.user_email)}
-                            title="Reply via email"
-                          >
-                            <Reply className="h-4 w-4" />
-                          </Button>
+                        {/* Message Content */}
+                        <div className="col-span-6">
+                          <p className="text-sm text-foreground line-clamp-2 leading-relaxed">{message.message}</p>
+                        </div>
+                        
+                        {/* Date & Actions */}
+                        <div className="col-span-3 flex items-start justify-between">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            <span>{format(new Date(message.created_at), 'MMM dd')}</span>
+                          </div>
                           
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteMessage(message.id)}
-                            title="Delete message"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                          
-                          {!message.is_read && (
+                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleMarkAsRead(message.id)}
-                              title="Mark as read"
+                              onClick={() => handleReplyToMessage(message.user_email)}
+                              title="Reply via email"
+                              className="h-7 w-7 p-0 hover:bg-accent"
                             >
-                              <CheckCheck className="h-4 w-4" />
+                              <Reply className="h-3.5 w-3.5" />
                             </Button>
-                          )}
+                            
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteMessage(message.id)}
+                              title="Delete message"
+                              className="h-7 w-7 p-0 hover:bg-accent"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                            
+                            {!message.is_read && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleMarkAsRead(message.id)}
+                                title="Mark as read"
+                                className="h-7 w-7 p-0 hover:bg-accent"
+                              >
+                                <CheckCheck className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
