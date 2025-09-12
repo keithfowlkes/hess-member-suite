@@ -17,6 +17,7 @@ interface AnalyticsFeedbackDialogProps {
 export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbackDialogProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [organization, setOrganization] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -30,7 +31,7 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
         try {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('first_name, last_name, email')
+            .select('first_name, last_name, email, organization')
             .eq('user_id', user.id)
             .maybeSingle();
 
@@ -40,6 +41,7 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
               .join(' ') || '';
             setName(fullName);
             setEmail(profile.email || user.email || '');
+            setOrganization(profile.organization || '');
           } else {
             // Fallback to user email if no profile found
             setEmail(user.email || '');
@@ -56,6 +58,7 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
       // Reset form when dialog closes
       setName('');
       setEmail('');
+      setOrganization('');
       setMessage('');
     }
   }, [open, user]);
@@ -66,7 +69,7 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
     if (!name.trim() || !email.trim() || !message.trim()) {
       toast({
         title: "Error",
-        description: "Please fill in all fields.",
+        description: "Please fill in all required fields.",
         variant: "destructive"
       });
       return;
@@ -81,6 +84,7 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
         .insert([{
           user_name: name.trim(),
           user_email: email.trim(),
+          organization: organization.trim() || null,
           message: message.trim()
         }]);
 
@@ -93,6 +97,7 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
 
       setName('');
       setEmail('');
+      setOrganization('');
       setMessage('');
       onOpenChange(false);
     } catch (err) {
@@ -139,6 +144,17 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="organization">Organization</Label>
+            <Input
+              id="organization"
+              value={organization}
+              onChange={(e) => setOrganization(e.target.value)}
+              placeholder="Your organization name"
               disabled={isLoading}
             />
           </div>

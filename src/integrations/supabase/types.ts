@@ -1195,6 +1195,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          message_type: string
+          organization: string | null
+          updated_at: string
+          user_email: string
+          user_id: string | null
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          message_type?: string
+          organization?: string | null
+          updated_at?: string
+          user_email: string
+          user_id?: string | null
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          message_type?: string
+          organization?: string | null
+          updated_at?: string
+          user_email?: string
+          user_id?: string | null
+          user_name?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageSquare, Calendar, User, Mail, Trash2, CheckCheck, Reply } from 'lucide-react';
+import { MessageSquare, Calendar, User, Mail, Trash2, CheckCheck, Reply, Building2 } from 'lucide-react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,6 +126,12 @@ export default function UserMessages() {
                               <Mail className="h-4 w-4" />
                               <span className="text-sm">{message.user_email}</span>
                             </div>
+                            {message.organization && (
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Building2 className="h-4 w-4" />
+                                <span className="text-sm">{message.organization}</span>
+                              </div>
+                            )}
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <Calendar className="h-4 w-4" />
                               <span className="text-sm">{format(new Date(message.created_at), 'MMM dd, yyyy hh:mm a')}</span>
@@ -200,6 +206,10 @@ export default function UserMessages() {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Email</label>
                   <p className="text-foreground">{selectedMessage.user_email}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Organization</label>
+                  <p className="text-foreground">{selectedMessage.organization || 'Not specified'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Submitted</label>

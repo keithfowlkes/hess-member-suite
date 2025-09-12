@@ -6,6 +6,7 @@ export interface UserMessage {
   id: string;
   user_name: string;
   user_email: string;
+  organization?: string;
   message: string;
   created_at: string;
   is_read: boolean;
@@ -45,7 +46,7 @@ export function useCreateUserMessage() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { user_name: string; user_email: string; message: string }) => {
+    mutationFn: async (data: { user_name: string; user_email: string; organization?: string; message: string }) => {
       const { error } = await (supabase as any)
         .from('user_messages')
         .insert([data]);
