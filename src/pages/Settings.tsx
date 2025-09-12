@@ -810,137 +810,322 @@ export default function Settings() {
                        )}
                        </div>
 
-                        {/* Email Configuration Management */}
-                        <div className="space-y-4 pt-4 border-t border-border">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Mail className="w-4 h-4" />
-                            <h4 className="font-medium">Email Configuration</h4>
+                         {/* Enhanced Email Configuration Management */}
+                        <div className="space-y-6 pt-6 border-t border-border">
+                          <div className="flex items-center gap-2 mb-4">
+                            <Settings2 className="w-5 h-5 text-primary" />
+                            <h3 className="text-lg font-semibold">Email System Configuration</h3>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="resend-from-email">From Email Address</Label>
-                              <Input
-                                id="resend-from-email"
-                                type="email"
-                                placeholder="support@members.hessconsortium.app"
-                                value={resendFromEmail}
-                                onChange={(e) => setResendFromEmail(e.target.value)}
-                              />
-                              <p className="text-xs text-muted-foreground">
-                                The email address that will appear as the sender for all system emails
-                              </p>
-                            </div>
+                          {/* Current Configuration Status */}
+                          <Card className="bg-gradient-to-r from-background to-muted/20 border-l-4 border-l-primary">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                <Eye className="w-4 h-4" />
+                                Current Configuration Status
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div className="space-y-1">
+                                  <p className="text-muted-foreground">Provider</p>
+                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    Resend
+                                  </Badge>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-muted-foreground">From Address</p>
+                                  <p className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                                    support@members.hessconsortium.app
+                                  </p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-muted-foreground">API Key Status</p>
+                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    Configured
+                                  </Badge>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
 
-                            <div className="space-y-2">
-                              <Label htmlFor="resend-api-key">Resend API Key</Label>
-                              <Input
-                                id="resend-api-key"
-                                type="password"
-                                placeholder="re_xxxxxxxxxx"
-                                value={resendApiKey}
-                                onChange={(e) => setResendApiKey(e.target.value)}
-                              />
-                              <p className="text-xs text-muted-foreground">
-                                Get your API key from{' '}
-                                <a 
-                                  href="https://resend.com/api-keys" 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-primary hover:underline"
-                                >
-                                  Resend Dashboard
-                                </a>
-                              </p>
-                            </div>
+                          {/* Configuration Forms */}
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* From Email Configuration */}
+                            <Card>
+                              <CardHeader>
+                                <CardTitle className="text-base flex items-center gap-2">
+                                  <Mail className="w-4 h-4" />
+                                  Sender Configuration
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="new-from-email" className="text-sm font-medium">
+                                    From Email Address
+                                  </Label>
+                                  <div className="relative">
+                                    <Input
+                                      id="new-from-email"
+                                      type="email"
+                                      placeholder="support@members.hessconsortium.app"
+                                      value={resendFromEmail}
+                                      onChange={(e) => setResendFromEmail(e.target.value)}
+                                      className={`pr-10 ${
+                                        resendFromEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resendFromEmail) 
+                                          ? 'border-destructive focus:border-destructive' 
+                                          : resendFromEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resendFromEmail)
+                                          ? 'border-green-500 focus:border-green-500'
+                                          : ''
+                                      }`}
+                                    />
+                                    {resendFromEmail && (
+                                      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                        {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resendFromEmail) ? (
+                                          <CheckCircle className="w-4 h-4 text-green-500" />
+                                        ) : (
+                                          <AlertCircle className="w-4 h-4 text-destructive" />
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                                    <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <p>Domain must be verified in your Resend account</p>
+                                      <p className="text-primary hover:underline cursor-pointer" 
+                                         onClick={() => window.open('https://resend.com/domains', '_blank')}>
+                                        Verify domain at resend.com/domains →
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      disabled={emailConfigLoading || !resendFromEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resendFromEmail)}
+                                      className="w-full"
+                                      size="sm"
+                                    >
+                                      {emailConfigLoading ? (
+                                        <>
+                                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                          Updating From Address...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Save className="w-4 h-4 mr-2" />
+                                          Update From Address
+                                        </>
+                                      )}
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle className="flex items-center gap-2">
+                                        <Mail className="w-5 h-5" />
+                                        Update Sender Email Address
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription className="space-y-2">
+                                        <p>You're about to change the sender email address to:</p>
+                                        <div className="bg-muted p-2 rounded font-mono text-sm">
+                                          {resendFromEmail}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">
+                                          This will affect all system emails. Ensure this domain is verified in your Resend account.
+                                        </p>
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={handleUpdateEmailConfig}>
+                                        Update Sender Address
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </CardContent>
+                            </Card>
+
+                            {/* API Key Configuration */}
+                            <Card>
+                              <CardHeader>
+                                <CardTitle className="text-base flex items-center gap-2">
+                                  <Key className="w-4 h-4" />
+                                  API Configuration
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="new-api-key" className="text-sm font-medium">
+                                    Resend API Key
+                                  </Label>
+                                  <div className="relative">
+                                    <Input
+                                      id="new-api-key"
+                                      type="password"
+                                      placeholder="re_xxxxxxxxxxxxxxxxxx"
+                                      value={resendApiKey}
+                                      onChange={(e) => setResendApiKey(e.target.value)}
+                                      className={`pr-10 ${
+                                        resendApiKey && !resendApiKey.startsWith('re_') 
+                                          ? 'border-destructive focus:border-destructive' 
+                                          : resendApiKey && resendApiKey.startsWith('re_') && resendApiKey.length > 10
+                                          ? 'border-green-500 focus:border-green-500'
+                                          : ''
+                                      }`}
+                                    />
+                                    {resendApiKey && (
+                                      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                        {resendApiKey.startsWith('re_') && resendApiKey.length > 10 ? (
+                                          <CheckCircle className="w-4 h-4 text-green-500" />
+                                        ) : (
+                                          <AlertCircle className="w-4 h-4 text-destructive" />
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                                    <Key className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <p>Get your API key from the Resend dashboard</p>
+                                      <p className="text-primary hover:underline cursor-pointer"
+                                         onClick={() => window.open('https://resend.com/api-keys', '_blank')}>
+                                        Generate key at resend.com/api-keys →
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      disabled={apiKeyLoading || !resendApiKey.trim() || !resendApiKey.startsWith('re_')}
+                                      className="w-full"
+                                      size="sm"
+                                    >
+                                      {apiKeyLoading ? (
+                                        <>
+                                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                          Updating API Key...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Save className="w-4 h-4 mr-2" />
+                                          Update API Key
+                                        </>
+                                      )}
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle className="flex items-center gap-2">
+                                        <Key className="w-5 h-5" />
+                                        Update Resend API Key
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription className="space-y-2">
+                                        <p>You're about to update the Resend API key.</p>
+                                        <div className="bg-muted p-2 rounded font-mono text-sm">
+                                          {resendApiKey.substring(0, 8)}{'*'.repeat(Math.max(0, resendApiKey.length - 8))}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">
+                                          This will replace the current API key. Ensure the new key has send permissions and is valid.
+                                        </p>
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={handleUpdateResendApiKey}>
+                                        Update API Key
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </CardContent>
+                            </Card>
                           </div>
 
-                          <div className="flex flex-col sm:flex-row gap-3">
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
+                          {/* Quick Actions */}
+                          <Card className="border-dashed">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                <Settings2 className="w-4 h-4" />
+                                Quick Actions & Resources
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <Button 
-                                  disabled={emailConfigLoading || !resendFromEmail.trim()}
-                                  size="sm"
-                                  variant="outline"
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-auto py-3 px-4 flex flex-col items-start gap-1"
+                                  onClick={() => window.open('https://resend.com/dashboard', '_blank')}
                                 >
-                                  {emailConfigLoading ? (
-                                    <>
-                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                      Updating...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Save className="w-4 h-4 mr-2" />
-                                      Update From Email
-                                    </>
-                                  )}
+                                  <div className="flex items-center gap-2 font-medium">
+                                    <BarChart3 className="w-4 h-4" />
+                                    Resend Dashboard
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">View email analytics & logs</p>
                                 </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Update From Email Address</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to update the from email address? This will change the sender address for all system emails. Make sure the domain is verified in your Resend account.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={handleUpdateEmailConfig}>
-                                    Yes, Update From Email
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
+                                
                                 <Button 
-                                  disabled={apiKeyLoading || !resendApiKey.trim()}
-                                  size="sm"
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-auto py-3 px-4 flex flex-col items-start gap-1"
+                                  onClick={() => window.open('https://resend.com/domains', '_blank')}
                                 >
-                                  {apiKeyLoading ? (
-                                    <>
-                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                      Updating...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Save className="w-4 h-4 mr-2" />
-                                      Update API Key
-                                    </>
-                                  )}
+                                  <div className="flex items-center gap-2 font-medium">
+                                    <Shield className="w-4 h-4" />
+                                    Domain Management
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">Verify & manage domains</p>
                                 </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Update Resend API Key</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to update the Resend API key? This will replace the current API key and may affect email functionality if the new key is invalid.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={handleUpdateResendApiKey}>
-                                    Yes, Update API Key
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-
-                          <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
-                            <h4 className="font-medium text-blue-900 mb-2">Email Configuration Requirements:</h4>
-                            <ul className="text-sm text-blue-800 space-y-1">
-                              <li><strong>Domain Verification:</strong> Verify your domain in Resend</li>
-                              <li><strong>API Key:</strong> Valid Resend API key with send permissions</li>
-                              <li><strong>From Address:</strong> Must use verified domain (e.g., @members.hessconsortium.app)</li>
-                              <li><strong>Testing:</strong> Use the test email feature above to verify configuration</li>
-                            </ul>
-                            <p className="text-xs text-blue-700 mt-2">
-                              <strong>Important:</strong> Domain verification is required for custom sender addresses. 
-                              Without verification, emails will use the Resend sandbox domain.
-                            </p>
-                          </div>
+                                
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-auto py-3 px-4 flex flex-col items-start gap-1"
+                                  onClick={() => window.open('https://resend.com/docs', '_blank')}
+                                >
+                                  <div className="flex items-center gap-2 font-medium">
+                                    <FileText className="w-4 h-4" />
+                                    Documentation
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">API reference & guides</p>
+                                </Button>
+                              </div>
+                              
+                              <Separator className="my-4" />
+                              
+                              <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200">
+                                <h4 className="font-medium text-amber-900 mb-2 flex items-center gap-2">
+                                  <AlertCircle className="w-4 h-4" />
+                                  Configuration Checklist
+                                </h4>
+                                <div className="space-y-2 text-sm text-amber-800">
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle className="w-4 h-4 text-green-600" />
+                                    <span>Valid Resend API key configured</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle className="w-4 h-4 text-green-600" />
+                                    <span>Domain verified at resend.com/domains</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle className="w-4 h-4 text-green-600" />
+                                    <span>From email address using verified domain</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Send className="w-4 h-4 text-blue-600" />
+                                    <span>Test email functionality using the form above</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
                         </div>
                     </CardContent>
                   </Card>
