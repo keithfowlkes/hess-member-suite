@@ -239,10 +239,21 @@ const handler = async (req: Request): Promise<Response> => {
     const finalSubject = replaceTemplateVariables(emailRequest.subject || template.subject, templateData);
     const finalHtml = replaceTemplateVariables(template.html, templateData);
 
-    // Validate sender and fallback to Resend sandbox if misconfigured
+    // Determine sender: prefer DB setting, fallback to env, then sandbox
+    let configuredFrom = '';
+    try {
+      const { data: fromRow } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'email_from')
+        .maybeSingle();
+      configuredFrom = (fromRow?.setting_value as string) || '';
+    } catch (_) {}
     const fromEnv = Deno.env.get('RESEND_FROM') || '';
-    const validFrom = /^(?:[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+|.+\s<[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+>)$/.test(fromEnv)
-      ? fromEnv
+    const fromCandidate = configuredFrom || fromEnv;
+    const validFrom = /^(?:[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+|.+\s<[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+>)$/.test(fromCandidate)
+      ? fromCandidate
+      : 'HESS Consortium <onboarding@resend.dev>';
       : 'HESS Consortium <onboarding@resend.dev>';
 
     // Prepare email payload

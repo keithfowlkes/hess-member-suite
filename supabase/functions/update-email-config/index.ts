@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -32,71 +32,42 @@ const handler = async (req: Request): Promise<Response> => {
       fromEmail: resendFromEmail 
     });
 
-    // Get the Supabase management token from environment
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const supabaseProjectRef = Deno.env.get("SUPABASE_URL")?.split("//")[1]?.split(".")[0];
-    
-    if (!supabaseServiceKey || !supabaseProjectRef) {
-      throw new Error("Missing Supabase configuration");
-    }
+    // Initialize Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    );
 
     const results: any[] = [];
 
-    // Update RESEND_API_KEY if provided
+    // Handle API key request (not supported via app for security)
     if (resendApiKey) {
-      try {
-        const apiKeyResponse = await fetch(`https://api.supabase.com/v1/projects/${supabaseProjectRef}/secrets`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseServiceKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: 'RESEND_API_KEY',
-            value: resendApiKey,
-          }),
-        });
-
-        if (!apiKeyResponse.ok) {
-          const errorText = await apiKeyResponse.text();
-          console.error('Failed to update RESEND_API_KEY:', errorText);
-          throw new Error(`Failed to update API key: ${apiKeyResponse.statusText}`);
-        }
-
-        results.push({ secret: 'RESEND_API_KEY', status: 'updated' });
-        console.log('✅ RESEND_API_KEY updated successfully');
-      } catch (error) {
-        console.error('Error updating RESEND_API_KEY:', error);
-        results.push({ secret: 'RESEND_API_KEY', status: 'failed', error: error.message });
-      }
+      results.push({ secret: 'RESEND_API_KEY', status: 'unsupported', reason: 'Update via Supabase Secrets only' });
     }
 
-    // Update RESEND_FROM if provided
+    // Update sender email in system settings
     if (resendFromEmail) {
-      try {
-        const fromEmailResponse = await fetch(`https://api.supabase.com/v1/projects/${supabaseProjectRef}/secrets`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseServiceKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: 'RESEND_FROM',
-            value: resendFromEmail,
-          }),
-        });
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(resendFromEmail)) {
+        results.push({ setting: 'email_from', status: 'failed', error: 'Invalid email format' });
+      } else {
+        const { error: upsertError } = await supabase
+          .from('system_settings')
+          .upsert([
+            {
+              setting_key: 'email_from',
+              setting_value: resendFromEmail,
+              description: 'Sender email address for Resend (managed via app)'
+            }
+          ], { onConflict: 'setting_key' });
 
-        if (!fromEmailResponse.ok) {
-          const errorText = await fromEmailResponse.text();
-          console.error('Failed to update RESEND_FROM:', errorText);
-          throw new Error(`Failed to update from email: ${fromEmailResponse.statusText}`);
+        if (upsertError) {
+          console.error('Failed to upsert email_from setting:', upsertError);
+          results.push({ setting: 'email_from', status: 'failed', error: upsertError.message });
+        } else {
+          results.push({ setting: 'email_from', status: 'updated' });
         }
-
-        results.push({ secret: 'RESEND_FROM', status: 'updated' });
-        console.log('✅ RESEND_FROM updated successfully');
-      } catch (error) {
-        console.error('Error updating RESEND_FROM:', error);
-        results.push({ secret: 'RESEND_FROM', status: 'failed', error: error.message });
       }
     }
 

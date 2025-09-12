@@ -98,6 +98,9 @@ export default function Settings() {
   const { data: recaptchaEnabledSetting } = useSystemSetting('recaptcha_enabled');
   const [recaptchaEnabled, setRecaptchaEnabled] = useState(true);
 
+  // Email sender setting
+  const { data: emailFromSetting } = useSystemSetting('email_from');
+
   // Email template helpers
   const getEmailTypeSubject = (type: string) => {
     const subjects: Record<string, string> = {
@@ -163,19 +166,33 @@ export default function Settings() {
 
     setEmailConfigLoading(true);
     try {
-      toast({
-        title: 'Manual Configuration Required',
-        description: 'Please update RESEND_FROM in your Supabase project settings under Edge Functions > Secrets.',
+      const { data, error } = await supabase.functions.invoke('update-email-config', {
+        body: { resendFromEmail: resendFromEmail.trim() }
       });
-      
-      // Open Supabase secrets management in new tab
-      window.open('https://supabase.com/dashboard/project/tyovnvuluyosjnabrzjc/settings/functions', '_blank');
-      
-      setResendFromEmail(''); // Clear for security
+
+      if (error) {
+        console.error('Sender update error:', error);
+        toast({
+          title: 'Update Failed',
+          description: error.message || 'Failed to update sender address',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      if (data.success) {
+        toast({
+          title: 'Sender Updated',
+          description: 'From address updated. Changes may take a few minutes to propagate.',
+        });
+        setResendFromEmail('');
+      } else {
+        throw new Error(data.message || 'Update failed');
+      }
     } catch (error: any) {
       toast({
         title: 'Configuration Error',
-        description: 'Please update the secret manually in Supabase dashboard.',
+        description: error.message || 'Failed to update sender address',
         variant: 'destructive'
       });
     } finally {
@@ -1014,7 +1031,7 @@ export default function Settings() {
                               <div className="space-y-1">
                                 <p className="text-muted-foreground">From Address</p>
                                 <p className="font-mono text-xs bg-muted px-2 py-1 rounded">
-                                  support@members.hessconsortium.app
+                                  {emailFromSetting?.setting_value || 'Not configured (using RESEND_FROM or sandbox)'}
                                 </p>
                               </div>
                               <div className="space-y-1">
@@ -1112,7 +1129,7 @@ export default function Settings() {
                                         {resendFromEmail}
                                       </code>
                                       <span className="block text-xs text-muted-foreground mt-2">
-                                        This will affect all system emails. You'll need to update this manually in Supabase Edge Functions secrets.
+                                        This will affect all system emails. Changes may take a few minutes to propagate across edge functions.
                                       </span>
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
