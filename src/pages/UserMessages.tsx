@@ -72,27 +72,39 @@ export default function UserMessages() {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1 p-8">
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                  <MessageSquare className="h-8 w-8" />
-                  User Messages
-                </h1>
-                <p className="text-muted-foreground mt-2">
-                  Feedback and messages from users
-                </p>
+        <main className="flex-1 p-8 bg-gradient-to-br from-background to-muted/30">
+          <div className="max-w-7xl mx-auto space-y-8">
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/20 shadow-lg">
+                    <MessageSquare className="h-7 w-7 text-primary" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold text-foreground tracking-tight">
+                      User Messages
+                    </h1>
+                    <p className="text-muted-foreground text-lg">
+                      Feedback and communications from your community
+                    </p>
+                  </div>
+                </div>
               </div>
               
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {unreadCount > 0 && (
-                  <Badge variant="destructive" className="text-sm">
-                    {unreadCount} unread
-                  </Badge>
+                  <div className="flex items-center gap-3 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-full">
+                    <div className="w-2 h-2 bg-destructive rounded-full animate-pulse"></div>
+                    <span className="text-destructive font-medium text-sm">
+                      {unreadCount} unread message{unreadCount !== 1 ? 's' : ''}
+                    </span>
+                  </div>
                 )}
                 {unreadCount > 0 && (
-                  <Button onClick={handleMarkAllAsRead} variant="outline" size="sm">
+                  <Button 
+                    onClick={handleMarkAllAsRead} 
+                    className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
                     <CheckCheck className="h-4 w-4 mr-2" />
                     Mark All Read
                   </Button>
@@ -101,87 +113,117 @@ export default function UserMessages() {
             </div>
 
             {messages.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h2 className="text-xl font-semibold text-foreground mb-2">No Messages Yet</h2>
-                  <p className="text-muted-foreground">
-                    User feedback and messages will appear here when submitted.
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="flex items-center justify-center min-h-[400px]">
+                <Card className="max-w-md w-full border-0 shadow-2xl bg-gradient-to-br from-card to-muted/50">
+                  <CardContent className="py-16 text-center space-y-6">
+                    <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/30 rounded-2xl flex items-center justify-center">
+                      <MessageSquare className="h-10 w-10 text-primary" />
+                    </div>
+                    <div className="space-y-3">
+                      <h2 className="text-2xl font-bold text-foreground">No Messages Yet</h2>
+                      <p className="text-muted-foreground text-lg leading-relaxed">
+                        User feedback and messages will appear here when submitted through the system.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             ) : (
-              <div className="grid gap-3">
+              <div className="grid gap-4">
                 {messages.map((message) => (
-                  <Card key={message.id} className={`transition-all hover:shadow-md cursor-pointer animate-fade-in ${!message.is_read ? 'border-primary/50 bg-primary/5' : ''}`}>
-                    <CardContent className="p-4" onClick={() => handleViewMessage(message)}>
-                      <div className="grid grid-cols-12 gap-4 items-start">
-                        {/* User Info & Status */}
-                        <div className="col-span-3 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                            <span className="font-medium text-foreground text-sm truncate">{message.user_name}</span>
-                            {!message.is_read && (
-                              <Badge variant="destructive" className="text-xs px-1.5 py-0">New</Badge>
+                  <Card 
+                    key={message.id} 
+                    className={`group transition-all duration-300 cursor-pointer border-0 shadow-lg hover:shadow-xl animate-fade-in ${
+                      !message.is_read 
+                        ? 'bg-gradient-to-r from-primary/5 via-card to-accent/5 border-l-4 border-l-primary shadow-primary/20' 
+                        : 'bg-gradient-to-r from-card to-muted/30 hover:from-muted/20 hover:to-muted/40'
+                    }`}
+                  >
+                    <CardContent className="p-6" onClick={() => handleViewMessage(message)}>
+                      <div className="grid grid-cols-12 gap-6 items-center">
+                        {/* User Avatar & Info */}
+                        <div className="col-span-3 space-y-2">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
+                              !message.is_read 
+                                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg' 
+                                : 'bg-gradient-to-br from-muted to-muted/60 text-muted-foreground'
+                            }`}>
+                              {message.user_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-foreground text-sm truncate">{message.user_name}</span>
+                                {!message.is_read && (
+                                  <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-destructive to-destructive/80 text-destructive-foreground text-xs rounded-full shadow-lg">
+                                    <div className="w-1.5 h-1.5 bg-current rounded-full animate-pulse"></div>
+                                    <span className="font-medium">New</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-1.5 ml-13">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Mail className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{message.user_email}</span>
+                            </div>
+                            {message.organization && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Building2 className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{message.organization}</span>
+                              </div>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Mail className="h-3 w-3 flex-shrink-0" />
-                            <span className="truncate">{message.user_email}</span>
-                          </div>
-                          {message.organization && (
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Building2 className="h-3 w-3 flex-shrink-0" />
-                              <span className="truncate">{message.organization}</span>
-                            </div>
-                          )}
                         </div>
                         
                         {/* Message Content */}
-                        <div className="col-span-6">
-                          <p className="text-sm text-foreground line-clamp-2 leading-relaxed">{message.message}</p>
+                        <div className="col-span-6 px-4">
+                          <div className="space-y-2">
+                            <p className="text-sm text-foreground line-clamp-2 leading-relaxed font-medium">
+                              {message.message}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              <span>{format(new Date(message.created_at), 'MMM dd, yyyy • hh:mm a')}</span>
+                            </div>
+                          </div>
                         </div>
                         
-                        {/* Date & Actions */}
-                        <div className="col-span-3 flex items-start justify-between">
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            <span>{format(new Date(message.created_at), 'MMM dd')}</span>
-                          </div>
+                        {/* Actions */}
+                        <div className="col-span-3 flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleReplyToMessage(message.user_email)}
+                            title="Reply via email"
+                            className="h-9 w-9 p-0 hover:bg-accent/20 hover:text-accent-foreground transition-colors duration-200 opacity-60 group-hover:opacity-100"
+                          >
+                            <Reply className="h-4 w-4" />
+                          </Button>
                           
-                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteMessage(message.id)}
+                            title="Delete message"
+                            className="h-9 w-9 p-0 hover:bg-destructive/20 hover:text-destructive transition-colors duration-200 opacity-60 group-hover:opacity-100"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          
+                          {!message.is_read && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleReplyToMessage(message.user_email)}
-                              title="Reply via email"
-                              className="h-7 w-7 p-0 hover:bg-accent"
+                              onClick={() => handleMarkAsRead(message.id)}
+                              title="Mark as read"
+                              className="h-9 w-9 p-0 hover:bg-primary/20 hover:text-primary transition-colors duration-200"
                             >
-                              <Reply className="h-3.5 w-3.5" />
+                              <CheckCheck className="h-4 w-4" />
                             </Button>
-                            
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteMessage(message.id)}
-                              title="Delete message"
-                              className="h-7 w-7 p-0 hover:bg-accent"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                            
-                            {!message.is_read && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleMarkAsRead(message.id)}
-                                title="Mark as read"
-                                className="h-7 w-7 p-0 hover:bg-accent"
-                              >
-                                <CheckCheck className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -195,54 +237,84 @@ export default function UserMessages() {
       
       {/* Message View Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              User Message
+        <DialogContent className="max-w-3xl border-0 shadow-2xl bg-gradient-to-br from-card to-muted/20">
+          <DialogHeader className="pb-6 border-b border-border/50">
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/30">
+                <MessageSquare className="h-5 w-5 text-primary" />
+              </div>
+              Message Details
             </DialogTitle>
           </DialogHeader>
           
           {selectedMessage && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Name</label>
-                  <p className="text-foreground">{selectedMessage.user_name}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Email</label>
-                  <p className="text-foreground">{selectedMessage.user_email}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Organization</label>
-                  <p className="text-foreground">{selectedMessage.organization || 'Not specified'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Submitted</label>
-                  <p className="text-foreground">{format(new Date(selectedMessage.created_at), 'PPpp')}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Status</label>
-                  <Badge variant={selectedMessage.is_read ? "secondary" : "destructive"}>
-                    {selectedMessage.is_read ? "Read" : "Unread"}
-                  </Badge>
-                </div>
+            <div className="space-y-6 py-2">
+              <div className="grid grid-cols-2 gap-6">
+                <Card className="border-0 bg-gradient-to-br from-muted/30 to-muted/10 shadow-lg">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sender</label>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center text-sm font-semibold">
+                          {selectedMessage.user_name.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-semibold text-foreground">{selectedMessage.user_name}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</label>
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-foreground">{selectedMessage.user_email}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 bg-gradient-to-br from-muted/30 to-muted/10 shadow-lg">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Organization</label>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-foreground">{selectedMessage.organization || 'Not specified'}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Submitted</label>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-foreground text-sm">{format(new Date(selectedMessage.created_at), 'PPpp')}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
               
-              <Separator />
-              
-              <div>
-                <label className="text-sm font-medium text-muted-foreground mb-2 block">Message</label>
-                <ScrollArea className="max-h-64 p-4 bg-muted/30 rounded-lg">
-                  <p className="text-foreground whitespace-pre-wrap">{selectedMessage.message}</p>
-                </ScrollArea>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-foreground">Message Content</h3>
+                <Badge 
+                  variant={selectedMessage.is_read ? "secondary" : "destructive"} 
+                  className={`${!selectedMessage.is_read ? 'bg-gradient-to-r from-destructive to-destructive/80 shadow-lg' : ''}`}
+                >
+                  {selectedMessage.is_read ? "Read" : "Unread"}
+                </Badge>
               </div>
               
-              <div className="flex gap-2 pt-4">
+              <Card className="border-0 bg-gradient-to-br from-muted/20 to-background shadow-inner">
+                <CardContent className="p-6">
+                  <ScrollArea className="max-h-64">
+                    <p className="text-foreground whitespace-pre-wrap leading-relaxed">{selectedMessage.message}</p>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+              
+              <div className="flex gap-3 pt-4 border-t border-border/50">
                 <Button 
                   onClick={() => handleReplyToMessage(selectedMessage.user_email)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <Reply className="h-4 w-4" />
                   Reply via Email
@@ -253,7 +325,7 @@ export default function UserMessages() {
                     handleDeleteMessage(selectedMessage.id);
                     setIsDialogOpen(false);
                   }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:border-destructive/50 transition-all duration-200"
                 >
                   <Trash2 className="h-4 w-4" />
                   Delete Message
