@@ -146,6 +146,7 @@ serve(async (req: Request): Promise<Response> => {
     const finalHtml = replaceTemplateVariables(template.html, templateData);
 
     if (!Deno.env.get('RESEND_API_KEY')) {
+      console.error('[centralized-email-delivery-public] Missing RESEND_API_KEY');
       return new Response(JSON.stringify({ success: false, error: 'Resend API key is not configured.' }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
     }
 
