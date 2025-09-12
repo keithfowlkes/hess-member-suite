@@ -122,11 +122,15 @@ serve(async (req: Request): Promise<Response> => {
     const fromEnv = Deno.env.get('RESEND_FROM') || '';
     const fromCandidate = configuredFrom || fromEnv || 'HESS Consortium <onboarding@resend.dev>';
 
+    // For test emails, always use sandbox sender to avoid domain issues
+    const isTest = (emailRequest.type || 'test').toString().replace(/-/g, '_') === 'test';
+    const finalFrom = isTest ? 'HESS Consortium <onboarding@resend.dev>' : fromCandidate;
+
     // Prepare template data
     const templateData = {
       timestamp: new Date().toISOString(),
       test_id: crypto.randomUUID(),
-      from_email: fromCandidate,
+      from_email: finalFrom,
       message: 'This is a test email from the HESS Consortium email system.',
       organization_name: 'Test Organization',
       primary_contact_name: 'Test Contact',
@@ -146,7 +150,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const emailPayload: any = {
-      from: fromCandidate,
+      from: finalFrom,
       to: Array.isArray(emailRequest.to) ? emailRequest.to : [emailRequest.to],
       subject: finalSubject,
       html: finalHtml,
