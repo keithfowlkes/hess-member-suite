@@ -312,7 +312,7 @@ export default function Settings() {
         }
       };
 
-      const response = await fetch('https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/centralized-email-delivery', {
+      const response = await fetch('https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/centralized-email-delivery-public', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

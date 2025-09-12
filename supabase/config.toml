@@ -44,3 +44,6 @@ verify_jwt = true
 
 [functions.verify-email-config]
 verify_jwt = true
+
+[functions.centralized-email-delivery-public]
+verify_jwt = false
