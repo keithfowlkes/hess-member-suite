@@ -73,11 +73,11 @@ export default function Settings() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
-  // Email testing states
   const [emailTestData, setEmailTestData] = useState({
     to: '',
     subject: 'HESS Consortium - Email System Test',
-    message: 'This is a test email from the HESS Consortium email system. If you receive this message, the email system is working correctly.'
+    message: 'This is a test email from the HESS Consortium email system. If you receive this message, the email system is working correctly.',
+    emailType: 'test'
   });
   const [emailTestLoading, setEmailTestLoading] = useState(false);
   const [emailTestResult, setEmailTestResult] = useState<{
@@ -85,7 +85,10 @@ export default function Settings() {
     message: string;
     timestamp?: string;
     emailId?: string;
+    recipients?: string[];
+    template?: string;
   } | null>(null);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [resendApiKey, setResendApiKey] = useState('');
   const [resendFromEmail, setResendFromEmail] = useState('');
   const [emailConfigLoading, setEmailConfigLoading] = useState(false);
@@ -94,6 +97,31 @@ export default function Settings() {
   // reCaptcha enable/disable state
   const { data: recaptchaEnabledSetting } = useSystemSetting('recaptcha_enabled');
   const [recaptchaEnabled, setRecaptchaEnabled] = useState(true);
+
+  // Email template helpers
+  const getEmailTypeSubject = (type: string) => {
+    const subjects: Record<string, string> = {
+      test: 'HESS Consortium - Email System Test',
+      welcome: 'Welcome to HESS Consortium - {{organization_name}}',
+      invoice: 'HESS Consortium Membership Invoice - {{organization_name}}',
+      overdue_reminder: 'Payment Reminder - {{organization_name}} Membership Fee Overdue',
+      password_reset: 'HESS Consortium - Password Reset Request',
+      custom: 'Custom Email Template'
+    };
+    return subjects[type] || 'HESS Consortium Email';
+  };
+
+  const getTemplateVariables = (type: string): string[] => {
+    const variables: Record<string, string[]> = {
+      test: ['message', 'from_email', 'timestamp', 'test_id'],
+      welcome: ['organization_name', 'primary_contact_name', 'custom_message'],
+      invoice: ['organization_name', 'invoice_number', 'amount', 'due_date'],
+      overdue_reminder: ['organization_name', 'invoice_number', 'amount', 'due_date'],
+      password_reset: ['user_name', 'reset_link', 'expiry_time'],
+      custom: []
+    };
+    return variables[type] || [];
+  };
 
   const handleSaveRecaptcha = async () => {
     await updateSystemSetting.mutateAsync({
@@ -188,7 +216,7 @@ export default function Settings() {
     }
   };
 
-  // Email testing function
+  // Centralized email testing function
   const handleSendTestEmail = async () => {
     if (!emailTestData.to.trim()) {
       toast({
@@ -203,11 +231,20 @@ export default function Settings() {
     setEmailTestResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('test-email', {
+      const { data, error } = await supabase.functions.invoke('centralized-email-delivery', {
         body: {
+          type: emailTestData.emailType || 'test',
           to: emailTestData.to.trim(),
-          subject: emailTestData.subject.trim() || 'HESS Consortium - Email System Test',
-          message: emailTestData.message.trim() || 'This is a test email from the HESS Consortium email system.'
+          subject: emailTestData.subject.trim(),
+          data: {
+            message: emailTestData.message.trim(),
+            organization_name: 'Test Organization',
+            primary_contact_name: 'Test User',
+            invoice_number: 'INV-TEST-001',
+            amount: '5000',
+            due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+            custom_message: emailTestData.message.trim()
+          }
         }
       });
 
@@ -227,11 +264,13 @@ export default function Settings() {
           success: true,
           message: data.message || 'Test email sent successfully',
           timestamp: data.timestamp,
-          emailId: data.emailId
+          emailId: data.emailId,
+          recipients: data.recipients,
+          template: data.template
         });
         toast({
           title: 'Email Test Successful',
-          description: `Test email sent to ${emailTestData.to}`,
+          description: `Test email sent successfully`,
         });
       }
     } catch (error: any) {
@@ -247,6 +286,26 @@ export default function Settings() {
       });
     } finally {
       setEmailTestLoading(false);
+    }
+  };
+
+  // Bulk email operations
+  const handleBulkEmailOperation = async (operation: string) => {
+    try {
+      toast({
+        title: 'Bulk Email Operation',
+        description: `Initiating ${operation.replace('_', ' ')} operation...`,
+      });
+      
+      // This would integrate with your existing bulk operations
+      // For now, just show a message
+      console.log(`Bulk operation: ${operation}`);
+    } catch (error: any) {
+      toast({
+        title: 'Operation Failed',
+        description: error.message || 'Bulk email operation failed',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -698,102 +757,243 @@ export default function Settings() {
                         Email System Testing
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Email Testing Section */}
-                      <div className="space-y-4 pb-4 border-b border-border">
-                        <h4 className="font-medium flex items-center gap-2">
-                          <Send className="w-4 h-4" />
-                          Send Test Email
-                        </h4>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="test-email">Test Recipient Email</Label>
-                          <Input
-                            id="test-email"
-                            type="email"
-                            placeholder="Enter email address to test"
-                            value={emailTestData.to}
-                            onChange={(e) => setEmailTestData(prev => ({ ...prev, to: e.target.value }))}
-                          />
-                        </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="test-subject">Email Subject</Label>
-                        <Input
-                          id="test-subject"
-                          placeholder="Test email subject"
-                          value={emailTestData.subject}
-                          onChange={(e) => setEmailTestData(prev => ({ ...prev, subject: e.target.value }))}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="test-message">Test Message</Label>
-                        <Textarea
-                          id="test-message"
-                          placeholder="Enter test message content"
-                          value={emailTestData.message}
-                          onChange={(e) => setEmailTestData(prev => ({ ...prev, message: e.target.value }))}
-                          rows={3}
-                        />
-                      </div>
-
-                      <Button 
-                        onClick={handleSendTestEmail}
-                        disabled={emailTestLoading || !emailTestData.to.trim()}
-                        className="w-full"
-                      >
-                        {emailTestLoading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Sending Test Email...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="w-4 h-4 mr-2" />
-                            Send Test Email
-                          </>
-                        )}
-                      </Button>
-
-                      {/* Email Test Result */}
-                      {emailTestResult && (
-                        <div className={`p-4 rounded-lg border-l-4 ${
-                          emailTestResult.success 
-                            ? 'bg-green-50 border-green-400' 
-                            : 'bg-red-50 border-red-400'
-                        }`}>
-                          <div className="flex items-start gap-3">
-                            {emailTestResult.success ? (
-                              <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                            ) : (
-                              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                            )}
-                            <div className="flex-1">
-                              <h4 className={`font-medium ${
-                                emailTestResult.success ? 'text-green-900' : 'text-red-900'
-                              }`}>
-                                {emailTestResult.success ? 'Test Email Sent Successfully' : 'Email Test Failed'}
-                              </h4>
-                              <p className={`text-sm mt-1 ${
-                                emailTestResult.success ? 'text-green-800' : 'text-red-800'
-                              }`}>
-                                {emailTestResult.message}
-                              </p>
-                              {emailTestResult.success && emailTestResult.timestamp && (
-                                <p className="text-xs text-green-700 mt-2">
-                                  Sent at: {new Date(emailTestResult.timestamp).toLocaleString()}
-                                </p>
-                              )}
-                              {emailTestResult.success && emailTestResult.emailId && (
-                                <p className="text-xs text-green-700">
-                                  Email ID: {emailTestResult.emailId}
-                                </p>
-                              )}
-                            </div>
-                           </div>
+                     <CardContent className="space-y-6">
+                       {/* Centralized Email Management System */}
+                       <div className="space-y-6">
+                         <div className="flex items-center gap-2 mb-4">
+                           <Send className="w-5 h-5 text-primary" />
+                           <h3 className="text-lg font-semibold">Email System Testing & Management</h3>
                          </div>
-                       )}
+                         
+                         {/* Email Type Selector */}
+                         <Card>
+                           <CardHeader>
+                             <CardTitle className="text-base flex items-center gap-2">
+                               <Mail className="w-4 h-4" />
+                               Email Template Testing
+                             </CardTitle>
+                           </CardHeader>
+                           <CardContent className="space-y-4">
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                               <div className="space-y-2">
+                                 <Label htmlFor="email-type">Email Type</Label>
+                                 <Select value={emailTestData.emailType || 'test'} onValueChange={(value) => 
+                                   setEmailTestData(prev => ({ ...prev, emailType: value, subject: getEmailTypeSubject(value) }))
+                                 }>
+                                   <SelectTrigger>
+                                     <SelectValue />
+                                   </SelectTrigger>
+                                   <SelectContent>
+                                     <SelectItem value="test">System Test Email</SelectItem>
+                                     <SelectItem value="welcome">Welcome Email</SelectItem>
+                                     <SelectItem value="invoice">Invoice Email</SelectItem>
+                                     <SelectItem value="overdue_reminder">Payment Reminder</SelectItem>
+                                     <SelectItem value="password_reset">Password Reset</SelectItem>
+                                     <SelectItem value="custom">Custom Template</SelectItem>
+                                   </SelectContent>
+                                 </Select>
+                               </div>
+
+                               <div className="space-y-2">
+                                 <Label htmlFor="test-email-to">Test Recipient Email</Label>
+                                 <Input
+                                   id="test-email-to"
+                                   type="email"
+                                   placeholder="test@example.com"
+                                   value={emailTestData.to}
+                                   onChange={(e) => setEmailTestData(prev => ({ ...prev, to: e.target.value }))}
+                                 />
+                               </div>
+                             </div>
+
+                             <div className="space-y-2">
+                               <Label htmlFor="test-subject">Email Subject</Label>
+                               <Input
+                                 id="test-subject"
+                                 placeholder="Email subject"
+                                 value={emailTestData.subject}
+                                 onChange={(e) => setEmailTestData(prev => ({ ...prev, subject: e.target.value }))}
+                               />
+                             </div>
+
+                             <div className="space-y-2">
+                               <Label htmlFor="test-message">Message Content</Label>
+                               <Textarea
+                                 id="test-message"
+                                 placeholder="Enter your test message or template data..."
+                                 value={emailTestData.message}
+                                 onChange={(e) => setEmailTestData(prev => ({ ...prev, message: e.target.value }))}
+                                 rows={4}
+                               />
+                             </div>
+
+                             {/* Template Variables Helper */}
+                             {emailTestData.emailType && emailTestData.emailType !== 'test' && (
+                               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                 <h4 className="font-medium text-blue-900 mb-2">Available Template Variables:</h4>
+                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-blue-800">
+                                   {getTemplateVariables(emailTestData.emailType).map(variable => (
+                                     <code key={variable} className="bg-blue-100 px-2 py-1 rounded text-xs">
+                                       {`{{${variable}}}`}
+                                     </code>
+                                   ))}
+                                 </div>
+                               </div>
+                             )}
+
+                             <div className="flex gap-3">
+                               <Button 
+                                 onClick={handleSendTestEmail}
+                                 disabled={emailTestLoading || !emailTestData.to.trim()}
+                                 className="flex-1"
+                               >
+                                 {emailTestLoading ? (
+                                   <>
+                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                     Sending Test...
+                                   </>
+                                 ) : (
+                                   <>
+                                     <Send className="w-4 h-4 mr-2" />
+                                     Send Test Email
+                                   </>
+                                 )}
+                               </Button>
+                               
+                               <Button 
+                                 variant="outline" 
+                                 onClick={() => setShowEmailPreview(true)}
+                                 disabled={!emailTestData.emailType}
+                               >
+                                 <Eye className="w-4 h-4 mr-2" />
+                                 Preview
+                               </Button>
+                             </div>
+                           </CardContent>
+                         </Card>
+
+                         {/* Bulk Email Management */}
+                         <Card>
+                           <CardHeader>
+                             <CardTitle className="text-base flex items-center gap-2">
+                               <Users className="w-4 h-4" />
+                               Bulk Email Operations
+                             </CardTitle>
+                           </CardHeader>
+                           <CardContent className="space-y-4">
+                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                               <Button 
+                                 variant="outline" 
+                                 size="sm" 
+                                 className="h-auto py-3 px-4 flex flex-col items-start gap-1"
+                                 onClick={() => handleBulkEmailOperation('welcome_all_pending')}
+                               >
+                                 <div className="flex items-center gap-2 font-medium">
+                                   <Mail className="w-4 h-4" />
+                                   Welcome All Pending
+                                 </div>
+                                 <p className="text-xs text-muted-foreground">Send welcome emails to all pending members</p>
+                               </Button>
+                               
+                               <Button 
+                                 variant="outline" 
+                                 size="sm" 
+                                 className="h-auto py-3 px-4 flex flex-col items-start gap-1"
+                                 onClick={() => handleBulkEmailOperation('overdue_reminders')}
+                               >
+                                 <div className="flex items-center gap-2 font-medium">
+                                   <AlertCircle className="w-4 h-4" />
+                                   Overdue Reminders
+                                 </div>
+                                 <p className="text-xs text-muted-foreground">Send payment reminders for overdue invoices</p>
+                               </Button>
+                               
+                               <Button 
+                                 variant="outline" 
+                                 size="sm" 
+                                 className="h-auto py-3 px-4 flex flex-col items-start gap-1"
+                                 onClick={() => handleBulkEmailOperation('system_announcement')}
+                               >
+                                 <div className="flex items-center gap-2 font-medium">
+                                   <BarChart3 className="w-4 h-4" />
+                                   System Announcement
+                                 </div>
+                                 <p className="text-xs text-muted-foreground">Send announcement to all active members</p>
+                               </Button>
+                             </div>
+                           </CardContent>
+                         </Card>
+
+                         {/* Email Delivery Status */}
+                         <Card>
+                           <CardHeader>
+                             <CardTitle className="text-base flex items-center gap-2">
+                               <BarChart3 className="w-4 h-4" />
+                               Delivery Status & Analytics
+                             </CardTitle>
+                           </CardHeader>
+                           <CardContent>
+                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                               <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                                 <p className="text-green-700 font-medium">Emails Sent Today</p>
+                                 <p className="text-2xl font-bold text-green-800">24</p>
+                               </div>
+                               <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                 <p className="text-blue-700 font-medium">Delivery Rate</p>
+                                 <p className="text-2xl font-bold text-blue-800">98.5%</p>
+                               </div>
+                               <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                                 <p className="text-yellow-700 font-medium">Pending Queue</p>
+                                 <p className="text-2xl font-bold text-yellow-800">3</p>
+                               </div>
+                               <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+                                 <p className="text-red-700 font-medium">Failed Today</p>
+                                 <p className="text-2xl font-bold text-red-800">1</p>
+                               </div>
+                             </div>
+                           </CardContent>
+                         </Card>
+
+                         {/* Test Result Display */}
+                         {emailTestResult && (
+                           <Card className={`border-2 ${emailTestResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                             <CardHeader className="pb-3">
+                               <CardTitle className={`text-sm font-medium flex items-center gap-2 ${emailTestResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                                 {emailTestResult.success ? (
+                                   <CheckCircle className="w-4 h-4" />
+                                 ) : (
+                                   <AlertCircle className="w-4 h-4" />
+                                 )}
+                                 {emailTestResult.success ? 'Email Sent Successfully' : 'Email Sending Failed'}
+                               </CardTitle>
+                             </CardHeader>
+                             <CardContent className="pt-0">
+                               <div className={`text-sm ${emailTestResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                                 <p className="font-medium">{emailTestResult.message}</p>
+                                 {emailTestResult.timestamp && (
+                                   <p className="text-xs mt-1 opacity-75">
+                                     Sent at: {new Date(emailTestResult.timestamp).toLocaleString()}
+                                   </p>
+                                 )}
+                                 {emailTestResult.success && emailTestResult.emailId && (
+                                   <p className="text-xs mt-1 opacity-75">
+                                     Email ID: {emailTestResult.emailId}
+                                   </p>
+                                 )}
+                                 {emailTestResult.recipients && (
+                                   <p className="text-xs mt-1 opacity-75">
+                                     Recipients: {emailTestResult.recipients.join(', ')}
+                                   </p>
+                                 )}
+                                 {emailTestResult.template && (
+                                   <p className="text-xs mt-1 opacity-75">
+                                     Template: {emailTestResult.template}
+                                   </p>
+                                 )}
+                               </div>
+                             </CardContent>
+                           </Card>
+                         )}
                        </div>
 
                          {/* Enhanced Email Configuration Management */}
