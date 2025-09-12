@@ -145,6 +145,22 @@ serve(async (req: Request): Promise<Response> => {
     const finalSubject = replaceTemplateVariables(emailRequest.subject || template.subject, templateData);
     const finalHtml = replaceTemplateVariables(template.html, templateData);
 
+    // Preflight: verify API key with domains.list()
+    try {
+      const domainsCheck = await resend.domains.list();
+      if ((domainsCheck as any)?.error) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Resend API key rejected by Resend (domains.list)', details: (domainsCheck as any).error }),
+          { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+    } catch (e: any) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Failed to verify Resend API key', details: e?.message || e }),
+        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
     if (!Deno.env.get('RESEND_API_KEY')) {
       console.error('[centralized-email-delivery-public] Missing RESEND_API_KEY');
       return new Response(JSON.stringify({ success: false, error: 'Resend API key is not configured.' }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
