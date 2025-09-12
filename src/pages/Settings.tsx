@@ -1336,6 +1336,52 @@ export default function Settings() {
           </div>
         </main>
       </div>
+
+      {/* Email Preview Dialog */}
+      <Dialog open={showEmailPreview} onOpenChange={setShowEmailPreview}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Email Template Preview - {emailTestData.emailType}</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[70vh] space-y-4">
+            {emailTestData.emailType && (
+              <div className="space-y-4">
+                <div className="p-4 bg-muted rounded-lg">
+                  <h3 className="font-medium mb-2">Email Details</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">To:</span> {emailTestData.to}
+                    </div>
+                    <div>
+                      <span className="font-medium">Subject:</span> {emailTestData.subject}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-medium mb-2">Message Content</h3>
+                  <div className="whitespace-pre-wrap text-sm bg-background p-4 rounded border">
+                    {emailTestData.message || `This would show the ${emailTestData.emailType} template content with sample data.`}
+                  </div>
+                </div>
+                
+                {emailTestData.emailType !== 'test' && (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h4 className="font-medium text-blue-900 mb-2">Available Template Variables:</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-blue-800">
+                      {getTemplateVariables(emailTestData.emailType).map(variable => (
+                        <code key={variable} className="bg-blue-100 px-2 py-1 rounded text-xs">
+                          {`{{${variable}}}`}
+                        </code>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }
