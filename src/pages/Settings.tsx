@@ -196,19 +196,36 @@ export default function Settings() {
 
     setApiKeyLoading(true);
     try {
-      toast({
-        title: 'Manual Configuration Required',
-        description: 'Please update RESEND_API_KEY in your Supabase project settings under Edge Functions > Secrets.',
+      const { data, error } = await supabase.functions.invoke('update-email-config', {
+        body: {
+          resendApiKey: resendApiKey.trim()
+        }
       });
-      
-      // Open Supabase secrets management in new tab
-      window.open('https://supabase.com/dashboard/project/tyovnvuluyosjnabrzjc/settings/functions', '_blank');
-      
-      setResendApiKey(''); // Clear for security
+
+      if (error) {
+        console.error('API key update error:', error);
+        toast({
+          title: 'API Key Update Failed',
+          description: error.message || 'Failed to update API key',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      if (data.success) {
+        toast({
+          title: 'API Key Updated',
+          description: 'Resend API key has been updated successfully. Changes may take a few minutes to take effect.',
+        });
+        setResendApiKey(''); // Clear for security
+      } else {
+        throw new Error(data.message || 'Update failed');
+      }
     } catch (error: any) {
+      console.error('API key update error:', error);
       toast({
         title: 'Configuration Error',
-        description: 'Please update the secret manually in Supabase dashboard.',
+        description: error.message || 'Failed to update API key',
         variant: 'destructive'
       });
     } finally {
