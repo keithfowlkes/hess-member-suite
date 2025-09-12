@@ -28,6 +28,9 @@ interface EmailRequest {
     content: string;
     contentType: string;
   }>;
+  // Optional flags
+  forceSandbox?: boolean;
+  debug?: boolean;
 }
 
 interface EmailTemplate {
@@ -108,6 +111,15 @@ serve(async (req: Request): Promise<Response> => {
 
   try {
     const emailRequest: EmailRequest = await req.json();
+    const correlationId = crypto.randomUUID();
+    const startTs = new Date().toISOString();
+    console.log('[centralized-email-delivery-public] Incoming request', {
+      correlationId,
+      type: emailRequest.type,
+      toCount: Array.isArray(emailRequest.to) ? emailRequest.to.length : 1,
+      debug: emailRequest.debug ?? false,
+      startTs,
+    });
 
     // Determine sender
     let configuredFrom = '';
@@ -122,9 +134,41 @@ serve(async (req: Request): Promise<Response> => {
     const fromEnv = Deno.env.get('RESEND_FROM') || '';
     const fromCandidate = configuredFrom || fromEnv || 'HESS Consortium <onboarding@resend.dev>';
 
-    // For test emails, always use sandbox sender to avoid domain issues
+    // For test or forced sandbox emails, use sandbox sender; otherwise enforce verified domain
     const isTest = (emailRequest.type || 'test').toString().replace(/-/g, '_') === 'test';
-    const finalFrom = isTest ? 'HESS Consortium <onboarding@resend.dev>' : fromCandidate;
+    const forceSandbox = emailRequest.forceSandbox === true;
+    const verifiedDomain = 'members.hessconsortium.app';
+
+    const extractEmail = (fromStr: string) => {
+      const match = fromStr.match(/<(.*?)>/);
+      return (match ? match[1] : fromStr).trim();
+    };
+    const ensureDomain = (fromStr: string) => {
+      try {
+        const email = extractEmail(fromStr);
+        const domain = email.split('@')[1]?.toLowerCase();
+        if (domain === verifiedDomain) return fromStr;
+        const nameMatch = fromStr.match(/^(.*?)</);
+        const display = nameMatch ? nameMatch[1].trim() : 'HESS Consortium';
+        return `${display} <no-reply@${verifiedDomain}>`;
+      } catch {
+        return `HESS Consortium <no-reply@${verifiedDomain}>`;
+      }
+    };
+
+    let finalFrom = (isTest || forceSandbox)
+      ? 'HESS Consortium <onboarding@resend.dev>'
+      : ensureDomain(fromCandidate);
+
+    console.log('[centralized-email-delivery-public] Sender selection', {
+      correlationId,
+      configuredFrom,
+      fromEnv,
+      fromCandidate,
+      finalFrom,
+      isTest,
+      forceSandbox,
+    });
 
     // Prepare template data
     const templateData = {
@@ -149,21 +193,41 @@ serve(async (req: Request): Promise<Response> => {
     try {
       const domainsCheck = await resend.domains.list();
       if ((domainsCheck as any)?.error) {
+        console.error('[centralized-email-delivery-public] Resend domains.list error', { correlationId, error: (domainsCheck as any).error });
         return new Response(
-          JSON.stringify({ success: false, error: 'Resend API key rejected by Resend (domains.list)', details: (domainsCheck as any).error }),
+          JSON.stringify({ success: false, error: 'Resend API key rejected by Resend (domains.list)', details: (domainsCheck as any).error, correlationId }),
           { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
         );
       }
+      const domains = (domainsCheck as any)?.data ?? [];
+      try {
+        const fromEmail = extractEmail(finalFrom);
+        const fromDomain = fromEmail.split('@')[1]?.toLowerCase();
+        const domainEntry = domains.find((d: any) => (d.name || d.domain || '').toLowerCase() === fromDomain);
+        console.log('[centralized-email-delivery-public] Preflight domains', {
+          correlationId,
+          fromDomain,
+          domainFound: !!domainEntry,
+          status: domainEntry?.status || domainEntry?.verification?.status,
+          domainsCount: Array.isArray(domains) ? domains.length : 0,
+        });
+      } catch (e) {
+        console.warn('[centralized-email-delivery-public] Preflight domain parse failed', { correlationId, error: String(e) });
+      }
     } catch (e: any) {
+      console.error('[centralized-email-delivery-public] Failed to verify Resend API key', { correlationId, error: e?.message || e });
       return new Response(
-        JSON.stringify({ success: false, error: 'Failed to verify Resend API key', details: e?.message || e }),
+        JSON.stringify({ success: false, error: 'Failed to verify Resend API key', details: e?.message || e, correlationId }),
         { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
     if (!Deno.env.get('RESEND_API_KEY')) {
-      console.error('[centralized-email-delivery-public] Missing RESEND_API_KEY');
-      return new Response(JSON.stringify({ success: false, error: 'Resend API key is not configured.' }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+      console.error('[centralized-email-delivery-public] Missing RESEND_API_KEY', { correlationId });
+      return new Response(
+        JSON.stringify({ success: false, error: 'Resend API key is not configured.', correlationId }),
+        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
     }
 
     const emailPayload: any = {
@@ -174,33 +238,39 @@ serve(async (req: Request): Promise<Response> => {
     };
 
     // Try send; on 403 (domain not verified), retry with Resend sandbox sender
+    console.log('[centralized-email-delivery-public] Send attempt', { correlationId, from: emailPayload.from, toCount: emailPayload.to?.length, subject: emailPayload.subject });
     let emailResponse = await resend.emails.send(emailPayload);
+    if (emailResponse?.error) {
+      console.error('[centralized-email-delivery-public] Send error', { correlationId, statusCode: emailResponse.error.statusCode, name: emailResponse.error.name, message: emailResponse.error.message });
+    } else {
+      console.log('[centralized-email-delivery-public] Send success', { correlationId, id: emailResponse?.data?.id });
+    }
     if (emailResponse?.error && emailResponse.error.statusCode === 403) {
       const sandboxFrom = 'HESS Consortium <onboarding@resend.dev>';
       const retryPayload = { ...emailPayload, from: sandboxFrom };
       const retry = await resend.emails.send(retryPayload);
       if (!retry.error) {
         return new Response(
-          JSON.stringify({ success: true, message: 'Email sent (fallback sandbox sender)', emailId: retry.data?.id, timestamp: new Date().toISOString() }),
+          JSON.stringify({ success: true, message: 'Email sent (fallback sandbox sender)', emailId: retry.data?.id, timestamp: new Date().toISOString(), correlationId }),
           { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
         );
       }
       // If retry also failed, return original 403 error
       return new Response(
-        JSON.stringify({ success: false, error: emailResponse.error.message, note: 'Domain likely not verified; sandbox fallback failed' }),
+        JSON.stringify({ success: false, error: emailResponse.error.message, note: 'Domain likely not verified; sandbox fallback failed', statusCode: emailResponse.error.statusCode, name: emailResponse.error.name, correlationId }),
         { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
     if (emailResponse?.error) {
       return new Response(
-        JSON.stringify({ success: false, error: emailResponse.error.message }),
+        JSON.stringify({ success: false, error: emailResponse.error.message, statusCode: emailResponse.error.statusCode, name: emailResponse.error.name, correlationId }),
         { status: emailResponse.error.statusCode || 502, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Email sent', emailId: emailResponse.data?.id, timestamp: new Date().toISOString() }),
+      JSON.stringify({ success: true, message: 'Email sent', emailId: emailResponse.data?.id, timestamp: new Date().toISOString(), correlationId }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   } catch (error: any) {
