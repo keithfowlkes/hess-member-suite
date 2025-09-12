@@ -183,10 +183,109 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         </div>
       </div>
 
-      {/* Personal Information */}
+      {/* Organization Information - Only show if user has an organization */}
+      {editedData.organization && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Organization Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="org_name">Organization Name</Label>
+                  <Input
+                    id="org_name"
+                    value={editedData.organization.name || ''}
+                    onChange={(e) => updateOrganizationField('name', e.target.value)}
+                    disabled={!isEditing}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="student_fte">Student FTE</Label>
+                  <Input
+                    id="student_fte"
+                    type="number"
+                    value={editedData.organization.student_fte || ''}
+                    onChange={(e) => updateOrganizationField('student_fte', parseInt(e.target.value) || null)}
+                    disabled={!isEditing}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="org_website">Website</Label>
+                  <Input
+                    id="org_website"
+                    value={editedData.organization.website || ''}
+                    onChange={(e) => updateOrganizationField('website', e.target.value)}
+                    disabled={!isEditing}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* Address Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
+          <CardTitle>Address Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                value={editedData.profile.address || ''}
+                onChange={(e) => updateProfileField('address', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                value={editedData.profile.city || ''}
+                onChange={(e) => updateProfileField('city', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="state">State</Label>
+              <Input
+                id="state"
+                value={editedData.profile.state || ''}
+                onChange={(e) => updateProfileField('state', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="zip">ZIP Code</Label>
+              <Input
+                id="zip"
+                value={editedData.profile.zip || ''}
+                onChange={(e) => updateProfileField('zip', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="state_association">State Association</Label>
+              <Input
+                id="state_association"
+                value={editedData.profile.state_association || ''}
+                onChange={(e) => updateProfileField('state_association', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Primary Contact Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Primary Contact Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -239,48 +338,56 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         </CardContent>
       </Card>
 
-      {/* Organization Information - Only show if user has an organization */}
+      {/* Secondary Contact */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Secondary Contact</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="secondary_first_name">First Name</Label>
+              <Input
+                id="secondary_first_name"
+                value={editedData.profile.secondary_first_name || ''}
+                onChange={(e) => updateProfileField('secondary_first_name', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="secondary_last_name">Last Name</Label>
+              <Input
+                id="secondary_last_name"
+                value={editedData.profile.secondary_last_name || ''}
+                onChange={(e) => updateProfileField('secondary_last_name', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="secondary_contact_title">Title</Label>
+              <Input
+                id="secondary_contact_title"
+                value={editedData.profile.secondary_contact_title || ''}
+                onChange={(e) => updateProfileField('secondary_contact_title', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="secondary_contact_email">Email</Label>
+              <Input
+                id="secondary_contact_email"
+                value={editedData.profile.secondary_contact_email || ''}
+                onChange={(e) => updateProfileField('secondary_contact_email', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Software Systems - Only show if user has an organization */}
       {editedData.organization && (
         <>
-          <Card>
-            <CardHeader>
-              <CardTitle>Organization Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="org_name">Organization Name</Label>
-                  <Input
-                    id="org_name"
-                    value={editedData.organization.name || ''}
-                    onChange={(e) => updateOrganizationField('name', e.target.value)}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="student_fte">Student FTE</Label>
-                  <Input
-                    id="student_fte"
-                    type="number"
-                    value={editedData.organization.student_fte || ''}
-                    onChange={(e) => updateOrganizationField('student_fte', parseInt(e.target.value) || null)}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="org_website">Website</Label>
-                  <Input
-                    id="org_website"
-                    value={editedData.organization.website || ''}
-                    onChange={(e) => updateOrganizationField('website', e.target.value)}
-                    disabled={!isEditing}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Software Systems */}
           <Card>
             <CardHeader>
               <CardTitle>Software Systems</CardTitle>
@@ -405,7 +512,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
             </CardContent>
           </Card>
 
-          {/* Additional Software Comments */}
+          {/* Additional Information */}
           <Card>
             <CardHeader>
               <CardTitle>Additional Information</CardTitle>
