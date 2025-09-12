@@ -581,7 +581,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Build email options and include reply_to for feedback
     const emailOptions: any = {
-      from: "HESS Consortium <support@members.hessconsortium.app>",
+       from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
       to: emailTo,
       cc: cc.length > 0 ? cc : undefined,
       subject,
@@ -596,7 +596,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (type === 'analytics_feedback') {
         // Use proven payload (matches working test-email) with array recipient
         emailResponse = await resend.emails.send({
-          from: "HESS Consortium <support@members.hessconsortium.app>",
+          from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
           to: [to],
           subject,
           html,

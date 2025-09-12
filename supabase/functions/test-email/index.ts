@@ -47,7 +47,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Attempting to send test email to: ${to}`);
 
     const emailResponse = await resend.emails.send({
-      from: "HESS Consortium <support@members.hessconsortium.app>",
+      from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
       to: [to],
       subject: subject,
       html: `

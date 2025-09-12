@@ -49,7 +49,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to admins using the same pattern as working functions
     const emailResponse = await resend.emails.send({
-      from: "HESS Consortium <support@members.hessconsortium.app>",
+      from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
       to: ["keith.fowlkes@hessconsortium.org"], // Admin email
       subject: "Member Analytics Dashboard Feedback",
       html: `
