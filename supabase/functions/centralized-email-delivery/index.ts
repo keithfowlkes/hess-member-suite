@@ -219,12 +219,18 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`No template found for email type: ${emailRequest.type}`);
     }
 
-    // Prepare template data with defaults
+    // Prepare template data with defaults for ALL possible variables
     const templateData = {
       timestamp: new Date().toISOString(),
       test_id: crypto.randomUUID(),
       from_email: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
       message: 'This is a test email from the HESS Consortium email system.',
+      organization_name: 'Test Organization',
+      primary_contact_name: 'Test Contact',
+      custom_message: 'This is a test message.',
+      invoice_number: 'INV-TEST-001',
+      amount: '299.00',
+      due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
       ...emailRequest.data
     };
 
