@@ -42,10 +42,19 @@ export const useResendInvoice = () => {
 
       const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
         body: {
-          type: 'custom',
+          type: 'invoice',
           to: toEmail,
           subject,
-          template: invoiceHTML
+          data: {
+            organization_name: (invoice as any).organizations?.name || '',
+            invoice_number: (invoice as any).invoice_number,
+            amount: `$${(((invoice as any).amount || 0) as number).toLocaleString()}`,
+            due_date: (invoice as any).due_date,
+            period_start_date: (invoice as any).period_start_date,
+            period_end_date: (invoice as any).period_end_date,
+            notes: (invoice as any).notes || '',
+            invoice_content: invoiceHTML
+          }
         }
       });
       console.log('Resend email function response:', { data, error });

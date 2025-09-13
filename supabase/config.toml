@@ -1,1 +1,70 @@
 project_id = "tyovnvuluyosjnabrzjc"
+
+[functions.centralized-email-delivery-public]
+verify_jwt = false
+
+[functions.ai-dashboard-generator]
+verify_jwt = true
+
+[functions.approve-pending-registration]
+verify_jwt = false
+
+[functions.approve-reassignment-request]
+verify_jwt = true
+
+[functions.bulk-registration-operations]
+verify_jwt = true
+
+[functions.change-user-password]
+verify_jwt = true
+
+[functions.cleanup-orphaned-profiles]
+verify_jwt = true
+
+[functions.cleanup-orphaned-records]
+verify_jwt = true
+
+[functions.cleanup-pending-registration]
+verify_jwt = false
+
+[functions.create-external-user]
+verify_jwt = false
+
+[functions.delete-organization]
+verify_jwt = true
+
+[functions.delete-user]
+verify_jwt = true
+
+[functions.fix-registration-password]
+verify_jwt = true
+
+[functions.import-members]
+verify_jwt = true
+
+[functions.organization-emails]
+verify_jwt = true
+
+[functions.refresh-analytics-datacube]
+verify_jwt = true
+
+[functions.send-analytics-feedback]
+verify_jwt = true
+
+[functions.send-password-reset]
+verify_jwt = true
+
+[functions.test-email]
+verify_jwt = true
+
+[functions.track-invoice-open]
+verify_jwt = false
+
+[functions.unapprove-organization]
+verify_jwt = true
+
+[functions.update-email-config]
+verify_jwt = true
+
+[functions.verify-email-config]
+verify_jwt = true

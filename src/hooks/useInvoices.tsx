@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { renderInvoiceEmailHTML } from '@/utils/invoiceEmailRenderer';
 
 export interface Invoice {
   id: string;
@@ -180,6 +181,45 @@ export function useInvoices() {
 
   const sendInvoice = async (id: string) => {
     try {
+      // First get the invoice and organization details
+      const { data: invoice, error: invoiceError } = await supabase
+        .from('invoices')
+        .select('*, organizations ( id, name, email )')
+        .eq('id', id)
+        .single();
+      
+      if (invoiceError || !invoice) throw new Error('Invoice not found');
+      if (!(invoice as any).organizations?.email) throw new Error('Organization email not found');
+
+      // Use the centralized email delivery system
+      const invoiceEmailData = {
+        organization_name: (invoice as any).organizations.name,
+        invoice_number: (invoice as any).invoice_number,
+        amount: `$${((invoice as any).prorated_amount || (invoice as any).amount).toLocaleString()}`,
+        due_date: (invoice as any).due_date,
+        period_start_date: (invoice as any).period_start_date,
+        period_end_date: (invoice as any).period_end_date,
+        notes: (invoice as any).notes || ''
+      };
+
+      const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
+      const subject = `HESS Consortium - Invoice ${(invoice as any).invoice_number}`;
+
+      const { error: emailError } = await supabase.functions.invoke('centralized-email-delivery-public', {
+        body: {
+          type: 'invoice',
+          to: (invoice as any).organizations.email,
+          subject,
+          data: {
+            ...invoiceEmailData,
+            invoice_content: invoiceHTML
+          }
+        }
+      });
+
+      if (emailError) throw emailError;
+
+      // Update invoice status only after successful email send
       const { data, error } = await supabase
         .from('invoices')
         .update({
@@ -194,7 +234,7 @@ export function useInvoices() {
       
       toast({
         title: 'Success',
-        description: 'Invoice sent successfully'
+        description: `Invoice emailed to ${(invoice as any).organizations.name} via centralized delivery.`
       });
       
       await fetchInvoices();
