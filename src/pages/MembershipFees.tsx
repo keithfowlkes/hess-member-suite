@@ -603,6 +603,7 @@ export default function MembershipFees() {
 
       let successCount = 0;
       let errorCount = 0;
+      let sentCount = 0;
 
       for (const organizationId of selectedOrganizations) {
         try {
@@ -616,7 +617,8 @@ export default function MembershipFees() {
           const tierAmount = feeTier ? getFeeAmountForTier(feeTier) : null;
           const invoiceAmount = proratedAmount || tierAmount || organization.annual_fee_amount || 1000;
 
-          await createInvoice({
+          // Create the invoice
+          const newInvoice = await createInvoice({
             organization_id: organizationId,
             amount: invoiceAmount,
             prorated_amount: proratedAmount,
@@ -629,16 +631,72 @@ export default function MembershipFees() {
           });
 
           successCount++;
+
+          // Now send the invoice automatically using centralized email delivery
+          try {
+            const toEmail = organization.email;
+            if (!toEmail) {
+              console.warn(`Organization ${organization.name} has no email, skipping send`);
+              continue;
+            }
+
+            // Wait a moment to ensure the invoice is available in the system
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Find the created invoice to get the invoice number
+            const createdInvoice = invoices.find(inv => 
+              inv.organization_id === organizationId && 
+              inv.status === 'draft'
+            ) || newInvoice;
+
+            if (!createdInvoice) {
+              console.warn(`Could not find created invoice for ${organization.name}`);
+              continue;
+            }
+
+            const subject = `HESS Consortium - Invoice ${createdInvoice.invoice_number}`;
+
+            const invoiceEmailData = {
+              organization_name: organization.name || '',
+              invoice_number: createdInvoice.invoice_number,
+              amount: `$${(invoiceAmount || 0).toLocaleString()}`,
+              due_date: format(dueDate, 'yyyy-MM-dd'),
+              period_start_date: format(periodStart, 'yyyy-MM-dd'),
+              period_end_date: format(periodEnd, 'yyyy-MM-dd'),
+              notes: createdInvoice.notes || ''
+            };
+
+            const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
+
+            const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
+              body: {
+                type: 'custom',
+                to: toEmail,
+                subject,
+                template: invoiceHTML
+              }
+            });
+            
+            if (error) {
+              console.error(`Failed to send invoice email for ${organization.name}:`, error);
+            } else {
+              // Mark invoice as sent
+              await sendInvoice(createdInvoice.id);
+              sentCount++;
+            }
+          } catch (sendError) {
+            console.error(`Failed to send invoice for organization ${organization.name}:`, sendError);
+          }
         } catch (error) {
-          console.error(`Failed to create invoice for organization ${organizationId}:`, error);
+          console.error(`Failed to create/send invoice for organization ${organizationId}:`, error);
           errorCount++;
         }
       }
 
       if (successCount > 0) {
         toast({
-          title: "Invoices created successfully",
-          description: `${successCount} invoice${successCount !== 1 ? 's' : ''} created successfully${errorCount > 0 ? `, ${errorCount} failed` : ''}.`
+          title: "Invoices created and sent successfully",
+          description: `${successCount} invoice${successCount !== 1 ? 's' : ''} created${sentCount > 0 ? ` and ${sentCount} sent` : ''}${errorCount > 0 ? `, ${errorCount} failed` : ''}.`
         });
       }
 
@@ -653,10 +711,10 @@ export default function MembershipFees() {
       // Clear selection after sending
       setSelectedOrganizations(new Set());
     } catch (error) {
-      console.error('Error creating invoices:', error);
+      console.error('Error creating/sending invoices:', error);
       toast({
         title: "Error",
-        description: "Failed to create invoices. Please try again.",
+        description: "Failed to create and send invoices. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -1792,7 +1850,7 @@ export default function MembershipFees() {
                           onClick={handleSendSelectedInvoices}
                           disabled={selectedOrganizations.size === 0 || isSendingInvoices}
                         >
-                          {isSendingInvoices ? "Creating Invoices..." : "Create Selected Invoices"}
+                          {isSendingInvoices ? "Creating & Sending Invoices..." : "Create & Send Selected Invoices"}
                         </Button>
                       </div>
                     </div>
