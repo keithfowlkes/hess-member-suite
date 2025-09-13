@@ -175,6 +175,8 @@ const MasterDashboard = () => {
   const [savingCcRecipients, setSavingCcRecipients] = useState(false);
   const [showAddExternalUser, setShowAddExternalUser] = useState(false);
 
+  console.log('Profile edit requests loaded:', profileEditRequests.length);
+  
   // Cleanup specific problematic user on mount
   useEffect(() => {
     const cleanupOrphanedJKFowlkes = async () => {
@@ -193,6 +195,184 @@ const MasterDashboard = () => {
       cleanupOrphanedJKFowlkes();
     }
   }, [users, settingsLoading, cleanupSpecificUser]);
+
+  // Initialize messages from settings
+  useEffect(() => {
+    if (settings) {
+      const passwordSetting = settings.find(s => s.setting_key === 'password_reset_message');
+      if (passwordSetting?.setting_value) {
+        setPasswordResetMessage(passwordSetting.setting_value);
+      }
+      
+      const welcomeSetting = settings.find(s => s.setting_key === 'welcome_message_template');
+      if (welcomeSetting?.setting_value) {
+        setWelcomeMessage(welcomeSetting.setting_value);
+      } else {
+        // Set default welcome message template
+        const defaultTemplate = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <center>
+              <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+            </center>
+            
+            <p>{{primary_contact_name}},</p>
+            
+            <p>Thank you for your registration for HESS Consortium membership. I want to welcome you and {{organization_name}} personally to membership in the HESS Consortium!</p>
+            
+            <p>I've CCed Gwen Pechan, HESS Board President and CIO at Flagler College to welcome you also.</p>
+            
+            <p>If you have a few minutes, I would love to fill you in on the work we are doing together in the Consortium and with our business partners.</p>
+            
+            <p>We will make sure to get your contact information into our member listserv asap.</p>
+            
+            <p>Also, make sure to register for an account on our HESS Online Leadership Community collaboration website to download the latest information and join in conversation with HESS CIOs. You will definitely want to sign up online at <a href="https://www.hessconsortium.org/community">https://www.hessconsortium.org/community</a> and invite your staff to participate also.</p>
+            
+            <p>You now have access to our HESS / Coalition Educational Discount Program with Insight for computer and network hardware, peripherals and cloud software. Please create an institutional portal account at <a href="https://www.insight.com/HESS">www.insight.com/HESS</a> online now. We hope you will evaluate these special Insight discount pricing and let us know how it looks compared to your current suppliers.</p>
+            
+            <p>After you have joined the HESS OLC (mentioned above), click the Member Discounts icon at the top of the page to see all of the discount programs you have access to as a HESS member institution.</p>
+            
+            <p>Again, welcome to our quickly growing group of private, non-profit institutions in technology!</p>
+            
+            <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/04/KeithFowlkesshortsig.png" alt="Keith Fowlkes Signature" style="margin: 20px 0;">
+            
+            <p>Keith Fowlkes, M.A., M.B.A.<br>
+            Executive Director and Founder<br>
+            The HESS Consortium<br>
+            keith.fowlkes@hessconsortium.org | 859.516.3571</p>
+          </div>
+        `;
+        setWelcomeMessage(defaultTemplate);
+      }
+
+      const profileUpdateSetting = settings.find(s => s.setting_key === 'profile_update_message_template');
+      if (profileUpdateSetting?.setting_value) {
+        setProfileUpdateMessage(profileUpdateSetting.setting_value);
+      } else {
+        // Set default profile update message template
+        const defaultProfileUpdateTemplate = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <center>
+              <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:150px; height:auto;">
+            </center>
+            
+            <p>Dear {{primary_contact_name}},</p>
+            
+            <p>Your profile update request for {{organization_name}} has been approved by our administration team.</p>
+            
+            <p>The changes you requested have been applied to your organization's profile and are now active in our system.</p>
+            
+            <p>You can view your updated profile by logging into the HESS Consortium member portal.</p>
+            
+            <p>If you have any questions about your profile or membership, please don't hesitate to contact us.</p>
+            
+            <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/04/KeithFowlkesshortsig.png" alt="Keith Fowlkes Signature" style="margin: 20px 0;">
+            
+            <p>Keith Fowlkes, M.A., M.B.A.<br>
+            Executive Director and Founder<br>
+            The HESS Consortium<br>
+            keith.fowlkes@hessconsortium.org | 859.516.3571</p>
+          </div>
+        `;
+        setProfileUpdateMessage(defaultProfileUpdateTemplate);
+      }
+
+      const ccSetting = settings.find(s => s.setting_key === 'welcome_message_cc_recipients');
+      if (ccSetting?.setting_value) {
+        try {
+          const ccList = JSON.parse(ccSetting.setting_value);
+          setWelcomeCcRecipients(ccList);
+        } catch (error) {
+          console.error('Error parsing CC recipients:', error);
+          setWelcomeCcRecipients([]);
+        }
+      }
+      
+      const defaultRecipientsSetting = settings.find(s => s.setting_key === 'welcome_message_default_recipients');
+      if (defaultRecipientsSetting?.setting_value) {
+        try {
+          const defaultRecipientsConfig = JSON.parse(defaultRecipientsSetting.setting_value);
+          setDefaultRecipients(defaultRecipientsConfig);
+        } catch (error) {
+          console.error('Error parsing default recipients:', error);
+          setDefaultRecipients({
+            'keith.fowlkes@hessconsortium.org': true
+          });
+        }
+      }
+    }
+  }, [settings]);
+
+  // Filter functions for search
+  const filteredPendingOrganizations = pendingOrganizations.filter(org => {
+    const searchLower = organizationSearchTerm.toLowerCase();
+    return (
+      org.name.toLowerCase().includes(searchLower) ||
+      org.profiles?.first_name?.toLowerCase().includes(searchLower) ||
+      org.profiles?.last_name?.toLowerCase().includes(searchLower) ||
+      org.profiles?.email?.toLowerCase().includes(searchLower) ||
+      org.city?.toLowerCase().includes(searchLower) ||
+      org.state?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const filteredPendingRegistrations = pendingRegistrations.filter(reg => {
+    const searchLower = organizationSearchTerm.toLowerCase();
+    return (
+      reg.organization_name.toLowerCase().includes(searchLower) ||
+      reg.first_name.toLowerCase().includes(searchLower) ||
+      reg.last_name.toLowerCase().includes(searchLower) ||
+      reg.email.toLowerCase().includes(searchLower) ||
+      reg.city?.toLowerCase().includes(searchLower) ||
+      reg.state?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const filteredUsers = users.filter(user => {
+    const searchLower = userSearchTerm.toLowerCase();
+    return (
+      user.email.toLowerCase().includes(searchLower) ||
+      user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower)
+    );
+  }).sort((a, b) => {
+    // Sort by role first (admin before member), then by email
+    const roleA = a.user_roles?.[0]?.role || 'member';
+    const roleB = b.user_roles?.[0]?.role || 'member';
+    
+    if (roleA !== roleB) {
+      return roleA === 'admin' ? -1 : 1;
+    }
+    
+    // Then sort by email
+    return a.email.localeCompare(b.email);
+  });
+
+  if (statsLoading || settingsLoading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="text-lg">Loading dashboard...</span>
+          </div>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
+  if (!user || (user.user_roles?.[0]?.role !== 'admin' && user.user_roles?.[0]?.role !== 'super_admin')) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center p-8">
+            <Shield className="h-16 w-16 mx-auto mb-4 text-red-500" />
+            <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+            <p className="text-muted-foreground mb-4">You don't have permission to access this dashboard.</p>
+            <Button onClick={() => window.history.back()}>Go Back</Button>
+          </div>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   // Stats for the overview section
   const mainStats = [
@@ -242,7 +422,7 @@ const MasterDashboard = () => {
       value: users.length,
       icon: Shield,
       color: 'text-purple-600',
-      description: `${users.filter(u => u.user_roles?.[0]?.role === 'admin').length} admins`
+      description: `${users.filter(u => u.role === 'admin').length} admins`
     },
     {
       title: 'Total Student FTE',
@@ -453,13 +633,6 @@ const MasterDashboard = () => {
     setSavingProfileUpdateMessage(false);
   };
 
-  const handleSaveCcRecipients = async () => {
-    setSavingCcRecipients(true);
-    await updateSetting('welcome_message_cc_recipients', JSON.stringify(welcomeCcRecipients));
-    await updateSetting('welcome_message_default_recipients', JSON.stringify(defaultRecipients));
-    setSavingCcRecipients(false);
-  };
-
   const handleSaveAnalyticsFeedbackTemplate = async () => {
     setSavingAnalyticsFeedbackTemplate(true);
     await updateSetting('analytics_feedback_template', analyticsFeedbackTemplate);
@@ -476,6 +649,13 @@ const MasterDashboard = () => {
     setSavingOverdueReminderTemplate(true);
     await updateSetting('overdue_reminder_template', overdueReminderTemplate);
     setSavingOverdueReminderTemplate(false);
+  };
+
+  const handleSaveCcRecipients = async () => {
+    setSavingCcRecipients(true);
+    await updateSetting('welcome_message_cc_recipients', JSON.stringify(welcomeCcRecipients));
+    await updateSetting('welcome_message_default_recipients', JSON.stringify(defaultRecipients));
+    setSavingCcRecipients(false);
   };
 
   const handleDeleteDefaultRecipient = async (email: string) => {
@@ -506,434 +686,161 @@ const MasterDashboard = () => {
       setSavingCcRecipients(false);
     }
   };
-  // Initialize password reset message, welcome message, profit update message, and CC recipients when settings load
-  useEffect(() => {
-    const passwordSetting = settings.find(s => s.setting_key === 'password_reset_message');
-    if (passwordSetting?.setting_value) {
-      setPasswordResetMessage(passwordSetting.setting_value);
-    }
-    
-    const welcomeSetting = settings.find(s => s.setting_key === 'welcome_message_template');
-    if (welcomeSetting?.setting_value) {
-      setWelcomeMessage(welcomeSetting.setting_value);
-    } else {
-      // Set default welcome message template
-      const defaultTemplate = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <center>
-            <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-          </center>
-          
-          <p>{{primary_contact_name}},</p>
-          
-          <p>Thank you for your registration for HESS Consortium membership. I want to welcome you and {{organization_name}} personally to membership in the HESS Consortium!</p>
-          
-          <p>I've CCed Gwen Pechan, HESS Board President and CIO at Flagler College to welcome you also.</p>
-          
-          <p>If you have a few minutes, I would love to fill you in on the work we are doing together in the Consortium and with our business partners.</p>
-          
-          <p>We will make sure to get your contact information into our member listserv asap.</p>
-          
-          <p>Also, make sure to register for an account on our HESS Online Leadership Community collaboration website to download the latest information and join in conversation with HESS CIOs. You will definitely want to sign up online at <a href="https://www.hessconsortium.org/community">https://www.hessconsortium.org/community</a> and invite your staff to participate also.</p>
-          
-          <p>You now have access to our HESS / Coalition Educational Discount Program with Insight for computer and network hardware, peripherals and cloud software. Please create an institutional portal account at <a href="https://www.insight.com/HESS">www.insight.com/HESS</a> online now. We hope you will evaluate these special Insight discount pricing and let us know how it looks compared to your current suppliers.</p>
-          
-          <p>After you have joined the HESS OLC (mentioned above), click the Member Discounts icon at the top of the page to see all of the discount programs you have access to as a HESS member institution.</p>
-          
-          <p>Again, welcome to our quickly growing group of private, non-profit institutions in technology!</p>
-          
-          <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/04/KeithFowlkesshortsig.png" alt="Keith Fowlkes Signature" style="margin: 20px 0;">
-          
-          <p>Keith Fowlkes, M.A., M.B.A.<br>
-          Executive Director and Founder<br>
-          The HESS Consortium<br>
-          keith.fowlkes@hessconsortium.org | 859.516.3571</p>
-        </div>
-      `;
-      setWelcomeMessage(defaultTemplate);
-    }
-
-    // Initialize profile update message
-    const profileUpdateSetting = settings.find(s => s.setting_key === 'profile_update_message_template');
-    if (profileUpdateSetting?.setting_value) {
-      setProfileUpdateMessage(profileUpdateSetting.setting_value);
-    } else {
-      // Set default profile update message template
-      const defaultProfileUpdateTemplate = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <center>
-            <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:150px; height:auto;">
-          </center>
-          
-          <p>Dear {{primary_contact_name}},</p>
-          
-          <p>Your profile update request for {{organization_name}} has been approved by our administration team.</p>
-          
-          <p>The changes you requested have been applied to your organization's profile and are now active in our system.</p>
-          
-          <p>You can view your updated profile by logging into the HESS Consortium member portal.</p>
-          
-          <p>If you have any questions about your profile or membership, please don't hesitate to contact us.</p>
-          
-          <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/04/KeithFowlkesshortsig.png" alt="Keith Fowlkes Signature" style="margin: 20px 0;">
-          
-          <p>Keith Fowlkes, M.A., M.B.A.<br>
-          Executive Director and Founder<br>
-          The HESS Consortium<br>
-          keith.fowlkes@hessconsortium.org | 859.516.3571</p>
-        </div>
-      `;
-      setProfileUpdateMessage(defaultProfileUpdateTemplate);
-    }
-
-    // Load CC recipients
-    const ccSetting = settings.find(s => s.setting_key === 'welcome_message_cc_recipients');
-    if (ccSetting?.setting_value) {
-      try {
-        const ccList = JSON.parse(ccSetting.setting_value);
-        setWelcomeCcRecipients(ccList);
-      } catch (error) {
-        console.error('Error parsing CC recipients:', error);
-        setWelcomeCcRecipients([]);
-      }
-    }
-    
-    // Load default recipients settings
-    const defaultRecipientsSetting = settings.find(s => s.setting_key === 'welcome_message_default_recipients');
-    if (defaultRecipientsSetting?.setting_value) {
-      try {
-        const defaultRecipientsConfig = JSON.parse(defaultRecipientsSetting.setting_value);
-        setDefaultRecipients(defaultRecipientsConfig);
-      } catch (error) {
-        console.error('Error parsing default recipients:', error);
-        setDefaultRecipients({
-          'keith.fowlkes@hessconsortium.org': true
-        });
-      }
-    }
-  }, [settings]);
-
-  // Filter functions for search
-  const filteredPendingOrganizations = pendingOrganizations.filter(org => {
-    const searchLower = organizationSearchTerm.toLowerCase();
-    return (
-      org.name.toLowerCase().includes(searchLower) ||
-      org.profiles?.first_name?.toLowerCase().includes(searchLower) ||
-      org.profiles?.last_name?.toLowerCase().includes(searchLower) ||
-      org.profiles?.email?.toLowerCase().includes(searchLower) ||
-      org.city?.toLowerCase().includes(searchLower) ||
-      org.state?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  const filteredPendingRegistrations = pendingRegistrations.filter(reg => {
-    const searchLower = organizationSearchTerm.toLowerCase();
-    return (
-      reg.organization_name.toLowerCase().includes(searchLower) ||
-      reg.first_name.toLowerCase().includes(searchLower) ||
-      reg.last_name.toLowerCase().includes(searchLower) ||
-      reg.email.toLowerCase().includes(searchLower) ||
-      reg.city?.toLowerCase().includes(searchLower) ||
-      reg.state?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  const filteredUsers = users.filter(user => {
-    const searchLower = userSearchTerm.toLowerCase();
-    return (
-      user.email.toLowerCase().includes(searchLower) ||
-      user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower)
-    );
-  }).sort((a, b) => {
-    // Sort by role first (admin before member), then by email
-    const roleA = a.user_roles?.[0]?.role || 'member';
-    const roleB = b.user_roles?.[0]?.role || 'member';
-    
-    if (roleA !== roleB) {
-      return roleA === 'admin' ? -1 : 1;
-    }
-    
-    // Then sort by email
-    return a.email.localeCompare(b.email);
-  });
-
-  if (statsLoading || settingsLoading) {
-    console.log('Dashboard loading state:', { 
-      statsLoading, 
-      settingsLoading, 
-      approvalsLoading, 
-      invitationsLoading, 
-      memberInfoUpdateLoading,
-      pendingRegistrationsLoading 
-    });
-    
-    return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full">
-          <AppSidebar />
-          <main className="flex-1 p-8">
-            <ConnectionTest />
-            <div className="mt-8 flex flex-col items-center justify-center">
-              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-              <p className="mt-4 text-muted-foreground">
-                Loading dashboard... (stats: {statsLoading ? 'loading' : 'done'}, settings: {settingsLoading ? 'loading' : 'done'})
-              </p>
-            </div>
-          </main>
-        </div>
-      </SidebarProvider>
-    );
-  }
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1 p-8">
-          <div className="space-y-6">
-            {/* Header */}
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Master Dashboard</h1>
-                <p className="text-muted-foreground mt-2">
-                  Complete administrative control and system overview
-                </p>
-                {user?.email && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Logged in as: 
-                    <a 
-                      href={`mailto:${user.email}`}
-                      className="font-medium text-primary hover:underline ml-1"
-                    >
-                      {user.email}
-                    </a>
-                  </p>
-                )}
-              </div>
-              <Button
-                variant="outline"
-                onClick={signOut}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
+        <main className="flex-1 p-8 space-y-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold">Master Dashboard</h1>
+              <p className="text-muted-foreground">System administration and overview</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" onClick={() => setShowAddExternalUser(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add External User
+              </Button>
+              <Button onClick={signOut} variant="outline">
+                <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
             </div>
+          </div>
 
-            {/* Main Tabs */}
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="organizations" className="relative">
-                  Organizations/Users
-                  {totalOrganizationActions > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                    >
-                      {totalOrganizationActions}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="messages">Messages</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              </TabsList>
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="organizations" className="relative">
+                Organizations
+                {totalOrganizationActions > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                  >
+                    {totalOrganizationActions}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="users">Users</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
+            </TabsList>
 
-              {/* Overview Tab */}
-              <TabsContent value="overview" className="space-y-6">
-                {/* Main Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {mainStats.map((stat) => {
-                    const Icon = stat.icon;
-                    return (
-                      <Card key={stat.title}>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">
-                            {stat.title}
-                          </CardTitle>
-                          <Icon className={`h-4 w-4 ${stat.color}`} />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold flex items-center gap-2">
-                            {statsLoading ? (
-                              <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : null}
-                            {stat.value}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-
-                {/* Admin Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {adminStats.map((stat) => {
-                    const Icon = stat.icon;
-                    return (
-                      <Card key={stat.title}>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">
-                            {stat.title}
-                          </CardTitle>
-                          <Icon className={`h-4 w-4 ${stat.color}`} />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold">{stat.value}</div>
-                          <p className="text-xs text-muted-foreground">
-                            {stat.description}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-
-                {/* Recent Activity and Security Settings */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Recent Activity */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Recent Activity</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">Organization approved</p>
-                            <p className="text-xs text-muted-foreground">2 hours ago</p>
-                          </div>
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-8">
+              {/* Main Statistics */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {mainStats.map((stat, index) => (
+                  <Card key={index} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-4">
+                        <div className={`p-2 rounded-lg bg-gray-100 ${stat.color}`}>
+                          <stat.icon className="h-6 w-6" />
                         </div>
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">New user registration</p>
-                            <p className="text-xs text-muted-foreground">1 day ago</p>
-                          </div>
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                          <p className="text-2xl font-bold">{stat.value}</p>
                         </div>
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">Invitation sent</p>
-                            <p className="text-xs text-muted-foreground">3 days ago</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Admin Statistics */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {adminStats.map((stat, index) => (
+                  <Card key={index} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between space-x-4">
+                        <div className="flex items-center space-x-4">
+                          <div className={`p-2 rounded-lg bg-gray-100 ${stat.color}`}>
+                            <stat.icon className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                            <p className="text-2xl font-bold">{stat.value}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
                           </div>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
+                ))}
+              </div>
 
-                  {/* Security Settings */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Security Settings</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Row Level Security</p>
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                          Enabled
-                        </Badge>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Email Verification</p>
-                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                          Disabled (Development)
-                        </Badge>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">API Access</p>
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                          Authenticated Only
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
+              {/* Connection Test */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <RefreshCw className="h-5 w-5" />
+                    System Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ConnectionTest />
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-              {/* Organizations Tab */}
-              <TabsContent value="organizations" className="space-y-6">
-                <Tabs defaultValue="approvals" className="space-y-4">
-                  <TabsList>
-                    <TabsTrigger value="approvals" className="relative">
-                      Pending Approvals
+            {/* Organizations Tab */}
+            <TabsContent value="organizations" className="space-y-6">
+              <Tabs defaultValue="approvals" className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="approvals" className="relative">
+                    Pending Approvals
+                    {pendingApprovalsCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                      >
+                        {pendingApprovalsCount}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="invitations" className="relative">
+                    Organization Invitations
+                    {activeInvitationsCount > 0 && (
+                      <Badge 
+                        variant="outline" 
+                        className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                      >
+                        {activeInvitationsCount}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="approvals" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold">Pending Approvals</h2>
+                    <div className="flex items-center gap-2">
                       {pendingApprovalsCount > 0 && (
-                        <Badge 
-                          variant="destructive" 
-                          className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                        >
-                          {pendingApprovalsCount}
+                        <Badge variant="secondary">
+                          {pendingApprovalsCount} pending
                         </Badge>
                       )}
-                    </TabsTrigger>
-                    <TabsTrigger value="invitations" className="relative">
-                      Manage Invitations
-                      {activeInvitationsCount > 0 && (
-                        <Badge 
-                          variant="destructive" 
-                          className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                        >
-                          {activeInvitationsCount}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                    <TabsTrigger value="users">User Management</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="approvals" className="space-y-6">
-                    {/* New Member Applications Section */}
-                      <DebugRequestsComponent />
-                      
-                      <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-semibold">Pending New Member Applications</h2>
-                        <div className="flex items-center gap-2">
-                          {(pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length) > 0 && (
-                            <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
-                              <AlertCircle className="h-4 w-4" />
-                              <span className="font-medium">{pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length} Pending Review</span>
-                            </div>
-                          )}
-                          <Badge variant="secondary" className="text-sm">
-                            {filteredPendingOrganizations.length + filteredPendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length} of {pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length} shown
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {/* Search Bar */}
-                      <div className="relative max-w-md">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                         <Input
-                          placeholder="Search applications, contacts, or locations..."
+                          placeholder="Search organizations..."
                           value={organizationSearchTerm}
                           onChange={(e) => setOrganizationSearchTerm(e.target.value)}
-                          className="pl-10 bg-white"
+                          className="pl-10 w-64"
                         />
                       </div>
+                    </div>
+                  </div>
 
-                      {(approvalsLoading || pendingRegistrationsLoading || profileEditRequestsLoading) ? (
-                        <Card>
-                          <CardContent className="p-6">
-                            <div className="text-center">Loading pending applications...</div>
-                          </CardContent>
-                        </Card>
-                      ) : (filteredPendingOrganizations.length === 0 && filteredPendingRegistrations.length === 0 && memberInfoUpdateRequests.length === 0 && profileEditRequests.length === 0) ? (
-                        <Card>
-                          <CardContent className="p-6">
-                            <div className="text-center text-muted-foreground">
-                              <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                              {organizationSearchTerm ? (
-                                <p>No applications match your search "{organizationSearchTerm}".</p>
-                              ) : (
-                                <p>No pending new member applications.</p>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ) : (
-                        <div className="grid gap-4">
-                        {/* Existing Organization Applications */}
+                  <div className="space-y-4">
+                    {/* Organization Approvals */}
+                    {filteredPendingOrganizations.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-orange-600 flex items-center gap-2">
+                          <Building2 className="h-5 w-5" />
+                          Organization Registrations ({filteredPendingOrganizations.length})
+                        </h3>
                         {filteredPendingOrganizations.map((org) => (
                           <Card key={`org-${org.id}`} className="hover:shadow-md transition-shadow">
                             <CardContent className="p-6">
@@ -941,88 +848,29 @@ const MasterDashboard = () => {
                                 <div className="space-y-2">
                                   <div className="flex items-center gap-3">
                                     <h3 className="text-lg font-semibold">{org.name}</h3>
-                                    <Badge variant="secondary">Organization Update</Badge>
-                                    <Badge variant={org.profiles?.is_private_nonprofit ? "default" : "destructive"}>
-                                      {org.profiles?.is_private_nonprofit ? "Private Non-Profit" : "Not Approved"}
+                                    <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                                      New Organization
                                     </Badge>
                                   </div>
-                                  
                                   <div className="text-sm text-muted-foreground space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <Users className="h-3 w-3" />
-                                      <span>
-                                        Contact: {org.profiles?.first_name} {org.profiles?.last_name}
-                                        {org.profiles?.primary_contact_title && ` - ${org.profiles.primary_contact_title}`}
-                                      </span>
-                                    </div>
-                                    <div>
-                                      Email: {org.profiles?.email} | Location: {org.city}, {org.state}
-                                    </div>
-                                    <div>
-                                      Student FTE: {org.student_fte?.toLocaleString() || 'Not specified'} | 
-                                      Applied: {new Date(org.created_at).toLocaleDateString()}
-                                    </div>
+                                    <p>
+                                      <strong>Contact:</strong> {org.profiles?.first_name} {org.profiles?.last_name} ({org.profiles?.email})
+                                    </p>
+                                    <p>
+                                      <strong>Location:</strong> {org.city}, {org.state}
+                                    </p>
+                                    <p>
+                                      <strong>Student FTE:</strong> {org.student_fte ? org.student_fte.toLocaleString() : 'Not specified'}
+                                    </p>
                                   </div>
                                 </div>
-
                                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleReviewOrganization(org)}
-                    className="flex items-center gap-2"
-                  >
-                    <Eye className="h-3 w-3" />
-                    Review Changes
-                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                        
-                        {/* New Registration Applications */}
-                        {filteredPendingRegistrations.map((reg) => (
-                          <Card key={`reg-${reg.id}`} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-3">
-                                    <h3 className="text-lg font-semibold">{reg.organization_name}</h3>
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                      New Registration
-                                    </Badge>
-                                  </div>
-                                  
-                                  <div className="text-sm text-muted-foreground space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <Users className="h-3 w-3" />
-                                      <span>
-                                        Contact: {reg.first_name} {reg.last_name}
-                                        {reg.primary_contact_title && ` - ${reg.primary_contact_title}`}
-                                      </span>
-                                    </div>
-                                    <div>
-                                      Email: {reg.email} | Location: {reg.city}, {reg.state}
-                                    </div>
-                                    <div>
-                                      Student FTE: {reg.student_fte?.toLocaleString() || 'Not specified'} | 
-                                      Submitted: {new Date(reg.created_at).toLocaleDateString()}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedPendingRegistration(reg);
-                                      setShowRegistrationApprovalDialog(true);
-                                    }}
-                                    className="flex items-center gap-2"
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => handleReviewOrganization(org)}
                                   >
-                                    <Eye className="h-3 w-3" />
+                                    <Eye className="h-4 w-4 mr-2" />
                                     Review
                                   </Button>
                                 </div>
@@ -1030,716 +878,438 @@ const MasterDashboard = () => {
                             </CardContent>
                           </Card>
                         ))}
+                      </div>
+                    )}
 
-                        {/* Member Info Update Requests */}
-                        {memberInfoUpdateRequests.map((request) => {
-                          console.log('Rendering member info update request:', request);
-                          return (
-                          <Card key={`update-${request.id}`} className="hover:shadow-md transition-shadow">
+                    {/* Pending Registrations */}
+                    {filteredPendingRegistrations.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-blue-600 flex items-center gap-2">
+                          <Users className="h-5 w-5" />
+                          User Registrations ({filteredPendingRegistrations.length})
+                        </h3>
+                        {filteredPendingRegistrations.map((registration) => (
+                          <Card key={`reg-${registration.id}`} className="hover:shadow-md transition-shadow">
                             <CardContent className="p-6">
                               <div className="flex items-center justify-between">
                                 <div className="space-y-2">
                                   <div className="flex items-center gap-3">
                                     <h3 className="text-lg font-semibold">
-                                      {request.new_organization_data?.name || 'Organization Update'}
+                                      {registration.first_name} {registration.last_name}
                                     </h3>
-                                     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                       Member Info Update
-                                     </Badge>
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                      User Registration
+                                    </Badge>
                                   </div>
-                                  
                                   <div className="text-sm text-muted-foreground space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <Users className="h-3 w-3" />
-                                      <span>New Contact: {request.new_contact_email}</span>
-                                    </div>
-                                    <div>
-                                      Status: {request.status} | 
-                                      Requested: {new Date(request.created_at).toLocaleDateString()}
-                                    </div>
-                                    {request.admin_notes && (
-                                      <div>
-                                        Notes: {request.admin_notes}
-                                      </div>
-                                    )}
+                                    <p><strong>Email:</strong> {registration.email}</p>
+                                    <p><strong>Organization:</strong> {registration.organization_name}</p>
+                                    <p><strong>Requested:</strong> {format(new Date(registration.created_at), 'PPp')}</p>
                                   </div>
                                 </div>
-
                                 <div className="flex gap-2">
-                                   <Button
-                                     variant="outline"
-                                     size="sm"
-                                     onClick={(e) => {
-                                       e.preventDefault();
-                                       e.stopPropagation();
-                                       console.log('Review Changes clicked for member info update:', request);
-                                       console.log('Current state:', { 
-                                         selectedMemberInfoUpdate, 
-                                         showMemberInfoUpdateComparisonDialog 
-                                       });
-                                       setSelectedMemberInfoUpdate(request);
-                                       setShowMemberInfoUpdateComparisonDialog(true);
-                                       console.log('After state update - should show modal');
-                                     }}
-                                     className="flex items-center gap-2"
-                                   >
-                                     <Eye className="h-3 w-3" />
-                                     Review Changes
-                                   </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => {
+                                      setSelectedPendingRegistration(registration);
+                                      setShowRegistrationApprovalDialog(true);
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Review
+                                  </Button>
                                 </div>
                               </div>
                             </CardContent>
                           </Card>
-                        );
-                        })}
-                         </div>
+                        ))}
+                      </div>
+                    )}
 
-                         {/* Profile Update Requests */}
-                         {profileEditRequests.map((request) => (
-                           <Card key={`profile-edit-${request.id}`} className="hover:shadow-md transition-shadow">
-                             <CardContent className="p-6">
-                               <div className="flex items-center justify-between">
-                                 <div className="space-y-2">
-                                   <div className="flex items-center gap-3">
-                                     <h3 className="text-lg font-semibold">
-                                       {request.organization?.name || 'Profile Update Request'}
-                                     </h3>
-                                     <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                       Profile Update
-                                     </Badge>
-                                   </div>
-                                  
+                    {/* Member Info Update Requests */}
+                    {memberInfoUpdateRequests.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-green-600 flex items-center gap-2">
+                          <Edit className="h-5 w-5" />
+                          Member Info Updates ({memberInfoUpdateRequests.length})
+                        </h3>
+                        {memberInfoUpdateRequests.map((request) => (
+                          <Card key={`member-info-${request.id}`} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-3">
+                                    <h3 className="text-lg font-semibold">
+                                      {request.organizations?.name || 'Member Info Update'}
+                                    </h3>
+                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                      Member Info Update
+                                    </Badge>
+                                  </div>
                                   <div className="text-sm text-muted-foreground space-y-1">
-                                     <div className="flex items-center gap-2">
-                                       <Users className="h-3 w-3" />
-                                       <span>
-                                         Requested by: {request.requester_profile?.first_name} {request.requester_profile?.last_name}
-                                         {request.organization?.name && (
-                                           <span className="text-muted-foreground"> ({request.organization.name})</span>
-                                         )}
-                                       </span>
-                                     </div>
-                                    <div>
-                                      Email: {request.requester_profile?.email} | 
-                                      Status: {request.status}
-                                    </div>
-                                    <div>
-                                      Requested: {new Date(request.created_at).toLocaleDateString()}
-                                    </div>
-                                    {request.admin_notes && (
-                                      <div>
-                                        Admin Notes: {request.admin_notes}
-                                      </div>
-                                    )}
+                                    <p><strong>New Contact:</strong> {request.new_contact_email}</p>
+                                    <p><strong>Current Contact:</strong> {request.organizations?.profiles?.email}</p>
+                                    <p><strong>Requested:</strong> {format(new Date(request.created_at), 'PPp')}</p>
                                   </div>
                                 </div>
-
-                                 <div className="flex gap-2">
-                                   <Button
-                                     variant="outline"
-                                     size="sm"
-                                     onClick={(e) => {
-                                       e.preventDefault();
-                                       e.stopPropagation();
-                                       console.log('Review Changes clicked for profile edit:', request);
-                                       console.log('Current state:', { 
-                                         selectedProfileEditRequest, 
-                                         showProfileEditComparisonDialog 
-                                       });
-                                       setSelectedProfileEditRequest(request);
-                                       setShowProfileEditComparisonDialog(true);
-                                       setAdminNotes('');
-                                       console.log('After state update - should show modal');
-                                     }}
-                                     className="flex items-center gap-2"
-                                   >
-                                     <Eye className="h-3 w-3" />
-                                     Review Changes
-                                   </Button>
-                                  <Button
-                                    size="sm"
-                                    onClick={async () => {
-                                      try {
-                                        const success = await approveProfileEditRequest(request.id);
-                                        if (success) {
-                                          // Force immediate refresh of the requests list
-                                          refetchProfileEditRequests();
-                                        }
-                                      } catch (error) {
-                                        console.error('Error approving profile edit request:', error);
-                                      }
-                                    }}
-                                    className="bg-green-600 hover:bg-green-700 text-white"
-                                  >
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={async () => {
-                                      try {
-                                        const success = await rejectProfileEditRequest(request.id, 'Rejected from dashboard');
-                                        if (success) {
-                                          // Force immediate refresh of the requests list
-                                          refetchProfileEditRequests();
-                                        }
-                                      }
-                                      catch (error) {
-                                        console.error('Error rejecting profile edit request:', error);
-                                      }
+                                <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => {
+                                      console.log('Review Changes clicked for member info:', request.id);
+                                      setSelectedMemberInfoUpdate(request);
+                                      setShowMemberInfoUpdateComparisonDialog(true);
                                     }}
                                   >
-                                    <XCircle className="h-3 w-3 mr-1" />
-                                    Reject
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Review Changes
                                   </Button>
                                 </div>
                               </div>
                             </CardContent>
-                            </Card>
-                         ))}
-                         </div>
-                       )}
-                      </div>
-                   </TabsContent>
-
-                  <TabsContent value="invitations" className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-semibold">Organization Invitations</h2>
-                      <div className="flex items-center gap-2">
-                        {activeInvitationsCount > 0 && (
-                          <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                            <Mail className="h-4 w-4" />
-                            <span className="font-medium">
-                              {activeInvitationsCount} Active
-                            </span>
-                          </div>
-                        )}
-                        <Button onClick={() => setShowInvitationDialog(true)}>
-                          <Mail className="h-4 w-4 mr-2" />
-                          Manage Invitations
-                        </Button>
-                      </div>
-                    </div>
-
-                    <Card>
-                      <CardContent className="p-6">
-                        <div className="text-center text-muted-foreground">
-                          <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>Click "Manage Invitations" to send invitations to organizations without contacts.</p>
-                          <p className="text-sm mt-2">
-                            This allows existing organizations in your database to gain portal access.
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="reassignments" className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-semibold">Organization Reassignment Requests</h2>
-                      <div className="flex items-center gap-2">
-                        {memberInfoUpdateRequests.length > 0 && (
-                           <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                             <AlertCircle className="h-4 w-4" />
-                             <span className="font-medium">{memberInfoUpdateRequests.length} Pending</span>
-                           </div>
-                        )}
-                        <Button onClick={() => refetchRequests()}>
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                          Refresh List
-                        </Button>
-                      </div>
-                    </div>
-
-                    {memberInfoUpdateLoading ? (
-                      <Card>
-                        <CardContent className="p-6">
-                          <div className="text-center">Loading reassignment requests...</div>
-                        </CardContent>
-                      </Card>
-                    ) : memberInfoUpdateRequests.length === 0 ? (
-                      <Card>
-                        <CardContent className="p-6">
-                          <div className="text-center text-muted-foreground">
-                            <RefreshCw className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No pending reassignment requests.</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <div className="space-y-2">
-                        {memberInfoUpdateRequests.map((request) => (
-                          <Collapsible key={request.id}>
-                            <Card>
-                              <CollapsibleTrigger asChild>
-                                <CardContent className="p-4 hover:bg-muted/50 cursor-pointer">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4 min-w-0 flex-1">
-                                      <div className="min-w-0 flex-1">
-                                        <div className="font-medium truncate">
-                                          {request.organizations?.name || 'Unknown Organization'}
-                                        </div>
-                                        <div className="text-sm text-muted-foreground truncate">
-                                          {request.new_contact_email}
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-2 flex-shrink-0">
-                                        <Badge variant={request.status === 'pending' ? 'outline' : 'default'}>
-                                          {request.status}
-                                        </Badge>
-                                        <span className="text-sm text-muted-foreground">
-                                          {new Date(request.created_at).toLocaleDateString()}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />
-                                  </div>
-                                </CardContent>
-                              </CollapsibleTrigger>
-                              
-                              <CollapsibleContent>
-                                <CardContent className="pt-0 px-4 pb-4">
-                                  <Separator className="mb-4" />
-                                  
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    {/* Current Information */}
-                                    <div className="space-y-2">
-                                      <h4 className="font-medium text-sm">Current Contact</h4>
-                                      <div className="text-sm text-muted-foreground space-y-1">
-                                        {request.organizations?.profiles?.first_name && request.organizations?.profiles?.last_name ? (
-                                          <div>{request.organizations.profiles.first_name} {request.organizations.profiles.last_name}</div>
-                                        ) : (
-                                          <div>No name on file</div>
-                                        )}
-                                        <div>{request.organizations?.profiles?.email || 'No email on file'}</div>
-                                      </div>
-                                    </div>
-
-                                    {/* New Contact Information */}
-                                    <div className="space-y-2">
-                                      <h4 className="font-medium text-sm">Requested New Contact</h4>
-                                      <div className="text-sm text-muted-foreground">
-                                        {request.new_contact_email}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                   {/* Organization Information Comparison */}
-                                   {request.new_organization_data && (
-                                     <div className="space-y-4 mb-4">
-                                       <h4 className="font-medium text-sm">Organization Information Comparison</h4>
-                                       
-                                       {(() => {
-                                         const currentOrg = request.organizations as any;
-                                         const newOrgData = request.new_organization_data as Record<string, any>;
-                                         
-                                         // Define field mappings for consistent display
-                                         const fieldMappings = [
-                                           { key: 'name', label: 'Organization Name', current: currentOrg?.name, new: newOrgData?.name },
-                                           { 
-                                             key: 'address', 
-                                             label: 'Address', 
-                                             current: [currentOrg?.address_line_1, currentOrg?.address_line_2].filter(Boolean).join(', '),
-                                             new: [newOrgData?.address_line_1, newOrgData?.address_line_2].filter(Boolean).join(', ')
-                                           },
-                                           { key: 'city', label: 'City', current: currentOrg?.city, new: newOrgData?.city },
-                                           { key: 'state', label: 'State', current: currentOrg?.state, new: newOrgData?.state },
-                                           { key: 'zip_code', label: 'ZIP Code', current: currentOrg?.zip_code, new: newOrgData?.zip_code },
-                                           { key: 'country', label: 'Country', current: currentOrg?.country, new: newOrgData?.country },
-                                           { 
-                                             key: 'primary_contact', 
-                                             label: 'Primary Contact', 
-                                             current: currentOrg?.contact_person_id && currentOrg?.profiles
-                                               ? `${currentOrg.profiles.first_name} ${currentOrg.profiles.last_name}` 
-                                               : 'Not set',
-                                             new: newOrgData?.primary_contact_name || 'Not specified'
-                                           },
-                                           { key: 'primary_contact_title', label: 'Primary Contact Title', current: currentOrg?.primary_contact_title, new: newOrgData?.primary_contact_title },
-                                           { key: 'phone', label: 'Phone', current: currentOrg?.phone, new: newOrgData?.phone },
-                                           { key: 'email', label: 'Email', current: currentOrg?.email, new: newOrgData?.email },
-                                           { key: 'website', label: 'Website', current: currentOrg?.website, new: newOrgData?.website },
-                                           { 
-                                             key: 'secondary_contact', 
-                                             label: 'Secondary Contact', 
-                                             current: `${currentOrg?.secondary_first_name || ''} ${currentOrg?.secondary_last_name || ''}`.trim() || 'Not set',
-                                             new: `${newOrgData?.secondary_first_name || ''} ${newOrgData?.secondary_last_name || ''}`.trim() || 'Not set'
-                                           },
-                                           { key: 'secondary_contact_email', label: 'Secondary Contact Email', current: currentOrg?.secondary_contact_email, new: newOrgData?.secondary_contact_email },
-                                           { key: 'secondary_contact_title', label: 'Secondary Contact Title', current: currentOrg?.secondary_contact_title, new: newOrgData?.secondary_contact_title },
-                                           { key: 'student_fte', label: 'Student FTE', current: currentOrg?.student_fte?.toLocaleString(), new: newOrgData?.student_fte?.toLocaleString() },
-                                           { key: 'membership_status', label: 'Membership Status', current: currentOrg?.membership_status, new: newOrgData?.membership_status },
-                                           { key: 'student_information_system', label: 'Student Information System', current: currentOrg?.student_information_system, new: newOrgData?.student_information_system },
-                                           { key: 'financial_system', label: 'Financial System', current: currentOrg?.financial_system, new: newOrgData?.financial_system },
-                                           { key: 'financial_aid', label: 'Financial Aid', current: currentOrg?.financial_aid, new: newOrgData?.financial_aid },
-                                           { key: 'learning_management', label: 'Learning Management', current: currentOrg?.learning_management, new: newOrgData?.learning_management },
-                                           { key: 'hcm_hr', label: 'HCM HR', current: currentOrg?.hcm_hr, new: newOrgData?.hcm_hr },
-                                           { key: 'payroll_system', label: 'Payroll System', current: currentOrg?.payroll_system, new: newOrgData?.payroll_system },
-                                           { key: 'purchasing_system', label: 'Purchasing System', current: currentOrg?.purchasing_system, new: newOrgData?.purchasing_system },
-                                           { key: 'housing_management', label: 'Housing Management', current: currentOrg?.housing_management, new: newOrgData?.housing_management },
-                                           { key: 'admissions_crm', label: 'Admissions CRM', current: currentOrg?.admissions_crm, new: newOrgData?.admissions_crm },
-                                           { key: 'alumni_advancement_crm', label: 'Alumni Advancement CRM', current: currentOrg?.alumni_advancement_crm, new: newOrgData?.alumni_advancement_crm },
-                                           { key: 'notes', label: 'Notes', current: currentOrg?.notes, new: newOrgData?.notes }
-                                         ];
-                                         
-                                         // Filter to show only fields that have values or changes
-                                         const relevantFields = fieldMappings.filter(field => 
-                                           field.current || field.new
-                                         );
-                                         
-                                         return (
-                                           <div className="border border-border rounded-lg overflow-hidden">
-                                             <Table>
-                                               <TableHeader>
-                                                 <TableRow className="bg-muted/50">
-                                                   <TableHead className="font-semibold">Field</TableHead>
-                                                   <TableHead className="font-semibold">Current Value</TableHead>
-                                                   <TableHead className="font-semibold">Updated Value</TableHead>
-                                                 </TableRow>
-                                               </TableHeader>
-                                               <TableBody>
-                                                 {relevantFields.map((field) => {
-                                                   const currentValue = field.current || 'Not set';
-                                                   const newValue = field.new || 'Not set';
-                                                   const hasChanged = currentValue !== newValue;
-                                                   
-                                                   return (
-                                                     <TableRow 
-                                                       key={field.key} 
-                                                       className={hasChanged ? "bg-amber-50/50" : ""}
-                                                     >
-                                                       <TableCell className="font-medium text-foreground">
-                                                         {field.label}
-                                                         {hasChanged && (
-                                                           <Badge variant="outline" className="ml-2 text-xs bg-amber-100 text-amber-800 border-amber-300">
-                                                             Changed
-                                                           </Badge>
-                                                         )}
-                                                       </TableCell>
-                                                       <TableCell className="text-muted-foreground break-words max-w-xs">
-                                                         {currentValue}
-                                                       </TableCell>
-                                                       <TableCell className={`break-words max-w-xs ${hasChanged ? 'text-blue-700 font-medium' : 'text-muted-foreground'}`}>
-                                                         {newValue}
-                                                       </TableCell>
-                                                     </TableRow>
-                                                   );
-                                                 })}
-                                               </TableBody>
-                                             </Table>
-                                           </div>
-                                         );
-                                       })()}
-                                     </div>
-                                   )}
-
-                                  {/* Actions */}
-                                  {request.status === 'pending' && (
-                                    <div className="flex gap-2 justify-end">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={async () => {
-                                          try {
-                                            await approveMemberInfoUpdate.mutateAsync({ id: request.id });
-                                          } catch (error) {
-                                            console.error('Error approving member info update:', error);
-                                          }
-                                        }}
-                                        disabled={approveMemberInfoUpdate.isPending}
-                                        className="flex items-center gap-1"
-                                      >
-                                        {approveMemberInfoUpdate.isPending ? (
-                                          <Loader2 className="h-3 w-3 animate-spin" />
-                                        ) : (
-                                          <CheckCircle className="h-3 w-3" />
-                                        )}
-                                        Approve
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={async () => {
-                                          try {
-                                            await deleteMemberInfoUpdate.mutateAsync(request.id);
-                                          } catch (error) {
-                                            console.error('Error deleting member info update:', error);
-                                          }
-                                        }}
-                                        disabled={deleteMemberInfoUpdate.isPending}
-                                        className="flex items-center gap-1 text-destructive hover:text-destructive"
-                                      >
-                                        {deleteMemberInfoUpdate.isPending ? (
-                                          <Loader2 className="h-3 w-3 animate-spin" />
-                                        ) : (
-                                          <XCircle className="h-3 w-3" />
-                                        )}
-                                        Delete
-                                      </Button>
-                                    </div>
-                                  )}
-                                </CardContent>
-                              </CollapsibleContent>
-                            </Card>
-                          </Collapsible>
+                          </Card>
                         ))}
                       </div>
                     )}
-                  </TabsContent>
 
-                  <TabsContent value="users" className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-semibold">User Management</h2>
-                      <Badge variant="secondary" className="text-sm">
-                        {filteredUsers.length} of {users.length} users shown
-                      </Badge>
-                    </div>
-
-                    {/* Search Bar for Users */}
-                    <div className="flex gap-4 items-center">
-                      <div className="relative max-w-md flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input
-                          placeholder="Search users by email or role..."
-                          value={userSearchTerm}
-                          onChange={(e) => setUserSearchTerm(e.target.value)}
-                          className="pl-10 bg-white"
-                        />
+                    {/* Profile Update Requests */}
+                    {profileEditRequests.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-purple-600 flex items-center gap-2">
+                          <Edit className="h-5 w-5" />
+                          Profile Updates ({profileEditRequests.length})
+                        </h3>
+                        {profileEditRequests.map((request) => (
+                          <Card key={`profile-edit-${request.id}`} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-3">
+                                    <h3 className="text-lg font-semibold">
+                                      {request.organization?.name || 'Profile Update Request'}
+                                    </h3>
+                                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                      Profile Update
+                                    </Badge>
+                                  </div>
+                                  <div className="text-sm text-muted-foreground space-y-1">
+                                    <p><strong>Contact:</strong> {request.updated_profile_data?.first_name} {request.updated_profile_data?.last_name}</p>
+                                    <p><strong>Email:</strong> {request.updated_profile_data?.email}</p>
+                                    <p><strong>Requested:</strong> {format(new Date(request.created_at), 'PPp')}</p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => {
+                                      console.log('Review Changes clicked for profile edit:', request.id);
+                                      setSelectedProfileEditRequest(request);
+                                      setShowProfileEditComparisonDialog(true);
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Review Changes
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
-                      <Button
-                        onClick={() => setShowAddExternalUser(true)}
-                        className="whitespace-nowrap"
-                      >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Add External User
+                    )}
+
+                    {pendingApprovalsCount === 0 && (
+                      <div className="text-center py-12">
+                        <CheckCircle className="h-16 w-16 mx-auto text-green-500 mb-4" />
+                        <h3 className="text-xl font-semibold mb-2">All caught up!</h3>
+                        <p className="text-muted-foreground">No pending approvals at this time.</p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="invitations" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold">Organization Invitations</h2>
+                    <div className="flex items-center gap-2">
+                      {activeInvitationsCount > 0 && (
+                        <Badge variant="secondary">
+                          {activeInvitationsCount} active
+                        </Badge>
+                      )}
+                      <Button onClick={() => setShowInvitationDialog(true)}>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Manage Invitations
                       </Button>
                     </div>
+                  </div>
 
-                    <Card>
-                      <CardContent className="p-6">
-                        {filteredUsers.length === 0 ? (
-                          <div className="text-center text-muted-foreground py-8">
-                            <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            {userSearchTerm ? (
-                              <p>No users match your search "{userSearchTerm}".</p>
-                            ) : (
-                              <p>No users found.</p>
-                            )}
-                          </div>
-                        ) : (
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-medium">Recent Invitations</h3>
+                          <span className="text-sm text-muted-foreground">
+                            {invitations.length} total invitations
+                          </span>
+                        </div>
+                        
+                        {invitations.length > 0 ? (
                           <Table>
                             <TableHeader>
                               <TableRow>
                                 <TableHead>Email</TableHead>
-                                <TableHead>Role</TableHead>
-                                <TableHead>Created</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>Organization</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Expires</TableHead>
+                                <TableHead>Actions</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                               {filteredUsers.map((user) => (
-                              <TableRow key={user.id}>
-                                <TableCell className="font-medium">
-                                  <div className="flex items-center gap-2">
-                                    <a 
-                                      href={`mailto:${user.email}`}
-                                      className="text-blue-600 hover:text-blue-800 hover:underline"
-                                    >
-                                      {user.email}
-                                    </a>
-                                    {user.organization && (
-                                      <Badge variant="secondary" className="text-xs bg-gray-200 text-gray-700 border-gray-300">
-                                        {user.organization}
-                                      </Badge>
+                              {invitations.slice(0, 10).map((invitation) => (
+                                <TableRow key={invitation.id}>
+                                  <TableCell className="font-medium">{invitation.email}</TableCell>
+                                  <TableCell>{invitation.organization}</TableCell>
+                                  <TableCell>
+                                    {invitation.used_at ? (
+                                      <Badge variant="secondary">Used</Badge>
+                                    ) : new Date(invitation.expires_at) > new Date() ? (
+                                      <Badge variant="outline">Active</Badge>
+                                    ) : (
+                                      <Badge variant="destructive">Expired</Badge>
                                     )}
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant={user.user_roles?.[0]?.role === 'admin' ? 'default' : 'secondary'}>
-                                    {user.user_roles?.[0]?.role || 'member'}
-                                  </Badge>
-                                </TableCell>
-                                 <TableCell>
-                                   {new Date(user.created_at).toLocaleDateString()}
-                                 </TableCell>
-                                 <TableCell className="text-right">
-                                   <DropdownMenu>
-                                     <DropdownMenuTrigger asChild>
-                                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                         <MoreVertical className="h-4 w-4" />
-                                       </Button>
-                                     </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end" className="bg-background border border-border shadow-lg z-50">
-                                        <DropdownMenuItem
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            handleRoleUpdate(user.user_id || user.id, user.user_roles?.[0]?.role || 'member');
-                                          }}
-                                          disabled={updatingUser === (user.user_id || user.id)}
-                                          className="flex items-center gap-2 cursor-pointer"
-                                        >
-                                          {updatingUser === (user.user_id || user.id) ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <KeyRound className="h-4 w-4" />
-                                          )}
-                                          {user.user_roles?.[0]?.role === 'admin' ? 'Make Member' : 'Make Admin'}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            handlePasswordReset(user.email);
-                                          }}
-                                          className="flex items-center gap-2 cursor-pointer"
-                                        >
-                                          <RefreshCw className="h-4 w-4" />
-                                          Reset Password
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            handleOpenChangePassword(user.user_id || user.id, user.email);
-                                          }}
-                                          className="flex items-center gap-2 cursor-pointer"
-                                        >
-                                          <Lock className="h-4 w-4" />
-                                          Change Password
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <AlertDialog>
-                                          <AlertDialogTrigger asChild>
-                                            <DropdownMenuItem
-                                              className="text-destructive focus:text-destructive flex items-center gap-2 cursor-pointer"
-                                              onSelect={(e) => e.preventDefault()}
-                                            >
-                                              <UserMinus className="h-4 w-4" />
-                                              Delete User
-                                            </DropdownMenuItem>
-                                          </AlertDialogTrigger>
-                                          <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                              <AlertDialogTitle>Delete User</AlertDialogTitle>
-                                              <AlertDialogDescription>
-                                                Are you sure you want to delete {user.email}? This action cannot be undone and will remove all associated data.
-                                              </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                               <AlertDialogAction
-                                                 onClick={(e) => {
-                                                   e.preventDefault();
-                                                   handleDeleteUser(user.user_id || user.id, user.email);
-                                                 }}
-                                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                               >
-                                                Delete
-                                              </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                          </AlertDialogContent>
-                                        </AlertDialog>
-                                     </DropdownMenuContent>
-                                   </DropdownMenu>
-                                 </TableCell>
-                              </TableRow>
+                                  </TableCell>
+                                  <TableCell>{format(new Date(invitation.expires_at), 'PPp')}</TableCell>
+                                  <TableCell>
+                                    <Button variant="outline" size="sm">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
                               ))}
                             </TableBody>
                           </Table>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                 </Tabs>
-               </TabsContent>
-
-               {/* Messages Tab */}
-              <TabsContent value="messages" className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-semibold">Message Configuration</h2>
-                  <p className="text-muted-foreground">Customize system messages and notifications</p>
-                </div>
-
-                <Tabs defaultValue="system-messages" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="system-messages">System Messages</TabsTrigger>
-                    <TabsTrigger value="password-reset">Password Reset</TabsTrigger>
-                    <TabsTrigger value="welcome-template">Welcome Template</TabsTrigger>
-                  </TabsList>
-
-                  {/* System Messages Subtab */}
-                  <TabsContent value="system-messages" className="space-y-6">
-                    <SystemMessageEditor />
-                  </TabsContent>
-
-                  {/* Password Reset Subtab */}
-                  <TabsContent value="password-reset" className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Password Reset Message</CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          Customize the message shown to users when their password is reset
-                        </p>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="password-reset-message">Password Reset Message</Label>
-                          <Textarea
-                            id="password-reset-message"
-                            placeholder="Enter the password reset message..."
-                            value={passwordResetMessage}
-                            onChange={(e) => setPasswordResetMessage(e.target.value)}
-                            rows={4}
-                            className="mt-2"
-                          />
-                        </div>
-                        <Button 
-                          onClick={handleSavePasswordMessage}
-                          disabled={savingMessage}
-                        >
-                          {savingMessage ? "Saving..." : "Save Message"}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  {/* Welcome Template Subtab */}
-                  <TabsContent value="welcome-template" className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Welcome Message for Approved Organizations</CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          Customize the welcome email sent to newly approved organizations
-                        </p>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div>
-                          <Label htmlFor="welcome-message">Welcome Message Template</Label>
-                          <div className="mt-2">
-                            <ReactQuill
-                              theme="snow"
-                              value={welcomeMessage}
-                              onChange={setWelcomeMessage}
-                              style={{ minHeight: '300px' }}
-                            />
+                        ) : (
+                          <div className="text-center py-8">
+                            <Mail className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                            <p className="text-muted-foreground">No invitations found</p>
                           </div>
-                        </div>
-                        <Button 
-                          onClick={handleSaveWelcomeMessage}
-                          disabled={savingWelcomeMessage}
-                        >
-                          {savingWelcomeMessage ? "Saving..." : "Save Welcome Message"}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                 </Tabs>
-               </TabsContent>
-             </Tabs>
-           </div>
-         </main>
-       </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
 
-       {/* Member Info Update Comparison Dialog */}
-      {selectedMemberInfoUpdate && showMemberInfoUpdateComparisonDialog ? (
+            {/* Users Tab */}
+            <TabsContent value="users" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-semibold">User Management</h2>
+                  <p className="text-muted-foreground">Manage system users and their permissions</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{users.length} users</Badge>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Search users..."
+                      value={userSearchTerm}
+                      onChange={(e) => setUserSearchTerm(e.target.value)}
+                      className="pl-10 w-64"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Card>
+                <CardContent className="p-6">
+                  {filteredUsers.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>User</TableHead>
+                          <TableHead>Organization</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Last Sign In</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredUsers.map((user) => (
+                          <TableRow key={user.id}>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{user.email}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  ID: {user.id}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell>{user.organization || 'Not specified'}</TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={user.role === 'admin' ? 'default' : 'outline'}
+                              >
+                                {user.role || 'member'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {user.created_at 
+                                ? format(new Date(user.created_at), 'PPp')
+                                : 'Never'
+                              }
+                            </TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem 
+                                    onClick={() => handleRoleUpdate(user.id, user.role || 'member')}
+                                    disabled={updatingUser === user.id}
+                                  >
+                                    {updatingUser === user.id ? (
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    ) : user.role === 'admin' ? (
+                                      <UserMinus className="h-4 w-4 mr-2" />
+                                    ) : (
+                                      <UserPlus className="h-4 w-4 mr-2" />
+                                    )}
+                                    {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handlePasswordReset(user.email)}>
+                                    <KeyRound className="h-4 w-4 mr-2" />
+                                    Reset Password
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleOpenChangePassword(user.id, user.email)}>
+                                    <Lock className="h-4 w-4 mr-2" />
+                                    Change Password
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDeleteUser(user.id, user.email)}
+                                    className="text-red-600"
+                                  >
+                                    <UserMinus className="h-4 w-4 mr-2" />
+                                    Delete User
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                      <h3 className="text-xl font-semibold mb-2">No users found</h3>
+                      <p className="text-muted-foreground">Try adjusting your search criteria.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Messages Tab */}
+            <TabsContent value="messages" className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold">Message Configuration</h2>
+                <p className="text-muted-foreground">Customize system messages and notifications</p>
+              </div>
+
+              <div className="grid gap-6">
+                {/* Password Reset Message */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Password Reset Message</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Textarea
+                      value={passwordResetMessage}
+                      onChange={(e) => setPasswordResetMessage(e.target.value)}
+                      placeholder="Enter password reset message template..."
+                      rows={4}
+                    />
+                    <Button 
+                      onClick={handleSavePasswordMessage}
+                      disabled={savingMessage}
+                    >
+                      {savingMessage ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : null}
+                      Save Password Message
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Welcome Message */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Welcome Message Template</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="min-h-[200px]">
+                      <ReactQuill
+                        value={welcomeMessage}
+                        onChange={setWelcomeMessage}
+                        theme="snow"
+                        placeholder="Enter welcome message template..."
+                      />
+                    </div>
+                    <Button 
+                      onClick={handleSaveWelcomeMessage}
+                      disabled={savingWelcomeMessage}
+                    >
+                      {savingWelcomeMessage ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : null}
+                      Save Welcome Message
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Profile Update Message */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Profile Update Message Template</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="min-h-[200px]">
+                      <ReactQuill
+                        value={profileUpdateMessage}
+                        onChange={setProfileUpdateMessage}
+                        theme="snow"
+                        placeholder="Enter profile update message template..."
+                      />
+                    </div>
+                    <Button 
+                      onClick={handleSaveProfileUpdateMessage}
+                      disabled={savingProfileUpdateMessage}
+                    >
+                      {savingProfileUpdateMessage ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : null}
+                      Save Profile Update Message
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+
+      {/* Member Info Update Comparison Dialog */}
+      {selectedMemberInfoUpdate && showMemberInfoUpdateComparisonDialog && (
         <UnifiedComparisonModal
           open={showMemberInfoUpdateComparisonDialog}
           onOpenChange={(open) => {
@@ -1782,10 +1352,10 @@ const MasterDashboard = () => {
           }}
           isSubmitting={approveMemberInfoUpdate.isPending || deleteMemberInfoUpdate.isPending}
         />
-      ) : null}
+      )}
 
       {/* Profile Edit Comparison Dialog */}
-      {selectedProfileEditRequest && showProfileEditComparisonDialog ? (
+      {selectedProfileEditRequest && showProfileEditComparisonDialog && (
         <UnifiedComparisonModal
           open={showProfileEditComparisonDialog}
           onOpenChange={(open) => {
@@ -1796,12 +1366,7 @@ const MasterDashboard = () => {
             }
           }}
           title="Review Profile Update Request"
-          data={{
-            originalData: selectedProfileEditRequest.original_organization_data || {},
-            updatedData: selectedProfileEditRequest.updated_organization_data || {},
-            organizationChanges: [],
-            profileChanges: []
-          }}
+          data={createProfileEditComparisonData(selectedProfileEditRequest)}
           showActions={true}
           onApprove={() => {
             console.log('Approving profile edit request');
@@ -1815,9 +1380,85 @@ const MasterDashboard = () => {
           onActionNotesChange={setAdminNotes}
           isSubmitting={false}
         />
-       ) : null}
-     </SidebarProvider>
-   );
- };
+      )}
 
- export default MasterDashboard;
+      {/* Organization Approval Dialog */}
+      {selectedOrganization && (
+        <OrganizationApprovalDialog
+          organization={selectedOrganization}
+          open={showApprovalDialog}
+          onOpenChange={setShowApprovalDialog}
+          onApprove={approveOrganization}
+          onReject={rejectOrganization}
+        />
+      )}
+
+      {/* Registration Approval Dialog */}
+      {selectedPendingRegistration && (
+        <PendingRegistrationApprovalDialog
+          registration={selectedPendingRegistration}
+          open={showRegistrationApprovalDialog}
+          onOpenChange={setShowRegistrationApprovalDialog}
+          onApprove={approveRegistration}
+          onReject={rejectRegistration}
+        />
+      )}
+
+      {/* Invitation Management Dialog */}
+      <InvitationManagementDialog
+        open={showInvitationDialog}
+        onOpenChange={setShowInvitationDialog}
+      />
+
+      {/* Change Password Dialog */}
+      <Dialog open={changePasswordDialog.open} onOpenChange={(open) => setChangePasswordDialog(prev => ({ ...prev, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Set a new password for {changePasswordDialog.userName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setChangePasswordDialog({ open: false, userId: '', userName: '' })}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleChangePassword}
+              disabled={!newPassword.trim() || changingPassword}
+            >
+              {changingPassword ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Change Password
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add External User Dialog */}
+      <AddExternalUserDialog
+        open={showAddExternalUser}
+        onOpenChange={setShowAddExternalUser}
+        onUserCreated={() => {}}
+      />
+    </SidebarProvider>
+  );
+};
+
+export default MasterDashboard;
