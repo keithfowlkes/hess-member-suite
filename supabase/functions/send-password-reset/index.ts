@@ -166,7 +166,15 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     // Send email using Resend with safe fallback sender
-    const fromAddress = Deno.env.get("RESEND_FROM") || "onboarding@resend.dev";
+    let fromAddress = Deno.env.get("RESEND_FROM");
+    
+    // Validate the from address format and use fallback if invalid
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!fromAddress || !emailRegex.test(fromAddress.replace(/^.*<(.+)>$/, '$1'))) {
+      fromAddress = "onboarding@resend.dev";
+      console.log("Invalid RESEND_FROM format, using fallback:", fromAddress);
+    }
+    
     console.log("Using from address:", fromAddress);
     const { data: sent, error: sendError } = await resend.emails.send({
       from: fromAddress,
