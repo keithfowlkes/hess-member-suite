@@ -44,7 +44,8 @@ import {
   CheckCircle,
   Mail,
   Printer,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -62,7 +63,7 @@ interface FeesStats {
 
 export default function MembershipFees() {
   const { organizations, loading, updateOrganization, markAllOrganizationsActive } = useMembers();
-  const { invoices, createInvoice, markAsPaid, sendInvoice, markAllInvoicesAsPaid } = useInvoices();
+  const { invoices, createInvoice, markAsPaid, sendInvoice, markAllInvoicesAsPaid, deleteInvoice } = useInvoices();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const resendInvoice = useResendInvoice();
@@ -78,6 +79,7 @@ export default function MembershipFees() {
   
   // Invoice management states
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateSearch, setDateSearch] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
@@ -481,10 +483,16 @@ export default function MembershipFees() {
   };
 
   // Filter invoices for search
-  const filteredInvoices = invoices.filter(invoice =>
-    invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.organizations?.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredInvoices = invoices.filter(invoice => {
+    const matchesSearch = invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.organizations?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesDate = !dateSearch || 
+      format(new Date(invoice.invoice_date), 'yyyy-MM-dd') === dateSearch ||
+      format(new Date(invoice.due_date), 'yyyy-MM-dd') === dateSearch;
+    
+    return matchesSearch && matchesDate;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -712,6 +720,13 @@ export default function MembershipFees() {
   const handleResendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     resendInvoice.mutate({ invoiceId });
+  };
+
+  const handleDeleteInvoice = async (invoiceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+      await deleteInvoice(invoiceId);
+    }
   };
 
   // Test email function
@@ -1441,6 +1456,16 @@ export default function MembershipFees() {
                         className="pl-10"
                       />
                     </div>
+                    <div className="relative w-48">
+                      <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        type="date"
+                        placeholder="Filter by date..."
+                        value={dateSearch}
+                        onChange={(e) => setDateSearch(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
                   </div>
 
                   {/* Invoices List */}
@@ -1525,6 +1550,14 @@ export default function MembershipFees() {
                                     </Button>
                                   </>
                                 )}
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={(e) => handleDeleteInvoice(invoice.id, e)}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
+                                </Button>
                                 <Button
                                   size="sm"
                                   variant="ghost"
