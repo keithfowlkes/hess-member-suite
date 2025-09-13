@@ -75,25 +75,39 @@ const handler = async (req: Request): Promise<Response> => {
         // Test API key validity by checking domains
         const domainsResponse = await resend.domains.list();
         
+        console.log('Resend domains response:', JSON.stringify(domainsResponse, null, 2));
+        
         if (domainsResponse.error) {
           config.errors.push(`Resend API key invalid: ${domainsResponse.error.message}`);
         } else {
           config.api_key_valid = true;
           
           // Check if sender domain is verified
-          if (config.sender_domain && domainsResponse.data?.data) {
-            const domainsList = domainsResponse.data.data || [];
+          if (config.sender_domain) {
+            // Handle different response structures
+            let domainsList = [];
+            if (domainsResponse.data) {
+              // Try different possible structures
+              domainsList = domainsResponse.data.data || domainsResponse.data || [];
+            }
+            
+            console.log('Domains list:', JSON.stringify(domainsList, null, 2));
+            console.log('Looking for domain:', config.sender_domain);
+            
             const domain = domainsList.find(d => 
               d.name === config.sender_domain && d.status === 'verified'
             );
             config.domain_verified = !!domain;
+            
+            console.log('Found domain:', JSON.stringify(domain, null, 2));
+            console.log('Domain verified:', config.domain_verified);
             
             if (!domain) {
               const foundDomain = domainsList.find(d => d.name === config.sender_domain);
               if (foundDomain) {
                 config.warnings.push(`Domain ${config.sender_domain} found but status is '${foundDomain.status}' (not verified)`);
               } else {
-                config.warnings.push(`Domain ${config.sender_domain} not found in Resend account`);
+                config.warnings.push(`Domain ${config.sender_domain} not found in Resend account. Available domains: ${domainsList.map(d => d.name).join(', ')}`);
               }
             }
           }
