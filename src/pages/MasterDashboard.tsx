@@ -1417,21 +1417,41 @@ const MasterDashboard = () => {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => approveMemberInfoUpdate.mutate({ id: request.id })}
+                                        onClick={async () => {
+                                          try {
+                                            await approveMemberInfoUpdate.mutateAsync({ id: request.id });
+                                          } catch (error) {
+                                            console.error('Error approving member info update:', error);
+                                          }
+                                        }}
                                         disabled={approveMemberInfoUpdate.isPending}
                                         className="flex items-center gap-1"
                                       >
-                                        <CheckCircle className="h-3 w-3" />
+                                        {approveMemberInfoUpdate.isPending ? (
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <CheckCircle className="h-3 w-3" />
+                                        )}
                                         Approve
                                       </Button>
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => deleteMemberInfoUpdate.mutate(request.id)}
+                                        onClick={async () => {
+                                          try {
+                                            await deleteMemberInfoUpdate.mutateAsync(request.id);
+                                          } catch (error) {
+                                            console.error('Error deleting member info update:', error);
+                                          }
+                                        }}
                                         disabled={deleteMemberInfoUpdate.isPending}
                                         className="flex items-center gap-1 text-destructive hover:text-destructive"
                                       >
-                                        <XCircle className="h-3 w-3" />
+                                        {deleteMemberInfoUpdate.isPending ? (
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <XCircle className="h-3 w-3" />
+                                        )}
                                         Delete
                                       </Button>
                                     </div>
