@@ -25,6 +25,11 @@ export default function PasswordReset() {
   const type = searchParams.get('type');
   const tokenHash = searchParams.get('token_hash');
 
+  // Scroll to top when password reset page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Verify token on component mount
   useEffect(() => {
     const verifyToken = async () => {

@@ -29,6 +29,11 @@ export default function Auth() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  // Scroll to top when auth page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const { data: organizations = [] } = useOrganizations();
   const createReassignmentRequest = useCreateReassignmentRequest();
   const { data: recaptchaSetting, isLoading: isLoadingRecaptcha } = useSystemSetting('recaptcha_site_key');
