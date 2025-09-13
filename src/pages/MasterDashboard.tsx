@@ -1094,22 +1094,20 @@ const MasterDashboard = () => {
                         })}
                          </div>
 
-                        {/* Profile Update Requests */}
-                        {profileEditRequests.map((request) => {
-                          console.log('Rendering profile edit request:', request);
-                          return (
-                          <Card key={`profile-edit-${request.id}`} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-3">
-                                    <h3 className="text-lg font-semibold">
-                                      {request.organization?.name || 'Profile Update Request'}
-                                    </h3>
-                                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                      Profile Update
-                                    </Badge>
-                                  </div>
+                         {/* Profile Update Requests */}
+                         {profileEditRequests.map((request) => (
+                           <Card key={`profile-edit-${request.id}`} className="hover:shadow-md transition-shadow">
+                             <CardContent className="p-6">
+                               <div className="flex items-center justify-between">
+                                 <div className="space-y-2">
+                                   <div className="flex items-center gap-3">
+                                     <h3 className="text-lg font-semibold">
+                                       {request.organization?.name || 'Profile Update Request'}
+                                     </h3>
+                                     <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                       Profile Update
+                                     </Badge>
+                                   </div>
                                   
                                   <div className="text-sm text-muted-foreground space-y-1">
                                      <div className="flex items-center gap-2">
@@ -1198,13 +1196,12 @@ const MasterDashboard = () => {
                                 </div>
                               </div>
                             </CardContent>
-                           </Card>
-                         );
-                        })}
+                            </Card>
+                         ))}
                          </div>
-                      )}
-                     </div>
-                  </TabsContent>
+                       )}
+                      </div>
+                   </TabsContent>
 
                   <TabsContent value="invitations" className="space-y-4">
                     <div className="flex justify-between items-center">
@@ -1651,11 +1648,10 @@ const MasterDashboard = () => {
                       </CardContent>
                     </Card>
                   </TabsContent>
-                </Tabs>
-              </TabsContent>
+                 </Tabs>
+               </TabsContent>
 
-
-              {/* Messages Tab */}
+               {/* Messages Tab */}
               <TabsContent value="messages" className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-semibold">Message Configuration</h2>
@@ -1737,12 +1733,12 @@ const MasterDashboard = () => {
                   </TabsContent>
                  </Tabs>
                </TabsContent>
-            </Tabs>
-          </div>
-        </main>
-      </div>
+             </Tabs>
+           </div>
+         </main>
+       </div>
 
-      {/* Member Info Update Comparison Dialog */}
+       {/* Member Info Update Comparison Dialog */}
       {selectedMemberInfoUpdate && showMemberInfoUpdateComparisonDialog ? (
         <UnifiedComparisonModal
           open={showMemberInfoUpdateComparisonDialog}
@@ -1819,9 +1815,9 @@ const MasterDashboard = () => {
           onActionNotesChange={setAdminNotes}
           isSubmitting={false}
         />
-      ) : null}
-    </SidebarProvider>
-  );
-};
+       ) : null}
+     </SidebarProvider>
+   );
+ };
 
-export default MasterDashboard;
+ export default MasterDashboard;
