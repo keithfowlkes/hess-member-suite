@@ -710,7 +710,7 @@ const MasterDashboard = () => {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="organizations" className="relative">
                 Organizations
@@ -724,7 +724,6 @@ const MasterDashboard = () => {
                 )}
               </TabsTrigger>
               <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="messages">Messages</TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
@@ -1218,92 +1217,6 @@ const MasterDashboard = () => {
                   )}
                 </CardContent>
               </Card>
-            </TabsContent>
-
-            {/* Messages Tab */}
-            <TabsContent value="messages" className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold">Message Configuration</h2>
-                <p className="text-muted-foreground">Customize system messages and notifications</p>
-              </div>
-
-              <div className="grid gap-6">
-                {/* Password Reset Message */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Password Reset Message</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Textarea
-                      value={passwordResetMessage}
-                      onChange={(e) => setPasswordResetMessage(e.target.value)}
-                      placeholder="Enter password reset message template..."
-                      rows={4}
-                    />
-                    <Button 
-                      onClick={handleSavePasswordMessage}
-                      disabled={savingMessage}
-                    >
-                      {savingMessage ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : null}
-                      Save Password Message
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Welcome Message */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Welcome Message Template</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="min-h-[200px]">
-                      <ReactQuill
-                        value={welcomeMessage}
-                        onChange={setWelcomeMessage}
-                        theme="snow"
-                        placeholder="Enter welcome message template..."
-                      />
-                    </div>
-                    <Button 
-                      onClick={handleSaveWelcomeMessage}
-                      disabled={savingWelcomeMessage}
-                    >
-                      {savingWelcomeMessage ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : null}
-                      Save Welcome Message
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Profile Update Message */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Profile Update Message Template</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="min-h-[200px]">
-                      <ReactQuill
-                        value={profileUpdateMessage}
-                        onChange={setProfileUpdateMessage}
-                        theme="snow"
-                        placeholder="Enter profile update message template..."
-                      />
-                    </div>
-                    <Button 
-                      onClick={handleSaveProfileUpdateMessage}
-                      disabled={savingProfileUpdateMessage}
-                    >
-                      {savingProfileUpdateMessage ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : null}
-                      Save Profile Update Message
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
             </TabsContent>
           </Tabs>
         </main>
