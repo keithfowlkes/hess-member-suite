@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { renderInvoiceEmailHTML } from '@/utils/invoiceEmailRenderer';
 
 export interface ResendInvoiceParams {
   invoiceId: string;
@@ -23,20 +24,24 @@ export const useResendInvoice = () => {
       if (!toEmail) throw new Error('Organization has no email');
       const subject = `HESS Consortium - Invoice ${(invoice as any).invoice_number || ''}`.trim();
 
-      const { data, error } = await supabase.functions.invoke('centralized-email-delivery', {
+      const invoiceEmailData = {
+        organization_name: (invoice as any).organizations?.name || '',
+        invoice_number: (invoice as any).invoice_number,
+        amount: `$${(((invoice as any).amount || 0) as number).toLocaleString()}`,
+        due_date: (invoice as any).due_date,
+        period_start_date: (invoice as any).period_start_date,
+        period_end_date: (invoice as any).period_end_date,
+        notes: (invoice as any).notes || ''
+      };
+
+      const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
+
+      const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
         body: {
-          type: 'invoice',
+          type: 'custom',
           to: toEmail,
           subject,
-          data: {
-            organization_name: (invoice as any).organizations?.name || '',
-            invoice_number: (invoice as any).invoice_number,
-            amount: `$${(((invoice as any).amount || 0) as number).toLocaleString()}`,
-            due_date: (invoice as any).due_date,
-            period_start_date: (invoice as any).period_start_date,
-            period_end_date: (invoice as any).period_end_date,
-            notes: (invoice as any).notes || ''
-          }
+          template: invoiceHTML
         }
       });
 

@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useResendInvoice } from '@/hooks/useResendInvoice';
 import { useSystemSettings, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
+import { renderInvoiceEmailHTML } from '@/utils/invoiceEmailRenderer';
 import { setupDefaultInvoiceTemplate } from '@/utils/setupDefaultInvoiceTemplate';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { InvoiceDialog } from '@/components/InvoiceDialog';
@@ -669,20 +670,24 @@ export default function MembershipFees() {
       if (!toEmail) throw new Error('Organization has no email');
       const subject = `HESS Consortium - Invoice ${invoice.invoice_number}`;
 
-      const { data, error } = await supabase.functions.invoke('centralized-email-delivery', {
+      const invoiceEmailData = {
+        organization_name: invoice.organizations?.name || '',
+        invoice_number: invoice.invoice_number,
+        amount: `$${(invoice.amount || 0).toLocaleString()}`,
+        due_date: invoice.due_date,
+        period_start_date: invoice.period_start_date,
+        period_end_date: invoice.period_end_date,
+        notes: invoice.notes || ''
+      };
+
+      const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
+
+      const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
         body: {
-          type: 'invoice',
+          type: 'custom',
           to: toEmail,
           subject,
-          data: {
-            organization_name: invoice.organizations?.name || '',
-            invoice_number: invoice.invoice_number,
-            amount: `$${(invoice.amount || 0).toLocaleString()}`,
-            due_date: invoice.due_date,
-            period_start_date: invoice.period_start_date,
-            period_end_date: invoice.period_end_date,
-            notes: invoice.notes || ''
-          }
+          template: invoiceHTML
         }
       });
       if (error) throw error;
