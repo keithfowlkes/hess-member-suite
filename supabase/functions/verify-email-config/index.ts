@@ -13,7 +13,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== "GET") {
+  if (req.method !== "GET" && req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed" }),
       { status: 405, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -122,6 +122,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (config.sender_domain === 'resend.dev') {
       recommendations.push('Using Resend sandbox domain - configure your own verified domain for production');
+      recommendations.push('On Resend free plan, verify recipient emails at resend.com/verified-emails or use a verified domain');
     }
 
     return new Response(

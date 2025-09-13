@@ -270,7 +270,14 @@ serve(async (req: Request): Promise<Response> => {
       }
       // If retry also failed, return original 403 error
       return new Response(
-        JSON.stringify({ success: false, error: emailResponse.error.message, note: 'Domain likely not verified; sandbox fallback failed', statusCode: emailResponse.error.statusCode, name: emailResponse.error.name, correlationId }),
+        JSON.stringify({
+          success: false,
+          error: emailResponse?.error?.message || (typeof emailResponse?.error === 'string' ? emailResponse.error : 'Forbidden'),
+          note: 'Sending failed. If you are on the Resend free plan, you must verify recipient emails at https://resend.com/verified-emails or use a verified domain.',
+          statusCode: emailResponse?.error?.statusCode || 403,
+          name: emailResponse?.error?.name,
+          correlationId
+        }),
         { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }

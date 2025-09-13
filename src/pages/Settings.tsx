@@ -326,7 +326,8 @@ export default function Settings() {
       if (!response.ok) {
         const details = respJson ? `: ${respJson.error || respJson.message || ''}` : '';
         const meta = respJson ? ` [code=${respJson.statusCode || response.status}${respJson.name ? `, name=${respJson.name}` : ''}${respJson.correlationId ? `, id=${respJson.correlationId}` : ''}]` : ` [code=${response.status}]`;
-        throw new Error(`Edge Function error${details}${meta}`.trim());
+        const note = respJson?.note ? ` - ${respJson.note}` : '';
+        throw new Error(`Edge Function error${details}${meta}${note}`.trim());
       }
 
       setEmailTestResult({
