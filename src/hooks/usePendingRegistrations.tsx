@@ -75,8 +75,28 @@ export function usePendingRegistrations() {
 
       console.log('✅ PENDING DEBUG: Successfully fetched pending registrations:', {
         count: data?.length || 0,
-        registrations: data?.map(r => ({ id: r.id, email: r.email, organization: r.organization_name, created_at: r.created_at }))
+        registrations: data?.map(r => ({ id: r.id, email: r.email, organization: r.organization_name, created_at: r.created_at, status: r.approval_status }))
       });
+
+      // Clean up any non-pending records that might block new registrations
+      const nonPendingRecords = (data || []).filter(r => r.approval_status !== 'pending');
+      if (nonPendingRecords.length > 0) {
+        console.log('🧹 PENDING DEBUG: Found non-pending records in pending table, cleaning up:', nonPendingRecords.map(r => ({ id: r.id, email: r.email, status: r.approval_status })));
+        try {
+          const { error: cleanupError } = await supabase
+            .from('pending_registrations')
+            .delete()
+            .neq('approval_status', 'pending');
+          
+          if (cleanupError) {
+            console.warn('⚠️ PENDING DEBUG: Failed to cleanup non-pending records:', cleanupError);
+          } else {
+            console.log('✅ PENDING DEBUG: Successfully cleaned up non-pending records');
+          }
+        } catch (cleanupErr) {
+          console.warn('⚠️ PENDING DEBUG: Error during cleanup:', cleanupErr);
+        }
+      }
 
       // Filter out and delete pending registrations for organizations that already exist
       const original = (data || []) as PendingRegistration[];
@@ -170,6 +190,15 @@ export function usePendingRegistrations() {
       // Immediately remove the approved item from the local state for instant UI update
       setPendingRegistrations(prev => prev.filter(reg => reg.id !== registrationId));
       
+      // Clean up the approved record from pending_registrations table
+      try {
+        await supabase.functions.invoke('cleanup-pending-registration', {
+          body: { email: pendingRegistrations.find(r => r.id === registrationId)?.email }
+        });
+      } catch (cleanupError) {
+        console.warn('Failed to cleanup approved registration:', cleanupError);
+      }
+      
       // Also refresh the list to ensure consistency
       setTimeout(() => fetchPendingRegistrations(), 100);
       return { success: true, organizationId: data.organizationId };
@@ -207,14 +236,10 @@ export function usePendingRegistrations() {
     try {
       setLoading(true);
       
+      // Delete the rejected registration instead of just updating status
       const { error } = await supabase
         .from('pending_registrations')
-        .update({
-          approval_status: 'rejected',
-          rejection_reason: reason,
-          approved_by: adminUserId,
-          approved_at: new Date().toISOString()
-        })
+        .delete()
         .eq('id', registrationId);
 
       if (error) {
@@ -223,7 +248,7 @@ export function usePendingRegistrations() {
 
       toast({
         title: "Registration Rejected",
-        description: "The registration has been rejected.",
+        description: "The registration has been rejected and removed.",
       });
 
       // Immediately remove the rejected item from the local state for instant UI update

@@ -77,15 +77,10 @@ serve(async (req) => {
         );
       }
 
-      // Bulk update for rejections
+      // Delete rejected registrations instead of just updating status
       const { data, error } = await supabaseAdmin
         .from('pending_registrations')
-        .update({
-          approval_status: 'rejected',
-          rejection_reason: rejectionReason,
-          approved_by: adminUserId,
-          approved_at: new Date().toISOString()
-        })
+        .delete()
         .in('id', registrationIds)
         .select('id');
 
