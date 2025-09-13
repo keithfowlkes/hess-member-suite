@@ -349,6 +349,31 @@ export function useInvoices() {
     }
   };
 
+  const deleteInvoice = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast({
+        title: 'Success',
+        description: 'Invoice deleted successfully'
+      });
+      
+      await fetchInvoices();
+    } catch (error: any) {
+      toast({
+        title: 'Error deleting invoice',
+        description: error.message,
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  };
+
   return {
     invoices,
     loading,
@@ -358,6 +383,7 @@ export function useInvoices() {
     updateInvoice,
     markAsPaid,
     sendInvoice,
+    deleteInvoice,
     markAllInvoicesAsPaid
   };
 }

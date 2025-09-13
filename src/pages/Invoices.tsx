@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useAuth } from '@/hooks/useAuth';
 import { useResendInvoice } from '@/hooks/useResendInvoice';
-import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, Download, Mail } from 'lucide-react';
+import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, Download, Mail, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -17,10 +17,11 @@ import { MemberInvoiceViewModal } from '@/components/MemberInvoiceViewModal';
 import { Invoice } from '@/hooks/useInvoices';
 
 export default function Invoices() {
-  const { invoices, loading, markAsPaid, sendInvoice } = useInvoices();
+  const { invoices, loading, markAsPaid, sendInvoice, deleteInvoice } = useInvoices();
   const { isViewingAsAdmin } = useAuth();
   const resendInvoice = useResendInvoice();
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateSearch, setDateSearch] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
@@ -29,13 +30,17 @@ export default function Invoices() {
     const matchesSearch = invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.organizations?.name.toLowerCase().includes(searchTerm.toLowerCase());
     
+    const matchesDate = !dateSearch || 
+      format(new Date(invoice.invoice_date), 'yyyy-MM-dd') === dateSearch ||
+      format(new Date(invoice.due_date), 'yyyy-MM-dd') === dateSearch;
+    
     // Members can only see their own invoices
     if (!isViewingAsAdmin) {
       // Add user organization filtering logic here if needed
-      return matchesSearch;
+      return matchesSearch && matchesDate;
     }
     
-    return matchesSearch;
+    return matchesSearch && matchesDate;
   });
 
   const getStatusColor = (status: string) => {
@@ -62,6 +67,13 @@ export default function Invoices() {
   const handleResendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     resendInvoice.mutate({ invoiceId });
+  };
+
+  const handleDeleteInvoice = async (invoiceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+      await deleteInvoice(invoiceId);
+    }
   };
 
   const generatePDF = async (invoice: any, e: React.MouseEvent) => {
@@ -179,6 +191,16 @@ export default function Invoices() {
                   className="pl-10"
                 />
               </div>
+              <div className="relative w-48">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  type="date"
+                  placeholder="Filter by date..."
+                  value={dateSearch}
+                  onChange={(e) => setDateSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
 
             {/* Invoices List */}
@@ -260,6 +282,14 @@ export default function Invoices() {
                                 </Button>
                               </>
                             )}
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={(e) => handleDeleteInvoice(invoice.id, e)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
                           </div>
                         ) : (
                           <div className="flex space-x-2">
