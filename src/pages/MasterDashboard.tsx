@@ -396,7 +396,7 @@ const MasterDashboard = () => {
       color: dashboardStats.pendingInvoices > 0 ? 'text-orange-600' : 'text-green-600' 
     },
     { 
-      title: 'Annual Revenue', 
+      title: 'Projected Annual Revenue', 
       value: statsLoading ? '...' : `$${dashboardStats.totalRevenue.toLocaleString()}`, 
       icon: DollarSign, 
       color: 'text-green-600' 
@@ -730,17 +730,17 @@ const MasterDashboard = () => {
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-8">
               {/* Main Statistics */}
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {mainStats.map((stat, index) => (
                   <Card key={index} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center space-x-4">
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-3">
                         <div className={`p-2 rounded-lg bg-gray-100 ${stat.color}`}>
-                          <stat.icon className="h-6 w-6" />
+                          <stat.icon className="h-5 w-5" />
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                          <p className="text-2xl font-bold">{stat.value}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium text-muted-foreground truncate">{stat.title}</p>
+                          <p className="text-xl font-bold truncate">{stat.value}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -749,19 +749,19 @@ const MasterDashboard = () => {
               </div>
 
               {/* Admin Statistics */}
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {adminStats.map((stat, index) => (
                   <Card key={index} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between space-x-4">
-                        <div className="flex items-center space-x-4">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between space-x-3">
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
                           <div className={`p-2 rounded-lg bg-gray-100 ${stat.color}`}>
-                            <stat.icon className="h-6 w-6" />
+                            <stat.icon className="h-5 w-5" />
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                            <p className="text-2xl font-bold">{stat.value}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-muted-foreground truncate">{stat.title}</p>
+                            <p className="text-xl font-bold truncate">{stat.value}</p>
+                            <p className="text-xs text-muted-foreground mt-1 truncate">{stat.description}</p>
                           </div>
                         </div>
                       </div>
@@ -841,43 +841,44 @@ const MasterDashboard = () => {
                           <Building2 className="h-5 w-5" />
                           Organization Registrations ({filteredPendingOrganizations.length})
                         </h3>
-                        {filteredPendingOrganizations.map((org) => (
-                          <Card key={`org-${org.id}`} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-3">
-                                    <h3 className="text-lg font-semibold">{org.name}</h3>
-                                    <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                                      New Organization
-                                    </Badge>
-                                  </div>
-                                  <div className="text-sm text-muted-foreground space-y-1">
-                                    <p>
-                                      <strong>Contact:</strong> {org.profiles?.first_name} {org.profiles?.last_name} ({org.profiles?.email})
-                                    </p>
-                                    <p>
-                                      <strong>Location:</strong> {org.city}, {org.state}
-                                    </p>
-                                    <p>
-                                      <strong>Student FTE:</strong> {org.student_fte ? org.student_fte.toLocaleString() : 'Not specified'}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => handleReviewOrganization(org)}
-                                  >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Review
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                         {filteredPendingOrganizations.map((org) => (
+                           <Card key={`org-${org.id}`} className="hover:shadow-md transition-shadow">
+                             <CardContent className="p-4">
+                               <div className="flex items-start justify-between">
+                                 <div className="space-y-2 min-w-0 flex-1 mr-4">
+                                   <div className="flex items-center gap-2">
+                                     <h3 className="text-sm font-semibold truncate">{org.name}</h3>
+                                     <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-xs flex-shrink-0">
+                                       New Org
+                                     </Badge>
+                                   </div>
+                                   <div className="text-xs text-muted-foreground space-y-1">
+                                     <p className="truncate">
+                                       <strong>Contact:</strong> {org.profiles?.first_name} {org.profiles?.last_name}
+                                     </p>
+                                     <p className="truncate">
+                                       <strong>Location:</strong> {org.city}, {org.state}
+                                     </p>
+                                     <p>
+                                       <strong>FTE:</strong> {org.student_fte ? org.student_fte.toLocaleString() : 'N/A'}
+                                     </p>
+                                   </div>
+                                 </div>
+                                 <div className="flex gap-2 flex-shrink-0">
+                                   <Button 
+                                     variant="outline" 
+                                     size="sm" 
+                                     onClick={() => handleReviewOrganization(org)}
+                                     className="text-xs"
+                                   >
+                                     <Eye className="h-3 w-3 mr-1" />
+                                     Review
+                                   </Button>
+                                 </div>
+                               </div>
+                             </CardContent>
+                           </Card>
+                         ))}
                       </div>
                     )}
 
@@ -888,42 +889,43 @@ const MasterDashboard = () => {
                           <Users className="h-5 w-5" />
                           User Registrations ({filteredPendingRegistrations.length})
                         </h3>
-                        {filteredPendingRegistrations.map((registration) => (
-                          <Card key={`reg-${registration.id}`} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-3">
-                                    <h3 className="text-lg font-semibold">
-                                      {registration.first_name} {registration.last_name}
-                                    </h3>
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                      User Registration
-                                    </Badge>
-                                  </div>
-                                  <div className="text-sm text-muted-foreground space-y-1">
-                                    <p><strong>Email:</strong> {registration.email}</p>
-                                    <p><strong>Organization:</strong> {registration.organization_name}</p>
-                                    <p><strong>Requested:</strong> {format(new Date(registration.created_at), 'PPp')}</p>
-                                  </div>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => {
-                                      setSelectedPendingRegistration(registration);
-                                      setShowRegistrationApprovalDialog(true);
-                                    }}
-                                  >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Review
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                         {filteredPendingRegistrations.map((registration) => (
+                           <Card key={`reg-${registration.id}`} className="hover:shadow-md transition-shadow">
+                             <CardContent className="p-4">
+                               <div className="flex items-start justify-between">
+                                 <div className="space-y-2 min-w-0 flex-1 mr-4">
+                                   <div className="flex items-center gap-2">
+                                     <h3 className="text-sm font-semibold truncate">
+                                       {registration.first_name} {registration.last_name}
+                                     </h3>
+                                     <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs flex-shrink-0">
+                                       User Registration
+                                     </Badge>
+                                   </div>
+                                   <div className="text-xs text-muted-foreground space-y-1">
+                                     <p className="truncate"><strong>Email:</strong> {registration.email}</p>
+                                     <p className="truncate"><strong>Organization:</strong> {registration.organization_name}</p>
+                                     <p><strong>Requested:</strong> {format(new Date(registration.created_at), 'PP')}</p>
+                                   </div>
+                                 </div>
+                                 <div className="flex gap-2 flex-shrink-0">
+                                   <Button 
+                                     variant="outline" 
+                                     size="sm" 
+                                     onClick={() => {
+                                       setSelectedPendingRegistration(registration);
+                                       setShowRegistrationApprovalDialog(true);
+                                     }}
+                                     className="text-xs"
+                                   >
+                                     <Eye className="h-3 w-3 mr-1" />
+                                     Review
+                                   </Button>
+                                 </div>
+                               </div>
+                             </CardContent>
+                           </Card>
+                         ))}
                       </div>
                     )}
 
@@ -935,41 +937,42 @@ const MasterDashboard = () => {
                           Member Info Updates ({memberInfoUpdateRequests.length})
                         </h3>
                         {memberInfoUpdateRequests.map((request) => (
-                          <Card key={`member-info-${request.id}`} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-3">
-                                    <h3 className="text-lg font-semibold">
-                                      {request.organizations?.name || 'Member Info Update'}
-                                    </h3>
-                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                      Member Info Update
-                                    </Badge>
-                                  </div>
-                                  <div className="text-sm text-muted-foreground space-y-1">
-                                    <p><strong>New Contact:</strong> {request.new_contact_email}</p>
-                                    <p><strong>Current Contact:</strong> {request.organizations?.profiles?.email}</p>
-                                    <p><strong>Requested:</strong> {format(new Date(request.created_at), 'PPp')}</p>
-                                  </div>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => {
-                                      console.log('Review Changes clicked for member info:', request.id);
-                                      setSelectedMemberInfoUpdate(request);
-                                      setShowMemberInfoUpdateComparisonDialog(true);
-                                    }}
-                                  >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Review Changes
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
+                           <Card key={`member-info-${request.id}`} className="hover:shadow-md transition-shadow">
+                             <CardContent className="p-4">
+                               <div className="flex items-start justify-between">
+                                 <div className="space-y-2 min-w-0 flex-1 mr-4">
+                                   <div className="flex items-center gap-2">
+                                     <h3 className="text-sm font-semibold truncate">
+                                       {request.organizations?.name || 'Member Info Update'}
+                                     </h3>
+                                     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs flex-shrink-0">
+                                       Info Update
+                                     </Badge>
+                                   </div>
+                                   <div className="text-xs text-muted-foreground space-y-1">
+                                     <p className="truncate"><strong>New Contact:</strong> {request.new_contact_email}</p>
+                                     <p className="truncate"><strong>Current:</strong> {request.organizations?.profiles?.email}</p>
+                                     <p><strong>Requested:</strong> {format(new Date(request.created_at), 'PP')}</p>
+                                   </div>
+                                 </div>
+                                 <div className="flex gap-2 flex-shrink-0">
+                                   <Button 
+                                     variant="outline" 
+                                     size="sm" 
+                                     onClick={() => {
+                                       console.log('Review Changes clicked for member info:', request.id);
+                                       setSelectedMemberInfoUpdate(request);
+                                       setShowMemberInfoUpdateComparisonDialog(true);
+                                     }}
+                                     className="text-xs"
+                                   >
+                                     <Eye className="h-3 w-3 mr-1" />
+                                     Review
+                                   </Button>
+                                 </div>
+                               </div>
+                             </CardContent>
+                           </Card>
                         ))}
                       </div>
                     )}
@@ -981,43 +984,44 @@ const MasterDashboard = () => {
                           <Edit className="h-5 w-5" />
                           Profile Updates ({profileEditRequests.length})
                         </h3>
-                        {profileEditRequests.map((request) => (
-                          <Card key={`profile-edit-${request.id}`} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-3">
-                                    <h3 className="text-lg font-semibold">
-                                      {request.organization?.name || 'Profile Update Request'}
-                                    </h3>
-                                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                      Profile Update
-                                    </Badge>
-                                  </div>
-                                  <div className="text-sm text-muted-foreground space-y-1">
-                                    <p><strong>Contact:</strong> {request.updated_profile_data?.first_name} {request.updated_profile_data?.last_name}</p>
-                                    <p><strong>Email:</strong> {request.updated_profile_data?.email}</p>
-                                    <p><strong>Requested:</strong> {format(new Date(request.created_at), 'PPp')}</p>
-                                  </div>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => {
-                                      console.log('Review Changes clicked for profile edit:', request.id);
-                                      setSelectedProfileEditRequest(request);
-                                      setShowProfileEditComparisonDialog(true);
-                                    }}
-                                  >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Review Changes
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                         {profileEditRequests.map((request) => (
+                           <Card key={`profile-edit-${request.id}`} className="hover:shadow-md transition-shadow">
+                             <CardContent className="p-4">
+                               <div className="flex items-start justify-between">
+                                 <div className="space-y-2 min-w-0 flex-1 mr-4">
+                                   <div className="flex items-center gap-2">
+                                     <h3 className="text-sm font-semibold truncate">
+                                       {request.organization?.name || 'Profile Update Request'}
+                                     </h3>
+                                     <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs flex-shrink-0">
+                                       Profile Update
+                                     </Badge>
+                                   </div>
+                                   <div className="text-xs text-muted-foreground space-y-1">
+                                     <p className="truncate"><strong>Contact:</strong> {request.updated_profile_data?.first_name} {request.updated_profile_data?.last_name}</p>
+                                     <p className="truncate"><strong>Email:</strong> {request.updated_profile_data?.email}</p>
+                                     <p><strong>Requested:</strong> {format(new Date(request.created_at), 'PP')}</p>
+                                   </div>
+                                 </div>
+                                 <div className="flex gap-2 flex-shrink-0">
+                                   <Button 
+                                     variant="outline" 
+                                     size="sm" 
+                                     onClick={() => {
+                                       console.log('Review Changes clicked for profile edit:', request.id);
+                                       setSelectedProfileEditRequest(request);
+                                       setShowProfileEditComparisonDialog(true);
+                                     }}
+                                     className="text-xs"
+                                   >
+                                     <Eye className="h-3 w-3 mr-1" />
+                                     Review
+                                   </Button>
+                                 </div>
+                               </div>
+                             </CardContent>
+                           </Card>
+                         ))}
                       </div>
                     )}
 
@@ -1048,12 +1052,12 @@ const MasterDashboard = () => {
                   </div>
 
                   <Card>
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-medium">Recent Invitations</h3>
-                          <span className="text-sm text-muted-foreground">
-                            {invitations.length} total invitations
+                          <h3 className="text-sm font-medium">Recent Invitations</h3>
+                          <span className="text-xs text-muted-foreground">
+                            {invitations.length} total
                           </span>
                         </div>
                         
@@ -1132,7 +1136,7 @@ const MasterDashboard = () => {
               </div>
 
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   {filteredUsers.length > 0 ? (
                     <Table>
                       <TableHeader>
