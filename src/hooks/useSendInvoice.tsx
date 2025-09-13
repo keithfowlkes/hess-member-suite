@@ -20,6 +20,7 @@ export const useSendInvoice = () => {
 
   return useMutation({
     mutationFn: async (params: SendInvoiceParams) => {
+      console.log('Sending new invoice with params:', params);
       const invoiceEmailData = {
         organization_name: params.organizationName,
         invoice_number: `INV-${Date.now()}`, // Generate a temporary invoice number
@@ -31,6 +32,7 @@ export const useSendInvoice = () => {
         notes: params.notes || ''
       };
 
+      console.log('New invoice email data:', invoiceEmailData);
       const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
       const subject = `HESS Consortium - Invoice for ${params.organizationName}`;
 
@@ -42,6 +44,7 @@ export const useSendInvoice = () => {
           template: invoiceHTML
         }
       });
+      console.log('New invoice email function response:', { data, error });
 
       if (error) throw error;
       return data;

@@ -664,10 +664,15 @@ export default function MembershipFees() {
   const handleSendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
+      console.log('Attempting to send invoice:', invoiceId);
       const invoice = invoices.find(inv => inv.id === invoiceId);
       if (!invoice) throw new Error('Invoice not found');
+      console.log('Found invoice:', invoice);
+      
       const toEmail = invoice.organizations?.email;
       if (!toEmail) throw new Error('Organization has no email');
+      console.log('Sending to email:', toEmail);
+      
       const subject = `HESS Consortium - Invoice ${invoice.invoice_number}`;
 
       const invoiceEmailData = {
@@ -680,7 +685,9 @@ export default function MembershipFees() {
         notes: invoice.notes || ''
       };
 
+      console.log('Invoice email data:', invoiceEmailData);
       const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
+      console.log('Generated HTML length:', invoiceHTML.length);
 
       const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
         body: {
@@ -690,6 +697,8 @@ export default function MembershipFees() {
           template: invoiceHTML
         }
       });
+      console.log('Email function response:', { data, error });
+      
       if (error) throw error;
 
       await sendInvoice(invoiceId);

@@ -12,6 +12,7 @@ export const useResendInvoice = () => {
 
   return useMutation({
     mutationFn: async ({ invoiceId }: ResendInvoiceParams) => {
+      console.log('Resending invoice:', invoiceId);
       // Fetch invoice and organization email
       const { data: invoice, error: invErr } = await supabase
         .from('invoices')
@@ -20,6 +21,8 @@ export const useResendInvoice = () => {
         .maybeSingle();
       if (invErr) throw invErr;
       if (!invoice) throw new Error('Invoice not found');
+      
+      console.log('Found invoice for resend:', invoice);
       const toEmail = (invoice as any).organizations?.email as string | undefined;
       if (!toEmail) throw new Error('Organization has no email');
       const subject = `HESS Consortium - Invoice ${(invoice as any).invoice_number || ''}`.trim();
@@ -34,6 +37,7 @@ export const useResendInvoice = () => {
         notes: (invoice as any).notes || ''
       };
 
+      console.log('Resend invoice email data:', invoiceEmailData);
       const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
 
       const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
@@ -44,6 +48,7 @@ export const useResendInvoice = () => {
           template: invoiceHTML
         }
       });
+      console.log('Resend email function response:', { data, error });
 
       if (error) throw error;
       return data;
