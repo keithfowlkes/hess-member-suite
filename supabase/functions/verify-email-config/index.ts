@@ -81,14 +81,20 @@ const handler = async (req: Request): Promise<Response> => {
           config.api_key_valid = true;
           
           // Check if sender domain is verified
-          if (config.sender_domain && domainsResponse.data) {
-            const domain = domainsResponse.data.data?.find(d => 
+          if (config.sender_domain && domainsResponse.data?.data) {
+            const domainsList = domainsResponse.data.data || [];
+            const domain = domainsList.find(d => 
               d.name === config.sender_domain && d.status === 'verified'
             );
             config.domain_verified = !!domain;
             
             if (!domain) {
-              config.warnings.push(`Domain ${config.sender_domain} not found or not verified in Resend account`);
+              const foundDomain = domainsList.find(d => d.name === config.sender_domain);
+              if (foundDomain) {
+                config.warnings.push(`Domain ${config.sender_domain} found but status is '${foundDomain.status}' (not verified)`);
+              } else {
+                config.warnings.push(`Domain ${config.sender_domain} not found in Resend account`);
+              }
             }
           }
         }

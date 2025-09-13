@@ -201,7 +201,7 @@ serve(async (req: Request): Promise<Response> => {
           { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
         );
       }
-      const domains = (domainsCheck as any)?.data ?? [];
+      const domains = (domainsCheck as any)?.data?.data ?? [];
       try {
         const fromEmail = extractEmail(finalFrom);
         const fromDomain = fromEmail.split('@')[1]?.toLowerCase();
