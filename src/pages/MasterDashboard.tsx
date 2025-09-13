@@ -66,7 +66,7 @@ import { InvitationManagementDialog } from '@/components/InvitationManagementDia
 import { MemberInfoUpdateRequestsDialog } from '@/components/MemberInfoUpdateRequestsDialog';
 import { PendingRegistrationApprovalDialog } from '@/components/PendingRegistrationApprovalDialog';
 import { AddExternalUserDialog } from '@/components/AddExternalUserDialog';
-import SystemMessageEditor from '@/components/SystemMessageEditor';
+import { DebugRequestsComponent } from '@/components/DebugRequestsComponent';
 import type { PendingRegistration } from '@/hooks/usePendingRegistrations';
 
 // Icons
@@ -883,7 +883,9 @@ const MasterDashboard = () => {
 
                   <TabsContent value="approvals" className="space-y-6">
                     {/* New Member Applications Section */}
-                    <div className="space-y-4">
+                      <DebugRequestsComponent />
+                      
+                      <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <h2 className="text-xl font-semibold">Pending New Member Applications</h2>
                         <div className="flex items-center gap-2">
@@ -1030,7 +1032,9 @@ const MasterDashboard = () => {
                         ))}
 
                         {/* Member Info Update Requests */}
-                        {memberInfoUpdateRequests.map((request) => (
+                        {memberInfoUpdateRequests.map((request) => {
+                          console.log('Rendering member info update request:', request);
+                          return (
                           <Card key={`update-${request.id}`} className="hover:shadow-md transition-shadow">
                             <CardContent className="p-6">
                               <div className="flex items-center justify-between">
@@ -1062,27 +1066,38 @@ const MasterDashboard = () => {
                                 </div>
 
                                 <div className="flex gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        console.log('Review Changes clicked for member info update:', request);
-                                        setSelectedMemberInfoUpdate(request);
-                                        setShowMemberInfoUpdateComparisonDialog(true);
-                                      }}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <Eye className="h-3 w-3" />
-                                      Review Changes
-                                    </Button>
+                                   <Button
+                                     variant="outline"
+                                     size="sm"
+                                     onClick={(e) => {
+                                       e.preventDefault();
+                                       e.stopPropagation();
+                                       console.log('Review Changes clicked for member info update:', request);
+                                       console.log('Current state:', { 
+                                         selectedMemberInfoUpdate, 
+                                         showMemberInfoUpdateComparisonDialog 
+                                       });
+                                       setSelectedMemberInfoUpdate(request);
+                                       setShowMemberInfoUpdateComparisonDialog(true);
+                                       console.log('After state update - should show modal');
+                                     }}
+                                     className="flex items-center gap-2"
+                                   >
+                                     <Eye className="h-3 w-3" />
+                                     Review Changes
+                                   </Button>
                                 </div>
                               </div>
                             </CardContent>
                           </Card>
-                          ))}
+                        );
+                        })}
+                         </div>
 
                         {/* Profile Update Requests */}
-                        {profileEditRequests.map((request) => (
+                        {profileEditRequests.map((request) => {
+                          console.log('Rendering profile edit request:', request);
+                          return (
                           <Card key={`profile-edit-${request.id}`} className="hover:shadow-md transition-shadow">
                             <CardContent className="p-6">
                               <div className="flex items-center justify-between">
@@ -1122,20 +1137,27 @@ const MasterDashboard = () => {
                                 </div>
 
                                  <div className="flex gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        console.log('Review Changes clicked for profile edit:', request);
-                                        setSelectedProfileEditRequest(request);
-                                        setShowProfileEditComparisonDialog(true);
-                                        setAdminNotes('');
-                                      }}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <Eye className="h-3 w-3" />
-                                      Review Changes
-                                    </Button>
+                                   <Button
+                                     variant="outline"
+                                     size="sm"
+                                     onClick={(e) => {
+                                       e.preventDefault();
+                                       e.stopPropagation();
+                                       console.log('Review Changes clicked for profile edit:', request);
+                                       console.log('Current state:', { 
+                                         selectedProfileEditRequest, 
+                                         showProfileEditComparisonDialog 
+                                       });
+                                       setSelectedProfileEditRequest(request);
+                                       setShowProfileEditComparisonDialog(true);
+                                       setAdminNotes('');
+                                       console.log('After state update - should show modal');
+                                     }}
+                                     className="flex items-center gap-2"
+                                   >
+                                     <Eye className="h-3 w-3" />
+                                     Review Changes
+                                   </Button>
                                   <Button
                                     size="sm"
                                     onClick={async () => {
@@ -1176,8 +1198,9 @@ const MasterDashboard = () => {
                                 </div>
                               </div>
                             </CardContent>
-                          </Card>
-                        ))}
+                           </Card>
+                         );
+                        })}
                          </div>
                       )}
                      </div>
@@ -1720,12 +1743,15 @@ const MasterDashboard = () => {
       </div>
 
       {/* Member Info Update Comparison Dialog */}
-      {selectedMemberInfoUpdate && (
+      {selectedMemberInfoUpdate && showMemberInfoUpdateComparisonDialog ? (
         <UnifiedComparisonModal
           open={showMemberInfoUpdateComparisonDialog}
           onOpenChange={(open) => {
             console.log('Member info dialog open change:', open);
             setShowMemberInfoUpdateComparisonDialog(open);
+            if (!open) {
+              setSelectedMemberInfoUpdate(null);
+            }
           }}
           title="Review Member Information Update"
           data={{
@@ -1760,15 +1786,18 @@ const MasterDashboard = () => {
           }}
           isSubmitting={approveMemberInfoUpdate.isPending || deleteMemberInfoUpdate.isPending}
         />
-      )}
+      ) : null}
 
       {/* Profile Edit Comparison Dialog */}
-      {selectedProfileEditRequest && (
+      {selectedProfileEditRequest && showProfileEditComparisonDialog ? (
         <UnifiedComparisonModal
           open={showProfileEditComparisonDialog}
           onOpenChange={(open) => {
             console.log('Profile edit dialog open change:', open);
             setShowProfileEditComparisonDialog(open);
+            if (!open) {
+              setSelectedProfileEditRequest(null);
+            }
           }}
           title="Review Profile Update Request"
           data={{
@@ -1790,7 +1819,7 @@ const MasterDashboard = () => {
           onActionNotesChange={setAdminNotes}
           isSubmitting={false}
         />
-      )}
+      ) : null}
     </SidebarProvider>
   );
 };
