@@ -62,7 +62,7 @@ import { useInvoices } from '@/hooks/useInvoices';
 
 // Components
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
-import { UnifiedComparisonModal } from '@/components/UnifiedComparisonModal';
+import { SideBySideComparisonModal } from '@/components/SideBySideComparisonModal';
 import { InvitationManagementDialog } from '@/components/InvitationManagementDialog';
 import { MemberInfoUpdateRequestsDialog } from '@/components/MemberInfoUpdateRequestsDialog';
 import { PendingRegistrationApprovalDialog } from '@/components/PendingRegistrationApprovalDialog';
@@ -1268,7 +1268,7 @@ const MasterDashboard = () => {
 
       {/* Member Info Update Comparison Dialog */}
       {selectedMemberInfoUpdate && showMemberInfoUpdateComparisonDialog && (
-        <UnifiedComparisonModal
+        <SideBySideComparisonModal
           open={showMemberInfoUpdateComparisonDialog}
           onOpenChange={(open) => {
             console.log('Member info dialog open change:', open);
@@ -1314,7 +1314,7 @@ const MasterDashboard = () => {
 
       {/* Profile Edit Comparison Dialog */}
       {selectedProfileEditRequest && showProfileEditComparisonDialog && (
-        <UnifiedComparisonModal
+        <SideBySideComparisonModal
           open={showProfileEditComparisonDialog}
           onOpenChange={(open) => {
             console.log('Profile edit dialog open change:', open);
