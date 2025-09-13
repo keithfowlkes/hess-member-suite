@@ -94,9 +94,10 @@ import {
   Settings as SettingsIcon,
   Search,
   MoreVertical,
-  ChevronDown
+  ChevronDown,
+  Activity
 } from 'lucide-react';
-import { ConnectionTest } from '@/components/ConnectionTest';
+import { SystemHealthStatus } from '@/components/SystemHealthStatus';
 import { format } from 'date-fns';
 
 const MasterDashboard = () => {
@@ -769,16 +770,16 @@ const MasterDashboard = () => {
                 ))}
               </div>
 
-              {/* Connection Test */}
+              {/* System Health Status */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <RefreshCw className="h-5 w-5" />
+                    <Activity className="h-5 w-5" />
                     System Status
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ConnectionTest />
+                  <SystemHealthStatus />
                 </CardContent>
               </Card>
             </TabsContent>
