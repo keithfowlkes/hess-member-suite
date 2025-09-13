@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -80,565 +77,91 @@ const handler = async (req: Request): Promise<Response> => {
     const { type, to, organizationName, token, adminMessage, memberName, memberEmail, secondaryEmail, organizationData, transferDetails, invoiceData }: EmailRequest = await req.json();
     console.log('Email request:', { type, to, organizationName });
 
-    const appUrl = Deno.env.get('SUPABASE_URL')?.replace('//', '//app.');
+    // Use centralized email delivery system for supported types
+    if (['welcome_approved', 'profile_update_approved', 'analytics_feedback'].includes(type)) {
+      console.log(`Using centralized email delivery for type: ${type}`);
+      
+      let emailData: Record<string, any> = {};
+      
+      switch (type) {
+        case 'welcome_approved':
+          emailData = {
+            organization_name: organizationName || 'Organization',
+            primary_contact_name: organizationData?.primary_contact_name || 'Member',
+            custom_message: adminMessage || 'We look forward to working with you and supporting your institution.'
+          };
+          break;
 
-    let subject: string;
-    let html: string;
+        case 'profile_update_approved':
+          emailData = {
+            organization_name: organizationName || 'Organization',
+            primary_contact_name: organizationData?.primary_contact_name || 'Member',
+            custom_message: adminMessage || 'Your profile changes have been successfully applied.'
+          };
+          break;
 
-    switch (type) {
-      case 'analytics_feedback':
-        subject = memberName ? `Member Analytics Feedback from ${memberName}` : `Member Analytics Dashboard Feedback`;
-        html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #333; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">
-              Member Analytics Dashboard Feedback
-            </h2>
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #495057; margin: 0 0 15px 0;">Feedback Details</h3>
-              <p><strong>Name:</strong> ${memberName || 'Unknown'}</p>
-              ${memberEmail ? `<p><strong>Email:</strong> ${memberEmail}</p>` : ''}
-              <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
-            </div>
-            <div style="background-color: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
-              <h3 style="color: #495057; margin: 0 0 15px 0;">Analytics Request</h3>
-              <div style="white-space: pre-wrap; color: #212529; line-height: 1.6;">${adminMessage || ''}</div>
-            </div>
-            <div style="background-color: #e7f3ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
-              <p style="margin: 0; color: #0c4a6e;">
-                <strong>Note:</strong> This feedback was submitted through the Member Analytics dashboard.
-              </p>
-            </div>
-            <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
-            <p style="color: #6c757d; font-size: 14px; text-align: center;">
-              This message was sent from the HESS Consortium Member Analytics Dashboard
-            </p>
-          </div>
-        `;
-        break;
-      case 'invitation':
-        subject = `Invitation to manage ${organizationName} - HESS Consortium`;
-        html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #2563eb;">HESS Consortium</h1>
-            <h2>Organization Account Invitation</h2>
-            <p>Hello,</p>
-            <p>You have been invited to manage the account for <strong>${organizationName}</strong> on the HESS Consortium member portal.</p>
-            <p>Click the link below to accept this invitation and create your account:</p>
-            <a href="${appUrl}/invite?token=${token}" 
-               style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
-              Accept Invitation
-            </a>
-            <p>This invitation will expire in 7 days.</p>
-            <p>If you have any questions, please contact us at support@hessconsortium.org.</p>
-            <p>Best regards,<br>HESS Consortium Team</p>
-          </div>
-        `;
-        break;
-
-      case 'approval':
-        subject = `Welcome to HESS Consortium - ${organizationName} Approved!`;
-        html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #16a34a;">Welcome to HESS Consortium!</h1>
-            <p>Congratulations! Your organization <strong>${organizationName}</strong> has been approved for membership.</p>
-            <p>You can now access the full member portal with all features and resources.</p>
-            <a href="${appUrl}" 
-               style="background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
-              Access Member Portal
-            </a>
-            ${adminMessage ? `<p><strong>Message from admin:</strong><br>${adminMessage}</p>` : ''}
-            <p>Welcome to the consortium!</p>
-            <p>Best regards,<br>HESS Consortium Team</p>
-          </div>
-        `;
-        break;
-
-      case 'rejection':
-        subject = `HESS Consortium Application Update - ${organizationName}`;
-        html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #dc2626;">HESS Consortium</h1>
-            <p>Thank you for your interest in joining HESS Consortium.</p>
-            <p>After careful review, we are unable to approve the application for <strong>${organizationName}</strong> at this time.</p>
-            ${adminMessage ? `<p><strong>Reason:</strong><br>${adminMessage}</p>` : ''}
-            <p>If you have questions about this decision, please contact us at support@hessconsortium.org.</p>
-            <p>Best regards,<br>HESS Consortium Team</p>
-          </div>
-        `;
-        break;
-
-      case 'transfer':
-        subject = `Organization Transfer Request - ${organizationName}`;
-        html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #2563eb;">HESS Consortium</h1>
-            <h2>Organization Transfer Request</h2>
-            <p>Hello,</p>
-            <p>You have been selected as the new primary contact for <strong>${organizationName}</strong>.</p>
-            ${transferDetails ? `<p>Current contact: ${transferDetails.currentContact}<br>New contact: ${transferDetails.newContact}</p>` : ''}
-            <p>Click the link below to accept this transfer and create/link your account:</p>
-            <a href="${appUrl}/transfer?token=${token}" 
-               style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
-              Accept Transfer
-            </a>
-            <p>This transfer request will expire in 7 days.</p>
-            <p>If you have questions, please contact us at support@hessconsortium.org.</p>
-            <p>Best regards,<br>HESS Consortium Team</p>
-          </div>
-        `;
-        break;
-
-      case 'member_approval':
-        subject = `Welcome to HESS Consortium - ${organizationName} Approved!`;
-        html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #16a34a;">Welcome to HESS Consortium!</h1>
-            <p>Dear ${memberName || 'Member'},</p>
-            <p>Great news! Your organization <strong>${organizationName}</strong> has been approved for membership in the HESS Consortium.</p>
-            <p>You can now access the full member portal with all available features and resources.</p>
-            <a href="${appUrl}" 
-               style="background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
-              Access Member Portal
-            </a>
-            ${adminMessage ? `<p><strong>Message from admin:</strong><br>${adminMessage}</p>` : ''}
-            <p>We're excited to have you as part of our consortium!</p>
-            <p>Best regards,<br>HESS Consortium Team</p>
-          </div>
-        `;
-        break;
-
-      case 'welcome':
-        subject = `Welcome to HESS Consortium - ${organizationName}`;
-        html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #2563eb;">Welcome to HESS Consortium!</h1>
-            <p>Thank you for registering <strong>${organizationName}</strong> with HESS Consortium.</p>
-            <p>Your application is currently under review. We will notify you once it has been processed.</p>
-            <p>You can check your application status by logging into the member portal:</p>
-            <a href="${appUrl}" 
-               style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
-              Member Portal
-            </a>
-            <p>If you have questions, please contact us at support@hessconsortium.org.</p>
-            <p>Best regards,<br>HESS Consortium Team</p>
-          </div>
-        `;
-        break;
-
-      case 'overdue_reminder':
-        subject = `Payment Reminder - ${organizationName} Membership Fee Overdue`;
-        
-        const invoiceDetails = invoiceData ? `
-          <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h3 style="color: #dc2626; margin: 0 0 10px 0;">Outstanding Invoice Details</h3>
-            <p><strong>Invoice Number:</strong> ${invoiceData.invoice_number}</p>
-            <p><strong>Amount Due:</strong> $${invoiceData.amount.toLocaleString()}</p>
-            <p><strong>Original Due Date:</strong> ${new Date(invoiceData.due_date).toLocaleDateString()}</p>
-          </div>
-        ` : '';
-
-        html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #dc2626; padding-bottom: 20px;">
-              <h1 style="color: #dc2626; margin: 0; font-size: 2rem;">PAYMENT REMINDER</h1>
-              <p style="color: #666; margin: 10px 0;">HESS Consortium Membership Fee</p>
-            </div>
-            
-            <p>Dear ${organizationName} Team,</p>
-            
-            <p>This is a friendly reminder that your HESS Consortium membership fee is currently <strong style="color: #dc2626;">overdue</strong>.</p>
-            
-            ${invoiceDetails}
-            
-            <div style="background: #f9fafb; padding: 20px; border-left: 4px solid #dc2626; margin: 30px 0;">
-              <h3 style="color: #dc2626; margin-bottom: 10px;">Immediate Action Required</h3>
-              <p>To maintain your active membership status and avoid any service interruptions, please:</p>
-              <ul>
-                <li>Process your payment as soon as possible</li>
-                <li>Contact us if you have any payment-related questions</li>
-                <li>Update your membership information if needed</li>
-              </ul>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${appUrl}" 
-                 style="background-color: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
-                Access Member Portal
-              </a>
-            </div>
-            
-            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 30px 0; text-align: center;">
-              <h3 style="color: #374151; margin-bottom: 15px;">Need Help?</h3>
-              <p>If you have questions about your membership or need assistance with payment, please don't hesitate to contact us:</p>
-              <p>
-                <strong>Email:</strong> billing@hessconsortium.org<br>
-                <strong>Phone:</strong> [Contact Number]
-              </p>
-            </div>
-            
-            <div style="text-align: center; padding: 15px; background: #fef2f2; border-radius: 8px; margin-top: 30px;">
-              <p style="color: #dc2626; margin: 0; font-weight: bold;">Thank you for your prompt attention to this matter.</p>
-              <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">HESS Consortium Team</p>
-            </div>
-          </div>
-        `;
-        break;
-
-      case 'welcome_approved':
-        subject = `Welcome to HESS Consortium - ${organizationName}`;
-        
-        try {
-          // Get the welcome message template from system settings
-          console.log('Fetching welcome message template from system settings...');
-          const { data: templateSetting, error: templateError } = await supabase
-            .from('system_settings')
-            .select('setting_value')
-            .eq('setting_key', 'welcome_message_template')
-            .single();
-
-          if (templateError && templateError.code !== 'PGRST116') {
-            console.error('Error fetching template setting:', templateError);
-            throw new Error(`Failed to fetch template: ${templateError.message}`);
-          }
-
-          let welcomeTemplate = '';
-          if (templateSetting?.setting_value) {
-            welcomeTemplate = templateSetting.setting_value;
-            console.log('Using custom welcome template');
-          } else {
-            console.log('Using default welcome template');
-            // Fallback to default template if none exists
-            welcomeTemplate = `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <center>
-                  <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-                </center>
-                
-                <p>{{primary_contact_name}},</p>
-                
-                <p>Thank you for your registration for HESS Consortium membership. I want to welcome you and {{organization_name}} personally to membership in the HESS Consortium!</p>
-                
-                <p>I've CCed Gwen Pechan, HESS Board President and CIO at Flagler College to welcome you also.</p>
-                
-                <p>If you have a few minutes, I would love to fill you in on the work we are doing together in the Consortium and with our business partners.</p>
-                
-                <p>We will make sure to get your contact information into our member listserv asap.</p>
-                
-                <p>Also, make sure to register for an account on our HESS Online Leadership Community collaboration website to download the latest information and join in conversation with HESS CIOs. You will definitely want to sign up online at <a href="https://www.hessconsortium.org/community">https://www.hessconsortium.org/community</a> and invite your staff to participate also.</p>
-                
-                <p>You now have access to our HESS / Coalition Educational Discount Program with Insight for computer and network hardware, peripherals and cloud software. Please create an institutional portal account at <a href="https://www.insight.com/HESS">www.insight.com/HESS</a> online now. We hope you will evaluate these special Insight discount pricing and let us know how it looks compared to your current suppliers.</p>
-                
-                <p>After you have joined the HESS OLC (mentioned above), click the Member Discounts icon at the top of the page to see all of the discount programs you have access to as a HESS member institution.</p>
-                
-                <p>Again, welcome to our quickly growing group of private, non-profit institutions in technology!</p>
-                
-                <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/04/KeithFowlkesshortsig.png" alt="Keith Fowlkes Signature" style="margin: 20px 0;">
-                
-                <p>Keith Fowlkes, M.A., M.B.A.<br>
-                Executive Director and Founder<br>
-                The HESS Consortium<br>
-                keith.fowlkes@hessconsortium.org | 859.516.3571</p>
-              </div>
-            `;
-          }
-
-          // Replace template variables with actual values
-          console.log('Replacing template variables...');
-          const primaryContactName = organizationData?.primary_contact_name || 'Member';
-          
-          html = welcomeTemplate
-            .replace(/{{primary_contact_name}}/g, primaryContactName)
-            .replace(/{{organization_name}}/g, organizationName)
-            .replace(/{{secondary_contact_email}}/g, organizationData?.secondary_contact_email || '')
-            .replace(/{{student_fte}}/g, organizationData?.student_fte?.toString() || '')
-            .replace(/{{address}}/g, organizationData?.address_line_1 || '')
-            .replace(/{{city}}/g, organizationData?.city || '')
-            .replace(/{{state}}/g, organizationData?.state || '')
-            .replace(/{{zip_code}}/g, organizationData?.zip_code || '')
-            .replace(/{{phone}}/g, organizationData?.phone || '')
-            .replace(/{{email}}/g, organizationData?.email || '')
-            .replace(/{{website}}/g, organizationData?.website || '');
-
-          // Add the submitted information section at the bottom
-          console.log('Adding submission details...');
-          const submissionDetails = organizationData ? `
-            <hr style="margin: 40px 0; border: none; border-top: 2px solid #2563eb;">
-            <h2 style="color: #2563eb;">Their submitted information is listed below.</h2>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-              <tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Organization:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationName}</td></tr>
-              ${organizationData.primary_contact_title ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Primary Contact Title:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.primary_contact_title}</td></tr>` : ''}
-              ${organizationData.student_fte ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Student FTE:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.student_fte}</td></tr>` : ''}
-              ${organizationData.address_line_1 ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Address:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.address_line_1}${organizationData.city ? `, ${organizationData.city}` : ''}${organizationData.state ? `, ${organizationData.state}` : ''}${organizationData.zip_code ? ` ${organizationData.zip_code}` : ''}</td></tr>` : ''}
-              ${organizationData.phone ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Phone:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.phone}</td></tr>` : ''}
-              ${organizationData.email ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Email:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.email}</td></tr>` : ''}
-              ${organizationData.website ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Website:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.website}</td></tr>` : ''}
-              ${organizationData.secondary_first_name && organizationData.secondary_last_name ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Secondary Contact:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.secondary_first_name} ${organizationData.secondary_last_name}${organizationData.secondary_contact_title ? ` (${organizationData.secondary_contact_title})` : ''}</td></tr>` : ''}
-              ${organizationData.secondary_contact_email ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Secondary Email:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.secondary_contact_email}</td></tr>` : ''}
-            </table>
-            
-            <h3 style="color: #2563eb; margin-top: 30px;">Systems Information</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              ${organizationData.student_information_system ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Student Information System:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.student_information_system}</td></tr>` : ''}
-              ${organizationData.financial_system ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Financial System:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.financial_system}</td></tr>` : ''}
-              ${organizationData.financial_aid ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Financial Aid:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.financial_aid}</td></tr>` : ''}
-              ${organizationData.hcm_hr ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>HCM/HR:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.hcm_hr}</td></tr>` : ''}
-              ${organizationData.payroll_system ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Payroll System:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.payroll_system}</td></tr>` : ''}
-              ${organizationData.purchasing_system ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Purchasing System:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.purchasing_system}</td></tr>` : ''}
-              ${organizationData.housing_management ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Housing Management:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.housing_management}</td></tr>` : ''}
-              ${organizationData.learning_management ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Learning Management:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.learning_management}</td></tr>` : ''}
-              ${organizationData.admissions_crm ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Admissions CRM:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.admissions_crm}</td></tr>` : ''}
-              ${organizationData.alumni_advancement_crm ? `<tr><td style="padding: 4px 0; border-bottom: 1px solid #eee;"><strong>Alumni/Advancement CRM:</strong></td><td style="padding: 4px 0; border-bottom: 1px solid #eee;">${organizationData.alumni_advancement_crm}</td></tr>` : ''}
-            </table>
-          ` : '';
-          
-          html = html + submissionDetails;
-          console.log('Welcome email HTML prepared successfully');
-          
-        } catch (templateError) {
-          console.error('Error in welcome_approved template processing:', templateError);
-          // Fallback to a simple template
-          html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <center>
-                <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-              </center>
-              <p>Dear ${organizationData?.primary_contact_name || 'Member'},</p>
-              <p>Welcome to the HESS Consortium! Your organization ${organizationName} has been approved for membership.</p>
-              <p>Best regards,<br>Keith Fowlkes<br>Executive Director, HESS Consortium</p>
-            </div>
-          `;
-        }
-        break;
-
-      case 'profile_update_approved':
-        subject = `Profile Update Approved - ${organizationName}`;
-        
-        try {
-          // Get the profile update message template from system settings
-          console.log('Fetching profile update message template from system settings...');
-          const { data: templateSetting, error: templateError } = await supabase
-            .from('system_settings')
-            .select('setting_value')
-            .eq('setting_key', 'profile_update_message_template')
-            .single();
-
-          if (templateError && templateError.code !== 'PGRST116') {
-            console.error('Error fetching profile update template setting:', templateError);
-            throw new Error(`Failed to fetch profile update template: ${templateError.message}`);
-          }
-
-          let profileUpdateTemplate = '';
-          if (templateSetting?.setting_value) {
-            profileUpdateTemplate = templateSetting.setting_value;
-            console.log('Using custom profile update template');
-          } else {
-            console.log('Using default profile update template');
-            // Fallback to default template if none exists
-            profileUpdateTemplate = `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <center>
-                  <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-                </center>
-                
-                <p>Dear {{primary_contact_name}},</p>
-                
-                <p>Your profile update request for {{organization_name}} has been approved by our administration team.</p>
-                
-                <p>The changes you requested have been applied to your organization's profile and are now active in our system.</p>
-                
-                <p>You can view your updated profile by logging into the HESS Consortium member portal.</p>
-                
-                <p>If you have any questions about your profile or membership, please don't hesitate to contact us.</p>
-                
-                <p>Best regards,<br>
-                Keith Fowlkes, M.A., M.B.A.<br>
-                Executive Director and Founder<br>
-                The HESS Consortium<br>
-                keith.fowlkes@hessconsortium.org | 859.516.3571</p>
-              </div>
-            `;
-          }
-
-          // Replace template variables with actual values
-          console.log('Replacing profile update template variables...');
-          const primaryContactName = organizationData?.primary_contact_name || 'Member';
-          
-          html = profileUpdateTemplate
-            .replace(/{{primary_contact_name}}/g, primaryContactName)
-            .replace(/{{organization_name}}/g, organizationName)
-            .replace(/{{secondary_contact_email}}/g, organizationData?.secondary_contact_email || '')
-            .replace(/{{student_fte}}/g, organizationData?.student_fte?.toString() || '')
-            .replace(/{{address}}/g, organizationData?.address_line_1 || '')
-            .replace(/{{city}}/g, organizationData?.city || '')
-            .replace(/{{state}}/g, organizationData?.state || '')
-            .replace(/{{zip_code}}/g, organizationData?.zip_code || '')
-            .replace(/{{phone}}/g, organizationData?.phone || '')
-            .replace(/{{email}}/g, organizationData?.email || '')
-            .replace(/{{website}}/g, organizationData?.website || '');
-
-          console.log('Profile update email HTML prepared successfully');
-          
-        } catch (templateError) {
-          console.error('Error in profile_update_approved template processing:', templateError);
-          // Fallback to a simple template
-          html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <center>
-                <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-              </center>
-              <p>Dear ${organizationData?.primary_contact_name || 'Member'},</p>
-              <p>Your profile update request for ${organizationName} has been approved and the changes have been applied.</p>
-              <p>Best regards,<br>Keith Fowlkes<br>Executive Director, HESS Consortium</p>
-            </div>
-          `;
-        }
-        break;
-
-      default:
-        throw new Error(`Unknown email type: ${type}`);
-    }
-
-    // For welcome_approved emails, get CC recipients from settings and add default ones
-    let emailTo = [to];
-    let cc: string[] = [];
-    
-    if (type === 'welcome_approved') {
-      try {
-        console.log('Processing CC recipients for welcome_approved email...');
-        // Get CC recipients from system settings
-        const { data: ccSetting, error: ccError } = await supabase
-          .from('system_settings')
-          .select('setting_value')
-          .eq('setting_key', 'welcome_message_cc_recipients')
-          .single();
-
-        if (ccError && ccError.code !== 'PGRST116') {
-          console.error('Error fetching CC recipients:', ccError);
-        }
-
-        // Get default recipients configuration from system settings
-        const { data: defaultRecipientsSetting, error: defaultRecipientsError } = await supabase
-          .from('system_settings')
-          .select('setting_value')
-          .eq('setting_key', 'welcome_message_default_recipients')
-          .single();
-
-        let defaultCcRecipients = ['keith.fowlkes@hessconsortium.org']; // fallback
-        
-        if (defaultRecipientsSetting?.setting_value && !defaultRecipientsError) {
-          try {
-            const defaultRecipientsConfig = JSON.parse(defaultRecipientsSetting.setting_value);
-            // Include only recipients explicitly enabled (true)
-            defaultCcRecipients = Object.entries(defaultRecipientsConfig)
-              .filter(([_, enabled]) => !!enabled)
-              .map(([email]) => email);
-            console.log('Using configured default CC recipients:', defaultCcRecipients);
-          } catch (error) {
-            console.error('Error parsing default recipients config:', error);
-            console.log('Using fallback default CC recipients:', defaultCcRecipients);
-          }
-        } else {
-          console.log('Using fallback default CC recipients:', defaultCcRecipients);
-        }
-        
-        if (ccSetting?.setting_value) {
-          try {
-            const configuredCc = JSON.parse(ccSetting.setting_value);
-            cc = [...new Set([...defaultCcRecipients, ...configuredCc])]; // Merge and dedupe
-            console.log('Using configured CC recipients:', cc);
-          } catch (error) {
-            console.error('Error parsing CC recipients:', error);
-            cc = defaultCcRecipients;
-          }
-        } else {
-          cc = defaultCcRecipients;
-          console.log('Using default CC recipients:', cc);
-        }
-
-        // Add secondary contact to main recipients if exists
-        if (secondaryEmail && secondaryEmail !== to) {
-          emailTo.push(secondaryEmail);
-          console.log('Added secondary email to recipients:', secondaryEmail);
-        }
-      } catch (ccProcessingError) {
-        console.error('Error processing CC recipients:', ccProcessingError);
-        // Use fallback CC recipients
-        cc = ['keith.fowlkes@hessconsortium.org'];
+        case 'analytics_feedback':
+          emailData = {
+            member_name: memberName || 'Unknown',
+            member_email: memberEmail || '',
+            organization_name: organizationName || '',
+            timestamp: new Date().toLocaleString(),
+            feedback_message: adminMessage || ''
+          };
+          break;
       }
-    }
-    
-    // For profile_update_approved emails, only add secondary email to main recipients (no CC)
-    if (type === 'profile_update_approved') {
-      console.log('Processing profile update approval email - no CC recipients');
-      if (secondaryEmail && secondaryEmail !== to) {
-        emailTo.push(secondaryEmail);
-        console.log('Added secondary email to recipients for profile update:', secondaryEmail);
-      }
-    }
 
-    // Log recipients and subject for debugging
-    console.log('Sending email via Resend', { to: emailTo, cc, subject, type });
-
-    // Build email options and include reply_to for feedback
-    const emailOptions: any = {
-       from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
-      to: emailTo,
-      cc: cc.length > 0 ? cc : undefined,
-      subject,
-      html,
-    };
-
-    // For analytics_feedback we keep the payload minimal (match invoice delivery)
-    // No reply_to to avoid provider rejections
-
-    let emailResponse: any;
-    try {
-      if (type === 'analytics_feedback') {
-        // Use proven payload (matches working test-email) with array recipient
-        emailResponse = await resend.emails.send({
-          from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
+      const { data: emailResult, error: emailError } = await supabase.functions.invoke('centralized-email-delivery', {
+        body: {
+          type: type,
           to: [to],
-          subject,
-          html,
-        });
-      } else {
-        emailResponse = await resend.emails.send(emailOptions);
-      }
-    } catch (providerErr) {
-      console.error('Resend provider threw', providerErr);
-      return new Response(JSON.stringify({ error: 'Resend provider error', details: String((providerErr as any)?.message || providerErr) }), { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } });
-    }
-
-    if ((emailResponse as any)?.error) {
-      console.error('Resend send error:', (emailResponse as any).error);
-      return new Response(JSON.stringify({ 
-        error: 'Resend delivery failed', 
-        details: (emailResponse as any).error?.message || 'unknown'
-      }), {
-        status: 502,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+          data: emailData
+        }
       });
+
+      if (emailError || emailResult?.error) {
+        console.error(`❌ Failed to send ${type} email via centralized delivery:`, emailError || emailResult?.error);
+        return new Response(
+          JSON.stringify({ 
+            error: `Failed to send ${type} email`,
+            details: emailError?.message || emailResult?.error?.message 
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      console.log(`✅ ${type} email sent via centralized delivery:`, emailResult);
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `${type} email sent successfully`,
+          emailId: emailResult?.emailId 
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
-    console.log("Email sent successfully:", emailResponse);
-    
-    // Log the email action in audit log
-    await supabase.from('audit_log').insert({
-      action: `email_sent_${type}`,
-      entity_type: 'email',
-      details: { to, organizationName, type, messageId: (emailResponse as any)?.data?.id }
-    });
+    // Legacy logic for unsupported email types (temporary fallback)
+    console.log('Email type not yet migrated to centralized system:', type);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Email type not supported in centralized system yet', 
+        type: type,
+        message: 'This email type needs to be migrated to the centralized email delivery system'
+      }),
+      {
+        status: 501,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
 
-    return new Response(JSON.stringify({
-      success: true,
-      messageId: (emailResponse as any)?.data?.id
-    }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
   } catch (error: any) {
     console.error("Error in organization-emails function:", error);
     return new Response(

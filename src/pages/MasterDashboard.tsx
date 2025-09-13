@@ -1593,11 +1593,13 @@ const MasterDashboard = () => {
                 </div>
 
                 <Tabs defaultValue="system-messages" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-5">
+                  <TabsList className="grid w-full grid-cols-7">
                     <TabsTrigger value="system-messages">System Messages</TabsTrigger>
                     <TabsTrigger value="password-reset">Password Reset</TabsTrigger>
                     <TabsTrigger value="welcome-template">Welcome Template</TabsTrigger>
-                    <TabsTrigger value="profit-update">Profile Update</TabsTrigger>
+                    <TabsTrigger value="profile-update">Profile Update</TabsTrigger>
+                    <TabsTrigger value="analytics-feedback">Analytics Feedback</TabsTrigger>
+                    <TabsTrigger value="invoice-templates">Invoice Templates</TabsTrigger>
                     <TabsTrigger value="cc-recipients">CC Recipients</TabsTrigger>
                   </TabsList>
 
@@ -1639,6 +1641,41 @@ const MasterDashboard = () => {
 
                   {/* CC Recipients Subtab */}
                   <TabsContent value="cc-recipients" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>CC Recipients Configuration</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Configure additional recipients for organization emails (welcome messages, approvals, etc.)
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="cc-recipients">CC Email Recipients (comma-separated)</Label>
+                          <Input
+                            id="cc-recipients"
+                            value={ccRecipients}
+                            onChange={(e) => setCcRecipients(e.target.value)}
+                            placeholder="email1@example.com, email2@example.com"
+                          />
+                        </div>
+                        <Button 
+                          onClick={handleSaveCcRecipients}
+                          disabled={savingCcRecipients}
+                        >
+                          {savingCcRecipients ? "Saving..." : "Save CC Recipients"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
+  );
+};
                     <Card>
                       <CardHeader>
                         <CardTitle>Welcome Message CC Recipients</CardTitle>
@@ -1775,14 +1812,150 @@ const MasterDashboard = () => {
                   </TabsContent>
 
                   {/* Profile Update Messages Subtab */}
-                  <TabsContent value="profit-update" className="space-y-6">
+                  <TabsContent value="profile-update" className="space-y-6">
                     <Card>
                       <CardHeader>
                         <CardTitle>Profile Update Message for Member Organizations</CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          Customize the profile update email sent to member organizations. Use variables like {'{{'}`primary_contact_name`{'}}'} and {'{{'}`organization_name`{'}}'} for personalization.
+                          Customize the profile update email sent to member organizations when their profile changes are approved. 
+                          Use variables like {'{{'}`primary_contact_name`{'}}'} and {'{{'}`organization_name`{'}}'} for personalization.
                         </p>
                       </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="profile-update-message">Profile Update Approval Message</Label>
+                          <div 
+                            id="profile-update-message-editor"
+                            style={{ height: '300px' }}
+                          />
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          <p><strong>Available Variables:</strong></p>
+                          <ul className="list-disc list-inside space-y-1">
+                            <li><code>{'{{'}`organization_name`{'}}'}</code> - Organization name</li>
+                            <li><code>{'{{'}`primary_contact_name`{'}}'}</code> - Primary contact name</li>
+                            <li><code>{'{{'}`custom_message`{'}}'}</code> - Custom admin message</li>
+                          </ul>
+                        </div>
+                        <Button 
+                          onClick={handleSaveProfileUpdateMessage}
+                          disabled={savingProfileUpdateMessage}
+                        >
+                          {savingProfileUpdateMessage ? "Saving..." : "Save Profile Update Message"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Analytics Feedback Template Subtab */}
+                  <TabsContent value="analytics-feedback" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Analytics Feedback Email Template</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Customize the email template sent to admins when members submit analytics feedback.
+                          Use variables like {'{{'}`member_name`{'}}'} and {'{{'}`feedback_message`{'}}'} for personalization.
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="analytics-feedback-template">Analytics Feedback Template</Label>
+                          <div 
+                            id="analytics-feedback-template-editor"
+                            style={{ height: '300px' }}
+                          />
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          <p><strong>Available Variables:</strong></p>
+                          <ul className="list-disc list-inside space-y-1">
+                            <li><code>{'{{'}`member_name`{'}}'}</code> - Member name</li>
+                            <li><code>{'{{'}`member_email`{'}}'}</code> - Member email</li>
+                            <li><code>{'{{'}`organization_name`{'}}'}</code> - Organization name</li>
+                            <li><code>{'{{'}`timestamp`{'}}'}</code> - Submission timestamp</li>
+                            <li><code>{'{{'}`feedback_message`{'}}'}</code> - Feedback content</li>
+                          </ul>
+                        </div>
+                        <Button 
+                          onClick={handleSaveAnalyticsFeedbackTemplate}
+                          disabled={savingAnalyticsFeedbackTemplate}
+                        >
+                          {savingAnalyticsFeedbackTemplate ? "Saving..." : "Save Analytics Feedback Template"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Invoice Templates Subtab */}
+                  <TabsContent value="invoice-templates" className="space-y-6">
+                    <div className="grid gap-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Invoice Email Template</CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            Customize the email template sent with membership invoices.
+                            Use variables like {'{{'}`organization_name`{'}}'} and {'{{'}`invoice_number`{'}}'} for personalization.
+                          </p>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="invoice-email-template">Invoice Email Template</Label>
+                            <div 
+                              id="invoice-email-template-editor"
+                              style={{ height: '300px' }}
+                            />
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            <p><strong>Available Variables:</strong></p>
+                            <ul className="list-disc list-inside space-y-1">
+                              <li><code>{'{{'}`organization_name`{'}}'}</code> - Organization name</li>
+                              <li><code>{'{{'}`invoice_number`{'}}'}</code> - Invoice number</li>
+                              <li><code>{'{{'}`amount`{'}}'}</code> - Invoice amount</li>
+                              <li><code>{'{{'}`due_date`{'}}'}</code> - Due date</li>
+                            </ul>
+                          </div>
+                          <Button 
+                            onClick={handleSaveInvoiceEmailTemplate}
+                            disabled={savingInvoiceEmailTemplate}
+                          >
+                            {savingInvoiceEmailTemplate ? "Saving..." : "Save Invoice Email Template"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Overdue Reminder Template</CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            Customize the email template sent for overdue payment reminders.
+                          </p>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="overdue-reminder-template">Overdue Reminder Template</Label>
+                            <div 
+                              id="overdue-reminder-template-editor"
+                              style={{ height: '300px' }}
+                            />
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            <p><strong>Available Variables:</strong></p>
+                            <ul className="list-disc list-inside space-y-1">
+                              <li><code>{'{{'}`organization_name`{'}}'}</code> - Organization name</li>
+                              <li><code>{'{{'}`invoice_number`{'}}'}</code> - Invoice number</li>
+                              <li><code>{'{{'}`amount`{'}}'}</code> - Outstanding amount</li>
+                              <li><code>{'{{'}`due_date`{'}}'}</code> - Original due date</li>
+                            </ul>
+                          </div>
+                          <Button 
+                            onClick={handleSaveOverdueReminderTemplate}
+                            disabled={savingOverdueReminderTemplate}
+                          >
+                            {savingOverdueReminderTemplate ? "Saving..." : "Save Overdue Reminder Template"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
                       <CardContent className="space-y-4">
                         <div>
                           <Label htmlFor="profile-update-message">Profile Update Message Template</Label>

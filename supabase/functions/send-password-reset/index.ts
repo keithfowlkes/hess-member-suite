@@ -112,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
       customResetUrl = `${baseResetUrl}/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
     }
 
-    // Create custom email content with login hint
+    // Create login hint section for template
     const loginHintSection = userProfile.login_hint ? `
       <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
         <h3 style="color: #0369a1; margin: 0 0 10px 0;">Login Hint</h3>
@@ -121,54 +121,17 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     ` : '';
 
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <center>
-          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-        </center>
-        
-        <h2 style="color: #2563eb;">Password Reset Request</h2>
-        
-        <p>Hello ${userProfile.first_name || 'Member'},</p>
-        
-        <p>We received a request to reset your password for your HESS Consortium account.</p>
-        
-        ${loginHintSection}
-        
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${customResetUrl}" 
-             style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
-            Reset Your Password
-          </a>
-        </div>
-        
-        <p style="color: #666; font-size: 14px;">
-          <strong>Important:</strong> This reset link will expire in 24 hours. If you didn't request this password reset, you can safely ignore this email.
-        </p>
-        
-        <p style="color: #666; font-size: 14px;">
-          If the button above doesn't work, you can copy and paste this link into your browser:<br>
-          <a href="${customResetUrl}" style="color: #2563eb; word-break: break-all;">
-            ${customResetUrl}
-          </a>
-        </p>
-        
-        <hr style="margin: 40px 0; border: none; border-top: 1px solid #eee;">
-        
-        <p style="color: #666; font-size: 12px; text-align: center;">
-          Questions? Contact us at support@members.hessconsortium.app<br>
-          HESS Consortium - Higher Education Systems & Services Consortium
-        </p>
-      </div>
-    `;
-
     // Send email using centralized email delivery system
     const { data: emailResult, error: emailError } = await supabase.functions.invoke('centralized-email-delivery', {
       body: {
+        type: 'password_reset',
         to: [email],
-        subject: "Reset Your HESS Consortium Password",
-        html: html,
-        category: "password_reset"
+        data: {
+          user_name: userProfile.first_name || 'Member',
+          reset_link: customResetUrl,
+          expiry_time: '24 hours',
+          login_hint_section: loginHintSection
+        }
       }
     });
 

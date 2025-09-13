@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,7 +11,13 @@ interface FeedbackRequest {
   name: string;
   email: string;
   message: string;
+  organization?: string;
 }
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
 
 const handler = async (req: Request): Promise<Response> => {
   console.log('Analytics feedback function called');
@@ -33,7 +37,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { name, email, message }: FeedbackRequest = await req.json();
+    const { name, email, message, organization }: FeedbackRequest = await req.json();
     console.log('Feedback request:', { name, email, message: message.substring(0, 100) + '...' });
 
     // Validate required fields
@@ -47,47 +51,36 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send email to admins using the same pattern as working functions
-    const emailResponse = await resend.emails.send({
-      from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
-      to: ["keith.fowlkes@hessconsortium.org"], // Admin email
-      subject: "Member Analytics Dashboard Feedback",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px;">
-            Member Analytics Dashboard Feedback
-          </h2>
-          
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #495057; margin: 0 0 15px 0;">Feedback Details</h3>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
-          </div>
-          
-          <div style="background-color: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h3 style="color: #495057; margin: 0 0 15px 0;">Analytics Request</h3>
-            <div style="white-space: pre-wrap; color: #212529; line-height: 1.6;">
-${message}
-            </div>
-          </div>
-          
-          <div style="background-color: #e7f3ff; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0;">
-            <p style="margin: 0; color: #004085;">
-              <strong>Note:</strong> This feedback was submitted through the Member Analytics dashboard. 
-              Consider reviewing and implementing these suggestions to improve the analytics experience for member institutions.
-            </p>
-          </div>
-          
-          <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
-          <p style="color: #6c757d; font-size: 14px; text-align: center;">
-            This message was sent from the HESS Consortium Member Analytics Dashboard
-          </p>
-        </div>
-      `,
+    // Send email using centralized email delivery system
+    const { data: emailResult, error: emailError } = await supabase.functions.invoke('centralized-email-delivery', {
+      body: {
+        type: 'analytics_feedback',
+        to: ['keith.fowlkes@hessconsortium.org'],
+        data: {
+          member_name: name,
+          member_email: email,
+          organization_name: organization || '',
+          timestamp: new Date().toLocaleString(),
+          feedback_message: message
+        }
+      }
     });
 
-    console.log("Analytics feedback email sent successfully:", emailResponse);
+    if (emailError || emailResult?.error) {
+      console.error("❌ Failed to send analytics feedback email via centralized delivery:", emailError || emailResult?.error);
+      return new Response(
+        JSON.stringify({ 
+          error: "Failed to send feedback email",
+          details: emailError?.message || emailResult?.error?.message 
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    console.log("✅ Analytics feedback email sent via centralized delivery:", emailResult);
 
     return new Response(
       JSON.stringify({ 

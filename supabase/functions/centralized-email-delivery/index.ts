@@ -13,6 +13,11 @@ interface EmailRequest {
     | 'test'
     | 'invoice'
     | 'welcome'
+    | 'welcome_approved'
+    | 'member_registration'
+    | 'profile_update_approved'
+    | 'member_info_update'
+    | 'analytics_feedback'
     | 'organization'
     | 'password_reset'
     | 'password-reset'
@@ -138,15 +143,144 @@ const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
     subject: 'HESS Consortium - Password Reset Request',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #2563eb;">Password Reset Request</h1>
-        <p>Hi {{user_name}},</p>
-        <p>We received a request to reset your password. Click the link below to set a new password:</p>
-        <p><a href="{{reset_link}}" style="color: #2563eb;">Reset your password</a></p>
-        <p>This link will expire in {{expiry_time}}.</p>
-        <p>If you did not request a password reset, please ignore this email.</p>
+        <center>
+          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+        </center>
+        <h2 style="color: #2563eb;">Password Reset Request</h2>
+        <p>Hello {{user_name}},</p>
+        <p>We received a request to reset your password for your HESS Consortium account.</p>
+        {{login_hint_section}}
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="{{reset_link}}" 
+             style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Reset Your Password
+          </a>
+        </div>
+        <p style="color: #666; font-size: 14px;">
+          <strong>Important:</strong> This reset link will expire in 24 hours. If you didn't request this password reset, you can safely ignore this email.
+        </p>
+        <hr style="margin: 40px 0; border: none; border-top: 1px solid #eee;">
+        <p style="color: #666; font-size: 12px; text-align: center;">
+          Questions? Contact us at support@members.hessconsortium.app<br>
+          HESS Consortium - Higher Education Systems & Services Consortium
+        </p>
       </div>
     `,
-    variables: ['user_name', 'reset_link', 'expiry_time']
+    variables: ['user_name', 'reset_link', 'expiry_time', 'login_hint_section']
+  },
+
+  welcome_approved: {
+    id: 'welcome_approved',
+    name: 'New Member Welcome (Approved)',
+    subject: 'Welcome to HESS Consortium - {{organization_name}}',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <center>
+          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+        </center>
+        <p>{{primary_contact_name}},</p>
+        <p>Thank you for your registration for HESS Consortium membership. I want to welcome you and {{organization_name}} personally to membership in the HESS Consortium!</p>
+        <p>{{custom_message}}</p>
+        <p>Best regards,<br>HESS Consortium Team</p>
+      </div>
+    `,
+    variables: ['organization_name', 'primary_contact_name', 'custom_message']
+  },
+
+  member_registration: {
+    id: 'member_registration',
+    name: 'New Member Registration',
+    subject: 'New Member Registration - {{organization_name}}',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <center>
+          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+        </center>
+        <h2 style="color: #2563eb;">New Member Registration</h2>
+        <p>A new member registration has been submitted:</p>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3>Organization Details:</h3>
+          <p><strong>Organization:</strong> {{organization_name}}</p>
+          <p><strong>Contact:</strong> {{primary_contact_name}}</p>
+          <p><strong>Email:</strong> {{contact_email}}</p>
+        </div>
+        <p>Please review and approve this registration in the admin dashboard.</p>
+      </div>
+    `,
+    variables: ['organization_name', 'primary_contact_name', 'contact_email']
+  },
+
+  profile_update_approved: {
+    id: 'profile_update_approved',
+    name: 'Profile Update Request Approved',
+    subject: 'Profile Update Approved - {{organization_name}}',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <center>
+          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+        </center>
+        <h2 style="color: #2563eb;">Profile Update Request Approved</h2>
+        <p>Dear {{primary_contact_name}},</p>
+        <p>Your profile update request for {{organization_name}} has been approved and processed.</p>
+        <p>{{custom_message}}</p>
+        <p>Thank you for keeping your organization information up to date.</p>
+        <p>Best regards,<br>HESS Consortium Team</p>
+      </div>
+    `,
+    variables: ['organization_name', 'primary_contact_name', 'custom_message']
+  },
+
+  member_info_update: {
+    id: 'member_info_update',
+    name: 'Member Information Update Request',
+    subject: 'Member Information Update Request - {{organization_name}}',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <center>
+          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+        </center>
+        <h2 style="color: #2563eb;">Member Information Update Request</h2>
+        <p>A member information update request has been submitted:</p>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3>Update Details:</h3>
+          <p><strong>Organization:</strong> {{organization_name}}</p>
+          <p><strong>Requested by:</strong> {{primary_contact_name}}</p>
+          <p><strong>Request Date:</strong> {{request_date}}</p>
+        </div>
+        <p>Please review this update request in the admin dashboard.</p>
+      </div>
+    `,
+    variables: ['organization_name', 'primary_contact_name', 'request_date']
+  },
+
+  analytics_feedback: {
+    id: 'analytics_feedback',
+    name: 'Analytics Dashboard Feedback',
+    subject: 'Member Analytics Feedback from {{member_name}}',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #333; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">
+          Member Analytics Dashboard Feedback
+        </h2>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #495057; margin: 0 0 15px 0;">Feedback Details</h3>
+          <p><strong>Name:</strong> {{member_name}}</p>
+          <p><strong>Email:</strong> {{member_email}}</p>
+          <p><strong>Organization:</strong> {{organization_name}}</p>
+          <p><strong>Submitted:</strong> {{timestamp}}</p>
+        </div>
+        <div style="background-color: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <h3 style="color: #495057; margin: 0 0 15px 0;">Analytics Request</h3>
+          <div style="white-space: pre-wrap; color: #212529; line-height: 1.6;">{{feedback_message}}</div>
+        </div>
+        <div style="background-color: #e7f3ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; color: #004085;">
+            <strong>Note:</strong> This feedback was submitted through the Member Analytics dashboard.
+          </p>
+        </div>
+      </div>
+    `,
+    variables: ['member_name', 'member_email', 'organization_name', 'timestamp', 'feedback_message']
   }
 };
 
