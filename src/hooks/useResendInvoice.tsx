@@ -10,25 +10,50 @@ export const useResendInvoice = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (params: ResendInvoiceParams) => {
-      const { data, error } = await supabase.functions.invoke('resend-invoice', {
-        body: params
+    mutationFn: async ({ invoiceId }: ResendInvoiceParams) => {
+      // Fetch invoice and organization email
+      const { data: invoice, error: invErr } = await supabase
+        .from('invoices')
+        .select('id, invoice_number, amount, due_date, period_start_date, period_end_date, notes, organizations ( id, name, email )')
+        .eq('id', invoiceId)
+        .maybeSingle();
+      if (invErr) throw invErr;
+      if (!invoice) throw new Error('Invoice not found');
+      const toEmail = (invoice as any).organizations?.email as string | undefined;
+      if (!toEmail) throw new Error('Organization has no email');
+      const subject = `HESS Consortium - Invoice ${(invoice as any).invoice_number || ''}`.trim();
+
+      const { data, error } = await supabase.functions.invoke('centralized-email-delivery', {
+        body: {
+          type: 'invoice',
+          to: toEmail,
+          subject,
+          data: {
+            organization_name: (invoice as any).organizations?.name || '',
+            invoice_number: (invoice as any).invoice_number,
+            amount: `$${(((invoice as any).amount || 0) as number).toLocaleString()}`,
+            due_date: (invoice as any).due_date,
+            period_start_date: (invoice as any).period_start_date,
+            period_end_date: (invoice as any).period_end_date,
+            notes: (invoice as any).notes || ''
+          }
+        }
       });
 
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast({
-        title: "Invoice Resent Successfully",
-        description: `Invoice ${data.invoiceNumber} has been resent for $${data.amount}`,
+        title: "Invoice email sent",
+        description: "The invoice was emailed using centralized delivery.",
       });
     },
     onError: (error: any) => {
       console.error('Error resending invoice:', error);
       toast({
-        title: "Error Resending Invoice",
-        description: error.message || "Failed to resend invoice",
+        title: "Error sending invoice email",
+        description: error.message || "Failed to send invoice email",
         variant: "destructive"
       });
     }

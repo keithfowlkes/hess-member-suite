@@ -662,7 +662,37 @@ export default function MembershipFees() {
 
   const handleSendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await sendInvoice(invoiceId);
+    try {
+      const invoice = invoices.find(inv => inv.id === invoiceId);
+      if (!invoice) throw new Error('Invoice not found');
+      const toEmail = invoice.organizations?.email;
+      if (!toEmail) throw new Error('Organization has no email');
+      const subject = `HESS Consortium - Invoice ${invoice.invoice_number}`;
+
+      const { data, error } = await supabase.functions.invoke('centralized-email-delivery', {
+        body: {
+          type: 'invoice',
+          to: toEmail,
+          subject,
+          data: {
+            organization_name: invoice.organizations?.name || '',
+            invoice_number: invoice.invoice_number,
+            amount: `$${(invoice.amount || 0).toLocaleString()}`,
+            due_date: invoice.due_date,
+            period_start_date: invoice.period_start_date,
+            period_end_date: invoice.period_end_date,
+            notes: invoice.notes || ''
+          }
+        }
+      });
+      if (error) throw error;
+
+      await sendInvoice(invoiceId);
+      toast({ title: 'Invoice email sent', description: `Invoice ${invoice.invoice_number} sent to ${toEmail}` });
+    } catch (err: any) {
+      console.error('Failed to send invoice email:', err);
+      toast({ title: 'Error', description: err.message || 'Failed to send invoice email', variant: 'destructive' });
+    }
   };
 
   const handleResendInvoice = async (invoiceId: string, e: React.MouseEvent) => {

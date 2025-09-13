@@ -19,17 +19,30 @@ export const useSendInvoice = () => {
 
   return useMutation({
     mutationFn: async (params: SendInvoiceParams) => {
-      const { data, error } = await supabase.functions.invoke('send-invoice', {
-        body: params
+      const { data, error } = await supabase.functions.invoke('centralized-email-delivery', {
+        body: {
+          type: 'invoice',
+          to: params.organizationEmail,
+          subject: `HESS Consortium - Invoice for ${params.organizationName}`,
+          data: {
+            organization_name: params.organizationName,
+            amount: `$${(params.proratedAmount ?? params.invoiceAmount).toLocaleString()}`,
+            prorated_amount: params.proratedAmount ? `$${params.proratedAmount.toLocaleString()}` : '',
+            membership_start_date: params.membershipStartDate,
+            period_start_date: params.periodStartDate,
+            period_end_date: params.periodEndDate,
+            notes: params.notes || ''
+          }
+        }
       });
 
       if (error) throw error;
       return data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       toast({
-        title: "Invoice Sent Successfully",
-        description: `Prorated invoice sent to ${variables.organizationName} for $${data.amount}`,
+        title: "Invoice Email Sent",
+        description: `Invoice emailed to ${variables.organizationName} via centralized delivery.`,
       });
     },
     onError: (error: any) => {
