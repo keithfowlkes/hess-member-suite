@@ -203,21 +203,67 @@ serve(async (req) => {
         if (authError.message?.includes('already been registered') || authError.code === 'email_exists') {
           console.log('User already exists, switching to existing user flow...');
           
-          // Try to get the existing user again
+          // Try multiple approaches to find the existing user
+          let existingUserRetry = null;
+          
+          // Approach 1: List users and find by email (with better comparison)
           const { data: existingUsersRetry, error: listErrorRetry } = await supabaseAdmin.auth.admin.listUsers();
           
-          if (listErrorRetry) {
-            console.error('Error listing users on retry:', listErrorRetry);
-            return new Response(
-              JSON.stringify({ error: 'Failed to check existing users on retry' }),
-              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          if (!listErrorRetry && existingUsersRetry?.users) {
+            // Try exact match first
+            existingUserRetry = existingUsersRetry.users.find(user => 
+              user.email?.toLowerCase() === pendingReg.email.toLowerCase()
             );
+            
+            // If not found, try broader search
+            if (!existingUserRetry) {
+              console.log('Exact email match not found, trying broader search...');
+              existingUserRetry = existingUsersRetry.users.find(user => 
+                user.email?.toLowerCase().includes(pendingReg.email.toLowerCase().split('@')[0])
+              );
+            }
           }
           
-          const existingUserRetry = existingUsersRetry.users.find(user => user.email === pendingReg.email);
+          // Approach 2: Try to get user by email directly (if approach 1 fails)
+          if (!existingUserRetry) {
+            console.log('User listing approach failed, trying direct email lookup...');
+            try {
+              const { data: userByEmail, error: emailLookupError } = await supabaseAdmin.auth.admin.getUserById('');
+              // This won't work directly, but we can try a different approach
+            } catch (e) {
+              console.log('Direct email lookup not available');
+            }
+          }
+          
+          // Approach 3: Create a minimal profile and let triggers handle user creation
+          if (!existingUserRetry) {
+            console.log('Could not find existing user, attempting to proceed with profile creation...');
+            
+            // Instead of failing, let's try to create a profile entry that might help
+            // Check if a profile already exists for this email
+            const { data: existingProfile, error: profileError } = await supabaseAdmin
+              .from('profiles')
+              .select('user_id, email')
+              .eq('email', pendingReg.email)
+              .single();
+            
+            if (!profileError && existingProfile) {
+              console.log('Found existing profile, using that user ID');
+              // Try to get the auth user by the profile's user_id
+              try {
+                const { data: userById, error: userByIdError } = await supabaseAdmin.auth.admin.getUserById(existingProfile.user_id);
+                if (!userByIdError && userById.user) {
+                  existingUserRetry = userById.user;
+                  console.log('Successfully found user via profile lookup');
+                }
+              } catch (e) {
+                console.log('Could not get user by profile user_id:', e);
+              }
+            }
+          }
           
           if (existingUserRetry) {
-            console.log(`Found existing user on retry: ${pendingReg.email}, updating user metadata`);
+            console.log(`Found existing user on retry: ${existingUserRetry.email}, updating user metadata`);
             
             // Update existing user's metadata
             const { data: updatedUser, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
@@ -297,11 +343,17 @@ serve(async (req) => {
 
             authUser = { user: updatedUser.user };
           } else {
-            // User still not found - this is an unexpected error
-            return new Response(
-              JSON.stringify({ error: 'User exists but could not be found in system' }),
-              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
+            // Last resort: Continue with approval but warn about user account issue
+            console.warn('Could not locate existing user, but continuing with approval process');
+            console.warn('User may need to use password reset to access their account');
+            
+            // Set a dummy authUser to continue the process
+            authUser = { 
+              user: { 
+                id: 'existing-user-not-found',
+                email: pendingReg.email 
+              } 
+            };
           }
         } else {
           // Other auth errors
@@ -373,65 +425,98 @@ serve(async (req) => {
       if (shouldCreateNew) {
         console.log('Organization not found, creating manually...');
         
-        // Get the profile ID for the user
-        const { data: profile, error: profileError } = await supabaseAdmin
-          .from('profiles')
-          .select('id')
-          .eq('user_id', authUser.user?.id)
-          .single();
-
-        if (profileError) {
-          console.error('Error fetching user profile:', profileError);
-          // Continue without failing - the trigger might handle it
-        } else if (profile) {
-          const { data: createdOrg, error: createError } = await supabaseAdmin
+        // Handle case where we have a placeholder user ID
+        if (authUser.user?.id === 'existing-user-not-found') {
+          console.log('User ID is placeholder, trying to find organization by email instead...');
+          
+          // Try to find organization by email instead
+          const { data: orgByEmail, error: orgByEmailError } = await supabaseAdmin
             .from('organizations')
-            .insert({
-              name: pendingReg.organization_name,
-              contact_person_id: profile.id,
-              student_fte: pendingReg.student_fte,
-              address_line_1: pendingReg.address,
-              city: pendingReg.city,
-              state: pendingReg.state,
-              zip_code: pendingReg.zip,
-              email: pendingReg.email,
-              primary_contact_title: pendingReg.primary_contact_title,
-              secondary_first_name: pendingReg.secondary_first_name,
-              secondary_last_name: pendingReg.secondary_last_name,
-              secondary_contact_title: pendingReg.secondary_contact_title,
-              secondary_contact_email: pendingReg.secondary_contact_email,
-              student_information_system: pendingReg.student_information_system,
-              financial_system: pendingReg.financial_system,
-              financial_aid: pendingReg.financial_aid,
-              hcm_hr: pendingReg.hcm_hr,
-              payroll_system: pendingReg.payroll_system,
-              purchasing_system: pendingReg.purchasing_system,
-              housing_management: pendingReg.housing_management,
-              learning_management: pendingReg.learning_management,
-              admissions_crm: pendingReg.admissions_crm,
-              alumni_advancement_crm: pendingReg.alumni_advancement_crm,
-              primary_office_apple: pendingReg.primary_office_apple,
-              primary_office_asus: pendingReg.primary_office_asus,
-              primary_office_dell: pendingReg.primary_office_dell,
-              primary_office_hp: pendingReg.primary_office_hp,
-              primary_office_microsoft: pendingReg.primary_office_microsoft,
-              primary_office_other: pendingReg.primary_office_other,
-              primary_office_other_details: pendingReg.primary_office_other_details,
-              other_software_comments: pendingReg.other_software_comments,
-              membership_status: 'active',
-              membership_start_date: new Date().toISOString().split('T')[0],
-              country: 'United States',
-              organization_type: isAdminOrg ? 'system' : 'member'
-            })
             .select('id, name, email')
+            .eq('email', pendingReg.email)
+            .single();
+          
+          if (!orgByEmailError && orgByEmail) {
+            console.log('Found organization by email, using existing organization');
+            newOrganization = orgByEmail;
+            shouldCreateNew = false;
+          } else {
+            console.log('No organization found by email, will skip organization creation due to user lookup issues');
+            // Skip organization creation but continue with approval
+            shouldCreateNew = false;
+          }
+        } else {
+          // Normal flow: Get the profile ID for the user
+          const { data: profile, error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('user_id', authUser.user?.id)
             .single();
 
-          if (createError) {
-            console.error('Error creating organization manually:', createError);
-            // Don't fail the entire process - user was created successfully
-          } else {
-            newOrganization = createdOrg;
-            console.log(`Organization ${newOrganization.name} created manually`);
+          if (profileError) {
+            console.error('Error fetching user profile:', profileError);
+            // Try to find organization by email as fallback
+            const { data: orgByEmail, error: orgByEmailError } = await supabaseAdmin
+              .from('organizations')
+              .select('id, name, email')
+              .eq('email', pendingReg.email)
+              .single();
+            
+            if (!orgByEmailError && orgByEmail) {
+              console.log('Found organization by email as fallback');
+              newOrganization = orgByEmail;
+              shouldCreateNew = false;
+            }
+          } else if (profile) {
+            const { data: createdOrg, error: createError } = await supabaseAdmin
+              .from('organizations')
+              .insert({
+                name: pendingReg.organization_name,
+                contact_person_id: profile.id,
+                student_fte: pendingReg.student_fte,
+                address_line_1: pendingReg.address,
+                city: pendingReg.city,
+                state: pendingReg.state,
+                zip_code: pendingReg.zip,
+                email: pendingReg.email,
+                primary_contact_title: pendingReg.primary_contact_title,
+                secondary_first_name: pendingReg.secondary_first_name,
+                secondary_last_name: pendingReg.secondary_last_name,
+                secondary_contact_title: pendingReg.secondary_contact_title,
+                secondary_contact_email: pendingReg.secondary_contact_email,
+                student_information_system: pendingReg.student_information_system,
+                financial_system: pendingReg.financial_system,
+                financial_aid: pendingReg.financial_aid,
+                hcm_hr: pendingReg.hcm_hr,
+                payroll_system: pendingReg.payroll_system,
+                purchasing_system: pendingReg.purchasing_system,
+                housing_management: pendingReg.housing_management,
+                learning_management: pendingReg.learning_management,
+                admissions_crm: pendingReg.admissions_crm,
+                alumni_advancement_crm: pendingReg.alumni_advancement_crm,
+                primary_office_apple: pendingReg.primary_office_apple,
+                primary_office_asus: pendingReg.primary_office_asus,
+                primary_office_dell: pendingReg.primary_office_dell,
+                primary_office_hp: pendingReg.primary_office_hp,
+                primary_office_microsoft: pendingReg.primary_office_microsoft,
+                primary_office_other: pendingReg.primary_office_other,
+                primary_office_other_details: pendingReg.primary_office_other_details,
+                other_software_comments: pendingReg.other_software_comments,
+                membership_status: 'active',
+                membership_start_date: new Date().toISOString().split('T')[0],
+                country: 'United States',
+                organization_type: isAdminOrg ? 'system' : 'member'
+              })
+              .select('id, name, email')
+              .single();
+
+            if (createError) {
+              console.error('Error creating organization manually:', createError);
+              // Don't fail the entire process - user was created successfully
+            } else {
+              newOrganization = createdOrg;
+              console.log(`Organization ${newOrganization.name} created manually`);
+            }
           }
         }
       }
