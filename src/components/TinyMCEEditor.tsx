@@ -16,40 +16,68 @@ const TinyMCEEditor: React.FC<TinyMCEEditorProps> = ({
   className = ""
 }) => {
   const [apiKey, setApiKey] = useState<string>('no-api-key');
+  const [keyVersion, setKeyVersion] = useState(0);
+
+  const fetchApiKey = async () => {
+    try {
+      // First try to get from system settings (where we store it now)
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'tinymce_api_key')
+        .maybeSingle();
+
+      if (!settingsError && settingsData?.setting_value) {
+        console.log('TinyMCE API key found in settings');
+        setApiKey(settingsData.setting_value);
+        return;
+      }
+
+      // Fallback to edge function
+      const { data, error } = await supabase.functions.invoke('get-tinymce-key');
+      if (!error && data?.apiKey) {
+        console.log('TinyMCE API key found from edge function');
+        setApiKey(data.apiKey);
+        return;
+      }
+
+      console.log('No TinyMCE API key found, using default');
+    } catch (error) {
+      console.error('Error fetching TinyMCE API key:', error);
+    }
+  };
 
   useEffect(() => {
-    const fetchApiKey = async () => {
-      try {
-        // First try to get from the edge function (new method)
-        const { data, error } = await supabase.functions.invoke('get-tinymce-key');
-        if (!error && data?.apiKey) {
-          setApiKey(data.apiKey);
-          return;
-        }
+    fetchApiKey();
+  }, [keyVersion]);
 
-        // Fallback to system settings (for backward compatibility)
-        const { data: settingsData, error: settingsError } = await supabase
-          .from('system_settings')
-          .select('setting_value')
-          .eq('setting_key', 'tinymce_api_key')
-          .maybeSingle();
-
-        if (!settingsError && settingsData?.setting_value) {
-          setApiKey(settingsData.setting_value);
-          return;
-        }
-
-        console.log('No TinyMCE API key found, using default');
-      } catch (error) {
-        console.error('Error fetching TinyMCE API key:', error);
-      }
+  // Listen for API key updates
+  useEffect(() => {
+    const handleStorageChange = () => {
+      // Increment version to trigger re-fetch
+      setKeyVersion(prev => prev + 1);
     };
 
-    fetchApiKey();
+    // Listen for custom events when API key is updated
+    window.addEventListener('tinymce-key-updated', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('tinymce-key-updated', handleStorageChange);
+    };
   }, []);
+
+  // Add a method to refresh the key from outside
+  React.useImperativeHandle(React.createRef(), () => ({
+    refreshApiKey: () => {
+      setKeyVersion(prev => prev + 1);
+    }
+  }));
+
+  console.log('TinyMCE Editor using API key:', apiKey.substring(0, 10) + '...');
   return (
     <div className={className}>
       <Editor
+        key={`tinymce-${keyVersion}-${apiKey}`}
         apiKey={apiKey}
         value={value}
         onEditorChange={(content) => onChange(content)}

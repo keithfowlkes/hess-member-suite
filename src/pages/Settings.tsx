@@ -327,6 +327,9 @@ export default function Settings() {
           description: 'TinyMCE API key has been updated successfully. The editor will use the new key.',
         });
         setTinymceApiKey(''); // Clear for security
+        
+        // Trigger refresh of all TinyMCE editors
+        window.dispatchEvent(new CustomEvent('tinymce-key-updated'));
       } else {
         throw new Error(data.message || 'Update failed');
       }
