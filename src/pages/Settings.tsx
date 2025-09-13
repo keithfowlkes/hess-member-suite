@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDirectory';
 import { SimpleSystemFieldManager } from '@/components/SimpleSystemFieldManager';
 import { USMap } from '@/components/USMap';
+import { MessageTextContent } from '@/components/MessageTextContent';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
@@ -515,7 +516,7 @@ export default function Settings() {
                 <TabsTrigger value="forms">Registration Forms</TabsTrigger>
                 <TabsTrigger value="public">Public Views</TabsTrigger>
                 <TabsTrigger value="security">Security Settings</TabsTrigger>
-                <TabsTrigger value="system">System Info</TabsTrigger>
+                <TabsTrigger value="messaging">Messaging Config</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-6">
@@ -802,23 +803,40 @@ export default function Settings() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="system" className="space-y-6">
-                {/* Email System Testing - Full Width */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Mail className="w-5 h-5" />
-                      Email System Testing & Management
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Centralized email delivery system for all application forms and communications
-                    </p>
-                  </CardHeader>
-                   <CardContent className="space-y-6">
-                     {/* Centralized Email Management System */}
-                      <div className="space-y-6">
-                        
-                        {/* Rate Limiting Configuration */}
+              <TabsContent value="messaging" className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-semibold">Messaging Configuration</h2>
+                  <p className="text-muted-foreground mt-2">
+                    Manage email system testing, templates, and message configuration for HESS Consortium
+                  </p>
+                </div>
+                
+                <Tabs defaultValue="email-testing" className="space-y-6">
+                  <TabsList className="grid w-full grid-cols-2 max-w-md">
+                    <TabsTrigger value="email-testing" className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Email System Testing
+                    </TabsTrigger>
+                    <TabsTrigger value="message-text" className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Message Text
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="email-testing" className="space-y-6">
+                    {/* Email System Testing */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Mail className="w-5 h-5" />
+                          Email System Testing & Management
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Centralized email delivery system for all application forms and communications
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        {/* Email Rate Limiting Configuration */}
                         <Card>
                           <CardHeader>
                             <CardTitle className="text-base flex items-center gap-2">
@@ -858,28 +876,17 @@ export default function Settings() {
                                 </div>
                               </div>
                             </div>
+
                             <Button 
                               onClick={async () => {
-                                try {
-                                  await updateSystemSetting.mutateAsync({
-                                    settingKey: 'email_rate_limit_delay_ms',
-                                    settingValue: emailDelay,
-                                    description: 'Delay in milliseconds between bulk email sends to respect Resend API rate limits (2 req/sec max)'
-                                  });
-                                  toast({
-                                    title: 'Email Rate Limit Settings Updated',
-                                    description: `Email delay set to ${emailDelay}ms for bulk operations.`
-                                  });
-                                } catch (error) {
-                                  toast({
-                                    title: 'Error',
-                                    description: 'Failed to update email rate limit settings.',
-                                    variant: 'destructive'
-                                  });
-                                }
+                                await updateSystemSetting.mutateAsync({
+                                  settingKey: 'email_rate_limit_delay_ms',
+                                  settingValue: emailDelay,
+                                  description: 'Delay in milliseconds between bulk email sends to respect rate limits'
+                                });
                               }}
                               disabled={updateSystemSetting.isPending}
-                              className="w-full md:w-auto"
+                              className="w-full sm:w-auto"
                             >
                               <Save className="w-4 h-4 mr-2" />
                               {updateSystemSetting.isPending ? 'Saving...' : 'Save Rate Limit Settings'}
@@ -887,690 +894,178 @@ export default function Settings() {
                           </CardContent>
                         </Card>
 
-                        {/* Email Type Selector */}
-                       <Card>
-                         <CardHeader>
-                           <CardTitle className="text-base flex items-center gap-2">
-                             <Mail className="w-4 h-4" />
-                             Email Template Testing
-                           </CardTitle>
-                         </CardHeader>
-                         <CardContent className="space-y-4">
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <div className="space-y-2">
-                               <Label htmlFor="email-type">Email Type</Label>
-                               <Select value={emailTestData.emailType || 'test'} onValueChange={(value) => 
-                                 setEmailTestData(prev => ({ ...prev, emailType: value, subject: getEmailTypeSubject(value) }))
-                               }>
-                                 <SelectTrigger>
-                                   <SelectValue />
-                                 </SelectTrigger>
-                                 <SelectContent>
-                                   <SelectItem value="test">System Test Email</SelectItem>
-                                   <SelectItem value="welcome">Welcome Email</SelectItem>
-                                   <SelectItem value="invoice">Invoice Email</SelectItem>
-                                   <SelectItem value="overdue_reminder">Payment Reminder</SelectItem>
-                                   <SelectItem value="password_reset">Password Reset</SelectItem>
-                                   <SelectItem value="custom">Custom Template</SelectItem>
-                                 </SelectContent>
-                               </Select>
-                             </div>
-
-                             <div className="space-y-2">
-                               <Label htmlFor="test-email-to">Test Recipient Email</Label>
-                               <Input
-                                 id="test-email-to"
-                                 type="email"
-                                 placeholder="test@example.com"
-                                 value={emailTestData.to}
-                                 onChange={(e) => setEmailTestData(prev => ({ ...prev, to: e.target.value }))}
-                               />
-                             </div>
-                           </div>
-
-                           <div className="space-y-2">
-                             <Label htmlFor="test-subject">Email Subject</Label>
-                             <Input
-                               id="test-subject"
-                               placeholder="Email subject"
-                               value={emailTestData.subject}
-                               onChange={(e) => setEmailTestData(prev => ({ ...prev, subject: e.target.value }))}
-                             />
-                           </div>
-
-                           <div className="space-y-2">
-                             <Label htmlFor="test-message">Message Content</Label>
-                             <Textarea
-                               id="test-message"
-                               placeholder="Enter your test message or template data..."
-                               value={emailTestData.message}
-                               onChange={(e) => setEmailTestData(prev => ({ ...prev, message: e.target.value }))}
-                               rows={4}
-                             />
-                           </div>
-
-                           {/* Template Variables Helper */}
-                           {emailTestData.emailType && emailTestData.emailType !== 'test' && (
-                             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                               <h4 className="font-medium text-blue-900 mb-2">Available Template Variables:</h4>
-                               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-blue-800">
-                                 {getTemplateVariables(emailTestData.emailType).map(variable => (
-                                   <code key={variable} className="bg-blue-100 px-2 py-1 rounded text-xs">
-                                     {`{{${variable}}}`}
-                                   </code>
-                                 ))}
-                               </div>
-                             </div>
-                           )}
-
-                           <div className="flex gap-3">
-                             <Button 
-                               onClick={handleSendTestEmail}
-                               disabled={emailTestLoading || !emailTestData.to.trim()}
-                               className="flex-1"
-                             >
-                               {emailTestLoading ? (
-                                 <>
-                                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                   Sending Test...
-                                 </>
-                               ) : (
-                                 <>
-                                   <Send className="w-4 h-4 mr-2" />
-                                   Send Test Email
-                                 </>
-                               )}
-                             </Button>
-                             
-                             <Button 
-                               variant="outline" 
-                               onClick={() => setShowEmailPreview(true)}
-                               disabled={!emailTestData.emailType}
-                             >
-                               <Eye className="w-4 h-4 mr-2" />
-                               Preview
-                             </Button>
-                           </div>
-                         </CardContent>
-                       </Card>
-
-                       {/* Bulk Email Management */}
-                       <Card>
-                         <CardHeader>
-                           <CardTitle className="text-base flex items-center gap-2">
-                             <Users className="w-4 h-4" />
-                             Bulk Email Operations
-                           </CardTitle>
-                         </CardHeader>
-                         <CardContent className="space-y-4">
-                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                             <Button 
-                               variant="outline" 
-                               size="sm" 
-                               className="h-auto py-3 px-4 flex flex-col items-start gap-1"
-                               onClick={() => handleBulkEmailOperation('welcome_all_pending')}
-                             >
-                               <div className="flex items-center gap-2 font-medium">
-                                 <Mail className="w-4 h-4" />
-                                 Welcome All Pending
-                               </div>
-                               <p className="text-xs text-muted-foreground">Send welcome emails to all pending members</p>
-                             </Button>
-                             
-                             <Button 
-                               variant="outline" 
-                               size="sm" 
-                               className="h-auto py-3 px-4 flex flex-col items-start gap-1"
-                               onClick={() => handleBulkEmailOperation('overdue_reminders')}
-                             >
-                               <div className="flex items-center gap-2 font-medium">
-                                 <AlertCircle className="w-4 h-4" />
-                                 Overdue Reminders
-                               </div>
-                               <p className="text-xs text-muted-foreground">Send payment reminders for overdue invoices</p>
-                             </Button>
-                             
-                             <Button 
-                               variant="outline" 
-                               size="sm" 
-                               className="h-auto py-3 px-4 flex flex-col items-start gap-1"
-                               onClick={() => handleBulkEmailOperation('system_announcement')}
-                             >
-                               <div className="flex items-center gap-2 font-medium">
-                                 <BarChart3 className="w-4 h-4" />
-                                 System Announcement
-                               </div>
-                               <p className="text-xs text-muted-foreground">Send announcement to all active members</p>
-                             </Button>
-                           </div>
-                         </CardContent>
-                        </Card>
-
-                        {/* Email Delivery Status */}
-                       <Card>
-                         <CardHeader>
-                           <CardTitle className="text-base flex items-center gap-2">
-                             <BarChart3 className="w-4 h-4" />
-                             Delivery Status & Analytics
-                           </CardTitle>
-                         </CardHeader>
-                         <CardContent>
-                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                             <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                               <p className="text-green-700 font-medium">Emails Sent Today</p>
-                               <p className="text-2xl font-bold text-green-800">24</p>
-                             </div>
-                             <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                               <p className="text-blue-700 font-medium">Delivery Rate</p>
-                               <p className="text-2xl font-bold text-blue-800">98.5%</p>
-                             </div>
-                             <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                               <p className="text-yellow-700 font-medium">Pending Queue</p>
-                               <p className="text-2xl font-bold text-yellow-800">3</p>
-                             </div>
-                             <div className="bg-red-50 p-3 rounded-lg border border-red-200">
-                               <p className="text-red-700 font-medium">Failed Today</p>
-                               <p className="text-2xl font-bold text-red-800">1</p>
-                             </div>
-                           </div>
-                         </CardContent>
-                       </Card>
-
-                       {/* Test Result Display */}
-                       {emailTestResult && (
-                         <Card className={`border-2 ${emailTestResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                           <CardHeader className="pb-3">
-                             <CardTitle className={`text-sm font-medium flex items-center gap-2 ${emailTestResult.success ? 'text-green-800' : 'text-red-800'}`}>
-                               {emailTestResult.success ? (
-                                 <CheckCircle className="w-4 h-4" />
-                               ) : (
-                                 <AlertCircle className="w-4 h-4" />
-                               )}
-                               {emailTestResult.success ? 'Email Sent Successfully' : 'Email Sending Failed'}
-                             </CardTitle>
-                           </CardHeader>
-                           <CardContent className="pt-0">
-                             <div className={`text-sm ${emailTestResult.success ? 'text-green-700' : 'text-red-700'}`}>
-                               <p className="font-medium">{emailTestResult.message}</p>
-                               {emailTestResult.timestamp && (
-                                 <p className="text-xs mt-1 opacity-75">
-                                   Sent at: {new Date(emailTestResult.timestamp).toLocaleString()}
-                                 </p>
-                               )}
-                               {emailTestResult.success && emailTestResult.emailId && (
-                                 <p className="text-xs mt-1 opacity-75">
-                                   Email ID: {emailTestResult.emailId}
-                                 </p>
-                               )}
-                               {emailTestResult.recipients && (
-                                 <p className="text-xs mt-1 opacity-75">
-                                   Recipients: {emailTestResult.recipients.join(', ')}
-                                 </p>
-                               )}
-                               {emailTestResult.template && (
-                                 <p className="text-xs mt-1 opacity-75">
-                                   Template: {emailTestResult.template}
-                                 </p>
-                               )}
-                             </div>
-                           </CardContent>
-                         </Card>
-                       )}
-                     </div>
-
-                       {/* Enhanced Email Configuration Management */}
-                      <div className="space-y-6 pt-6 border-t border-border">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Settings2 className="w-5 h-5 text-primary" />
-                          <h3 className="text-lg font-semibold">Email System Configuration</h3>
-                        </div>
-                        
-                         {/* Current Configuration Status */}
-                        <Card className="bg-gradient-to-r from-background to-muted/20 border-l-4 border-l-primary">
-                          <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-medium flex items-center gap-2">
-                              <Eye className="w-4 h-4" />
-                              Current Configuration Status
+                        {/* Enhanced Email Testing */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <Send className="w-4 h-4" />
+                              Email Testing & Validation
                             </CardTitle>
                           </CardHeader>
-                          <CardContent className="pt-0">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
-                              <div className="space-y-1">
-                                <p className="text-muted-foreground">Provider</p>
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Resend
-                                </Badge>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-muted-foreground">From Address</p>
-                                <p className="font-mono text-xs bg-muted px-2 py-1 rounded">
-                                  {emailFromSetting?.setting_value || 'Not configured (using RESEND_FROM or sandbox)'}
-                                </p>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-muted-foreground">API Key Status</p>
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Configured
-                                </Badge>
-                              </div>
-                            </div>
-                            
-                            {/* Verification Section */}
-                            <div className="border-t pt-4">
-                              <div className="flex items-center justify-between mb-3">
-                                <p className="text-sm font-medium">Configuration Verification</p>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={handleVerifyEmailConfig}
-                                  disabled={configVerificationLoading}
-                                >
-                                  {configVerificationLoading ? (
-                                    <>
-                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                      Verifying...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Shield className="w-4 h-4 mr-2" />
-                                      Verify Configuration
-                                    </>
-                                  )}
-                                </Button>
-                              </div>
-                              
-                              {configVerificationResult && (
-                                <div className={`p-4 rounded-lg border text-sm space-y-2 ${
-                                  configVerificationResult.success 
-                                    ? 'bg-green-50 border-green-200' 
-                                    : 'bg-red-50 border-red-200'
-                                }`}>
-                                  <div className="flex items-center gap-2 font-medium">
-                                    {configVerificationResult.success ? (
-                                      <CheckCircle className="w-4 h-4 text-green-600" />
-                                    ) : (
-                                      <AlertCircle className="w-4 h-4 text-red-600" />
-                                    )}
-                                    {configVerificationResult.success ? 'Configuration Valid' : 'Configuration Issues Found'}
-                                  </div>
-                                  
-                                  {configVerificationResult.configuration && (
-                                    <div className="grid grid-cols-2 gap-4 text-xs">
-                                      <div>
-                                        <p><strong>API Key:</strong> {configVerificationResult.configuration.api_key_valid ? '✓ Valid' : '✗ Invalid'}</p>
-                                        <p><strong>Sender Source:</strong> {configVerificationResult.configuration.sender_source}</p>
-                                      </div>
-                                      <div>
-                                        <p><strong>Domain:</strong> {configVerificationResult.configuration.sender_domain || 'None'}</p>
-                                        <p><strong>Domain Verified:</strong> {configVerificationResult.configuration.domain_verified ? '✓ Yes' : '✗ No'}</p>
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {configVerificationResult.configuration?.errors?.length > 0 && (
-                                    <div className="mt-2">
-                                      <p className="font-medium text-red-700">Errors:</p>
-                                      <ul className="list-disc list-inside text-red-600">
-                                        {configVerificationResult.configuration.errors.map((error: string, i: number) => (
-                                          <li key={i}>{error}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                  
-                                  {configVerificationResult.recommendations?.length > 0 && (
-                                    <div className="mt-2">
-                                      <p className="font-medium text-blue-700">Recommendations:</p>
-                                      <ul className="list-disc list-inside text-blue-600">
-                                        {configVerificationResult.recommendations.map((rec: string, i: number) => (
-                                          <li key={i}>{rec}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        {/* Configuration Forms */}
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                          {/* From Email Configuration */}
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-base flex items-center gap-2">
-                                <Mail className="w-4 h-4" />
-                                Sender Configuration
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {/* Domain Configuration */}
-                                <div className="space-y-2 mb-4">
-                                  <Label className="text-sm font-medium">Email Domain Configuration</Label>
-                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                    <p className="text-sm text-blue-800 font-medium mb-1">
-                                      Configured Domain: members.hessconsortium.app
-                                    </p>
-                                    <p className="text-xs text-blue-600">
-                                      All system emails will be sent from addresses using this domain. Ensure this domain is verified in your Resend account.
-                                    </p>
-                                  </div>
-                                </div>
-
+                          <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              <div className="space-y-4">
                                 <div className="space-y-2">
-                                 <Label htmlFor="new-from-email" className="text-sm font-medium">
-                                   From Email Address
-                                 </Label>
-                                 <div className="relative">
-                                   <Input
-                                     id="new-from-email"
-                                     type="email"
-                                     placeholder="support@members.hessconsortium.app"
-                                     value={resendFromEmail}
-                                     onChange={(e) => setResendFromEmail(e.target.value)}
-                                     className={`pr-10 ${
-                                       resendFromEmail && !/^[^\s@]+@members\.hessconsortium\.app$/.test(resendFromEmail) 
-                                         ? 'border-destructive focus:border-destructive' 
-                                         : resendFromEmail && /^[^\s@]+@members\.hessconsortium\.app$/.test(resendFromEmail)
-                                         ? 'border-green-500 focus:border-green-500'
-                                         : ''
-                                     }`}
-                                   />
-                                   {resendFromEmail && (
-                                     <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                                       {/^[^\s@]+@members\.hessconsortium\.app$/.test(resendFromEmail) ? (
-                                         <CheckCircle className="w-4 h-4 text-green-500" />
-                                       ) : (
-                                         <AlertCircle className="w-4 h-4 text-destructive" />
-                                       )}
-                                     </div>
-                                   )}
-                                 </div>
-                                 <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                                   <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                                   <div>
-                                     <p>Must use the configured domain: members.hessconsortium.app</p>
-                                     <p className="text-primary hover:underline cursor-pointer" 
-                                        onClick={() => window.open('https://resend.com/domains', '_blank')}>
-                                       Verify domain at resend.com/domains →
-                                     </p>
-                                   </div>
-                                 </div>
-                               </div>
-
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button 
-                                    disabled={emailConfigLoading || !resendFromEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resendFromEmail)}
-                                    className="w-full"
-                                    size="sm"
-                                  >
-                                    {emailConfigLoading ? (
-                                      <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Updating From Address...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Save className="w-4 h-4 mr-2" />
-                                        Update From Address
-                                      </>
-                                    )}
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle className="flex items-center gap-2">
-                                      <Mail className="w-5 h-5" />
-                                      Update Sender Email Address
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription className="space-y-2">
-                                      You're about to change the sender email address to:
-                                      <code className="block bg-muted p-2 rounded font-mono text-sm mt-2">
-                                        {resendFromEmail}
-                                      </code>
-                                      <span className="block text-xs text-muted-foreground mt-2">
-                                        This will affect all system emails. Changes may take a few minutes to propagate across edge functions.
-                                      </span>
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleUpdateEmailConfig}>
-                                      Update Sender Address
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </CardContent>
-                          </Card>
-
-                          {/* API Key Configuration */}
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-base flex items-center gap-2">
-                                <Key className="w-4 h-4" />
-                                API Configuration
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="new-api-key" className="text-sm font-medium">
-                                  Resend API Key
-                                </Label>
-                                <div className="relative">
+                                  <Label htmlFor="test-email-to">Recipient Email</Label>
                                   <Input
-                                    id="new-api-key"
-                                    type="password"
-                                    placeholder="re_xxxxxxxxxxxxxxxxxx"
-                                    value={resendApiKey}
-                                    onChange={(e) => setResendApiKey(e.target.value)}
-                                    className={`pr-10 ${
-                                      resendApiKey && !resendApiKey.startsWith('re_') 
-                                        ? 'border-destructive focus:border-destructive' 
-                                        : resendApiKey && resendApiKey.startsWith('re_') && resendApiKey.length > 10
-                                        ? 'border-green-500 focus:border-green-500'
-                                        : ''
-                                    }`}
+                                    id="test-email-to"
+                                    type="email"
+                                    value={emailTestData.to}
+                                    onChange={(e) => setEmailTestData(prev => ({ ...prev, to: e.target.value }))}
+                                    placeholder="recipient@example.com"
                                   />
-                                  {resendApiKey && (
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                                      {resendApiKey.startsWith('re_') && resendApiKey.length > 10 ? (
-                                        <CheckCircle className="w-4 h-4 text-green-500" />
-                                      ) : (
-                                        <AlertCircle className="w-4 h-4 text-destructive" />
-                                      )}
-                                    </div>
-                                  )}
                                 </div>
-                                <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                                  <Key className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                                  <div>
-                                    <p>Get your API key from the Resend dashboard</p>
-                                    <p className="text-primary hover:underline cursor-pointer"
-                                       onClick={() => window.open('https://resend.com/api-keys', '_blank')}>
-                                      Generate key at resend.com/api-keys →
-                                    </p>
-                                  </div>
+                                
+                                <div className="space-y-2">
+                                  <Label htmlFor="test-email-type">Email Type</Label>
+                                  <Select 
+                                    value={emailTestData.emailType} 
+                                    onValueChange={(value) => {
+                                      setEmailTestData(prev => ({ 
+                                        ...prev, 
+                                        emailType: value,
+                                        subject: getEmailTypeSubject(value)
+                                      }));
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select email type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="test">Test Email</SelectItem>
+                                      <SelectItem value="welcome">Welcome Email</SelectItem>
+                                      <SelectItem value="invoice">Invoice Email</SelectItem>
+                                      <SelectItem value="overdue_reminder">Overdue Reminder</SelectItem>
+                                      <SelectItem value="password_reset">Password Reset</SelectItem>
+                                      <SelectItem value="custom">Custom Template</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label htmlFor="test-email-subject">Subject Line</Label>
+                                  <Input
+                                    id="test-email-subject"
+                                    value={emailTestData.subject}
+                                    onChange={(e) => setEmailTestData(prev => ({ ...prev, subject: e.target.value }))}
+                                    placeholder="Email subject line"
+                                  />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label htmlFor="test-email-message">Message Content</Label>
+                                  <Textarea
+                                    id="test-email-message"
+                                    value={emailTestData.message}
+                                    onChange={(e) => setEmailTestData(prev => ({ ...prev, message: e.target.value }))}
+                                    placeholder="Enter test message content..."
+                                    rows={4}
+                                  />
                                 </div>
                               </div>
-
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button 
-                                    disabled={apiKeyLoading || !resendApiKey.trim() || !resendApiKey.startsWith('re_')}
-                                    className="w-full"
-                                    size="sm"
-                                  >
-                                    {apiKeyLoading ? (
-                                      <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Updating API Key...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Save className="w-4 h-4 mr-2" />
-                                        Update API Key
-                                      </>
-                                    )}
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle className="flex items-center gap-2">
-                                      <Key className="w-5 h-5" />
-                                      Update Resend API Key
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription className="space-y-2">
-                                      You're about to update the Resend API key.
-                                      <code className="block bg-muted p-2 rounded font-mono text-sm mt-2">
-                                        {resendApiKey.substring(0, 8)}{'*'.repeat(Math.max(0, resendApiKey.length - 8))}
-                                      </code>
-                                      <span className="block text-xs text-muted-foreground mt-2">
-                                        This will replace the current API key. You'll need to update this manually in Supabase Edge Functions secrets.
-                                      </span>
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleUpdateResendApiKey}>
-                                      Update API Key
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </CardContent>
-                          </Card>
-                        </div>
-
-                        {/* Quick Actions */}
-                        <Card className="border-dashed">
-                          <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-medium flex items-center gap-2">
-                              <Settings2 className="w-4 h-4" />
-                              Quick Actions & Resources
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-auto py-3 px-4 flex flex-col items-start gap-1"
-                                onClick={() => window.open('https://resend.com/dashboard', '_blank')}
-                              >
-                                <div className="flex items-center gap-2 font-medium">
-                                  <BarChart3 className="w-4 h-4" />
-                                  Resend Dashboard
-                                </div>
-                                <p className="text-xs text-muted-foreground">View email analytics & logs</p>
-                              </Button>
                               
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-auto py-3 px-4 flex flex-col items-start gap-1"
-                                onClick={() => window.open('https://resend.com/domains', '_blank')}
-                              >
-                                <div className="flex items-center gap-2 font-medium">
-                                  <Shield className="w-4 h-4" />
-                                  Domain Management
+                              <div className="space-y-4">
+                                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                  <h4 className="font-medium text-blue-900 mb-2">Testing Guidelines</h4>
+                                  <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                                    <li>Always test with a valid email address you control</li>
+                                    <li>Check both email delivery and template rendering</li>
+                                    <li>Verify all template variables are properly replaced</li>
+                                    <li>Test different email types to ensure templates work</li>
+                                  </ul>
                                 </div>
-                                <p className="text-xs text-muted-foreground">Verify & manage domains</p>
-                              </Button>
-                              
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-auto py-3 px-4 flex flex-col items-start gap-1"
-                                onClick={() => window.open('https://resend.com/docs', '_blank')}
-                              >
-                                <div className="flex items-center gap-2 font-medium">
-                                  <FileText className="w-4 h-4" />
-                                  Documentation
+                                
+                                <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                                  <h4 className="font-medium text-amber-900 mb-2">Rate Limits</h4>
+                                  <p className="text-sm text-amber-800">
+                                    Resend Free: 100 emails/day, 2 emails/second<br/>
+                                    Resend Pro: 50,000 emails/month, higher rate limits
+                                  </p>
                                 </div>
-                                <p className="text-xs text-muted-foreground">API reference & guides</p>
-                              </Button>
+                              </div>
                             </div>
                             
-                            <Separator className="my-4" />
-                            
-                            <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200">
-                              <h4 className="font-medium text-amber-900 mb-2 flex items-center gap-2">
-                                <AlertCircle className="w-4 h-4" />
-                                Configuration Checklist
-                              </h4>
-                              <div className="space-y-2 text-sm text-amber-800">
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle className="w-4 h-4 text-green-600" />
-                                  <span>Valid Resend API key configured</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle className="w-4 h-4 text-green-600" />
-                                  <span>Domain verified at resend.com/domains</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle className="w-4 h-4 text-green-600" />
-                                  <span>From email address using verified domain</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Send className="w-4 h-4 text-blue-600" />
-                                  <span>Test email functionality using the form above</span>
-                                </div>
-                              </div>
+                            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                              <Button 
+                                onClick={handleSendTestEmail}
+                                disabled={emailTestLoading || !emailTestData.to.trim()}
+                                className="flex-1"
+                              >
+                                {emailTestLoading ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Sending Test Email...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Send className="w-4 h-4 mr-2" />
+                                    Send Test Email
+                                  </>
+                                )}
+                              </Button>
+                              
+                              <Button 
+                                variant="outline" 
+                                onClick={() => setShowEmailPreview(true)}
+                                disabled={!emailTestData.emailType}
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                Preview
+                              </Button>
                             </div>
                           </CardContent>
                         </Card>
-                      </div>
-                  </CardContent>
-                </Card>
 
-                {/* System Information - Moved to bottom */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <SettingsIcon className="w-5 h-5" />
-                      System Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Application</p>
-                        <p className="text-lg font-semibold">HESS Consortium CRM</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Version</p>
-                        <p className="text-lg">v1.0.0</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Database</p>
-                        <p className="text-lg">Supabase PostgreSQL</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Authentication</p>
-                        <p className="text-lg">Supabase Auth</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                        {/* Test Result Display */}
+                        {emailTestResult && (
+                          <Card className={`border-2 ${emailTestResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                            <CardHeader className="pb-3">
+                              <CardTitle className={`text-sm font-medium flex items-center gap-2 ${emailTestResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                                {emailTestResult.success ? (
+                                  <CheckCircle className="w-4 h-4" />
+                                ) : (
+                                  <AlertCircle className="w-4 h-4" />
+                                )}
+                                {emailTestResult.success ? 'Email Sent Successfully' : 'Email Sending Failed'}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                              <div className={`text-sm ${emailTestResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                                <p className="font-medium">{emailTestResult.message}</p>
+                                {emailTestResult.timestamp && (
+                                  <p className="text-xs mt-1 opacity-75">
+                                    Sent at: {new Date(emailTestResult.timestamp).toLocaleString()}
+                                  </p>
+                                )}
+                                {emailTestResult.success && emailTestResult.emailId && (
+                                  <p className="text-xs mt-1 opacity-75">
+                                    Email ID: {emailTestResult.emailId}
+                                  </p>
+                                )}
+                                {emailTestResult.recipients && (
+                                  <p className="text-xs mt-1 opacity-75">
+                                    Recipients: {emailTestResult.recipients.join(', ')}
+                                  </p>
+                                )}
+                                {emailTestResult.template && (
+                                  <p className="text-xs mt-1 opacity-75">
+                                    Template: {emailTestResult.template}
+                                  </p>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="message-text" className="space-y-6">
+                    <MessageTextContent />
+                  </TabsContent>
+                </Tabs>
               </TabsContent>
             </Tabs>
-          </div>
-          
-          {/* Footer */}
-          <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
-            <img 
-              src="/lovable-uploads/95b9e225-2202-4407-bdb2-f95edf683d93.png" 
-              alt="DeusLogic Logo" 
-              className="h-8 w-auto mb-2 opacity-70"
-            />
-            <p className="text-xs text-muted-foreground">
-              Copyright 2025 DeusLogic, LLC.
-            </p>
           </div>
         </main>
       </div>
@@ -1621,191 +1116,5 @@ export default function Settings() {
         </DialogContent>
       </Dialog>
     </SidebarProvider>
-  );
-}
-
-// Form field components
-function AddFieldForm({ onSubmit, defaultSection }: { 
-  onSubmit: (field: Omit<FormField, 'id' | 'field_id' | 'display_order' | 'is_custom'>) => void;
-  defaultSection: string;
-}) {
-  const [field, setField] = useState<Omit<FormField, 'id' | 'field_id' | 'display_order' | 'is_custom'>>({
-    field_name: '',
-    field_label: '',
-    field_type: 'text',
-    section: defaultSection,
-    visibility: 'optional',
-    placeholder: ''
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (field.field_name && field.field_label) {
-      onSubmit(field);
-      setField({
-        field_name: '',
-        field_label: '',
-        field_type: 'text',
-        section: defaultSection,
-        visibility: 'optional',
-        placeholder: ''
-      });
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="field-name">Field Name</Label>
-        <Input
-          id="field-name"
-          value={field.field_name}
-          onChange={(e) => setField(prev => ({ ...prev, field_name: e.target.value }))}
-          placeholder="e.g., organizationType"
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="field-label">Field Label</Label>
-        <Input
-          id="field-label"
-          value={field.field_label}
-          onChange={(e) => setField(prev => ({ ...prev, field_label: e.target.value }))}
-          placeholder="e.g., Organization Type"
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="field-type">Field Type</Label>
-        <Select value={field.field_type} onValueChange={(value: 'text' | 'email' | 'number' | 'password') => 
-          setField(prev => ({ ...prev, field_type: value }))
-        }>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="text">Text</SelectItem>
-            <SelectItem value="email">Email</SelectItem>
-            <SelectItem value="number">Number</SelectItem>
-            <SelectItem value="password">Password</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="field-section">Section</Label>
-        <Select value={field.section} onValueChange={(value) => 
-          setField(prev => ({ ...prev, section: value }))
-        }>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {availableSections.map(section => (
-              <SelectItem key={section} value={section}>{section}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="field-visibility">Visibility</Label>
-        <Select value={field.visibility} onValueChange={(value: 'required' | 'optional' | 'hidden') => 
-          setField(prev => ({ ...prev, visibility: value }))
-        }>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="required">Required</SelectItem>
-            <SelectItem value="optional">Optional</SelectItem>
-            <SelectItem value="hidden">Hidden</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="field-placeholder">Placeholder</Label>
-        <Input
-          id="field-placeholder"
-          value={field.placeholder}
-          onChange={(e) => setField(prev => ({ ...prev, placeholder: e.target.value }))}
-          placeholder="e.g., Enter organization type"
-        />
-      </div>
-      <Button type="submit" className="w-full">Add Field</Button>
-    </form>
-  );
-}
-
-function EditFieldForm({ field, onSubmit }: { 
-  field: FormField;
-  onSubmit: (field: FormField) => void;
-}) {
-  const [editedField, setEditedField] = useState<FormField>(field);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(editedField);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="edit-field-name">Field Name</Label>
-        <Input
-          id="edit-field-name"
-          value={editedField.field_name}
-          onChange={(e) => setEditedField(prev => ({ ...prev, field_name: e.target.value }))}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="edit-field-label">Field Label</Label>
-        <Input
-          id="edit-field-label"
-          value={editedField.field_label}
-          onChange={(e) => setEditedField(prev => ({ ...prev, field_label: e.target.value }))}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="edit-field-type">Field Type</Label>
-        <Select value={editedField.field_type} onValueChange={(value: 'text' | 'email' | 'number' | 'password') => 
-          setEditedField(prev => ({ ...prev, field_type: value }))
-        }>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="text">Text</SelectItem>
-            <SelectItem value="email">Email</SelectItem>
-            <SelectItem value="number">Number</SelectItem>
-            <SelectItem value="password">Password</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="edit-field-section">Section</Label>
-        <Select value={editedField.section} onValueChange={(value) => 
-          setEditedField(prev => ({ ...prev, section: value }))
-        }>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {availableSections.map(section => (
-              <SelectItem key={section} value={section}>{section}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="edit-field-placeholder">Placeholder</Label>
-        <Input
-          id="edit-field-placeholder"
-          value={editedField.placeholder || ''}
-          onChange={(e) => setEditedField(prev => ({ ...prev, placeholder: e.target.value }))}
-        />
-      </div>
-      <Button type="submit" className="w-full">Update Field</Button>
-    </form>
   );
 }
