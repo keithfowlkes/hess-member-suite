@@ -41,9 +41,57 @@ interface EmailTemplate {
   variables: string[];
 }
 
-// Function to get email template from system_messages table
+// Function to get email template from system_settings table (primary) or system_messages (fallback)
 async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null> {
   try {
+    // First, try to get template from system_settings (where UI saves templates)
+    let settingKey = '';
+    switch (emailType) {
+      case 'welcome':
+        settingKey = 'welcome_message_template';
+        break;
+      case 'password_reset':
+        settingKey = 'password_reset_message';
+        break;
+      case 'profile_update':
+        settingKey = 'profile_update_message_template';
+        break;
+      default:
+        settingKey = `${emailType}_message_template`;
+    }
+
+    // Try to get from system_settings first
+    const { data: settingTemplate, error: settingError } = await supabase
+      .from('system_settings')
+      .select('setting_value, setting_key')
+      .eq('setting_key', settingKey)
+      .maybeSingle();
+
+    if (!settingError && settingTemplate?.setting_value) {
+      console.log(`Found template in system_settings for: ${emailType}`);
+      return {
+        id: emailType,
+        name: `${emailType.charAt(0).toUpperCase() + emailType.slice(1)} Template`,
+        subject: emailType === 'welcome' ? 'Welcome to HESS Consortium!' : 
+                emailType === 'password_reset' ? 'Password Reset Request' :
+                emailType === 'profile_update' ? 'Profile Update Approved' :
+                'HESS Consortium Notification',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+            <center>
+              <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+            </center>
+            <div style="margin-top: 20px;">
+              ${settingTemplate.setting_value}
+            </div>
+          </div>
+        `,
+        variables: []
+      };
+    }
+
+    // Fallback to system_messages table
+    console.log(`No template found in system_settings for ${emailType}, trying system_messages`);
     const { data: messageTemplate, error } = await supabase
       .from('system_messages')
       .select('title, content, email_type')
