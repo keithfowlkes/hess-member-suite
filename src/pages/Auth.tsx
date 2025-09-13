@@ -275,6 +275,15 @@ export default function Auth() {
     e.preventDefault();
     setIsSubmitting(true);
     
+    // First, let's check the email configuration to diagnose issues
+    const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-email-config');
+    if (verifyData) {
+      console.log('Email config verification:', verifyData);
+    }
+    if (verifyError) {
+      console.error('Verification error:', verifyError);
+    }
+    
     // Use custom password reset edge function that includes login hint
     const { data, error } = await supabase.functions.invoke('send-password-reset', {
       body: { 

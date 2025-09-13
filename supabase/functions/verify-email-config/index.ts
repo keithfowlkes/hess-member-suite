@@ -1,7 +1,6 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,156 +13,103 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   if (req.method !== "GET" && req.method !== "POST") {
-    return new Response(
-      JSON.stringify({ error: "Method not allowed" }),
-      { status: 405, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   }
 
   try {
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { persistSession: false } }
     );
 
-    // Check configuration requirements
-    const config = {
-      resend_api_key: !!Deno.env.get('RESEND_API_KEY'),
-      resend_from_env: Deno.env.get('RESEND_FROM') || null,
-      sender_configured: false,
-      sender_source: 'none',
-      sender_domain: null,
-      domain_verified: false,
-      api_key_valid: false,
-      errors: [] as string[],
-      warnings: [] as string[]
+    // Check environment variables
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const resendFrom = Deno.env.get("RESEND_FROM");
+    
+    console.log("RESEND_API_KEY exists:", !!resendApiKey);
+    console.log("RESEND_FROM:", resendFrom);
+
+    // Get from database
+    const { data: emailFromSetting } = await supabase
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_key', 'email_from')
+      .single();
+
+    const fromEmail = emailFromSetting?.setting_value || resendFrom;
+    console.log("Email sender from DB:", fromEmail);
+
+    let verificationResults = {
+      hasApiKey: !!resendApiKey,
+      hasFromAddress: !!fromEmail,
+      fromAddress: fromEmail,
+      domainStatus: null,
+      domains: [],
+      recommendations: []
     };
 
-    // Get app-managed sender setting
-    try {
-      const { data: fromRow } = await supabase
-        .from('system_settings')
-        .select('setting_value')
-        .eq('setting_key', 'email_from')
-        .maybeSingle();
-      
-      if (fromRow?.setting_value) {
-        config.sender_configured = true;
-        config.sender_source = 'app_managed';
-        const email = fromRow.setting_value as string;
-        config.sender_domain = email.includes('@') ? email.split('@')[1] : null;
-      }
-    } catch (error) {
-      config.errors.push(`Failed to check app-managed sender: ${error.message}`);
+    if (!resendApiKey) {
+      verificationResults.recommendations.push("RESEND_API_KEY environment variable is missing");
     }
 
-    // Fall back to env var if no app setting
-    if (!config.sender_configured && config.resend_from_env) {
-      config.sender_configured = true;
-      config.sender_source = 'environment';
-      config.sender_domain = config.resend_from_env.includes('@') 
-        ? config.resend_from_env.split('@')[1] 
-        : null;
+    if (!fromEmail) {
+      verificationResults.recommendations.push("No sender email address configured");
     }
 
-    // Test Resend API if key is available
-    if (config.resend_api_key) {
+    if (resendApiKey) {
       try {
-        const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
-        
-        // Test API key validity by checking domains
+        // List domains to check verification status
         const domainsResponse = await resend.domains.list();
+        verificationResults.domains = domainsResponse.data || [];
         
-        console.log('Resend domains response:', JSON.stringify(domainsResponse, null, 2));
-        
-        if (domainsResponse.error) {
-          config.errors.push(`Resend API key invalid: ${domainsResponse.error.message}`);
-        } else {
-          config.api_key_valid = true;
+        if (fromEmail) {
+          const domain = fromEmail.split('@')[1];
+          const domainInfo = verificationResults.domains.find(d => d.name === domain);
           
-          // Check if sender domain is verified
-          if (config.sender_domain) {
-            // Handle different response structures
-            let domainsList = [];
-            if (domainsResponse.data) {
-              // Try different possible structures
-              domainsList = domainsResponse.data.data || domainsResponse.data || [];
+          if (domainInfo) {
+            verificationResults.domainStatus = domainInfo.status;
+            if (domainInfo.status !== 'verified') {
+              verificationResults.recommendations.push(`Domain ${domain} is not verified. Status: ${domainInfo.status}`);
             }
-            
-            console.log('Domains list:', JSON.stringify(domainsList, null, 2));
-            console.log('Looking for domain:', config.sender_domain);
-            
-            const domain = domainsList.find(d => 
-              d.name === config.sender_domain && d.status === 'verified'
-            );
-            config.domain_verified = !!domain;
-            
-            console.log('Found domain:', JSON.stringify(domain, null, 2));
-            console.log('Domain verified:', config.domain_verified);
-            
-            if (!domain) {
-              const foundDomain = domainsList.find(d => d.name === config.sender_domain);
-              if (foundDomain) {
-                config.warnings.push(`Domain ${config.sender_domain} found but status is '${foundDomain.status}' (not verified)`);
-              } else {
-                config.warnings.push(`Domain ${config.sender_domain} not found in Resend account. Available domains: ${domainsList.map(d => d.name).join(', ')}`);
-              }
-            }
+          } else {
+            verificationResults.recommendations.push(`Domain ${domain} is not added to your Resend account`);
           }
         }
-      } catch (error) {
-        config.errors.push(`Failed to verify Resend API: ${error.message}`);
-      }
-    } else {
-      config.errors.push('RESEND_API_KEY not configured in Supabase secrets');
-    }
 
-    // Generate recommendations
-    const recommendations = [];
-    
-    if (!config.sender_configured) {
-      recommendations.push('Configure sender email address via Settings > Email System Configuration');
-    }
-    
-    if (!config.api_key_valid) {
-      recommendations.push('Set valid RESEND_API_KEY in Supabase Edge Functions > Secrets');
-    }
-    
-    if (config.sender_domain && !config.domain_verified) {
-      recommendations.push(`Verify domain ${config.sender_domain} at resend.com/domains`);
-    }
-    
-    if (config.sender_domain === 'resend.dev') {
-      recommendations.push('Using Resend sandbox domain - configure your own verified domain for production');
-      recommendations.push('On Resend free plan, verify recipient emails at resend.com/verified-emails or use a verified domain');
+        console.log("✅ Resend API verification successful");
+      } catch (resendError) {
+        console.error("❌ Resend API error:", resendError);
+        verificationResults.recommendations.push(`Resend API error: ${resendError.message}`);
+      }
     }
 
     return new Response(
-      JSON.stringify({
-        success: config.errors.length === 0,
-        configuration: config,
-        recommendations,
-        timestamp: new Date().toISOString()
+      JSON.stringify({ 
+        success: true,
+        configuration: verificationResults,
+        message: verificationResults.recommendations.length === 0 ? 
+          "Email configuration looks good!" : 
+          "Configuration issues found - see recommendations"
       }),
       {
         status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
 
   } catch (error: any) {
-    console.error("Error in verify-email-config function:", error);
-    
+    console.error("Error verifying email config:", error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || "Failed to verify email configuration",
-        timestamp: new Date().toISOString()
+      JSON.stringify({ 
+        error: error.message,
+        success: false 
       }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
