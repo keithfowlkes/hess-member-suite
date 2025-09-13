@@ -1062,18 +1062,19 @@ const MasterDashboard = () => {
                                 </div>
 
                                 <div className="flex gap-2">
-                                   <Button
-                                     variant="outline"
-                                     size="sm"
-                                     onClick={() => {
-                                       setSelectedMemberInfoUpdate(request);
-                                       setShowMemberInfoUpdateComparisonDialog(true);
-                                     }}
-                                     className="flex items-center gap-2"
-                                   >
-                                     <Eye className="h-3 w-3" />
-                                     Review Changes
-                                   </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        console.log('Review Changes clicked for member info update:', request);
+                                        setSelectedMemberInfoUpdate(request);
+                                        setShowMemberInfoUpdateComparisonDialog(true);
+                                      }}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                      Review Changes
+                                    </Button>
                                 </div>
                               </div>
                             </CardContent>
@@ -1121,19 +1122,20 @@ const MasterDashboard = () => {
                                 </div>
 
                                  <div className="flex gap-2">
-                                   <Button
-                                     variant="outline"
-                                     size="sm"
-                                     onClick={() => {
-                                       setSelectedProfileEditRequest(request);
-                                       setShowProfileEditComparisonDialog(true);
-                                       setAdminNotes('');
-                                     }}
-                                     className="flex items-center gap-2"
-                                   >
-                                     <Eye className="h-3 w-3" />
-                                     Review Changes
-                                   </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        console.log('Review Changes clicked for profile edit:', request);
+                                        setSelectedProfileEditRequest(request);
+                                        setShowProfileEditComparisonDialog(true);
+                                        setAdminNotes('');
+                                      }}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                      Review Changes
+                                    </Button>
                                   <Button
                                     size="sm"
                                     onClick={async () => {
@@ -1721,19 +1723,23 @@ const MasterDashboard = () => {
       {selectedMemberInfoUpdate && (
         <UnifiedComparisonModal
           open={showMemberInfoUpdateComparisonDialog}
-          onOpenChange={setShowMemberInfoUpdateComparisonDialog}
+          onOpenChange={(open) => {
+            console.log('Member info dialog open change:', open);
+            setShowMemberInfoUpdateComparisonDialog(open);
+          }}
           title="Review Member Information Update"
           data={{
-            originalData: selectedMemberInfoUpdate.original_organization_data,
-            updatedData: selectedMemberInfoUpdate.new_organization_data,
+            originalData: selectedMemberInfoUpdate.original_organization_data || {},
+            updatedData: selectedMemberInfoUpdate.new_organization_data || {},
             contactChanges: [{
               field: 'Contact Email',
-              oldValue: selectedMemberInfoUpdate.organizations?.profiles?.email || '',
-              newValue: selectedMemberInfoUpdate.new_contact_email
+              oldValue: selectedMemberInfoUpdate.organizations?.profiles?.email || 'N/A',
+              newValue: selectedMemberInfoUpdate.new_contact_email || 'N/A'
             }]
           }}
           showActions={true}
           onApprove={async () => {
+            console.log('Approving member info update:', selectedMemberInfoUpdate.id);
             try {
               await approveMemberInfoUpdate.mutateAsync({ id: selectedMemberInfoUpdate.id });
               setShowMemberInfoUpdateComparisonDialog(false);
@@ -1743,6 +1749,7 @@ const MasterDashboard = () => {
             }
           }}
           onReject={async () => {
+            console.log('Rejecting member info update:', selectedMemberInfoUpdate.id);
             try {
               await deleteMemberInfoUpdate.mutateAsync(selectedMemberInfoUpdate.id);
               setShowMemberInfoUpdateComparisonDialog(false);
@@ -1759,12 +1766,26 @@ const MasterDashboard = () => {
       {selectedProfileEditRequest && (
         <UnifiedComparisonModal
           open={showProfileEditComparisonDialog}
-          onOpenChange={setShowProfileEditComparisonDialog}
+          onOpenChange={(open) => {
+            console.log('Profile edit dialog open change:', open);
+            setShowProfileEditComparisonDialog(open);
+          }}
           title="Review Profile Update Request"
-          data={createProfileEditComparisonData(selectedProfileEditRequest)}
+          data={{
+            originalData: selectedProfileEditRequest.original_organization_data || {},
+            updatedData: selectedProfileEditRequest.updated_organization_data || {},
+            organizationChanges: [],
+            profileChanges: []
+          }}
           showActions={true}
-          onApprove={handleApproveProfileEdit}
-          onReject={handleRejectProfileEdit}
+          onApprove={() => {
+            console.log('Approving profile edit request');
+            handleApproveProfileEdit();
+          }}
+          onReject={() => {
+            console.log('Rejecting profile edit request');
+            handleRejectProfileEdit();
+          }}
           actionNotes={adminNotes}
           onActionNotesChange={setAdminNotes}
           isSubmitting={false}
