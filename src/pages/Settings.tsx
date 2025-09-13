@@ -310,8 +310,6 @@ export default function Settings() {
           due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
           custom_message: emailTestData.message.trim()
         },
-        // Help diagnose and ensure sandbox path for tests
-        forceSandbox: true,
         debug: true,
       };
 

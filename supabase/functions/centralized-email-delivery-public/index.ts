@@ -155,6 +155,8 @@ serve(async (req: Request): Promise<Response> => {
         return `HESS Consortium <no-reply@${verifiedDomain}>`;
       }
     };
+    
+    let domainVerified = false;
 
     let finalFrom = (isTest || forceSandbox)
       ? 'HESS Consortium <onboarding@resend.dev>'
@@ -204,11 +206,13 @@ serve(async (req: Request): Promise<Response> => {
         const fromEmail = extractEmail(finalFrom);
         const fromDomain = fromEmail.split('@')[1]?.toLowerCase();
         const domainEntry = domains.find((d: any) => (d.name || d.domain || '').toLowerCase() === fromDomain);
+        domainVerified = (domainEntry?.status || domainEntry?.verification?.status) === 'verified';
         console.log('[centralized-email-delivery-public] Preflight domains', {
           correlationId,
           fromDomain,
           domainFound: !!domainEntry,
           status: domainEntry?.status || domainEntry?.verification?.status,
+          domainVerified,
           domainsCount: Array.isArray(domains) ? domains.length : 0,
         });
       } catch (e) {
@@ -220,6 +224,15 @@ serve(async (req: Request): Promise<Response> => {
         JSON.stringify({ success: false, error: 'Failed to verify Resend API key', details: e?.message || e, correlationId }),
         { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
+    }
+
+    // If this is a test email and the domain is verified (and not forcing sandbox), use the verified domain sender
+    if (isTest && !forceSandbox && domainVerified) {
+      const adjustedFrom = ensureDomain(fromCandidate);
+      if (adjustedFrom !== finalFrom) {
+        console.log('[centralized-email-delivery-public] Adjusting sender to verified domain for test', { correlationId, from: adjustedFrom });
+      }
+      finalFrom = adjustedFrom;
     }
 
     if (!Deno.env.get('RESEND_API_KEY')) {
