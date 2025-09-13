@@ -47,3 +47,9 @@ verify_jwt = true
 
 [functions.centralized-email-delivery-public]
 verify_jwt = false
+
+[functions.cleanup-pending-registration]
+verify_jwt = false
+
+[functions.cleanup-orphaned-records]
+verify_jwt = true
