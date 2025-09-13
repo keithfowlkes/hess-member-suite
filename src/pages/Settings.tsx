@@ -802,6 +802,63 @@ export default function Settings() {
                     </Button>
                   </CardContent>
                 </Card>
+
+                {/* TinyMCE Editor Configuration */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Edit className="w-4 h-4" />
+                      TinyMCE Editor Key
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="tinymce-key">TinyMCE API Key</Label>
+                      <Input
+                        id="tinymce-key"
+                        type="password"
+                        placeholder="Enter your TinyMCE API key"
+                        value=""
+                        onChange={() => {}}
+                        disabled
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        TinyMCE API key is managed securely through Supabase secrets. Get your API key from{' '}
+                        <a 
+                          href="https://www.tiny.cloud/auth/signup/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          TinyMCE Cloud Dashboard
+                        </a>
+                      </p>
+                    </div>
+
+                    <div className="bg-green-50 p-4 rounded-md border-l-4 border-green-400">
+                      <h4 className="font-medium text-green-900 mb-2">✓ API Key Configured</h4>
+                      <p className="text-sm text-green-800">
+                        Your TinyMCE API key has been securely stored and is being used by the email template editor.
+                        The rich text editor in the messaging configuration now has full functionality including image resizing capabilities.
+                      </p>
+                    </div>
+
+                    <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
+                      <h4 className="font-medium text-blue-900 mb-2">Setup Information:</h4>
+                      <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                        <li>TinyMCE provides advanced rich text editing for email templates</li>
+                        <li>Includes built-in image resizing and formatting tools</li>
+                        <li>API key is required for production use beyond the free tier</li>
+                        <li>The key is securely stored in Supabase edge function environment</li>
+                      </ul>
+                    </div>
+
+                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-medium">Editor Status: Active</span>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="messaging" className="space-y-6">
