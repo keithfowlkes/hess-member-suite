@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -165,46 +162,31 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Send email using Resend with safe fallback sender
-    let fromAddress = Deno.env.get("RESEND_FROM");
-    
-    // Validate the from address format and use fallback if invalid
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!fromAddress || !emailRegex.test(fromAddress.replace(/^.*<(.+)>$/, '$1'))) {
-      fromAddress = "onboarding@resend.dev";
-      console.log("Invalid RESEND_FROM format, using fallback:", fromAddress);
-    }
-    
-    console.log("Using from address:", fromAddress);
-    const { data: sent, error: sendError } = await resend.emails.send({
-      from: fromAddress,
-      to: [email],
-      subject: "Reset Your HESS Consortium Password",
-      html: html,
+    // Send email using centralized email delivery system
+    const { data: emailResult, error: emailError } = await supabase.functions.invoke('centralized-email-delivery', {
+      body: {
+        to: [email],
+        subject: "Reset Your HESS Consortium Password",
+        html: html,
+        category: "password_reset"
+      }
     });
 
-    if (sendError) {
-      console.error("❌ Failed to send reset email:", sendError);
+    if (emailError || emailResult?.error) {
+      console.error("❌ Failed to send reset email via centralized delivery:", emailError || emailResult?.error);
       
-      // Handle specific Resend errors with user-friendly messages
-      let errorMessage = "Failed to send password reset email. Please try again or contact support.";
+      // Handle specific error messages
+      const errorMessage = emailError?.message || emailResult?.error?.message || "Failed to send password reset email. Please try again or contact support.";
       let statusCode = 500;
       
-      if (sendError.message?.includes("You can only send testing emails to your own email address")) {
-        errorMessage = "This email service is in testing mode and can only send to verified addresses. Please contact an administrator or try with keith.fowlkes@hessconsortium.org.";
-        statusCode = 400;
-      } else if (sendError.message?.includes("Invalid `from` field")) {
-        errorMessage = "Email configuration error. Please contact an administrator.";
-        statusCode = 400;
-      } else if (sendError.statusCode === 403) {
-        errorMessage = "Email sending restricted. Please contact an administrator.";
+      if (errorMessage.includes("restricted") || errorMessage.includes("testing mode")) {
         statusCode = 400;
       }
       
       return new Response(
         JSON.stringify({ 
           error: errorMessage,
-          details: sendError.message 
+          details: emailError?.details || emailResult?.error?.details 
         }),
         {
           status: statusCode,
@@ -213,7 +195,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("✅ Password reset email sent:", sent);
+    console.log("✅ Password reset email sent via centralized delivery:", emailResult);
 
     return new Response(
       JSON.stringify({ 
