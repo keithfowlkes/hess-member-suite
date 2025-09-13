@@ -43,246 +43,40 @@ interface EmailTemplate {
   variables: string[];
 }
 
-const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
-  test: {
-    id: 'test',
-    name: 'System Test Email',
-    subject: 'HESS Consortium - Email System Test',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #333; text-align: center;">HESS Consortium Email Test</h1>
-        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h2 style="color: #666; margin-top: 0;">Test Message</h2>
-          <p style="color: #333; line-height: 1.6;">{{message}}</p>
-        </div>
-        <div style="background-color: #e8f4f8; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #333; margin-top: 0;">System Information</h3>
-          <ul style="color: #666; line-height: 1.6;">
-            <li><strong>Sent from:</strong> {{from_email}}</li>
-            <li><strong>Email service:</strong> Resend</li>
-            <li><strong>Timestamp:</strong> {{timestamp}}</li>
-            <li><strong>Test ID:</strong> {{test_id}}</li>
-          </ul>
-        </div>
-        <p style="color: #666; font-size: 14px; text-align: center; margin-top: 30px;">
-          If you received this email, the HESS Consortium email system is working correctly.
-        </p>
-      </div>
-    `,
-    variables: ['message', 'from_email', 'timestamp', 'test_id']
-  },
-  
-  welcome: {
-    id: 'welcome',
-    name: 'Welcome Email',
-    subject: 'Welcome to HESS Consortium - {{organization_name}}',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <center>
-          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-        </center>
-        <p>{{primary_contact_name}},</p>
-        <p>Thank you for your registration for HESS Consortium membership. I want to welcome you and {{organization_name}} personally to membership in the HESS Consortium!</p>
-        <p>{{custom_message}}</p>
-        <p>Best regards,<br>HESS Consortium Team</p>
-      </div>
-    `,
-    variables: ['organization_name', 'primary_contact_name', 'custom_message']
-  },
+// Function to get email template from system_messages table
+async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null> {
+  try {
+    const { data: messageTemplate, error } = await supabase
+      .from('system_messages')
+      .select('title, content, email_type')
+      .eq('email_type', emailType)
+      .eq('is_active', true)
+      .maybeSingle();
 
-  invoice: {
-    id: 'invoice',
-    name: 'Invoice Email',
-    subject: 'HESS Consortium Membership Invoice - {{organization_name}}',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #2563eb;">HESS Consortium Invoice</h1>
-        <p>Dear {{organization_name}},</p>
-        <p>Please find your membership invoice attached.</p>
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3>Invoice Details:</h3>
-          <p><strong>Invoice Number:</strong> {{invoice_number}}</p>
-          <p><strong>Amount:</strong> $" + "{{amount}}</p>
-          <p><strong>Due Date:</strong> {{due_date}}</p>
-        </div>
-        <p>Payment instructions and invoice are attached.</p>
-        <p>Best regards,<br>HESS Consortium Billing</p>
-      </div>
-    `,
-    variables: ['organization_name', 'invoice_number', 'amount', 'due_date']
-  },
+    if (error || !messageTemplate) {
+      console.log(`No template found for email type: ${emailType}`, error);
+      return null;
+    }
 
-  overdue_reminder: {
-    id: 'overdue_reminder',
-    name: 'Payment Overdue Reminder',
-    subject: 'Payment Reminder - {{organization_name}} Membership Fee Overdue',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #dc2626; padding-bottom: 20px;">
-          <h1 style="color: #dc2626; margin: 0; font-size: 2rem;">PAYMENT REMINDER</h1>
-          <p style="color: #666; margin: 10px 0;">HESS Consortium Membership Fee</p>
+    return {
+      id: emailType,
+      name: messageTemplate.title,
+      subject: messageTemplate.title,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <center>
+            <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+          </center>
+          ${messageTemplate.content}
         </div>
-        <p>Dear {{organization_name}} Team,</p>
-        <p>This is a friendly reminder that your HESS Consortium membership fee is currently <strong style="color: #dc2626;">overdue</strong>.</p>
-        <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 20px; margin: 20px 0;">
-          <h3 style="color: #dc2626; margin: 0 0 10px 0;">Outstanding Invoice Details</h3>
-          <p><strong>Invoice Number:</strong> {{invoice_number}}</p>
-          <p><strong>Amount Due:</strong> $" + "{{amount}}</p>
-          <p><strong>Original Due Date:</strong> {{due_date}}</p>
-        </div>
-        <p>Please contact us if you have any questions: billing@hessconsortium.org</p>
-        <p>Best regards,<br>HESS Consortium Team</p>
-      </div>
-    `,
-    variables: ['organization_name', 'invoice_number', 'amount', 'due_date']
-  },
-
-  password_reset: {
-    id: 'password_reset',
-    name: 'Password Reset',
-    subject: 'HESS Consortium - Password Reset Request',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <center>
-          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-        </center>
-        <h2 style="color: #2563eb;">Password Reset Request</h2>
-        <p>Hello {{user_name}},</p>
-        <p>We received a request to reset your password for your HESS Consortium account.</p>
-        {{login_hint_section}}
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="{{reset_link}}" 
-             style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
-            Reset Your Password
-          </a>
-        </div>
-        <p style="color: #666; font-size: 14px;">
-          <strong>Important:</strong> This reset link will expire in 24 hours. If you didn't request this password reset, you can safely ignore this email.
-        </p>
-        <hr style="margin: 40px 0; border: none; border-top: 1px solid #eee;">
-        <p style="color: #666; font-size: 12px; text-align: center;">
-          Questions? Contact us at support@members.hessconsortium.app<br>
-          HESS Consortium - Higher Education Systems & Services Consortium
-        </p>
-      </div>
-    `,
-    variables: ['user_name', 'reset_link', 'expiry_time', 'login_hint_section']
-  },
-
-  welcome_approved: {
-    id: 'welcome_approved',
-    name: 'New Member Welcome (Approved)',
-    subject: 'Welcome to HESS Consortium - {{organization_name}}',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <center>
-          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-        </center>
-        <p>{{primary_contact_name}},</p>
-        <p>Thank you for your registration for HESS Consortium membership. I want to welcome you and {{organization_name}} personally to membership in the HESS Consortium!</p>
-        <p>{{custom_message}}</p>
-        <p>Best regards,<br>HESS Consortium Team</p>
-      </div>
-    `,
-    variables: ['organization_name', 'primary_contact_name', 'custom_message']
-  },
-
-  member_registration: {
-    id: 'member_registration',
-    name: 'New Member Registration',
-    subject: 'New Member Registration - {{organization_name}}',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <center>
-          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-        </center>
-        <h2 style="color: #2563eb;">New Member Registration</h2>
-        <p>A new member registration has been submitted:</p>
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3>Organization Details:</h3>
-          <p><strong>Organization:</strong> {{organization_name}}</p>
-          <p><strong>Contact:</strong> {{primary_contact_name}}</p>
-          <p><strong>Email:</strong> {{contact_email}}</p>
-        </div>
-        <p>Please review and approve this registration in the admin dashboard.</p>
-      </div>
-    `,
-    variables: ['organization_name', 'primary_contact_name', 'contact_email']
-  },
-
-  profile_update_approved: {
-    id: 'profile_update_approved',
-    name: 'Profile Update Request Approved',
-    subject: 'Profile Update Approved - {{organization_name}}',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <center>
-          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-        </center>
-        <h2 style="color: #2563eb;">Profile Update Request Approved</h2>
-        <p>Dear {{primary_contact_name}},</p>
-        <p>Your profile update request for {{organization_name}} has been approved and processed.</p>
-        <p>{{custom_message}}</p>
-        <p>Thank you for keeping your organization information up to date.</p>
-        <p>Best regards,<br>HESS Consortium Team</p>
-      </div>
-    `,
-    variables: ['organization_name', 'primary_contact_name', 'custom_message']
-  },
-
-  member_info_update: {
-    id: 'member_info_update',
-    name: 'Member Information Update Request',
-    subject: 'Member Information Update Request - {{organization_name}}',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <center>
-          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-        </center>
-        <h2 style="color: #2563eb;">Member Information Update Request</h2>
-        <p>A member information update request has been submitted:</p>
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3>Update Details:</h3>
-          <p><strong>Organization:</strong> {{organization_name}}</p>
-          <p><strong>Requested by:</strong> {{primary_contact_name}}</p>
-          <p><strong>Request Date:</strong> {{request_date}}</p>
-        </div>
-        <p>Please review this update request in the admin dashboard.</p>
-      </div>
-    `,
-    variables: ['organization_name', 'primary_contact_name', 'request_date']
-  },
-
-  analytics_feedback: {
-    id: 'analytics_feedback',
-    name: 'Analytics Dashboard Feedback',
-    subject: 'Member Analytics Feedback from {{member_name}}',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #333; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">
-          Member Analytics Dashboard Feedback
-        </h2>
-        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #495057; margin: 0 0 15px 0;">Feedback Details</h3>
-          <p><strong>Name:</strong> {{member_name}}</p>
-          <p><strong>Email:</strong> {{member_email}}</p>
-          <p><strong>Organization:</strong> {{organization_name}}</p>
-          <p><strong>Submitted:</strong> {{timestamp}}</p>
-        </div>
-        <div style="background-color: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
-          <h3 style="color: #495057; margin: 0 0 15px 0;">Analytics Request</h3>
-          <div style="white-space: pre-wrap; color: #212529; line-height: 1.6;">{{feedback_message}}</div>
-        </div>
-        <div style="background-color: #e7f3ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
-          <p style="margin: 0; color: #004085;">
-            <strong>Note:</strong> This feedback was submitted through the Member Analytics dashboard.
-          </p>
-        </div>
-      </div>
-    `,
-    variables: ['member_name', 'member_email', 'organization_name', 'timestamp', 'feedback_message']
+      `,
+      variables: []
+    };
+  } catch (error) {
+    console.error(`Error fetching template for ${emailType}:`, error);
+    return null;
   }
-};
+}
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
@@ -369,11 +163,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Normalize type and get email template
+    // Normalize type and get email template from system_messages
     const typeKeyBase = (emailRequest.type || 'test').toString().replace(/-/g, '_');
     const typeKey = typeKeyBase === 'organization' ? 'welcome' : typeKeyBase;
 
-    let template = EMAIL_TEMPLATES[typeKey];
+    let template = await getEmailTemplate(typeKey);
     if (!template && emailRequest.template) {
       // Custom template provided
       template = {
@@ -384,7 +178,6 @@ const handler = async (req: Request): Promise<Response> => {
         variables: []
       };
     }
-
 
     if (!template) {
       throw new Error(`No template found for email type: ${emailRequest.type}`);

@@ -36,62 +36,43 @@ const handler = async (req: Request): Promise<Response> => {
     const { organizationName, to, invoiceData }: OverdueReminderRequest = await req.json();
     console.log('Overdue reminder request:', { organizationName, to });
 
-    const appUrl = Deno.env.get('SUPABASE_URL')?.replace('//', '//app.');
-    
-    const subject = `Payment Reminder - ${organizationName} Membership Fee Overdue`;
-    
-    const invoiceDetails = invoiceData ? `
-      <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 20px; margin: 20px 0;">
-        <h3 style="color: #dc2626; margin: 0 0 10px 0;">Outstanding Invoice Details</h3>
-        <p><strong>Invoice Number:</strong> ${invoiceData.invoice_number}</p>
-        <p><strong>Amount Due:</strong> $${invoiceData.amount.toLocaleString()}</p>
-        <p><strong>Original Due Date:</strong> ${new Date(invoiceData.due_date).toLocaleDateString()}</p>
-      </div>
-    ` : '';
+    // Get the overdue reminder template from system_messages
+    const { data: messageTemplate, error: templateError } = await supabase
+      .from('system_messages')
+      .select('title, content')
+      .eq('email_type', 'overdue_reminder')
+      .eq('is_active', true)
+      .maybeSingle();
 
+    if (templateError || !messageTemplate) {
+      console.error('Overdue reminder template not found:', templateError);
+      throw new Error('Overdue reminder email template not found');
+    }
+
+    // Replace template variables
+    const templateData = {
+      organization_name: organizationName,
+      invoice_number: invoiceData?.invoice_number || '',
+      amount: invoiceData?.amount?.toLocaleString() || '',
+      due_date: invoiceData ? new Date(invoiceData.due_date).toLocaleDateString() : ''
+    };
+
+    function replaceTemplateVariables(content: string, data: Record<string, string>): string {
+      let result = content;
+      Object.entries(data).forEach(([key, value]) => {
+        const placeholder = `{{${key}}}`;
+        result = result.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value || '');
+      });
+      return result;
+    }
+
+    const subject = replaceTemplateVariables(messageTemplate.title, templateData);
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #dc2626; padding-bottom: 20px;">
-          <h1 style="color: #dc2626; margin: 0; font-size: 2rem;">PAYMENT REMINDER</h1>
-          <p style="color: #666; margin: 10px 0;">HESS Consortium Membership Fee</p>
-        </div>
-        
-        <p>Dear ${organizationName} Team,</p>
-        
-        <p>This is a friendly reminder that your HESS Consortium membership fee is currently <strong style="color: #dc2626;">overdue</strong>.</p>
-        
-        ${invoiceDetails}
-        
-        <div style="background: #f9fafb; padding: 20px; border-left: 4px solid #dc2626; margin: 30px 0;">
-          <h3 style="color: #dc2626; margin-bottom: 10px;">Immediate Action Required</h3>
-          <p>To maintain your active membership status and avoid any service interruptions, please:</p>
-          <ul>
-            <li>Process your payment as soon as possible</li>
-            <li>Contact us if you have any payment-related questions</li>
-            <li>Update your membership information if needed</li>
-          </ul>
-        </div>
-        
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${appUrl}" 
-             style="background-color: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
-            Access Member Portal
-          </a>
-        </div>
-        
-        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 30px 0; text-align: center;">
-          <h3 style="color: #374151; margin-bottom: 15px;">Need Help?</h3>
-          <p>If you have questions about your membership or need assistance with payment, please don't hesitate to contact us:</p>
-          <p>
-            <strong>Email:</strong> billing@hessconsortium.org<br>
-            <strong>Phone:</strong> [Contact Number]
-          </p>
-        </div>
-        
-        <div style="text-align: center; padding: 15px; background: #fef2f2; border-radius: 8px; margin-top: 30px;">
-          <p style="color: #dc2626; margin: 0; font-weight: bold;">Thank you for your prompt attention to this matter.</p>
-          <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">HESS Consortium Team</p>
-        </div>
+        <center>
+          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+        </center>
+        ${replaceTemplateVariables(messageTemplate.content, templateData)}
       </div>
     `;
 

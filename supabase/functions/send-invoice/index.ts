@@ -429,9 +429,25 @@ serve(async (req) => {
       notes
     }, false); // false - no need for attachment, logo is directly embedded
 
+    // Get invoice email template from system_messages
+    const { data: messageTemplate, error: messageError } = await supabase
+      .from('system_messages')
+      .select('title, content')
+      .eq('email_type', 'invoice')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (messageError || !messageTemplate) {
+      console.error('Invoice email template not found:', messageError);
+      // Fall back to simple subject if template not found
+    }
+
+    const subject = messageTemplate?.title 
+      ? messageTemplate.title.replace('{{organization_name}}', organizationName)
+      : `HESS Consortium Membership Invoice - ${organizationName}`;
+
     // Initialize Resend for sending email
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-    const subject = `HESS Consortium Membership Invoice - ${organizationName}`;
 
     const emailPayload: any = {
       from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',

@@ -386,9 +386,17 @@ serve(async (req) => {
       notes: invoice.notes
     }, invoiceId, true); // true for embedded logo
 
-    // Initialize Resend for sending email
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-    const subject = `HESS Consortium Membership Invoice - ${organization.name}`;
+    // Get invoice email template from system_messages for subject
+    const { data: messageTemplate, error: messageError } = await supabase
+      .from('system_messages')
+      .select('title, content')
+      .eq('email_type', 'invoice')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    const subject = messageTemplate?.title 
+      ? messageTemplate.title.replace('{{organization_name}}', organization.name)
+      : `HESS Consortium Membership Invoice - ${organization.name}`;
 
     const emailPayload: any = {
       from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
