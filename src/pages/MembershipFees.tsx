@@ -640,8 +640,8 @@ export default function MembershipFees() {
               continue;
             }
 
-            // Wait a moment to ensure the invoice is available in the system
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Add delay between API calls to avoid rate limiting (2 requests per second limit)
+            await new Promise(resolve => setTimeout(resolve, 600)); // 600ms delay
             
             // Find the created invoice to get the invoice number
             const createdInvoice = invoices.find(inv => 
@@ -1774,7 +1774,7 @@ export default function MembershipFees() {
                       </div>
                     </div>
                     
-                    <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-4">
+                    <div className="max-h-96 overflow-y-auto space-y-2 border rounded-md p-4">
                       <div className="grid grid-cols-12 gap-2 p-2 font-medium text-sm text-muted-foreground border-b">
                         <div className="col-span-1"></div>
                         <div className="col-span-4">Organization</div>
