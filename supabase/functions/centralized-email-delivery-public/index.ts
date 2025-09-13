@@ -54,6 +54,7 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
         settingKey = 'password_reset_message';
         break;
       case 'profile_update':
+      case 'profile_update_approved':
         settingKey = 'profile_update_message_template';
         break;
       default:
@@ -74,7 +75,7 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
         name: `${emailType.charAt(0).toUpperCase() + emailType.slice(1)} Template`,
         subject: emailType === 'welcome' ? 'Welcome to HESS Consortium!' : 
                 emailType === 'password_reset' ? 'Password Reset Request' :
-                emailType === 'profile_update' ? 'Profile Update Approved' :
+                (emailType === 'profile_update' || emailType === 'profile_update_approved') ? 'Profile Update Approved' :
                 'HESS Consortium Notification',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
