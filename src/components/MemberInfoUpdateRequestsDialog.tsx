@@ -37,7 +37,7 @@ import {
   useDeleteReassignmentRequest,
   type MemberInfoUpdateRequest 
 } from '@/hooks/useReassignmentRequests';
-import { UnifiedComparisonModal } from '@/components/UnifiedComparisonModal';
+import { SideBySideComparisonModal } from '@/components/SideBySideComparisonModal';
 import { CheckCircle, XCircle, Eye, Trash2, AlertTriangle, User, Building2, Mail, Monitor } from 'lucide-react';
 
 interface MemberInfoUpdateRequestsDialogProps {
@@ -58,67 +58,33 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Generate comparison data for the unified modal
+  // Generate comparison data for the side-by-side modal
   const comparisonData = useMemo(() => {
     if (!selectedRequest) return {};
 
     const organizationChanges = [];
     const contactChanges = [];
 
-    // Compare organization data if available
-    if (selectedRequest.new_organization_data && selectedRequest.organizations) {
-      const newData = selectedRequest.new_organization_data as Record<string, any>;
-      const currentData = selectedRequest.organizations as Record<string, any>;
-
-      // Organization field mappings
-      const orgFields = [
-        { field: 'name', label: 'Organization Name' },
-        { field: 'address_line_1', label: 'Address Line 1' },
-        { field: 'address_line_2', label: 'Address Line 2' },
-        { field: 'city', label: 'City' },
-        { field: 'state', label: 'State' },
-        { field: 'zip_code', label: 'ZIP Code' },
-        { field: 'phone', label: 'Phone' },
-        { field: 'student_fte', label: 'Student FTE', type: 'text' },
-        { field: 'student_information_system', label: 'Student Information System' },
-        { field: 'financial_system', label: 'Financial System' },
-        { field: 'financial_aid', label: 'Financial Aid System' },
-        { field: 'hcm_hr', label: 'HCM/HR System' },
-        { field: 'payroll_system', label: 'Payroll System' },
-        { field: 'purchasing_system', label: 'Purchasing System' },
-        { field: 'housing_management', label: 'Housing Management System' },
-        { field: 'learning_management', label: 'Learning Management System' },
-        { field: 'admissions_crm', label: 'Admissions CRM' },
-        { field: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM' },
-      ];
-
-      orgFields.forEach(({ field, label, type }) => {
-        if (newData[field] !== undefined && newData[field] !== currentData[field]) {
-          organizationChanges.push({
-            field,
-            label,
-            oldValue: currentData[field],
-            newValue: newData[field],
-            type: type as any
-          });
-        }
+    // Contact change (primary contact email change)
+    if (selectedRequest.new_contact_email && selectedRequest.organizations?.profiles?.email) {
+      contactChanges.push({
+        field: 'primary_contact_email',
+        label: 'Primary Contact Email',
+        oldValue: selectedRequest.organizations.profiles.email,
+        newValue: selectedRequest.new_contact_email,
+        type: 'email' as const
       });
     }
 
-    // Contact change (primary contact email change)
-    contactChanges.push({
-      field: 'primary_contact_email',
-      label: 'Primary Contact Email',
-      oldValue: selectedRequest.organizations?.profiles?.email,
-      newValue: selectedRequest.new_contact_email,
-      type: 'email' as const
-    });
+    // Compare organization data if available
+    const newData = selectedRequest.new_organization_data as Record<string, any> || {};
+    const currentData = selectedRequest.organizations as Record<string, any> || {};
 
     return {
       organizationChanges,
       contactChanges,
-      originalData: selectedRequest.organizations,
-      updatedData: selectedRequest.new_organization_data
+      originalData: currentData,
+      updatedData: newData
     };
   }, [selectedRequest]);
 
@@ -180,7 +146,7 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
         </DialogHeader>
 
         {showDetails && selectedRequest ? (
-          <UnifiedComparisonModal
+          <SideBySideComparisonModal
             open={showDetails}
             onOpenChange={setShowDetails}
             title={`Member Information Update Request - ${selectedRequest.organizations?.name || 'Unknown Organization'}`}
@@ -202,7 +168,7 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
                 </CardContent>
               </Card>
             )}
-          </UnifiedComparisonModal>
+          </SideBySideComparisonModal>
         ) : (
           <div className="space-y-4">
             {isLoading ? (
