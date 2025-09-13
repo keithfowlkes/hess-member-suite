@@ -1173,6 +1173,7 @@ export type Database = {
           content: string
           created_at: string
           created_by: string | null
+          email_type: string | null
           id: string
           is_active: boolean
           priority: string
@@ -1183,6 +1184,7 @@ export type Database = {
           content: string
           created_at?: string
           created_by?: string | null
+          email_type?: string | null
           id?: string
           is_active?: boolean
           priority?: string
@@ -1193,6 +1195,7 @@ export type Database = {
           content?: string
           created_at?: string
           created_by?: string | null
+          email_type?: string | null
           id?: string
           is_active?: boolean
           priority?: string
