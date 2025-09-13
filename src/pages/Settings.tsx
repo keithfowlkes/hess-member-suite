@@ -816,9 +816,78 @@ export default function Settings() {
                   </CardHeader>
                    <CardContent className="space-y-6">
                      {/* Centralized Email Management System */}
-                     <div className="space-y-6">
-                       
-                       {/* Email Type Selector */}
+                      <div className="space-y-6">
+                        
+                        {/* Rate Limiting Configuration */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <Settings2 className="w-4 h-4" />
+                              Email Rate Limiting Configuration
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              Configure delays between bulk email sends to respect Resend API rate limits (max 2 requests/second)
+                            </p>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="email-delay">Delay Between Emails (milliseconds)</Label>
+                                <Input
+                                  id="email-delay"
+                                  type="number"
+                                  min="500"
+                                  max="5000"
+                                  step="50"
+                                  value={emailDelay}
+                                  onChange={(e) => setEmailDelay(e.target.value)}
+                                  placeholder="550"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                  Recommended: 550ms (safely under 2 req/sec limit). Lower values may cause rate limit errors.
+                                </p>
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Rate Limit Information</Label>
+                                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                  <div className="text-sm space-y-1">
+                                    <p className="text-blue-700 font-medium">Current Setting: {emailDelay}ms</p>
+                                    <p className="text-blue-600">Effective Rate: ~{Math.round(1000 / parseInt(emailDelay || '550'))} emails/second</p>
+                                    <p className="text-blue-600">Recommended: 550ms for optimal delivery</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <Button 
+                              onClick={async () => {
+                                try {
+                                  await updateSystemSetting.mutateAsync({
+                                    settingKey: 'email_rate_limit_delay_ms',
+                                    settingValue: emailDelay,
+                                    description: 'Delay in milliseconds between bulk email sends to respect Resend API rate limits (2 req/sec max)'
+                                  });
+                                  toast({
+                                    title: 'Email Rate Limit Settings Updated',
+                                    description: `Email delay set to ${emailDelay}ms for bulk operations.`
+                                  });
+                                } catch (error) {
+                                  toast({
+                                    title: 'Error',
+                                    description: 'Failed to update email rate limit settings.',
+                                    variant: 'destructive'
+                                  });
+                                }
+                              }}
+                              disabled={updateSystemSetting.isPending}
+                              className="w-full md:w-auto"
+                            >
+                              <Save className="w-4 h-4 mr-2" />
+                              {updateSystemSetting.isPending ? 'Saving...' : 'Save Rate Limit Settings'}
+                            </Button>
+                          </CardContent>
+                        </Card>
+
+                        {/* Email Type Selector */}
                        <Card>
                          <CardHeader>
                            <CardTitle className="text-base flex items-center gap-2">
@@ -975,75 +1044,6 @@ export default function Settings() {
                              </Button>
                            </div>
                          </CardContent>
-                        </Card>
-
-                        {/* Rate Limiting Configuration */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-base flex items-center gap-2">
-                              <Settings2 className="w-4 h-4" />
-                              Email Rate Limiting Configuration
-                            </CardTitle>
-                            <p className="text-sm text-muted-foreground">
-                              Configure delays between bulk email sends to respect Resend API rate limits (max 2 requests/second)
-                            </p>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="email-delay">Delay Between Emails (milliseconds)</Label>
-                                <Input
-                                  id="email-delay"
-                                  type="number"
-                                  min="500"
-                                  max="5000"
-                                  step="50"
-                                  value={emailDelay}
-                                  onChange={(e) => setEmailDelay(e.target.value)}
-                                  placeholder="550"
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                  Recommended: 550ms (safely under 2 req/sec limit). Lower values may cause rate limit errors.
-                                </p>
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Rate Limit Information</Label>
-                                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                                  <div className="text-sm space-y-1">
-                                    <p className="text-blue-700 font-medium">Current Setting: {emailDelay}ms</p>
-                                    <p className="text-blue-600">Effective Rate: ~{Math.round(1000 / parseInt(emailDelay || '550'))} emails/second</p>
-                                    <p className="text-blue-600">Recommended: 550ms for optimal delivery</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <Button 
-                              onClick={async () => {
-                                try {
-                                  await updateSystemSetting.mutateAsync({
-                                    settingKey: 'email_rate_limit_delay_ms',
-                                    settingValue: emailDelay,
-                                    description: 'Delay in milliseconds between bulk email sends to respect Resend API rate limits (2 req/sec max)'
-                                  });
-                                  toast({
-                                    title: 'Email Rate Limit Settings Updated',
-                                    description: `Email delay set to ${emailDelay}ms for bulk operations.`
-                                  });
-                                } catch (error) {
-                                  toast({
-                                    title: 'Error',
-                                    description: 'Failed to update email rate limit settings.',
-                                    variant: 'destructive'
-                                  });
-                                }
-                              }}
-                              disabled={updateSystemSetting.isPending}
-                              className="w-full md:w-auto"
-                            >
-                              <Save className="w-4 h-4 mr-2" />
-                              {updateSystemSetting.isPending ? 'Saving...' : 'Save Rate Limit Settings'}
-                            </Button>
-                          </CardContent>
                         </Card>
 
                         {/* Email Delivery Status */}
