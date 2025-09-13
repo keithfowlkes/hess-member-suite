@@ -258,56 +258,54 @@ serve(async (req) => {
     }
 
     // 7) Send notification email using centralized email delivery
-    if (newUserId && newContactEmail) {
-      try {
-        console.log('[APPROVE-REASSIGNMENT] Sending notification email to', newContactEmail);
-        
-        // Prepare update details for email
-        const updateDetails = [];
-        const orgData = newOrgData || {};
-        const existingOrgData = existingOrg || {};
-        
-        // Compare and list changes
-        const fieldsToCheck = [
-          { key: 'name', label: 'Organization Name' },
-          { key: 'address_line_1', label: 'Address' },
-          { key: 'city', label: 'City' },
-          { key: 'state', label: 'State' },
-          { key: 'zip_code', label: 'ZIP Code' },
-          { key: 'phone', label: 'Phone' },
-          { key: 'email', label: 'Email' },
-          { key: 'student_fte', label: 'Student FTE' }
-        ];
-        
-        fieldsToCheck.forEach(field => {
-          if (orgData[field.key] && orgData[field.key] !== existingOrgData[field.key]) {
-            updateDetails.push(`- ${field.label}: ${orgData[field.key]}`);
-          }
-        });
-
-        const emailPayload = {
-          type: 'member_info_update',
-          to: [newContactEmail],
-          data: {
-            first_name: registration?.first_name || '',
-            last_name: registration?.last_name || '',
-            organization_name: orgData.name || existingOrgData.name || 'Your Organization',
-            update_details: updateDetails.length > 0 ? updateDetails.join('\n') : 'Contact information updated'
-          }
-        };
-
-        const emailResponse = await supabaseAdmin.functions.invoke('centralized-email-delivery', {
-          body: emailPayload
-        });
-
-        if (emailResponse.error) {
-          console.error('[APPROVE-REASSIGNMENT] Email notification failed', emailResponse.error);
-        } else {
-          console.log('[APPROVE-REASSIGNMENT] Email notification sent successfully');
+    try {
+      console.log('[APPROVE-REASSIGNMENT] Sending notification email to', newContactEmail);
+      
+      // Prepare update details for email
+      const updateDetails = [];
+      const orgData = newOrgData || {};
+      const existingOrgData = existingOrg || {};
+      
+      // Compare and list changes
+      const fieldsToCheck = [
+        { key: 'name', label: 'Organization Name' },
+        { key: 'address_line_1', label: 'Address' },
+        { key: 'city', label: 'City' },
+        { key: 'state', label: 'State' },
+        { key: 'zip_code', label: 'ZIP Code' },
+        { key: 'phone', label: 'Phone' },
+        { key: 'email', label: 'Email' },
+        { key: 'student_fte', label: 'Student FTE' }
+      ];
+      
+      fieldsToCheck.forEach(field => {
+        if (orgData[field.key] && orgData[field.key] !== existingOrgData[field.key]) {
+          updateDetails.push(`- ${field.label}: ${orgData[field.key]}`);
         }
-      } catch (emailErr) {
-        console.error('[APPROVE-REASSIGNMENT] Email notification exception', emailErr);
+      });
+
+      const emailPayload = {
+        type: 'member_info_update',
+        to: [newContactEmail],
+        data: {
+          first_name: registration?.first_name || '',
+          last_name: registration?.last_name || '',
+          organization_name: orgData.name || existingOrgData.name || 'Your Organization',
+          update_details: updateDetails.length > 0 ? updateDetails.join('\n') : 'Contact information updated'
+        }
+      };
+
+      const emailResponse = await supabaseAdmin.functions.invoke('centralized-email-delivery', {
+        body: emailPayload
+      });
+
+      if (emailResponse.error) {
+        console.error('[APPROVE-REASSIGNMENT] Email notification failed', emailResponse.error);
+      } else {
+        console.log('[APPROVE-REASSIGNMENT] Email notification sent successfully');
       }
+    } catch (emailErr) {
+      console.error('[APPROVE-REASSIGNMENT] Email notification exception', emailErr);
     }
 
     // 8) Send password reset email for new users

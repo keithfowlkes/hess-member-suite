@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useMembers, Organization, CreateOrganizationData } from '@/hooks/useMembers';
+import { supabase } from '@/integrations/supabase/client';
 import { CalendarIcon, User, Building2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -37,6 +38,9 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 const organizationSchema = z.object({
   name: z.string().min(2, 'Organization name must be at least 2 characters'),
@@ -54,6 +58,25 @@ const organizationSchema = z.object({
   membership_end_date: z.date().optional(),
   annual_fee_amount: z.number().min(0, 'Annual fee must be positive'),
   notes: z.string().optional(),
+  // Systems & Software fields
+  student_information_system: z.string().optional(),
+  financial_system: z.string().optional(),
+  financial_aid: z.string().optional(),
+  hcm_hr: z.string().optional(),
+  payroll_system: z.string().optional(),
+  purchasing_system: z.string().optional(),
+  housing_management: z.string().optional(),
+  learning_management: z.string().optional(),
+  admissions_crm: z.string().optional(),
+  alumni_advancement_crm: z.string().optional(),
+  primary_office_apple: z.boolean().optional(),
+  primary_office_asus: z.boolean().optional(),
+  primary_office_dell: z.boolean().optional(),
+  primary_office_hp: z.boolean().optional(),
+  primary_office_microsoft: z.boolean().optional(),
+  primary_office_other: z.boolean().optional(),
+  primary_office_other_details: z.string().optional(),
+  other_software_comments: z.string().optional(),
 });
 
 type OrganizationFormData = z.infer<typeof organizationSchema>;
@@ -67,6 +90,7 @@ interface OrganizationDialogProps {
 export function OrganizationDialog({ open, onOpenChange, organization }: OrganizationDialogProps) {
   const { createOrganization, updateOrganization } = useMembers();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [systemsExpanded, setSystemsExpanded] = useState(false);
 
   const form = useForm<OrganizationFormData>({
     resolver: zodResolver(organizationSchema),
@@ -84,11 +108,31 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
       membership_status: 'pending',
       annual_fee_amount: 1000,
       notes: '',
+      // Systems & Software defaults
+      student_information_system: '',
+      financial_system: '',
+      financial_aid: '',
+      hcm_hr: '',
+      payroll_system: '',
+      purchasing_system: '',
+      housing_management: '',
+      learning_management: '',
+      admissions_crm: '',
+      alumni_advancement_crm: '',
+      primary_office_apple: false,
+      primary_office_asus: false,
+      primary_office_dell: false,
+      primary_office_hp: false,
+      primary_office_microsoft: false,
+      primary_office_other: false,
+      primary_office_other_details: '',
+      other_software_comments: '',
     },
   });
 
   useEffect(() => {
     if (organization) {
+      const profile = organization.profiles;
       form.reset({
         name: organization.name,
         email: organization.email || '',
@@ -105,6 +149,25 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
         membership_end_date: organization.membership_end_date ? new Date(organization.membership_end_date) : undefined,
         annual_fee_amount: organization.annual_fee_amount,
         notes: organization.notes || '',
+        // Systems & Software from profile
+        student_information_system: profile?.student_information_system || '',
+        financial_system: profile?.financial_system || '',
+        financial_aid: profile?.financial_aid || '',
+        hcm_hr: profile?.hcm_hr || '',
+        payroll_system: profile?.payroll_system || '',
+        purchasing_system: profile?.purchasing_system || '',
+        housing_management: profile?.housing_management || '',
+        learning_management: profile?.learning_management || '',
+        admissions_crm: profile?.admissions_crm || '',
+        alumni_advancement_crm: profile?.alumni_advancement_crm || '',
+        primary_office_apple: profile?.primary_office_apple || false,
+        primary_office_asus: profile?.primary_office_asus || false,
+        primary_office_dell: profile?.primary_office_dell || false,
+        primary_office_hp: profile?.primary_office_hp || false,
+        primary_office_microsoft: profile?.primary_office_microsoft || false,
+        primary_office_other: profile?.primary_office_other || false,
+        primary_office_other_details: profile?.primary_office_other_details || '',
+        other_software_comments: profile?.other_software_comments || '',
       });
     } else {
       form.reset({
@@ -121,6 +184,25 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
         membership_status: 'pending',
         annual_fee_amount: 1000,
         notes: '',
+        // Systems & Software defaults
+        student_information_system: '',
+        financial_system: '',
+        financial_aid: '',
+        hcm_hr: '',
+        payroll_system: '',
+        purchasing_system: '',
+        housing_management: '',
+        learning_management: '',
+        admissions_crm: '',
+        alumni_advancement_crm: '',
+        primary_office_apple: false,
+        primary_office_asus: false,
+        primary_office_dell: false,
+        primary_office_hp: false,
+        primary_office_microsoft: false,
+        primary_office_other: false,
+        primary_office_other_details: '',
+        other_software_comments: '',
       });
     }
   }, [organization, form]);
@@ -129,11 +211,9 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
     setIsSubmitting(true);
     try {
       if (organization) {
-        // For updates, allow partial data
-        const updateData = {
-          ...data,
-          membership_start_date: data.membership_start_date?.toISOString().split('T')[0],
-          membership_end_date: data.membership_end_date?.toISOString().split('T')[0],
+        // For updates, update both organization and profile data
+        const orgUpdateData = {
+          name: data.name,
           email: data.email || null,
           phone: data.phone || null,
           website: data.website || null,
@@ -142,9 +222,43 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
           city: data.city || null,
           state: data.state || null,
           zip_code: data.zip_code || null,
+          country: data.country,
+          membership_status: data.membership_status,
+          membership_start_date: data.membership_start_date?.toISOString().split('T')[0],
+          membership_end_date: data.membership_end_date?.toISOString().split('T')[0],
+          annual_fee_amount: data.annual_fee_amount,
           notes: data.notes || null,
         };
-        await updateOrganization(organization.id, updateData);
+        await updateOrganization(organization.id, orgUpdateData);
+
+        // Also update the profile with systems data if profile exists
+        if (organization.profiles?.id) {
+          const profileUpdateData = {
+            student_information_system: data.student_information_system || null,
+            financial_system: data.financial_system || null,
+            financial_aid: data.financial_aid || null,
+            hcm_hr: data.hcm_hr || null,
+            payroll_system: data.payroll_system || null,
+            purchasing_system: data.purchasing_system || null,
+            housing_management: data.housing_management || null,
+            learning_management: data.learning_management || null,
+            admissions_crm: data.admissions_crm || null,
+            alumni_advancement_crm: data.alumni_advancement_crm || null,
+            primary_office_apple: data.primary_office_apple || false,
+            primary_office_asus: data.primary_office_asus || false,
+            primary_office_dell: data.primary_office_dell || false,
+            primary_office_hp: data.primary_office_hp || false,
+            primary_office_microsoft: data.primary_office_microsoft || false,
+            primary_office_other: data.primary_office_other || false,
+            primary_office_other_details: data.primary_office_other_details || null,
+            other_software_comments: data.other_software_comments || null,
+          };
+          
+          await supabase
+            .from('profiles')
+            .update(profileUpdateData)
+            .eq('id', organization.profiles.id);
+        }
       } else {
         // For creates, ensure we have all required data
         const createData: CreateOrganizationData = {
@@ -484,6 +598,276 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
                     </FormItem>
                   )}
                 />
+
+                {/* Systems & Software Information Section */}
+                {organization && (
+                  <Collapsible open={systemsExpanded} onOpenChange={setSystemsExpanded}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" type="button" className="w-full justify-between">
+                        Systems & Software Information
+                        <ChevronDown className={cn("h-4 w-4 transition-transform", systemsExpanded && "rotate-180")} />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-4 mt-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="student_information_system"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Student Information System</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Banner, PowerSchool" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="financial_system"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Financial System</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Banner Finance" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="financial_aid"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Financial Aid System</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., PowerFAIDS" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="hcm_hr"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>HCM/HR System</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Workday, PeopleSoft" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="payroll_system"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Payroll System</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., ADP, Paychex" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="purchasing_system"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Purchasing System</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Colleague Procurement" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="housing_management"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Housing Management System</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., StarRez, RoomKey" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="learning_management"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Learning Management System</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Canvas, Blackboard" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="admissions_crm"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Admissions CRM</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., SLATE, Element451" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="alumni_advancement_crm"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Alumni/Advancement CRM</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Raiser's Edge, Ellucian CRM" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-medium">Primary Office Equipment</h4>
+                        <div className="grid grid-cols-3 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="primary_office_apple"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm">Apple</FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="primary_office_asus"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm">ASUS</FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="primary_office_dell"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm">Dell</FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="primary_office_hp"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm">HP</FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="primary_office_microsoft"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm">Microsoft</FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="primary_office_other"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-sm">Other</FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="primary_office_other_details"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Other Equipment Details</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Please specify other equipment" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="other_software_comments"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Additional Software Comments</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Any additional software or system information..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
 
                 <div className="flex justify-end space-x-2 pt-4">
                   <Button
