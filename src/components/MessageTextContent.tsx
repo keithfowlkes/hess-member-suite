@@ -32,6 +32,33 @@ export const MessageTextContent = () => {
       const passwordSetting = settings.find(s => s.setting_key === 'password_reset_message');
       if (passwordSetting?.setting_value) {
         setPasswordResetMessage(passwordSetting.setting_value);
+      } else {
+        // Set default password reset message template
+        const defaultPasswordResetTemplate = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <center>
+              <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:150px; height:auto;">
+            </center>
+            
+            <p>Dear {{user_email}},</p>
+            
+            <p>You have requested a password reset for your HESS Consortium account.</p>
+            
+            <p>Please click the link below to reset your password:</p>
+            
+            <div style="text-align: center; margin: 20px 0;">
+              <a href="{{reset_link}}" style="background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Your Password</a>
+            </div>
+            
+            <p>If you did not request this password reset, please ignore this email. The link will expire in 24 hours for security reasons.</p>
+            
+            <p>If you have any questions or need assistance, please contact us at keith.fowlkes@hessconsortium.org</p>
+            
+            <p>Best regards,<br>
+            The HESS Consortium Team</p>
+          </div>
+        `;
+        setPasswordResetMessage(defaultPasswordResetTemplate);
       }
       
       const welcomeSetting = settings.find(s => s.setting_key === 'welcome_message_template');
@@ -205,14 +232,17 @@ export const MessageTextContent = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="password-reset-message">Message Template</Label>
-            <Textarea
-              id="password-reset-message"
-              value={passwordResetMessage}
-              onChange={(e) => setPasswordResetMessage(e.target.value)}
-              placeholder="Enter password reset message template..."
-              rows={4}
-            />
+            <Label>Email Template (HTML)</Label>
+            <p className="text-sm text-muted-foreground">
+              Available variables: user_email, reset_link (use double braces around each)
+            </p>
+            <div className="min-h-[200px]">
+                <EnhancedQuillEditor
+                  value={passwordResetMessage}
+                  onChange={setPasswordResetMessage}
+                  placeholder="Enter password reset message template..."
+                />
+            </div>
           </div>
           <Button 
             onClick={handleSavePasswordMessage}

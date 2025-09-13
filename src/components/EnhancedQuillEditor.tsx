@@ -220,22 +220,38 @@ const EnhancedQuillEditor: React.FC<EnhancedQuillEditorProps> = ({
 
   // Add resize functionality to existing images when component mounts or content changes
   React.useEffect(() => {
-    if (quillRef.current) {
-      const quill = quillRef.current.getEditor();
-      const images = quill.root.querySelectorAll('img');
-      
-      // Clear processed images set periodically to avoid memory leaks
-      if (images.length === 0) {
-        processedImages.current.clear();
-      }
-      
-      images.forEach((img: Element) => {
-        if (img instanceof HTMLImageElement) {
-          makeImageResizable(img);
+    const timer = setTimeout(() => {
+      if (quillRef.current) {
+        const quill = quillRef.current.getEditor();
+        const images = quill.root.querySelectorAll('img');
+        
+        // Clear processed images set periodically to avoid memory leaks
+        if (images.length === 0) {
+          processedImages.current.clear();
         }
-      });
-    }
-  }, [value, makeImageResizable]);
+        
+        images.forEach((img: Element) => {
+          if (img instanceof HTMLImageElement) {
+            makeImageResizable(img);
+          }
+        });
+
+        // Listen for text changes to detect new images
+        quill.on('text-change', () => {
+          setTimeout(() => {
+            const newImages = quill.root.querySelectorAll('img');
+            newImages.forEach((img: Element) => {
+              if (img instanceof HTMLImageElement) {
+                makeImageResizable(img);
+              }
+            });
+          }, 100);
+        });
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [makeImageResizable]);
 
   return (
     <ReactQuill
