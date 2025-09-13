@@ -262,12 +262,37 @@ serve(async (req) => {
       try {
         console.log('[APPROVE-REASSIGNMENT] Sending notification email to', newContactEmail);
         
+        // Prepare update details for email
+        const updateDetails = [];
+        const orgData = newOrgData || {};
+        const existingOrgData = existingOrg || {};
+        
+        // Compare and list changes
+        const fieldsToCheck = [
+          { key: 'name', label: 'Organization Name' },
+          { key: 'address_line_1', label: 'Address' },
+          { key: 'city', label: 'City' },
+          { key: 'state', label: 'State' },
+          { key: 'zip_code', label: 'ZIP Code' },
+          { key: 'phone', label: 'Phone' },
+          { key: 'email', label: 'Email' },
+          { key: 'student_fte', label: 'Student FTE' }
+        ];
+        
+        fieldsToCheck.forEach(field => {
+          if (orgData[field.key] && orgData[field.key] !== existingOrgData[field.key]) {
+            updateDetails.push(`- ${field.label}: ${orgData[field.key]}`);
+          }
+        });
+
         const emailPayload = {
-          type: 'profile_update_message_template',
-          to: newContactEmail,
+          type: 'member_info_update',
+          to: [newContactEmail],
           data: {
-            primary_contact_name: `${registration?.first_name || ''} ${registration?.last_name || ''}`.trim() || 'Member',
-            organization_name: newOrgData.name || existingOrg.name,
+            first_name: registration?.first_name || '',
+            last_name: registration?.last_name || '',
+            organization_name: orgData.name || existingOrgData.name || 'Your Organization',
+            update_details: updateDetails.length > 0 ? updateDetails.join('\n') : 'Contact information updated'
           }
         };
 

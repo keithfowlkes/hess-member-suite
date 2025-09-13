@@ -20,9 +20,11 @@ export const MessageTextContent = () => {
   const [passwordResetMessage, setPasswordResetMessage] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [profileUpdateMessage, setProfileUpdateMessage] = useState('');
+  const [memberInfoUpdateMessage, setMemberInfoUpdateMessage] = useState('');
   const [savingMessage, setSavingMessage] = useState(false);
   const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
   const [savingProfileUpdateMessage, setSavingProfileUpdateMessage] = useState(false);
+  const [savingMemberInfoUpdateMessage, setSavingMemberInfoUpdateMessage] = useState(false);
 
   // Initialize messages from settings
   useEffect(() => {
@@ -103,6 +105,41 @@ export const MessageTextContent = () => {
         `;
         setProfileUpdateMessage(defaultProfileUpdateTemplate);
       }
+
+      const memberInfoUpdateSetting = settings.find(s => s.setting_key === 'email_member_info_update_template');
+      if (memberInfoUpdateSetting?.setting_value) {
+        setMemberInfoUpdateMessage(memberInfoUpdateSetting.setting_value);
+      } else {
+        // Set default member info update message template
+        const defaultMemberInfoUpdateTemplate = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <center>
+              <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:150px; height:auto;">
+            </center>
+            
+            <p>Dear {{first_name}} {{last_name}},</p>
+            
+            <p>Your organization information has been successfully updated in our system.</p>
+            
+            <p><strong>Updated Information:</strong></p>
+            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0;">
+              {{update_details}}
+            </div>
+            
+            <p>These changes are now active in our system. You can view your updated profile by logging into the HESS Consortium member portal.</p>
+            
+            <p>If you have any questions about these changes, please don't hesitate to contact us.</p>
+            
+            <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/04/KeithFowlkesshortsig.png" alt="Keith Fowlkes Signature" style="margin: 20px 0;">
+            
+            <p>Keith Fowlkes, M.A., M.B.A.<br>
+            Executive Director and Founder<br>
+            The HESS Consortium<br>
+            keith.fowlkes@hessconsortium.org | 859.516.3571</p>
+          </div>
+        `;
+        setMemberInfoUpdateMessage(defaultMemberInfoUpdateTemplate);
+      }
     }
   }, [settings]);
 
@@ -130,6 +167,15 @@ export const MessageTextContent = () => {
       await updateSetting('profile_update_message_template', profileUpdateMessage);
     } finally {
       setSavingProfileUpdateMessage(false);
+    }
+  };
+
+  const handleSaveMemberInfoUpdateMessage = async () => {
+    setSavingMemberInfoUpdateMessage(true);
+    try {
+      await updateSetting('email_member_info_update_template', memberInfoUpdateMessage);
+    } finally {
+      setSavingMemberInfoUpdateMessage(false);
     }
   };
 
@@ -240,6 +286,40 @@ export const MessageTextContent = () => {
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : null}
             Save Profile Update Message
+          </Button>
+        </CardContent>
+      </Card>
+      {/* Member Information Update Message */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Edit className="h-5 w-5" />
+            Member Information Update Message Template
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Email Template (HTML)</Label>
+            <p className="text-sm text-muted-foreground">
+              Available variables: first_name, last_name, organization_name, update_details (use double braces around each)
+            </p>
+            <div className="min-h-[200px]">
+              <ReactQuill
+                value={memberInfoUpdateMessage}
+                onChange={setMemberInfoUpdateMessage}
+                theme="snow"
+                placeholder="Enter member information update message template..."
+              />
+            </div>
+          </div>
+          <Button 
+            onClick={handleSaveMemberInfoUpdateMessage}
+            disabled={savingMemberInfoUpdateMessage}
+          >
+            {savingMemberInfoUpdateMessage ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : null}
+            Save Member Information Update Message
           </Button>
         </CardContent>
       </Card>

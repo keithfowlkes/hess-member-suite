@@ -1279,7 +1279,7 @@ const MasterDashboard = () => {
           }}
           title="Review Member Information Update"
           data={{
-            originalData: selectedMemberInfoUpdate.original_organization_data || {},
+            originalData: selectedMemberInfoUpdate.organizations || {},
             updatedData: selectedMemberInfoUpdate.new_organization_data || {},
             contactChanges: [{
               field: 'Contact Email',
