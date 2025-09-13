@@ -359,7 +359,7 @@ const MasterDashboard = () => {
     );
   }
 
-  if (!user || (user.user_roles?.[0]?.role !== 'admin' && user.user_roles?.[0]?.role !== 'super_admin')) {
+  if (!user || !user.email || user.email !== 'keith.fowlkes@hessconsortium.org') {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex items-center justify-center">
@@ -422,7 +422,7 @@ const MasterDashboard = () => {
       value: users.length,
       icon: Shield,
       color: 'text-purple-600',
-      description: `${users.filter(u => u.role === 'admin').length} admins`
+      description: `Admin users in system`
     },
     {
       title: 'Total Student FTE',
@@ -439,7 +439,7 @@ const MasterDashboard = () => {
     setShowApprovalDialog(true);
   };
 
-  const handleRoleUpdate = async (userId: string, currentRole: string) => {
+  const handleRoleUpdate = async (userId: string, currentRole: string = 'member') => {
     setUpdatingUser(userId);
     try {
       const newRole = currentRole === 'admin' ? 'member' : 'admin';
@@ -1072,7 +1072,12 @@ const MasterDashboard = () => {
                               {invitations.slice(0, 10).map((invitation) => (
                                 <TableRow key={invitation.id}>
                                   <TableCell className="font-medium">{invitation.email}</TableCell>
-                                  <TableCell>{invitation.organization}</TableCell>
+                                  <TableCell>
+                                    {typeof invitation.organization === 'string' 
+                                      ? invitation.organization 
+                                      : invitation.organization?.name || 'N/A'
+                                    }
+                                  </TableCell>
                                   <TableCell>
                                     {invitation.used_at ? (
                                       <Badge variant="secondary">Used</Badge>
@@ -1152,10 +1157,8 @@ const MasterDashboard = () => {
                             </TableCell>
                             <TableCell>{user.organization || 'Not specified'}</TableCell>
                             <TableCell>
-                              <Badge 
-                                variant={user.role === 'admin' ? 'default' : 'outline'}
-                              >
-                                {user.role || 'member'}
+                              <Badge variant="outline">
+                                member
                               </Badge>
                             </TableCell>
                             <TableCell>
@@ -1173,17 +1176,15 @@ const MasterDashboard = () => {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem 
-                                    onClick={() => handleRoleUpdate(user.id, user.role || 'member')}
+                                    onClick={() => handleRoleUpdate(user.id)}
                                     disabled={updatingUser === user.id}
                                   >
                                     {updatingUser === user.id ? (
                                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    ) : user.role === 'admin' ? (
-                                      <UserMinus className="h-4 w-4 mr-2" />
                                     ) : (
                                       <UserPlus className="h-4 w-4 mr-2" />
                                     )}
-                                    {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                                    Toggle Admin Role
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handlePasswordReset(user.email)}>
                                     <KeyRound className="h-4 w-4 mr-2" />
