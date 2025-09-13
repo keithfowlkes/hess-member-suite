@@ -1716,6 +1716,60 @@ const MasterDashboard = () => {
           </div>
         </main>
       </div>
+
+      {/* Member Info Update Comparison Dialog */}
+      {selectedMemberInfoUpdate && (
+        <UnifiedComparisonModal
+          open={showMemberInfoUpdateComparisonDialog}
+          onOpenChange={setShowMemberInfoUpdateComparisonDialog}
+          title="Review Member Information Update"
+          data={{
+            originalData: selectedMemberInfoUpdate.original_organization_data,
+            updatedData: selectedMemberInfoUpdate.new_organization_data,
+            contactChanges: [{
+              field: 'Contact Email',
+              oldValue: selectedMemberInfoUpdate.organizations?.profiles?.email || '',
+              newValue: selectedMemberInfoUpdate.new_contact_email
+            }]
+          }}
+          showActions={true}
+          onApprove={async () => {
+            try {
+              await approveMemberInfoUpdate.mutateAsync({ id: selectedMemberInfoUpdate.id });
+              setShowMemberInfoUpdateComparisonDialog(false);
+              setSelectedMemberInfoUpdate(null);
+            } catch (error) {
+              console.error('Error approving member info update:', error);
+            }
+          }}
+          onReject={async () => {
+            try {
+              await deleteMemberInfoUpdate.mutateAsync(selectedMemberInfoUpdate.id);
+              setShowMemberInfoUpdateComparisonDialog(false);
+              setSelectedMemberInfoUpdate(null);
+            } catch (error) {
+              console.error('Error rejecting member info update:', error);
+            }
+          }}
+          isSubmitting={approveMemberInfoUpdate.isPending || deleteMemberInfoUpdate.isPending}
+        />
+      )}
+
+      {/* Profile Edit Comparison Dialog */}
+      {selectedProfileEditRequest && (
+        <UnifiedComparisonModal
+          open={showProfileEditComparisonDialog}
+          onOpenChange={setShowProfileEditComparisonDialog}
+          title="Review Profile Update Request"
+          data={createProfileEditComparisonData(selectedProfileEditRequest)}
+          showActions={true}
+          onApprove={handleApproveProfileEdit}
+          onReject={handleRejectProfileEdit}
+          actionNotes={adminNotes}
+          onActionNotesChange={setAdminNotes}
+          isSubmitting={false}
+        />
+      )}
     </SidebarProvider>
   );
 };
