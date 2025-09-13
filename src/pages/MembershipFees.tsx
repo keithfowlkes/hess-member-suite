@@ -632,7 +632,7 @@ export default function MembershipFees() {
 
           successCount++;
 
-          // Now send the invoice automatically using centralized email delivery
+          // Now send the invoice automatically using centralized email delivery in background
           try {
             const toEmail = organization.email;
             if (!toEmail) {
@@ -640,52 +640,61 @@ export default function MembershipFees() {
               continue;
             }
 
-            // Add delay between API calls to avoid rate limiting (2 requests per second limit)
-            await new Promise(resolve => setTimeout(resolve, 600)); // 600ms delay
+            // Add progressive delay to respect Resend's rate limit (2 requests/second max)
+            // Use 550ms delay between emails to be safely under the limit
+            const emailDelay = sentCount * 550; // Progressive delay for each email
             
-            // Find the created invoice to get the invoice number
-            const createdInvoice = invoices.find(inv => 
-              inv.organization_id === organizationId && 
-              inv.status === 'draft'
-            ) || newInvoice;
+            setTimeout(async () => {
+              try {
+                // Find the created invoice to get the invoice number
+                const createdInvoice = invoices.find(inv => 
+                  inv.organization_id === organizationId && 
+                  inv.status === 'draft'
+                ) || newInvoice;
 
-            if (!createdInvoice) {
-              console.warn(`Could not find created invoice for ${organization.name}`);
-              continue;
-            }
+                if (!createdInvoice) {
+                  console.warn(`Could not find created invoice for ${organization.name}`);
+                  return;
+                }
 
-            const subject = `HESS Consortium - Invoice ${createdInvoice.invoice_number}`;
+                const subject = `HESS Consortium - Invoice ${createdInvoice.invoice_number}`;
 
-            const invoiceEmailData = {
-              organization_name: organization.name || '',
-              invoice_number: createdInvoice.invoice_number,
-              amount: `$${(invoiceAmount || 0).toLocaleString()}`,
-              due_date: format(dueDate, 'yyyy-MM-dd'),
-              period_start_date: format(periodStart, 'yyyy-MM-dd'),
-              period_end_date: format(periodEnd, 'yyyy-MM-dd'),
-              notes: createdInvoice.notes || ''
-            };
+                const invoiceEmailData = {
+                  organization_name: organization.name || '',
+                  invoice_number: createdInvoice.invoice_number,
+                  amount: `$${(invoiceAmount || 0).toLocaleString()}`,
+                  due_date: format(dueDate, 'yyyy-MM-dd'),
+                  period_start_date: format(periodStart, 'yyyy-MM-dd'),
+                  period_end_date: format(periodEnd, 'yyyy-MM-dd'),
+                  notes: createdInvoice.notes || ''
+                };
 
-            const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
+                const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
 
-            const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
-              body: {
-                type: 'custom',
-                to: toEmail,
-                subject,
-                template: invoiceHTML
+                const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
+                  body: {
+                    type: 'custom',
+                    to: toEmail,
+                    subject,
+                    template: invoiceHTML
+                  }
+                });
+                
+                if (error) {
+                  console.error(`Failed to send invoice email for ${organization.name}:`, error);
+                } else {
+                  // Mark invoice as sent
+                  await sendInvoice(createdInvoice.id);
+                  console.log(`Successfully sent invoice to ${organization.name}`);
+                }
+              } catch (sendError) {
+                console.error(`Failed to send invoice for organization ${organization.name}:`, sendError);
               }
-            });
-            
-            if (error) {
-              console.error(`Failed to send invoice email for ${organization.name}:`, error);
-            } else {
-              // Mark invoice as sent
-              await sendInvoice(createdInvoice.id);
-              sentCount++;
-            }
+            }, emailDelay);
+
+            sentCount++; // Increment for delay calculation
           } catch (sendError) {
-            console.error(`Failed to send invoice for organization ${organization.name}:`, sendError);
+            console.error(`Failed to prepare invoice send for organization ${organization.name}:`, sendError);
           }
         } catch (error) {
           console.error(`Failed to create/send invoice for organization ${organizationId}:`, error);
