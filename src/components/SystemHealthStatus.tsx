@@ -83,7 +83,7 @@ export function SystemHealthStatus() {
 
   const checkResendHealth = async (): Promise<ServiceStatus> => {
     try {
-      // Check if email configuration is working by calling our verify function
+      // Use the same verification approach as the ResendApiConfig component
       const { data, error } = await supabase.functions.invoke('verify-email-config');
       
       if (error) {
@@ -98,11 +98,12 @@ export function SystemHealthStatus() {
       if (data?.success && data?.configuration) {
         const config = data.configuration;
         
+        // Check for critical issues first
         if (!config.hasApiKey) {
           return {
             name: 'Resend Email Service',
             status: 'error',
-            message: 'API key missing',
+            message: 'API key not configured',
             icon: Mail
           };
         }
@@ -110,21 +111,37 @@ export function SystemHealthStatus() {
         if (!config.hasFromAddress) {
           return {
             name: 'Resend Email Service',
-            status: 'warning',
-            message: 'Sender address not configured',
+            status: 'error',
+            message: 'From address not configured',
             icon: Mail
           };
         }
         
+        // Check for warnings (domain verification issues)
         if (config.recommendations && config.recommendations.length > 0) {
+          // Check if it's just domain verification issues vs more serious problems
+          const hasApiErrors = config.recommendations.some((rec: string) => 
+            rec.includes('API connection failed') || rec.includes('API error')
+          );
+          
+          if (hasApiErrors) {
+            return {
+              name: 'Resend Email Service',
+              status: 'error',
+              message: 'API connection failed',
+              icon: Mail
+            };
+          }
+          
           return {
             name: 'Resend Email Service',
             status: 'warning',
-            message: 'Configuration issues detected',
+            message: 'Domain verification needed',
             icon: Mail
           };
         }
         
+        // All good
         return {
           name: 'Resend Email Service',
           status: 'healthy',
@@ -133,12 +150,14 @@ export function SystemHealthStatus() {
         };
       }
       
+      // If we get here, something unexpected happened
       return {
         name: 'Resend Email Service',
         status: 'warning',
-        message: 'Status unknown',
+        message: 'Status verification incomplete',
         icon: Mail
       };
+      
     } catch (err: any) {
       return {
         name: 'Resend Email Service',
@@ -285,13 +304,23 @@ export function SystemHealthStatus() {
                 <div className="p-2 bg-muted rounded-lg">
                   <IconComponent className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <h4 className="font-medium text-foreground">{service.name}</h4>
                   <p className="text-sm text-muted-foreground">{service.message}</p>
                   {service.latency && (
                     <div className="flex items-center gap-1 mt-1">
                       <Wifi className="h-3 w-3 text-muted-foreground" />
                       <span className="text-xs text-muted-foreground">{service.latency}ms</span>
+                    </div>
+                  )}
+                  
+                  {/* Show detailed configuration info for Resend */}
+                  {service.name === 'Resend Email Service' && (
+                    <div className="mt-2 text-xs space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Provider:</span>
+                        <Badge variant="outline" className="text-xs">Resend</Badge>
+                      </div>
                     </div>
                   )}
                 </div>
