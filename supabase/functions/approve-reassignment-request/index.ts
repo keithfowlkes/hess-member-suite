@@ -101,26 +101,30 @@ serve(async (req) => {
 
     console.log('[APPROVE-REASSIGNMENT] Existing organization:', existingOrg.name);
 
-    // Deletion steps moved after creating the new organization and updating the request
-    // to avoid foreign key constraint violations with organization_reassignment_requests.
-
-
-    // 4) CREATE NEW contact (as if new member) when registration data provided
+    // 3) CREATE NEW contact user and profile when registration data provided
     let newContactProfileId: string | null = null;
+    let newUserId: string | null = null;
+    
     if (registration) {
-      // Try to find existing profile by email first
+      // Check if user already exists by email
       const { data: existingProfile, error: existProfErr } = await supabaseAdmin
         .from('profiles')
         .select('id, user_id')
         .eq('email', newContactEmail)
         .maybeSingle();
+      
       if (existProfErr) console.warn('[APPROVE-REASSIGNMENT] Error checking existing profile', existProfErr);
 
-      let newUserId: string | null = existingProfile?.user_id ?? null;
-
-      if (!newUserId) {
+      if (existingProfile?.user_id) {
+        // User already exists, use existing profile
+        newUserId = existingProfile.user_id;
+        newContactProfileId = existingProfile.id;
+        console.log('[APPROVE-REASSIGNMENT] Using existing user for', newContactEmail);
+      } else {
+        // Create new user
         console.log('[APPROVE-REASSIGNMENT] Creating new auth user for', newContactEmail);
         const tempPassword = `${Math.random().toString(36).slice(-8)}Aa!1`;
+        
         const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
           email: newContactEmail,
           password: tempPassword,
@@ -132,6 +136,7 @@ serve(async (req) => {
             organization: newOrgData?.name ?? '',
           },
         });
+        
         if (createErr) {
           console.error('[APPROVE-REASSIGNMENT] Failed creating auth user', createErr);
           return new Response(
@@ -139,75 +144,46 @@ serve(async (req) => {
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
+        
         newUserId = created.user?.id ?? null;
 
         // Give triggers a moment to insert profile
         await new Promise((r) => setTimeout(r, 1500));
-      }
 
-      // Fetch/create profile for that user
-      if (newUserId) {
+        // Fetch the profile created by the trigger
         const { data: prof, error: profErr } = await supabaseAdmin
           .from('profiles')
           .select('id')
-          .eq('user_id', newUserId)
+          .eq('user_id', newUserId!)
           .maybeSingle();
-        if (profErr) console.warn('[APPROVE-REASSIGNMENT] Error fetching profile for new user', profErr);
-
-        if (prof?.id) {
-          newContactProfileId = prof.id;
-        } else {
-          // Create minimal profile if trigger didn't create it
-          const { data: insertedProf, error: insertProfErr } = await supabaseAdmin
-            .from('profiles')
-            .insert({
-              user_id: newUserId,
-              first_name: registration.first_name ?? '',
-              last_name: registration.last_name ?? '',
-              email: newContactEmail,
-              organization: newOrgData?.name ?? '',
-            })
-            .select('id')
-            .maybeSingle();
-          if (insertProfErr) {
-            console.error('[APPROVE-REASSIGNMENT] Failed inserting profile', insertProfErr);
-            return new Response(
-              JSON.stringify({ error: `Failed to create new contact profile: ${insertProfErr.message}` }),
-              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
-          newContactProfileId = insertedProf?.id ?? null;
+          
+        if (profErr || !prof) {
+          console.error('[APPROVE-REASSIGNMENT] Profile not found after user creation', profErr);
+          return new Response(
+            JSON.stringify({ error: 'Failed to create user profile' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
-
-        // Send password reset email so user can set their password
-        try {
-          const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-            type: 'recovery',
-            email: newContactEmail,
-            options: {
-              redirectTo: (await (async () => {
-                const origin = req.headers.get('origin') || 'https://members.hessconsortium.app';
-                return `${origin}/auth`;
-              })()),
-            },
-          });
-          if (resetError) console.error('[APPROVE-REASSIGNMENT] Password reset email failed', resetError);
-        } catch (emailErr) {
-          console.error('[APPROVE-REASSIGNMENT] Password reset email exception', emailErr);
-        }
+        
+        newContactProfileId = prof.id;
       }
     } else {
-      // If no registration provided, try to link to an existing profile by email (optional)
+      // If no registration provided, try to link to an existing profile by email
       const { data: prof, error: profErr } = await supabaseAdmin
         .from('profiles')
-        .select('id')
+        .select('id, user_id')
         .eq('email', newContactEmail)
         .maybeSingle();
+        
       if (profErr) console.warn('[APPROVE-REASSIGNMENT] Profile lookup by email failed', profErr);
-      newContactProfileId = prof?.id ?? null;
+      
+      if (prof) {
+        newContactProfileId = prof.id;
+        newUserId = prof.user_id;
+      }
     }
 
-    // 5) INSERT the new organization record with the new information (as if new member)
+    // 4) Update the existing organization with new data instead of creating a new one
     const allowedOrgKeys = [
       'name','student_fte','address_line_1','address_line_2','city','state','zip_code','phone','email','website',
       'primary_contact_title','secondary_first_name','secondary_last_name','secondary_contact_title','secondary_contact_email',
@@ -217,286 +193,143 @@ serve(async (req) => {
       'primary_office_other_details','other_software_comments',
     ];
 
-    const insertPayload: Record<string, any> = Object.fromEntries(
+    const updatePayload: Record<string, any> = Object.fromEntries(
       Object.entries(newOrgData || {}).filter(([k]) => allowedOrgKeys.includes(k))
     );
 
-    insertPayload.contact_person_id = newContactProfileId ?? null;
-    // As new member: membership fields use defaults (pending, etc.)
-
-    const finalDesiredName: string = (newOrgData?.name ?? existingOrg.name ?? 'Organization');
-    let usedTempName = false;
-
-    // Try inserting with the final desired name first
-    let newOrg: { id: string; name: string } | null = null;
-    let insertOrgErr: any = null;
-    {
-      const { data, error } = await supabaseAdmin
-        .from('organizations')
-        .insert(insertPayload)
-        .select('id, name')
-        .maybeSingle();
-      newOrg = data as any;
-      insertOrgErr = error;
+    // Update contact person if we have a new one
+    if (newContactProfileId) {
+      updatePayload.contact_person_id = newContactProfileId;
     }
 
-    // Handle unique name conflict - check if the conflict is with the old organization we're replacing
-    if (insertOrgErr && (insertOrgErr.code === '23505' || `${insertOrgErr.message}`.toLowerCase().includes('unique') )) {
-      console.warn('[APPROVE-REASSIGNMENT] Name conflict detected. Checking if conflict is with old organization');
-      
-      // Check if the conflicting organization is the one we're replacing
-      const { data: conflictingOrg } = await supabaseAdmin
-        .from('organizations')
-        .select('id, name')
-        .eq('name', finalDesiredName)
-        .maybeSingle();
-      
-      if (conflictingOrg?.id === orgId) {
-        console.log('[APPROVE-REASSIGNMENT] Conflict is with old organization. Deleting it first.');
-        
-        // Clean up the old organization first since it's the one causing the conflict
-        await supabaseAdmin.from('invoices').delete().eq('organization_id', orgId);
-        await supabaseAdmin.from('organization_invitations').delete().eq('organization_id', orgId);
-        await supabaseAdmin.from('custom_software_entries').delete().eq('organization_id', orgId);
-        await supabaseAdmin.from('organization_profile_edit_requests').delete().eq('organization_id', orgId);
-        await supabaseAdmin.from('organization_transfer_requests').delete().eq('organization_id', orgId);
-        
-        // Update the reassignment request to avoid FK constraint on deletion
-        await supabaseAdmin
-          .from('organization_reassignment_requests')
-          .update({ organization_id: null })
-          .eq('id', requestId);
-        
-        // Now delete the old organization
-        const { error: delOrgErr } = await supabaseAdmin
-          .from('organizations')
-          .delete()
-          .eq('id', orgId);
-        
-        if (delOrgErr) {
-          console.error('[APPROVE-REASSIGNMENT] Failed deleting conflicting old organization', delOrgErr);
-        } else {
-          console.log('[APPROVE-REASSIGNMENT] Deleted conflicting old organization');
-        }
-        
-        // Now try inserting with the final name again
-        const { data: data2, error: err2 } = await supabaseAdmin
-          .from('organizations')
-          .insert(insertPayload)
-          .select('id, name')
-          .maybeSingle();
-        
-        if (err2) {
-          console.error('[APPROVE-REASSIGNMENT] Failed inserting after cleanup', err2);
-          return new Response(
-            JSON.stringify({ error: `Failed to insert new organization after cleanup: ${err2.message}` }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        newOrg = data2 as any;
-        console.log('[APPROVE-REASSIGNMENT] Successfully inserted new organization after cleanup', newOrg?.id);
-      } else {
-        // Different organization has the name, use temporary name approach
-        console.warn('[APPROVE-REASSIGNMENT] Conflict is with different organization. Using temporary name');
-        const tempName = `${finalDesiredName}__reassign_${Math.random().toString(36).slice(-6)}`;
-        const tempPayload = { ...insertPayload, name: tempName };
-        const { data: data2, error: err2 } = await supabaseAdmin
-          .from('organizations')
-          .insert(tempPayload)
-          .select('id, name')
-          .maybeSingle();
-        if (err2) {
-          console.error('[APPROVE-REASSIGNMENT] Failed inserting with temporary name', err2);
-          return new Response(
-            JSON.stringify({ error: `Failed to insert new organization: ${err2.message}` }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        usedTempName = true;
-        newOrg = data2 as any;
-        console.log('[APPROVE-REASSIGNMENT] Inserted new organization with temporary name', newOrg?.id);
-      }
-    } else if (insertOrgErr) {
-      console.error('[APPROVE-REASSIGNMENT] Failed inserting new organization', insertOrgErr);
+    console.log('[APPROVE-REASSIGNMENT] Updating organization with new data');
+    
+    const { error: updateOrgErr } = await supabaseAdmin
+      .from('organizations')
+      .update(updatePayload)
+      .eq('id', orgId);
+
+    if (updateOrgErr) {
+      console.error('[APPROVE-REASSIGNMENT] Failed updating organization', updateOrgErr);
       return new Response(
-        JSON.stringify({ error: `Failed to insert new organization: ${insertOrgErr.message}` }),
+        JSON.stringify({ error: `Failed to update organization: ${updateOrgErr.message}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log('[APPROVE-REASSIGNMENT] Successfully updated organization');
 
-    console.log('[APPROVE-REASSIGNMENT] Created new organization', newOrg?.name, newOrg?.id);
-
-    // 6) Mark the reassignment request approved
+    // 5) Mark the reassignment request as approved
     const { error: updReqErr } = await supabaseAdmin
       .from('organization_reassignment_requests')
       .update({
         status: 'approved',
         approved_by: adminUserId,
         approved_at: new Date().toISOString(),
-        organization_id: newOrg?.id ?? orgId, // re-point request to new org to avoid FK issues
       })
       .eq('id', requestId);
-    if (updReqErr) console.error('[APPROVE-REASSIGNMENT] Failed updating request status', updReqErr);
-
-    // 7) Cleanup old organization and its related data now that request points to new org
-    // (Skip if we already deleted it during conflict resolution)
-    try {
-      console.log('[APPROVE-REASSIGNMENT] Starting cleanup of old organization', orgId);
       
-      // Check if old organization still exists before trying to clean it up
-      const { data: orgExists } = await supabaseAdmin
-        .from('organizations')
-        .select('id')
-        .eq('id', orgId)
-        .maybeSingle();
+    if (updReqErr) {
+      console.error('[APPROVE-REASSIGNMENT] Failed updating request status', updReqErr);
+    } else {
+      console.log('[APPROVE-REASSIGNMENT] Request marked as approved');
+    }
+
+    // 6) Clean up old user if they exist and are different from new user
+    if (existingOrg?.profiles?.user_id && existingOrg.profiles.user_id !== newUserId) {
+      const oldUserId = existingOrg.profiles.user_id;
+      console.log('[APPROVE-REASSIGNMENT] Cleaning up old user', oldUserId);
       
-      if (orgExists) {
-        const { error: invDelErr2 } = await supabaseAdmin
-          .from('invoices')
-          .delete()
-          .eq('organization_id', orgId);
-        if (invDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting invoices', invDelErr2);
-
-        const { error: invtDelErr2 } = await supabaseAdmin
-          .from('organization_invitations')
-          .delete()
-          .eq('organization_id', orgId);
-        if (invtDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting invitations', invtDelErr2);
-
-        // Delete any custom software entries linked to this org
-        const { error: cseDelErr } = await supabaseAdmin
-          .from('custom_software_entries')
-          .delete()
-          .eq('organization_id', orgId);
-        if (cseDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting custom software entries', cseDelErr);
-
-        // Delete any profile edit requests linked to this org
-        const { error: perDelErr } = await supabaseAdmin
-          .from('organization_profile_edit_requests')
-          .delete()
-          .eq('organization_id', orgId);
-        if (perDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting profile edit requests', perDelErr);
-
-        const { error: xferDelErr2 } = await supabaseAdmin
-          .from('organization_transfer_requests')
-          .delete()
-          .eq('organization_id', orgId);
-        if (xferDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting transfer requests', xferDelErr2);
-
-        const { error: delOrgErr2 } = await supabaseAdmin
-          .from('organizations')
-          .delete()
-          .eq('id', orgId);
-        if (delOrgErr2) {
-          console.error('[APPROVE-REASSIGNMENT] Failed deleting old organization', delOrgErr2);
-        } else {
-          console.log('[APPROVE-REASSIGNMENT] Deleted old organization');
-        }
-      } else {
-        console.log('[APPROVE-REASSIGNMENT] Old organization already deleted during conflict resolution');
-      }
-
-      // Clean up the old user if it exists
-      if (existingOrg?.profiles?.user_id) {
-        const oldUserId: string | null = existingOrg.profiles?.user_id ?? null;
-        if (oldUserId) {
-          const { error: roleDelErr2 } = await supabaseAdmin
-            .from('user_roles')
-            .delete()
-            .eq('user_id', oldUserId);
-          if (roleDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting user roles', roleDelErr2);
-
-          const { error: authDelErr2 } = await supabaseAdmin.auth.admin.deleteUser(oldUserId);
-          if (authDelErr2) {
-            if (authDelErr2.message?.includes('User not found') || (authDelErr2 as any).code === 'user_not_found') {
-              console.log('[APPROVE-REASSIGNMENT] Old auth user already deleted');
-            } else {
-              console.error('[APPROVE-REASSIGNMENT] Failed deleting auth user', authDelErr2);
-            }
-          }
-
-          const { error: profDelErr2 } = await supabaseAdmin
-            .from('profiles')
-            .delete()
-            .eq('user_id', oldUserId);
-          if (profDelErr2) console.error('[APPROVE-REASSIGNMENT] Failed deleting old profile', profDelErr2);
-          else console.log('[APPROVE-REASSIGNMENT] Deleted old profile');
-        }
-      } else {
-        console.log('[APPROVE-REASSIGNMENT] Old organization already deleted during conflict resolution');
-      }
-
-      // Remove any lingering pending registrations that match this contact or org name
       try {
-        if (newContactEmail) {
-          const { error: prEmailDelErr } = await supabaseAdmin
-            .from('pending_registrations')
-            .delete()
-            .eq('email', newContactEmail)
-            .eq('approval_status', 'pending');
-          if (prEmailDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting pending registrations by email', prEmailDelErr);
-        }
-        const desiredName = (newOrg?.name || finalDesiredName || newOrgData?.name || '').trim();
-        if (desiredName) {
-          const { error: prOrgDelErr } = await supabaseAdmin
-            .from('pending_registrations')
-            .delete()
-            .eq('organization_name', desiredName)
-            .eq('approval_status', 'pending');
-          if (prOrgDelErr) console.error('[APPROVE-REASSIGNMENT] Failed deleting pending registrations by org name', prOrgDelErr);
-        }
-      } catch (prCleanupErr) {
-        console.error('[APPROVE-REASSIGNMENT] Error cleaning up pending registrations', prCleanupErr);
-      }
-    } catch (cleanupErr) {
-      console.error('[APPROVE-REASSIGNMENT] Cleanup step error', cleanupErr);
-    }
+        // Delete user roles
+        await supabaseAdmin
+          .from('user_roles')
+          .delete()
+          .eq('user_id', oldUserId);
 
-    // If we inserted with a temporary name, rename to the final desired name now
-    if (usedTempName && newOrg?.id) {
-      const { error: renameErr } = await supabaseAdmin
-        .from('organizations')
-        .update({ name: finalDesiredName })
-        .eq('id', newOrg.id);
-      if (renameErr) {
-        console.error('[APPROVE-REASSIGNMENT] Failed to rename organization to final name', renameErr);
-      } else {
-        console.log('[APPROVE-REASSIGNMENT] Renamed organization to final name');
-        newOrg = { ...(newOrg as any), name: finalDesiredName } as any;
+        // Delete auth user
+        const { error: authDelErr } = await supabaseAdmin.auth.admin.deleteUser(oldUserId);
+        if (authDelErr && !authDelErr.message?.includes('User not found')) {
+          console.error('[APPROVE-REASSIGNMENT] Failed deleting auth user', authDelErr);
+        }
+      } catch (cleanupErr) {
+        console.error('[APPROVE-REASSIGNMENT] Error during user cleanup', cleanupErr);
       }
     }
 
-    // 8) Send the "Member Information Update Request approved" email (NOT new member approval)
-    try {
-      await supabaseAdmin.functions.invoke('organization-emails', {
-        body: {
-          type: 'profile_update_approved',
+    // 7) Send notification email using centralized email delivery
+    if (newUserId && newContactEmail) {
+      try {
+        console.log('[APPROVE-REASSIGNMENT] Sending notification email to', newContactEmail);
+        
+        const emailPayload = {
+          type: 'member_info_update',
           to: newContactEmail,
-          organizationName: newOrg?.name || newOrgData?.name || 'Organization',
-          organizationData: {
-            primary_contact_name: registration ? `${registration.first_name ?? ''} ${registration.last_name ?? ''}`.trim() : 'Member',
-            ...newOrgData,
-          },
-        },
-      });
-      console.log('[APPROVE-REASSIGNMENT] Sent profile_update_approved email');
-    } catch (emailErr) {
-      console.error('[APPROVE-REASSIGNMENT] Email send failed', emailErr);
+          data: {
+            primary_contact_name: `${registration?.first_name || ''} ${registration?.last_name || ''}`.trim() || 'Member',
+            organization_name: newOrgData.name || existingOrg.name,
+          }
+        };
+
+        const emailResponse = await supabaseAdmin.functions.invoke('centralized-email-delivery', {
+          body: emailPayload
+        });
+
+        if (emailResponse.error) {
+          console.error('[APPROVE-REASSIGNMENT] Email notification failed', emailResponse.error);
+        } else {
+          console.log('[APPROVE-REASSIGNMENT] Email notification sent successfully');
+        }
+      } catch (emailErr) {
+        console.error('[APPROVE-REASSIGNMENT] Email notification exception', emailErr);
+      }
     }
+
+    // 8) Send password reset email for new users
+    if (newUserId && registration) {
+      try {
+        console.log('[APPROVE-REASSIGNMENT] Sending password reset email to', newContactEmail);
+        
+        const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'recovery',
+          email: newContactEmail,
+          options: {
+            redirectTo: (() => {
+              const origin = req.headers.get('origin') || 'https://members.hessconsortium.app';
+              return `${origin}/auth`;
+            })(),
+          },
+        });
+        
+        if (resetError) {
+          console.error('[APPROVE-REASSIGNMENT] Password reset email failed', resetError);
+        } else {
+          console.log('[APPROVE-REASSIGNMENT] Password reset email sent successfully');
+        }
+      } catch (resetErr) {
+        console.error('[APPROVE-REASSIGNMENT] Password reset email exception', resetErr);
+      }
+    }
+
+    console.log('[APPROVE-REASSIGNMENT] Process completed successfully');
 
     return new Response(
-      JSON.stringify({
+      JSON.stringify({ 
         success: true,
-        message: 'Organization replaced and request approved',
-        newOrganizationId: newOrg?.id,
+        message: 'Member information update request approved successfully',
+        organizationId: orgId,
+        newContactEmail: newContactEmail
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error) {
-    console.error('[APPROVE-REASSIGNMENT] Unexpected error', error);
+
+  } catch (error: any) {
+    console.error('[APPROVE-REASSIGNMENT] Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
