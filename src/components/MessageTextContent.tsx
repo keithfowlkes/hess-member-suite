@@ -6,9 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Mail, Edit, MessageSquare } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { useSystemMessages, useCreateSystemMessage, useUpdateSystemMessage } from '@/hooks/useSystemMessages';
-import EnhancedQuillEditor from '@/components/EnhancedQuillEditor';
-import 'react-quill/dist/quill.snow.css';
-import '@/styles/quill-custom.css';
+import TinyMCEEditor from '@/components/TinyMCEEditor';
 
 export const MessageTextContent = () => {
   const { settings, updateSetting } = useSettings();
@@ -237,7 +235,7 @@ export const MessageTextContent = () => {
               Available variables: user_email, reset_link (use double braces around each)
             </p>
             <div className="min-h-[200px]">
-                <EnhancedQuillEditor
+                <TinyMCEEditor
                   value={passwordResetMessage}
                   onChange={setPasswordResetMessage}
                   placeholder="Enter password reset message template..."
@@ -268,7 +266,7 @@ export const MessageTextContent = () => {
           <div className="space-y-2">
             <Label>Email Template (HTML)</Label>
             <div className="min-h-[200px]">
-                <EnhancedQuillEditor
+                <TinyMCEEditor
                   value={welcomeMessage}
                   onChange={setWelcomeMessage}
                   placeholder="Enter welcome message template..."
@@ -299,7 +297,7 @@ export const MessageTextContent = () => {
           <div className="space-y-2">
             <Label>Email Template (HTML)</Label>
             <div className="min-h-[200px]">
-                <EnhancedQuillEditor
+                <TinyMCEEditor
                   value={profileUpdateMessage}
                   onChange={setProfileUpdateMessage}
                   placeholder="Enter profile update message template..."
@@ -332,7 +330,7 @@ export const MessageTextContent = () => {
               Available variables: first_name, last_name, organization_name, update_details (use double braces around each)
             </p>
             <div className="min-h-[200px]">
-                <EnhancedQuillEditor
+                <TinyMCEEditor
                   value={memberInfoUpdateMessage}
                   onChange={setMemberInfoUpdateMessage}
                   placeholder="Enter member information update message template..."
