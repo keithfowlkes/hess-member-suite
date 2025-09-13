@@ -17,7 +17,8 @@ const EnhancedQuillEditor: React.FC<EnhancedQuillEditorProps> = ({
   className = ""
 }) => {
   const quillRef = useRef<ReactQuill>(null);
-  const processedImages = useRef<Set<string>>(new Set());
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contextMenuRef = useRef<HTMLDivElement | null>(null);
 
   // Function to update editor content and trigger onChange
   const updateContent = useCallback(() => {
@@ -27,131 +28,165 @@ const EnhancedQuillEditor: React.FC<EnhancedQuillEditorProps> = ({
     }
   }, [onChange]);
 
-  // Function to make images resizable
-  const makeImageResizable = useCallback((img: HTMLImageElement) => {
-    // Skip if already processed
-    const imgSrc = img.src;
-    if (processedImages.current.has(imgSrc)) {
-      return;
-    }
-    processedImages.current.add(imgSrc);
-
-    // Set initial styles
-    img.style.cursor = 'pointer';
-    img.style.maxWidth = '100%';
-    img.style.height = 'auto';
-    img.style.display = 'block';
-    img.title = 'Click to resize or right-click for options';
+  // Function to create context menu
+  const createContextMenu = useCallback((e: MouseEvent, img: HTMLImageElement) => {
+    e.preventDefault();
     
-    // Click handler for resize prompt
-    const clickHandler = () => {
-      const currentWidth = img.style.width || (img.naturalWidth + 'px');
-      const newWidth = prompt('Enter image width (e.g., 300px, 50%, auto):', currentWidth);
+    // Remove any existing menus
+    if (contextMenuRef.current) {
+      contextMenuRef.current.remove();
+      contextMenuRef.current = null;
+    }
+    
+    const menu = document.createElement('div');
+    menu.className = 'image-context-menu';
+    menu.style.cssText = `
+      position: fixed;
+      left: ${e.clientX}px;
+      top: ${e.clientY}px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 4px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      min-width: 180px;
+    `;
+
+    const options = [
+      { label: 'Small (150px)', size: '150px' },
+      { label: 'Medium (300px)', size: '300px' },
+      { label: 'Large (500px)', size: '500px' },
+      { label: 'Full Width (100%)', size: '100%' },
+      { label: 'Custom Size...', size: 'custom' },
+      { label: 'Remove Image', size: 'remove' }
+    ];
+
+    options.forEach((option, index) => {
+      const item = document.createElement('div');
+      item.textContent = option.label;
+      item.style.cssText = `
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+        ${index === options.length - 2 ? 'border-top: 1px solid #eee; margin-top: 4px;' : ''}
+        ${option.size === 'remove' ? 'color: #dc2626; border-top: 1px solid #eee; margin-top: 4px;' : ''}
+      `;
       
-      if (newWidth !== null && newWidth.trim() !== '') {
-        img.style.width = newWidth;
-        img.style.height = 'auto';
+      item.addEventListener('mouseenter', () => {
+        item.style.backgroundColor = option.size === 'remove' ? '#fef2f2' : '#f3f4f6';
+      });
+      
+      item.addEventListener('mouseleave', () => {
+        item.style.backgroundColor = 'white';
+      });
+      
+      item.addEventListener('click', () => {
+        if (option.size === 'remove') {
+          img.remove();
+        } else if (option.size === 'custom') {
+          const currentWidth = img.style.width || (img.naturalWidth + 'px');
+          const newWidth = prompt('Enter image width (e.g., 300px, 50%, auto):', currentWidth);
+          if (newWidth !== null && newWidth.trim() !== '') {
+            img.style.width = newWidth;
+            img.style.height = 'auto';
+          }
+        } else {
+          img.style.width = option.size;
+          img.style.height = 'auto';
+        }
+        
+        menu.remove();
+        contextMenuRef.current = null;
         updateContent();
+      });
+      
+      menu.appendChild(item);
+    });
+    
+    document.body.appendChild(menu);
+    contextMenuRef.current = menu;
+    
+    // Remove menu when clicking elsewhere
+    const removeMenu = (e: MouseEvent) => {
+      if (!menu.contains(e.target as Node)) {
+        menu.remove();
+        contextMenuRef.current = null;
+        document.removeEventListener('click', removeMenu);
+      }
+    };
+    
+    setTimeout(() => document.addEventListener('click', removeMenu), 100);
+  }, [updateContent]);
+
+  // Set up event delegation for image interactions
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'IMG') {
+        const img = target as HTMLImageElement;
+        
+        // Simple click for resize prompt
+        const currentWidth = img.style.width || (img.naturalWidth + 'px');
+        const newWidth = prompt('Enter image width (e.g., 300px, 50%, auto):', currentWidth);
+        
+        if (newWidth !== null && newWidth.trim() !== '') {
+          img.style.width = newWidth;
+          img.style.height = 'auto';
+          img.style.maxWidth = '100%';
+          img.style.display = 'block';
+          updateContent();
+        }
       }
     };
 
-    // Context menu handler
-    const contextHandler = (e: MouseEvent) => {
-      e.preventDefault();
-      
-      // Remove any existing menus
-      const existingMenus = document.querySelectorAll('.image-context-menu');
-      existingMenus.forEach(menu => menu.remove());
-      
-      const menu = document.createElement('div');
-      menu.className = 'image-context-menu';
-      menu.style.cssText = `
-        position: fixed;
-        left: ${e.clientX}px;
-        top: ${e.clientY}px;
-        background-color: white;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        padding: 4px 0;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        font-size: 14px;
-        min-width: 180px;
-      `;
-
-      const options = [
-        { label: 'Small (150px)', size: '150px' },
-        { label: 'Medium (300px)', size: '300px' },
-        { label: 'Large (500px)', size: '500px' },
-        { label: 'Full Width (100%)', size: '100%' },
-        { label: 'Custom Size...', size: 'custom' },
-        { label: 'Remove Image', size: 'remove' }
-      ];
-
-      options.forEach((option, index) => {
-        const item = document.createElement('div');
-        item.textContent = option.label;
-        item.style.cssText = `
-          padding: 8px 16px;
-          cursor: pointer;
-          transition: background-color 0.15s ease;
-          ${index === options.length - 2 ? 'border-top: 1px solid #eee; margin-top: 4px;' : ''}
-          ${option.size === 'remove' ? 'color: #dc2626; border-top: 1px solid #eee; margin-top: 4px;' : ''}
-        `;
-        
-        item.addEventListener('mouseenter', () => {
-          item.style.backgroundColor = option.size === 'remove' ? '#fef2f2' : '#f3f4f6';
-        });
-        
-        item.addEventListener('mouseleave', () => {
-          item.style.backgroundColor = 'white';
-        });
-        
-        item.addEventListener('click', () => {
-          if (option.size === 'remove') {
-            img.remove();
-            processedImages.current.delete(imgSrc);
-          } else if (option.size === 'custom') {
-            const currentWidth = img.style.width || (img.naturalWidth + 'px');
-            const newWidth = prompt('Enter image width (e.g., 300px, 50%, auto):', currentWidth);
-            if (newWidth !== null && newWidth.trim() !== '') {
-              img.style.width = newWidth;
-              img.style.height = 'auto';
-            }
-          } else {
-            img.style.width = option.size;
-            img.style.height = 'auto';
-          }
-          
-          menu.remove();
-          updateContent();
-        });
-        
-        menu.appendChild(item);
-      });
-      
-      document.body.appendChild(menu);
-      
-      // Remove menu when clicking elsewhere
-      const removeMenu = (e: MouseEvent) => {
-        if (!menu.contains(e.target as Node)) {
-          menu.remove();
-          document.removeEventListener('click', removeMenu);
-        }
-      };
-      
-      setTimeout(() => document.addEventListener('click', removeMenu), 100);
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'IMG') {
+        const img = target as HTMLImageElement;
+        createContextMenu(e, img);
+      }
     };
 
-    // Remove existing listeners to prevent duplicates
-    img.removeEventListener('click', clickHandler);
-    img.removeEventListener('contextmenu', contextHandler);
-    
-    // Add event listeners
-    img.addEventListener('click', clickHandler);
-    img.addEventListener('contextmenu', contextHandler);
-  }, [updateContent]);
+    container.addEventListener('click', handleClick);
+    container.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      container.removeEventListener('click', handleClick);
+      container.removeEventListener('contextmenu', handleContextMenu);
+      if (contextMenuRef.current) {
+        contextMenuRef.current.remove();
+        contextMenuRef.current = null;
+      }
+    };
+  }, [updateContent, createContextMenu]);
+
+  // Style images when content changes
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (quillRef.current) {
+        const quill = quillRef.current.getEditor();
+        const images = quill.root.querySelectorAll('img');
+        
+        images.forEach((img: Element) => {
+          if (img instanceof HTMLImageElement) {
+            img.style.cursor = 'pointer';
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.style.display = 'block';
+            img.title = 'Click to resize or right-click for options';
+          }
+        });
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [value]);
 
   // Custom image handler with resize functionality
   const imageHandler = useCallback(() => {
@@ -174,12 +209,16 @@ const EnhancedQuillEditor: React.FC<EnhancedQuillEditorProps> = ({
               // Insert image
               quill.insertEmbed(range.index, 'image', imageUrl);
               
-              // Make the inserted image resizable
+              // Style the inserted image
               setTimeout(() => {
                 const images = quill.root.querySelectorAll('img');
                 const lastImage = images[images.length - 1] as HTMLImageElement;
                 if (lastImage && lastImage.src === imageUrl) {
-                  makeImageResizable(lastImage);
+                  lastImage.style.cursor = 'pointer';
+                  lastImage.style.maxWidth = '100%';
+                  lastImage.style.height = 'auto';
+                  lastImage.style.display = 'block';
+                  lastImage.title = 'Click to resize or right-click for options';
                 }
               }, 100);
             }
@@ -188,7 +227,7 @@ const EnhancedQuillEditor: React.FC<EnhancedQuillEditorProps> = ({
         reader.readAsDataURL(file);
       }
     };
-  }, [makeImageResizable]);
+  }, []);
 
   const modules = useMemo(() => ({
     toolbar: {
@@ -218,52 +257,19 @@ const EnhancedQuillEditor: React.FC<EnhancedQuillEditorProps> = ({
     'color', 'background', 'align'
   ];
 
-  // Add resize functionality to existing images when component mounts or content changes
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (quillRef.current) {
-        const quill = quillRef.current.getEditor();
-        const images = quill.root.querySelectorAll('img');
-        
-        // Clear processed images set periodically to avoid memory leaks
-        if (images.length === 0) {
-          processedImages.current.clear();
-        }
-        
-        images.forEach((img: Element) => {
-          if (img instanceof HTMLImageElement) {
-            makeImageResizable(img);
-          }
-        });
-
-        // Listen for text changes to detect new images
-        quill.on('text-change', () => {
-          setTimeout(() => {
-            const newImages = quill.root.querySelectorAll('img');
-            newImages.forEach((img: Element) => {
-              if (img instanceof HTMLImageElement) {
-                makeImageResizable(img);
-              }
-            });
-          }, 100);
-        });
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [makeImageResizable]);
-
   return (
-    <ReactQuill
-      ref={quillRef}
-      theme="snow"
-      value={value}
-      onChange={onChange}
-      modules={modules}
-      formats={formats}
-      placeholder={placeholder}
-      className={className}
-    />
+    <div ref={containerRef}>
+      <ReactQuill
+        ref={quillRef}
+        theme="snow"
+        value={value}
+        onChange={onChange}
+        modules={modules}
+        formats={formats}
+        placeholder={placeholder}
+        className={className}
+      />
+    </div>
   );
 };
 
