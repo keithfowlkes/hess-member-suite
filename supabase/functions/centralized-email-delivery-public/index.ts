@@ -203,13 +203,15 @@ serve(async (req: Request): Promise<Response> => {
       }
       const domains = (domainsCheck as any)?.data?.data ?? [];
       try {
-        const fromEmail = extractEmail(finalFrom);
-        const fromDomain = fromEmail.split('@')[1]?.toLowerCase();
-        const domainEntry = domains.find((d: any) => (d.name || d.domain || '').toLowerCase() === fromDomain);
+        const candidateFromVerified = ensureDomain(fromCandidate);
+        const candidateEmail = extractEmail(candidateFromVerified);
+        const candidateDomain = candidateEmail.split('@')[1]?.toLowerCase();
+        const domainEntry = domains.find((d: any) => (d.name || d.domain || '').toLowerCase() === candidateDomain);
         domainVerified = (domainEntry?.status || domainEntry?.verification?.status) === 'verified';
         console.log('[centralized-email-delivery-public] Preflight domains', {
           correlationId,
-          fromDomain,
+          candidateDomain,
+          checkingFrom: candidateFromVerified,
           domainFound: !!domainEntry,
           status: domainEntry?.status || domainEntry?.verification?.status,
           domainVerified,
@@ -233,6 +235,8 @@ serve(async (req: Request): Promise<Response> => {
         console.log('[centralized-email-delivery-public] Adjusting sender to verified domain for test', { correlationId, from: adjustedFrom });
       }
       finalFrom = adjustedFrom;
+      // Keep template data accurate after adjusting sender
+      try { templateData.from_email = finalFrom; } catch(_) {}
     }
 
     if (!Deno.env.get('RESEND_API_KEY')) {
