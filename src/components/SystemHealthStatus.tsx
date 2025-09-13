@@ -83,32 +83,67 @@ export function SystemHealthStatus() {
 
   const checkResendHealth = async (): Promise<ServiceStatus> => {
     try {
-      // Since we can't directly ping Resend from the frontend, we'll check if our email settings exist
-      const { data, error } = await supabase.from('system_settings')
-        .select('setting_value')
-        .eq('setting_key', 'resend_api_key')
-        .single();
+      // Check if email configuration is working by calling our verify function
+      const { data, error } = await supabase.functions.invoke('verify-email-config');
       
-      if (error || !data?.setting_value) {
+      if (error) {
         return {
           name: 'Resend Email Service',
-          status: 'warning',
-          message: 'API key not configured',
+          status: 'error',
+          message: 'Connection test failed',
+          icon: Mail
+        };
+      }
+      
+      if (data?.success && data?.configuration) {
+        const config = data.configuration;
+        
+        if (!config.hasApiKey) {
+          return {
+            name: 'Resend Email Service',
+            status: 'error',
+            message: 'API key missing',
+            icon: Mail
+          };
+        }
+        
+        if (!config.hasFromAddress) {
+          return {
+            name: 'Resend Email Service',
+            status: 'warning',
+            message: 'Sender address not configured',
+            icon: Mail
+          };
+        }
+        
+        if (config.recommendations && config.recommendations.length > 0) {
+          return {
+            name: 'Resend Email Service',
+            status: 'warning',
+            message: 'Configuration issues detected',
+            icon: Mail
+          };
+        }
+        
+        return {
+          name: 'Resend Email Service',
+          status: 'healthy',
+          message: 'Service operational',
           icon: Mail
         };
       }
       
       return {
         name: 'Resend Email Service',
-        status: 'healthy',
-        message: 'Service configured',
+        status: 'warning',
+        message: 'Status unknown',
         icon: Mail
       };
     } catch (err: any) {
       return {
         name: 'Resend Email Service',
         status: 'error',
-        message: 'Configuration error',
+        message: 'Health check failed',
         icon: Mail
       };
     }

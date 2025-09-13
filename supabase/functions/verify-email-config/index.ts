@@ -63,11 +63,14 @@ const handler = async (req: Request): Promise<Response> => {
       try {
         // List domains to check verification status
         const domainsResponse = await resend.domains.list();
-        verificationResults.domains = domainsResponse.data || [];
+        const domainsList = domainsResponse.data;
+        
+        // Ensure domains is always an array
+        verificationResults.domains = Array.isArray(domainsList) ? domainsList : [];
         
         if (fromEmail) {
           const domain = fromEmail.split('@')[1];
-          const domainInfo = verificationResults.domains.find(d => d.name === domain);
+          const domainInfo = verificationResults.domains.find(d => d && d.name === domain);
           
           if (domainInfo) {
             verificationResults.domainStatus = domainInfo.status;
