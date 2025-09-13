@@ -58,6 +58,7 @@ import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
 import { useReassignmentRequests, useApproveReassignmentRequest, useRejectReassignmentRequest, useDeleteReassignmentRequest } from '@/hooks/useReassignmentRequests';
 import { useOrganizationProfileEditRequests, useApproveOrganizationProfileEditRequest, useRejectOrganizationProfileEditRequest } from '@/hooks/useOrganizationProfileEditRequests';
 import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
+import { useInvoices } from '@/hooks/useInvoices';
 
 // Components
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
@@ -118,6 +119,7 @@ const MasterDashboard = () => {
   const { approveRequest: approveProfileEditRequest } = useApproveOrganizationProfileEditRequest();
   const { rejectRequest: rejectProfileEditRequest } = useRejectOrganizationProfileEditRequest();
   const { pendingRegistrations, loading: pendingRegistrationsLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
+  const { invoices, loading: invoicesLoading } = useInvoices();
   
   // Calculate pending counts
   const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length;
@@ -175,6 +177,12 @@ const MasterDashboard = () => {
   const [savingOverdueReminderTemplate, setSavingOverdueReminderTemplate] = useState(false);
   const [savingCcRecipients, setSavingCcRecipients] = useState(false);
   const [showAddExternalUser, setShowAddExternalUser] = useState(false);
+
+  // Drill-down modal states
+  const [showPendingInvoicesModal, setShowPendingInvoicesModal] = useState(false);
+  const [showRevenueModal, setShowRevenueModal] = useState(false);
+  const [showPendingApprovalsModal, setShowPendingApprovalsModal] = useState(false);
+  const [showActiveInvitationsModal, setShowActiveInvitationsModal] = useState(false);
 
   console.log('Profile edit requests loaded:', profileEditRequests.length);
   
@@ -381,25 +389,31 @@ const MasterDashboard = () => {
       title: 'Total Organizations', 
       value: statsLoading ? '...' : dashboardStats.totalOrganizations.toLocaleString(), 
       icon: Building2, 
-      color: 'text-blue-600' 
+      color: 'text-blue-600',
+      clickable: false
     },
     { 
       title: 'Active Memberships', 
       value: statsLoading ? '...' : dashboardStats.activeOrganizations.toLocaleString(), 
       icon: Users, 
-      color: 'text-green-600' 
+      color: 'text-green-600',
+      clickable: false
     },
     { 
       title: 'Pending Invoices', 
       value: statsLoading ? '...' : dashboardStats.pendingInvoices.toLocaleString(), 
       icon: FileText, 
-      color: dashboardStats.pendingInvoices > 0 ? 'text-orange-600' : 'text-green-600' 
+      color: dashboardStats.pendingInvoices > 0 ? 'text-orange-600' : 'text-green-600',
+      clickable: true,
+      onClick: () => setShowPendingInvoicesModal(true)
     },
     { 
       title: 'Projected Annual Revenue', 
       value: statsLoading ? '...' : `$${dashboardStats.totalRevenue.toLocaleString()}`, 
       icon: DollarSign, 
-      color: 'text-green-600' 
+      color: 'text-green-600',
+      clickable: true,
+      onClick: () => setShowRevenueModal(true)
     }
   ];
 
@@ -409,21 +423,26 @@ const MasterDashboard = () => {
       value: pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length,
       icon: Clock,
       color: 'text-orange-600',
-      description: 'Organizations, registrations & profile edits awaiting review'
+      description: 'Organizations, registrations & profile edits awaiting review',
+      clickable: true,
+      onClick: () => setShowPendingApprovalsModal(true)
     },
     {
       title: 'Active Invitations',
       value: invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length,
       icon: Mail,
       color: 'text-blue-600',
-      description: 'Pending email invitations'
+      description: 'Pending email invitations',
+      clickable: true,
+      onClick: () => setShowActiveInvitationsModal(true)
     },
     {
       title: 'System Users',
       value: users.length,
       icon: Shield,
       color: 'text-purple-600',
-      description: `Admin users in system`
+      description: `Admin users in system`,
+      clickable: false
     },
     {
       title: 'Total Student FTE',
@@ -732,7 +751,11 @@ const MasterDashboard = () => {
               {/* Main Statistics */}
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {mainStats.map((stat, index) => (
-                  <Card key={index} className="hover:shadow-lg transition-shadow">
+                  <Card 
+                    key={index} 
+                    className={`transition-shadow ${stat.clickable ? 'hover:shadow-lg cursor-pointer hover:bg-muted/50' : 'hover:shadow-lg'}`}
+                    onClick={stat.clickable ? stat.onClick : undefined}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
                         <div className={`p-2 rounded-lg bg-gray-100 ${stat.color}`}>
@@ -741,6 +764,9 @@ const MasterDashboard = () => {
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium text-muted-foreground truncate">{stat.title}</p>
                           <p className="text-xl font-bold truncate">{stat.value}</p>
+                          {stat.clickable && (
+                            <p className="text-xs text-primary mt-1">Click for more</p>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -751,7 +777,11 @@ const MasterDashboard = () => {
               {/* Admin Statistics */}
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {adminStats.map((stat, index) => (
-                  <Card key={index} className="hover:shadow-lg transition-shadow">
+                  <Card 
+                    key={index} 
+                    className={`transition-shadow ${stat.clickable ? 'hover:shadow-lg cursor-pointer hover:bg-muted/50' : 'hover:shadow-lg'}`}
+                    onClick={stat.clickable ? stat.onClick : undefined}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between space-x-3">
                         <div className="flex items-center space-x-3 min-w-0 flex-1">
@@ -762,6 +792,9 @@ const MasterDashboard = () => {
                             <p className="text-xs font-medium text-muted-foreground truncate">{stat.title}</p>
                             <p className="text-xl font-bold truncate">{stat.value}</p>
                             <p className="text-xs text-muted-foreground mt-1 truncate">{stat.description}</p>
+                            {stat.clickable && (
+                              <p className="text-xs text-primary mt-1">Click for more</p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1376,6 +1409,213 @@ const MasterDashboard = () => {
         onOpenChange={setShowAddExternalUser}
         onUserCreated={() => {}}
       />
+
+      {/* Drill-down Modals */}
+      
+      {/* Pending Invoices Modal */}
+      <Dialog open={showPendingInvoicesModal} onOpenChange={setShowPendingInvoicesModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-orange-600" />
+              Pending Invoices ({dashboardStats.pendingInvoices})
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {invoices.filter(inv => inv.status !== 'paid').length > 0 ? (
+              <div className="space-y-3">
+                {invoices.filter(inv => inv.status !== 'paid').map((invoice) => (
+                  <Card key={invoice.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <p className="font-medium">Invoice #{invoice.invoice_number}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Due: {format(new Date(invoice.due_date), 'PP')}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Amount: ${(invoice.prorated_amount || invoice.amount).toFixed(2)}
+                        </p>
+                      </div>
+                      <Badge variant={invoice.status === 'overdue' ? 'destructive' : 'secondary'}>
+                        {invoice.status}
+                      </Badge>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No pending invoices</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Projected Annual Revenue Modal */}
+      <Dialog open={showRevenueModal} onOpenChange={setShowRevenueModal}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-green-600" />
+              Projected Annual Revenue Breakdown
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card className="p-4">
+                <h4 className="font-medium mb-2">Total Revenue</h4>
+                <p className="text-2xl font-bold text-green-600">${dashboardStats.totalRevenue.toLocaleString()}</p>
+              </Card>
+              <Card className="p-4">
+                <h4 className="font-medium mb-2">Active Organizations</h4>
+                <p className="text-xl font-semibold">{dashboardStats.activeOrganizations}</p>
+                <p className="text-sm text-muted-foreground">Contributing to revenue</p>
+              </Card>
+            </div>
+            <Card className="p-4">
+              <h4 className="font-medium mb-3">Revenue Sources</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm">Membership Fees</span>
+                  <span className="text-sm font-medium">${dashboardStats.totalRevenue.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span className="text-sm">Average per Organization</span>
+                  <span className="text-sm">
+                    ${dashboardStats.activeOrganizations > 0 
+                      ? Math.round(dashboardStats.totalRevenue / dashboardStats.activeOrganizations).toLocaleString()
+                      : '0'}
+                  </span>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pending Approvals Modal */}
+      <Dialog open={showPendingApprovalsModal} onOpenChange={setShowPendingApprovalsModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-orange-600" />
+              Pending Approvals ({pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length})
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {pendingOrganizations.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="font-medium text-orange-600">Organization Registrations ({pendingOrganizations.length})</h4>
+                {pendingOrganizations.slice(0, 5).map((org) => (
+                  <Card key={org.id} className="p-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{org.name}</p>
+                        <p className="text-sm text-muted-foreground">{org.city}, {org.state}</p>
+                        <p className="text-sm text-muted-foreground">FTE: {org.student_fte || 'N/A'}</p>
+                      </div>
+                      <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Pending</Badge>
+                    </div>
+                  </Card>
+                ))}
+                {pendingOrganizations.length > 5 && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    ...and {pendingOrganizations.length - 5} more
+                  </p>
+                )}
+              </div>
+            )}
+
+            {pendingRegistrations.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="font-medium text-blue-600">User Registrations ({pendingRegistrations.length})</h4>
+                {pendingRegistrations.slice(0, 5).map((reg) => (
+                  <Card key={reg.id} className="p-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{reg.first_name} {reg.last_name}</p>
+                        <p className="text-sm text-muted-foreground">{reg.email}</p>
+                        <p className="text-sm text-muted-foreground">{reg.organization_name}</p>
+                      </div>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Pending</Badge>
+                    </div>
+                  </Card>
+                ))}
+                {pendingRegistrations.length > 5 && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    ...and {pendingRegistrations.length - 5} more
+                  </p>
+                )}
+              </div>
+            )}
+
+            {(memberInfoUpdateRequests.length > 0 || profileEditRequests.length > 0) && (
+              <div className="space-y-3">
+                <h4 className="font-medium text-green-600">Profile Updates ({memberInfoUpdateRequests.length + profileEditRequests.length})</h4>
+                {[...memberInfoUpdateRequests.slice(0, 3), ...profileEditRequests.slice(0, 2)].map((req, index) => (
+                  <Card key={`${req.id}-${index}`} className="p-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">
+                          {(req as any).organizations?.name || (req as any).organization?.name || 'Profile Update'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(req.created_at), 'PP')}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Pending</Badge>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Active Invitations Modal */}
+      <Dialog open={showActiveInvitationsModal} onOpenChange={setShowActiveInvitationsModal}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-blue-600" />
+              Active Invitations ({invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length})
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length > 0 ? (
+              <div className="space-y-3">
+                {invitations
+                  .filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date())
+                  .map((invitation) => (
+                    <Card key={invitation.id} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <p className="font-medium">{invitation.email}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Sent: {format(new Date(invitation.created_at), 'PP')}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Expires: {format(new Date(invitation.expires_at), 'PP')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                            Active
+                          </Badge>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {Math.ceil((new Date(invitation.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No active invitations</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
