@@ -23,6 +23,9 @@ const Index = () => {
 
   // Fetch user's organization data
   useEffect(() => {
+    // Scroll to top when landing page loads
+    window.scrollTo(0, 0);
+    
     const fetchUserOrganization = async () => {
       if (user?.id) {
         const org = await getUserOrganization(user.id);

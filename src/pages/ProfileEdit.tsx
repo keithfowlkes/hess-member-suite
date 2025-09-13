@@ -109,6 +109,9 @@ const ProfileEdit = () => {
   const [editedProfile, setEditedProfile] = useState<ProfileData | null>(null);
 
   useEffect(() => {
+    // Scroll to top when profile edit page loads
+    window.scrollTo(0, 0);
+    
     if (profileId) {
       fetchProfile();
       checkEditPermissions();

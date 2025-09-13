@@ -2,11 +2,17 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, Mail, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useEffect } from 'react';
 
 export default function RegistrationConfirmation() {
   const [searchParams] = useSearchParams();
   const typeParam = searchParams.get('type');
   const isReassignment = typeParam === 'reassignment';
+
+  // Scroll to top when confirmation page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   // Debug logging
   console.log('🎯 CONFIRMATION DEBUG: Page loaded');

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,6 +10,11 @@ const Profile = () => {
   const { user } = useAuth();
   const { data, loading, isAdmin, submitEditRequest, updateProfileDirect, canEditDirectly } = useUnifiedProfile();
   const [saving, setSaving] = useState(false);
+
+  // Scroll to top when profile page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleSave = async (updates: {
     profile?: Partial<any>;
