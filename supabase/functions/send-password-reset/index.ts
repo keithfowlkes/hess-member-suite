@@ -185,10 +185,29 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (sendError) {
       console.error("❌ Failed to send reset email:", sendError);
+      
+      // Handle specific Resend errors with user-friendly messages
+      let errorMessage = "Failed to send password reset email. Please try again or contact support.";
+      let statusCode = 500;
+      
+      if (sendError.message?.includes("You can only send testing emails to your own email address")) {
+        errorMessage = "This email service is in testing mode and can only send to verified addresses. Please contact an administrator or try with keith.fowlkes@hessconsortium.org.";
+        statusCode = 400;
+      } else if (sendError.message?.includes("Invalid `from` field")) {
+        errorMessage = "Email configuration error. Please contact an administrator.";
+        statusCode = 400;
+      } else if (sendError.statusCode === 403) {
+        errorMessage = "Email sending restricted. Please contact an administrator.";
+        statusCode = 400;
+      }
+      
       return new Response(
-        JSON.stringify({ error: 'Failed to send reset email', details: sendError }),
+        JSON.stringify({ 
+          error: errorMessage,
+          details: sendError.message 
+        }),
         {
-          status: 500,
+          status: statusCode,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
