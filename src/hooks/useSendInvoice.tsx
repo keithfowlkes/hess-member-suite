@@ -38,10 +38,19 @@ export const useSendInvoice = () => {
 
       const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
         body: {
-          type: 'custom',
+          type: 'invoice',
           to: params.organizationEmail,
           subject,
-          template: invoiceHTML
+          data: {
+            organization_name: params.organizationName,
+            invoice_number: `INV-${Date.now()}`,
+            amount: `$${(params.proratedAmount ?? params.invoiceAmount).toLocaleString()}`,
+            due_date: params.periodEndDate,
+            period_start_date: params.periodStartDate,
+            period_end_date: params.periodEndDate,
+            notes: params.notes || '',
+            invoice_content: invoiceHTML
+          }
         }
       });
       console.log('New invoice email function response:', { data, error });

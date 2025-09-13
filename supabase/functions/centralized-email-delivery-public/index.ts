@@ -175,16 +175,58 @@ serve(async (req: Request): Promise<Response> => {
     const typeKeyBase = (emailRequest.type || 'test').toString().replace(/-/g, '_');
     const typeKey = typeKeyBase === 'organization' ? 'welcome' : typeKeyBase;
 
-    const template = await getEmailTemplate(typeKey);
-    if (!template) {
-      throw new Error(`No template found for email type: ${emailRequest.type}`);
+    let template = null;
+    if (emailRequest.type !== 'custom') {
+      template = await getEmailTemplate(typeKey);
+      if (!template && emailRequest.type !== 'test') {
+        throw new Error(`No template found for email type: ${emailRequest.type}`);
+      }
     }
+    
+    // For custom types without template, create a minimal template
+    if (!template) {
+      template = {
+        id: typeKey,
+        name: 'Default Template',
+        subject: emailRequest.subject || 'HESS Consortium Notification',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <center>
+              <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+            </center>
+            {{message}}
+          </div>
+        `,
+        variables: []
+      };
+    }
+    
     const finalSubject = replaceTemplateVariables(emailRequest.subject || template.subject, templateData);
     
     // For custom template types, use the provided template directly
-    const finalHtml = emailRequest.type === 'custom' && emailRequest.template 
-      ? emailRequest.template 
-      : replaceTemplateVariables(template.html, templateData);
+    // For invoice type with invoice_content, enhance the template
+    let finalHtml;
+    if (emailRequest.type === 'custom' && emailRequest.template) {
+      finalHtml = emailRequest.template;
+    } else if (emailRequest.type === 'invoice' && templateData.invoice_content) {
+      // Enhanced invoice template that includes the full invoice HTML
+      const enhancedTemplate = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <center>
+            <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
+          </center>
+          <div style="margin: 20px 0;">
+            ${template.html.replace(/<div[^>]*>|<\/div>/g, '').replace(/<center[^>]*>.*?<\/center>/g, '')}
+          </div>
+          <div style="margin-top: 30px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+            ${templateData.invoice_content}
+          </div>
+        </div>
+      `;
+      finalHtml = replaceTemplateVariables(enhancedTemplate, templateData);
+    } else {
+      finalHtml = replaceTemplateVariables(template.html, templateData);
+    }
 
     // Preflight: verify API key with domains.list()
     try {
