@@ -166,7 +166,8 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     // Send email using Resend with safe fallback sender
-    const fromAddress = Deno.env.get("RESEND_FROM") || "HESS Consortium <onboarding@resend.dev>";
+    const fromAddress = Deno.env.get("RESEND_FROM") || "onboarding@resend.dev";
+    console.log("Using from address:", fromAddress);
     const { data: sent, error: sendError } = await resend.emails.send({
       from: fromAddress,
       to: [email],
