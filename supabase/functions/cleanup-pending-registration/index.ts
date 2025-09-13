@@ -1,26 +1,29 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Initialize Supabase admin client
+    // Initialize Supabase admin client with proper configuration
     const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           autoRefreshToken: false,
           persistSession: false
+        },
+        db: {
+          schema: 'public'
         }
       }
     );
@@ -36,29 +39,48 @@ serve(async (req) => {
 
     console.log(`Cleaning up pending registration for email: ${email}`);
 
-    // Delete any non-pending records for this email to allow new registration
-    const { data, error } = await supabaseAdmin
+    // First check if there are any non-pending records to clean up
+    const { data: existingData, error: checkError } = await supabaseAdmin
       .from('pending_registrations')
-      .delete()
+      .select('id, approval_status')
       .eq('email', email)
-      .neq('approval_status', 'pending')
-      .select('id, approval_status');
+      .neq('approval_status', 'pending');
 
-    if (error) {
-      console.error('Error cleaning up registration:', error);
+    if (checkError) {
+      console.error('Error checking existing registrations:', checkError);
       return new Response(
-        JSON.stringify({ error: `Failed to cleanup registration: ${error.message}` }),
+        JSON.stringify({ error: `Failed to check existing registrations: ${checkError.message}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Successfully cleaned up ${data?.length || 0} records for ${email}`);
+    let cleanedCount = 0;
+    if (existingData && existingData.length > 0) {
+      // Delete any non-pending records for this email to allow new registration
+      const { data, error } = await supabaseAdmin
+        .from('pending_registrations')
+        .delete()
+        .eq('email', email)
+        .neq('approval_status', 'pending')
+        .select('id, approval_status');
+
+      if (error) {
+        console.error('Error cleaning up registration:', error);
+        return new Response(
+          JSON.stringify({ error: `Failed to cleanup registration: ${error.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      cleanedCount = data?.length || 0;
+    }
+
+    console.log(`Successfully cleaned up ${cleanedCount} records for ${email}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Cleaned up ${data?.length || 0} non-pending records for ${email}`,
-        cleaned: data
+        message: `Cleaned up ${cleanedCount} non-pending records for ${email}`,
+        cleaned: cleanedCount
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -70,4 +92,6 @@ serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-});
+};
+
+serve(handler);
