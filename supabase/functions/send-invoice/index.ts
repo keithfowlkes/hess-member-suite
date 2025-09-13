@@ -449,14 +449,27 @@ serve(async (req) => {
     // Initialize Resend for sending email
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-    const emailPayload: any = {
-      from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
+    // Migrate send-invoice to centralized method
+    const emailData = {
+      type: 'invoice',
       to: [organizationEmail],
       subject: subject,
-      html: html,
+      data: {
+        organization_name: organizationName,
+        invoice_number: invoiceNumber,
+        amount: amount.toString(),
+        due_date: dueDate.toLocaleDateString(),
+        invoice_content: html
+      }
     };
 
-    const emailResponse = await resend.emails.send(emailPayload);
+    const emailResponse = await supabase.functions.invoke('centralized-email-delivery-public', {
+      body: emailData
+    });
+
+    if (emailResponse.error) {
+      throw new Error(`Email delivery failed: ${emailResponse.error.message}`);
+    }
 
     console.log("Invoice email sent successfully:", emailResponse);
 

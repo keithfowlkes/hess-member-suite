@@ -77,14 +77,9 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
                 emailType === 'password_reset' ? 'Password Reset Request' :
                 (emailType === 'profile_update' || emailType === 'profile_update_approved') ? 'Profile Update Approved' :
                 'HESS Consortium Notification',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
-            <center>
-              <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-            </center>
-            <div style="margin-top: 20px;">
-              ${settingTemplate.setting_value}
-            </div>
+        html: settingTemplate.setting_value || `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            {{message}}
           </div>
         `,
         variables: []
@@ -109,12 +104,9 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
       id: emailType,
       name: messageTemplate.title,
       subject: messageTemplate.title,
-      html: `
+      html: messageTemplate.content || `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <center>
-            <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-          </center>
-          ${messageTemplate.content}
+          {{message}}
         </div>
       `,
       variables: []
@@ -240,9 +232,6 @@ serve(async (req: Request): Promise<Response> => {
         subject: emailRequest.subject || 'HESS Consortium Notification',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <center>
-              <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-            </center>
             {{message}}
           </div>
         `,
@@ -260,16 +249,11 @@ serve(async (req: Request): Promise<Response> => {
     } else if (emailRequest.type === 'invoice' && templateData.invoice_content) {
       // Enhanced invoice template that includes the full invoice HTML
       const enhancedTemplate = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <center>
-            <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-          </center>
-          <div style="margin: 20px 0;">
-            ${template.html.replace(/<div[^>]*>|<\/div>/g, '').replace(/<center[^>]*>.*?<\/center>/g, '')}
-          </div>
-          <div style="margin-top: 30px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-            ${templateData.invoice_content}
-          </div>
+        <div style="margin: 20px 0;">
+          ${template.html}
+        </div>
+        <div style="margin-top: 30px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+          ${templateData.invoice_content}
         </div>
       `;
       finalHtml = replaceTemplateVariables(enhancedTemplate, templateData);

@@ -398,14 +398,27 @@ serve(async (req) => {
       ? messageTemplate.title.replace('{{organization_name}}', organization.name)
       : `HESS Consortium Membership Invoice - ${organization.name}`;
 
-    const emailPayload: any = {
-      from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
+    // Migrate resend-invoice to centralized method
+    const emailData = {
+      type: 'invoice',
       to: [organization.email],
       subject: subject,
-      html: html,
+      data: {
+        organization_name: organization.name || 'Unknown Organization',
+        invoice_number: invoiceData.invoice_number || 'Unknown',
+        amount: invoiceData.amount?.toString() || '0',
+        due_date: invoiceData.due_date || 'Unknown',
+        invoice_content: html
+      }
     };
 
-    const emailResponse = await resend.emails.send(emailPayload);
+    const emailResponse = await supabase.functions.invoke('centralized-email-delivery-public', {
+      body: emailData
+    });
+
+    if (emailResponse.error) {
+      throw new Error(`Email delivery failed: ${emailResponse.error.message}`);
+    }
 
     console.log("Invoice email resent successfully:", emailResponse);
 

@@ -67,21 +67,25 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const subject = replaceTemplateVariables(messageTemplate.title, templateData);
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <center>
-          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="width:230px; height:155px;">
-        </center>
-        ${replaceTemplateVariables(messageTemplate.content, templateData)}
-      </div>
-    `;
-
-    const emailResponse = await resend.emails.send({
-      from: Deno.env.get('RESEND_FROM') || 'HESS Consortium <onboarding@resend.dev>',
+    
+    // Migrate send-overdue-reminder to centralized method
+    const emailData = {
+      type: 'overdue_reminder',
       to: [to],
-      subject,
-      html,
+      subject: subject,
+      data: {
+        organization_name: organizationName,
+        ...invoiceData
+      }
+    };
+
+    const emailResponse = await supabase.functions.invoke('centralized-email-delivery-public', {
+      body: emailData
     });
+
+    if (emailResponse.error) {
+      throw new Error(`Email delivery failed: ${emailResponse.error.message}`);
+    }
 
     console.log("Overdue reminder sent successfully:", emailResponse);
 
