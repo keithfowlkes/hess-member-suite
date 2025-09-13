@@ -602,7 +602,79 @@ export default function Auth() {
         
         let errorMessage = error.message;
         if (error.code === '23505') {
-          errorMessage = "An account with this email already exists or is pending approval.";
+          // Try to clean up orphaned records and retry
+          try {
+            console.log('🧹 Attempting to cleanup orphaned records for:', signUpForm.email);
+            const { cleanupOrphanedRecords } = await import('@/utils/cleanupOrphanedRecords');
+            await cleanupOrphanedRecords(signUpForm.email);
+            
+            // Retry the registration after cleanup
+            console.log('🔄 Retrying registration after cleanup');
+            const { error: retryError } = await supabase
+              .from('pending_registrations')
+              .insert({
+                email: signUpForm.email,
+                password_hash: storeActualPassword(signUpForm.password),
+                first_name: formDataWithCustomValues.firstName,
+                last_name: formDataWithCustomValues.lastName,
+                organization_name: formDataWithCustomValues.organization,
+                state_association: formDataWithCustomValues.stateAssociation,
+                student_fte: formDataWithCustomValues.studentFte ? parseInt(formDataWithCustomValues.studentFte) : null,
+                address: formDataWithCustomValues.address,
+                city: formDataWithCustomValues.city,
+                state: formDataWithCustomValues.state,
+                zip: formDataWithCustomValues.zip,
+                primary_contact_title: formDataWithCustomValues.primaryContactTitle,
+                secondary_first_name: formDataWithCustomValues.secondaryFirstName,
+                secondary_last_name: formDataWithCustomValues.secondaryLastName,
+                secondary_contact_title: formDataWithCustomValues.secondaryContactTitle,
+                secondary_contact_email: formDataWithCustomValues.secondaryContactEmail,
+                student_information_system: formDataWithCustomValues.studentInformationSystem,
+                financial_system: formDataWithCustomValues.financialSystem,
+                financial_aid: formDataWithCustomValues.financialAid,
+                hcm_hr: formDataWithCustomValues.hcmHr,
+                payroll_system: formDataWithCustomValues.payrollSystem,
+                purchasing_system: formDataWithCustomValues.purchasingSystem,
+                housing_management: formDataWithCustomValues.housingManagement,
+                learning_management: formDataWithCustomValues.learningManagement,
+                admissions_crm: formDataWithCustomValues.admissionsCrm,
+                alumni_advancement_crm: formDataWithCustomValues.alumniAdvancementCrm,
+                primary_office_apple: formDataWithCustomValues.primaryOfficeApple,
+                primary_office_asus: formDataWithCustomValues.primaryOfficeAsus,
+                primary_office_dell: formDataWithCustomValues.primaryOfficeDell,
+                primary_office_hp: formDataWithCustomValues.primaryOfficeHp,
+                primary_office_microsoft: formDataWithCustomValues.primaryOfficeMicrosoft,
+                primary_office_other: formDataWithCustomValues.primaryOfficeOther,
+                primary_office_other_details: formDataWithCustomValues.primaryOfficeOtherDetails,
+                other_software_comments: formDataWithCustomValues.otherSoftwareComments,
+                is_private_nonprofit: formDataWithCustomValues.isPrivateNonProfit,
+                login_hint: signUpForm.loginHint,
+              });
+            
+            if (!retryError) {
+              console.log('✅ Registration successful after cleanup');
+              toast({
+                title: "Registration submitted successfully",
+                description: "Your registration has been submitted for admin approval. You'll receive an email when it's processed.",
+              });
+              
+              if (recaptchaEnabled) {
+                signUpCaptchaRef.current?.reset();
+                setSignUpCaptcha(null);
+              }
+              
+              setSignUpForm(initialSignUpFormState);
+              navigate('/registration-confirmation?type=pending', { replace: true });
+              setIsSubmitting(false);
+              return;
+            } else {
+              console.error('❌ Retry failed after cleanup:', retryError);
+              errorMessage = "Registration failed. The email may already be registered. Please contact support if this continues.";
+            }
+          } catch (cleanupError) {
+            console.error('❌ Cleanup failed:', cleanupError);
+            errorMessage = "An account with this email already exists or is pending approval.";
+          }
         }
         
         toast({

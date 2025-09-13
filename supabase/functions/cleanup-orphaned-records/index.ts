@@ -28,7 +28,15 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    const { email, adminUserId } = await req.json();
+    // Allow GET request to clean up fowlkes@thecoalition.us specifically
+    let email = 'fowlkes@thecoalition.us';
+    let adminUserId = null;
+    
+    if (req.method === 'POST') {
+      const body = await req.json();
+      email = body.email || 'fowlkes@thecoalition.us';
+      adminUserId = body.adminUserId;
+    }
     
     if (!email) {
       return new Response(
