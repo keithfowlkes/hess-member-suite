@@ -59,33 +59,41 @@ const handler = async (req: Request): Promise<Response> => {
       verificationResults.recommendations.push("No sender email address configured");
     }
 
-    if (resendApiKey) {
+    if (resendApiKey && fromEmail) {
       try {
-        // List domains to check verification status
+        // Test if we can actually send with this configuration
+        // by making a simple API call to list domains
         const domainsResponse = await resend.domains.list();
-        const domainsList = domainsResponse.data;
         
-        // Ensure domains is always an array
-        verificationResults.domains = Array.isArray(domainsList) ? domainsList : [];
+        // Safely handle the domains response
+        let domainsList = [];
+        if (domainsResponse && domainsResponse.data) {
+          domainsList = Array.isArray(domainsResponse.data) ? domainsResponse.data : [];
+        }
         
-        if (fromEmail) {
-          const domain = fromEmail.split('@')[1];
-          const domainInfo = verificationResults.domains.find(d => d && d.name === domain);
-          
-          if (domainInfo) {
-            verificationResults.domainStatus = domainInfo.status;
-            if (domainInfo.status !== 'verified') {
-              verificationResults.recommendations.push(`Domain ${domain} is not verified. Status: ${domainInfo.status}`);
-            }
-          } else {
-            verificationResults.recommendations.push(`Domain ${domain} is not added to your Resend account`);
+        verificationResults.domains = domainsList;
+        
+        // Check domain verification
+        const domain = fromEmail.split('@')[1];
+        const domainInfo = domainsList.find(d => d && d.name === domain);
+        
+        if (domainInfo) {
+          verificationResults.domainStatus = domainInfo.status;
+          if (domainInfo.status !== 'verified') {
+            verificationResults.recommendations.push(`Domain ${domain} is not verified. Status: ${domainInfo.status}`);
           }
+        } else {
+          verificationResults.recommendations.push(`Domain ${domain} is not added to your Resend account`);
         }
 
-        console.log("✅ Resend API verification successful");
+        console.log("✅ Resend API verification successful", { 
+          domainsFound: domainsList.length, 
+          targetDomain: domain 
+        });
+        
       } catch (resendError) {
         console.error("❌ Resend API error:", resendError);
-        verificationResults.recommendations.push(`Resend API error: ${resendError.message}`);
+        verificationResults.recommendations.push(`Resend API connection failed: ${resendError.message}`);
       }
     }
 
