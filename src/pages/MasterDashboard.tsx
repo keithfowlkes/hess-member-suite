@@ -157,6 +157,10 @@ const MasterDashboard = () => {
   const [passwordResetMessage, setPasswordResetMessage] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [profileUpdateMessage, setProfileUpdateMessage] = useState('');
+  const [analyticsFeedbackTemplate, setAnalyticsFeedbackTemplate] = useState('');
+  const [invoiceEmailTemplate, setInvoiceEmailTemplate] = useState('');
+  const [overdueReminderTemplate, setOverdueReminderTemplate] = useState('');
+  const [ccRecipients, setCcRecipients] = useState('');
   const [welcomeCcRecipients, setWelcomeCcRecipients] = useState<string[]>([]);
   const [newCcEmail, setNewCcEmail] = useState('');
   const [defaultRecipients, setDefaultRecipients] = useState<{[email: string]: boolean}>({
@@ -165,6 +169,9 @@ const MasterDashboard = () => {
   const [savingMessage, setSavingMessage] = useState(false);
   const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
   const [savingProfileUpdateMessage, setSavingProfileUpdateMessage] = useState(false);
+  const [savingAnalyticsFeedbackTemplate, setSavingAnalyticsFeedbackTemplate] = useState(false);
+  const [savingInvoiceEmailTemplate, setSavingInvoiceEmailTemplate] = useState(false);
+  const [savingOverdueReminderTemplate, setSavingOverdueReminderTemplate] = useState(false);
   const [savingCcRecipients, setSavingCcRecipients] = useState(false);
   const [showAddExternalUser, setShowAddExternalUser] = useState(false);
 
@@ -451,6 +458,24 @@ const MasterDashboard = () => {
     await updateSetting('welcome_message_cc_recipients', JSON.stringify(welcomeCcRecipients));
     await updateSetting('welcome_message_default_recipients', JSON.stringify(defaultRecipients));
     setSavingCcRecipients(false);
+  };
+
+  const handleSaveAnalyticsFeedbackTemplate = async () => {
+    setSavingAnalyticsFeedbackTemplate(true);
+    await updateSetting('analytics_feedback_template', analyticsFeedbackTemplate);
+    setSavingAnalyticsFeedbackTemplate(false);
+  };
+
+  const handleSaveInvoiceEmailTemplate = async () => {
+    setSavingInvoiceEmailTemplate(true);
+    await updateSetting('invoice_email_template', invoiceEmailTemplate);
+    setSavingInvoiceEmailTemplate(false);
+  };
+
+  const handleSaveOverdueReminderTemplate = async () => {
+    setSavingOverdueReminderTemplate(true);
+    await updateSetting('overdue_reminder_template', overdueReminderTemplate);
+    setSavingOverdueReminderTemplate(false);
   };
 
   const handleDeleteDefaultRecipient = async (email: string) => {
@@ -1593,13 +1618,90 @@ const MasterDashboard = () => {
                 </div>
 
                 <Tabs defaultValue="system-messages" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-7">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="system-messages">System Messages</TabsTrigger>
                     <TabsTrigger value="password-reset">Password Reset</TabsTrigger>
                     <TabsTrigger value="welcome-template">Welcome Template</TabsTrigger>
-                    <TabsTrigger value="profile-update">Profile Update</TabsTrigger>
-                    <TabsTrigger value="analytics-feedback">Analytics Feedback</TabsTrigger>
-                    <TabsTrigger value="invoice-templates">Invoice Templates</TabsTrigger>
+                  </TabsList>
+
+                  {/* System Messages Subtab */}
+                  <TabsContent value="system-messages" className="space-y-6">
+                    <SystemMessageEditor />
+                  </TabsContent>
+
+                  {/* Password Reset Subtab */}
+                  <TabsContent value="password-reset" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Password Reset Message</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Customize the message shown to users when their password is reset
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="password-reset-message">Password Reset Message</Label>
+                          <Textarea
+                            id="password-reset-message"
+                            placeholder="Enter the password reset message..."
+                            value={passwordResetMessage}
+                            onChange={(e) => setPasswordResetMessage(e.target.value)}
+                            rows={4}
+                            className="mt-2"
+                          />
+                        </div>
+                        <Button 
+                          onClick={handleSavePasswordMessage}
+                          disabled={savingMessage}
+                        >
+                          {savingMessage ? "Saving..." : "Save Message"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Welcome Template Subtab */}
+                  <TabsContent value="welcome-template" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Welcome Message for Approved Organizations</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Customize the welcome email sent to newly approved organizations
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <Label htmlFor="welcome-message">Welcome Message Template</Label>
+                          <div className="mt-2">
+                            <ReactQuill
+                              theme="snow"
+                              value={welcomeMessage}
+                              onChange={setWelcomeMessage}
+                              style={{ minHeight: '300px' }}
+                            />
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={handleSaveWelcomeMessage}
+                          disabled={savingWelcomeMessage}
+                        >
+                          {savingWelcomeMessage ? "Saving..." : "Save Welcome Message"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </TabsContent>
+                <div>
+                  <h2 className="text-2xl font-semibold">Message Configuration</h2>
+                  <p className="text-muted-foreground">Customize system messages and notifications</p>
+                </div>
+
+                <Tabs defaultValue="system-messages" className="space-y-6">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="system-messages">System Messages</TabsTrigger>
+                    <TabsTrigger value="password-reset">Password Reset</TabsTrigger>
+                    <TabsTrigger value="welcome-template">Welcome Template</TabsTrigger>
                     <TabsTrigger value="cc-recipients">CC Recipients</TabsTrigger>
                   </TabsList>
 
