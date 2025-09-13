@@ -286,14 +286,15 @@ export default function Auth() {
     if (error) {
       console.log('Password reset error details:', error);
       
-      // Check if the error is because the email was not found
-      // The error might be in different formats, so check multiple conditions
+      // Check if the error is specifically because the email was not found
       const isUserNotFound = 
         error.message === 'User not found' ||
         error.status === 404 ||
-        (error.details && error.details === 'User not found') ||
-        (error.message && error.message.includes('Edge Function returned a non-2xx status code')) ||
-        error.statusCode === 404;
+        error.statusCode === 404 ||
+        (error.details && (
+          error.details === 'User not found' ||
+          error.details.message === 'User not found'
+        ));
       
       if (isUserNotFound) {
         // Store the email and show the dialog
