@@ -198,30 +198,147 @@ serve(async (req) => {
 
       if (authError) {
         console.error('Error creating auth user:', authError);
-        return new Response(
-          JSON.stringify({ error: `Failed to create user account: ${authError.message}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+        
+        // Handle the case where user already exists but wasn't found in initial check
+        if (authError.message?.includes('already been registered') || authError.code === 'email_exists') {
+          console.log('User already exists, switching to existing user flow...');
+          
+          // Try to get the existing user again
+          const { data: existingUsersRetry, error: listErrorRetry } = await supabaseAdmin.auth.admin.listUsers();
+          
+          if (listErrorRetry) {
+            console.error('Error listing users on retry:', listErrorRetry);
+            return new Response(
+              JSON.stringify({ error: 'Failed to check existing users on retry' }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          const existingUserRetry = existingUsersRetry.users.find(user => user.email === pendingReg.email);
+          
+          if (existingUserRetry) {
+            console.log(`Found existing user on retry: ${pendingReg.email}, updating user metadata`);
+            
+            // Update existing user's metadata
+            const { data: updatedUser, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+              existingUserRetry.id,
+              {
+                user_metadata: {
+                  ...existingUserRetry.user_metadata,
+                  first_name: pendingReg.first_name,
+                  last_name: pendingReg.last_name,
+                  organization: pendingReg.organization_name,
+                  state_association: pendingReg.state_association,
+                  student_fte: pendingReg.student_fte?.toString(),
+                  address: pendingReg.address,
+                  city: pendingReg.city,
+                  state: pendingReg.state,
+                  zip: pendingReg.zip,
+                  primary_contact_title: pendingReg.primary_contact_title,
+                  secondary_first_name: pendingReg.secondary_first_name,
+                  secondary_last_name: pendingReg.secondary_last_name,
+                  secondary_contact_title: pendingReg.secondary_contact_title,
+                  secondary_contact_email: pendingReg.secondary_contact_email,
+                  student_information_system: pendingReg.student_information_system,
+                  financial_system: pendingReg.financial_system,
+                  financial_aid: pendingReg.financial_aid,
+                  hcm_hr: pendingReg.hcm_hr,
+                  payroll_system: pendingReg.payroll_system,
+                  purchasing_system: pendingReg.purchasing_system,
+                  housing_management: pendingReg.housing_management,
+                  learning_management: pendingReg.learning_management,
+                  admissions_crm: pendingReg.admissions_crm,
+                  alumni_advancement_crm: pendingReg.alumni_advancement_crm,
+                  primary_office_apple: pendingReg.primary_office_apple,
+                  primary_office_asus: pendingReg.primary_office_asus,
+                  primary_office_dell: pendingReg.primary_office_dell,
+                  primary_office_hp: pendingReg.primary_office_hp,
+                  primary_office_microsoft: pendingReg.primary_office_microsoft,
+                  primary_office_other: pendingReg.primary_office_other,
+                  primary_office_other_details: pendingReg.primary_office_other_details,
+                  other_software_comments: pendingReg.other_software_comments,
+                  isPrivateNonProfit: pendingReg.is_private_nonprofit,
+                }
+              }
+            );
 
-      // Set the password for the new user (password_hash contains plaintext password)
-      console.log('Setting password for new user...');
-      try {
-        const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
-          newUser.user.id,
-          { password: pendingReg.password_hash }
-        );
+            if (updateError) {
+              console.error('Error updating existing user on retry:', updateError);
+              return new Response(
+                JSON.stringify({ error: `Failed to update existing user: ${updateError.message}` }),
+                { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
+            }
 
-        if (passwordError) {
-          console.warn('Could not set password for new user:', passwordError);
+            // Set the user's password
+            console.log('Setting user password on retry...');
+            try {
+              const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
+                existingUserRetry.id,
+                { password: pendingReg.password_hash }
+              );
+
+              if (passwordError) {
+                console.warn('Could not set user password on retry:', passwordError);
+                // Send a password reset email as fallback
+                const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+                  type: 'recovery',
+                  email: pendingReg.email,
+                });
+                if (resetError) {
+                  console.warn('Could not send password reset email on retry:', resetError);
+                }
+              } else {
+                console.log('User password set successfully on retry');
+              }
+            } catch (passwordUpdateError) {
+              console.warn('Error setting user password on retry:', passwordUpdateError);
+            }
+
+            authUser = { user: updatedUser.user };
+          } else {
+            // User still not found - this is an unexpected error
+            return new Response(
+              JSON.stringify({ error: 'User exists but could not be found in system' }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
         } else {
-          console.log('Password set successfully for new user');
+          // Other auth errors
+          return new Response(
+            JSON.stringify({ error: `Failed to create user account: ${authError.message}` }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
-      } catch (passwordUpdateError) {
-        console.warn('Error setting password for new user:', passwordUpdateError);
-      }
+      } else {
+        // User creation was successful - this is a genuinely new user
+        authUser = { user: newUser.user };
+        
+        // Set the password for the new user (password_hash contains plaintext password)
+        console.log('Setting password for new user...');
+        try {
+          const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
+            authUser.user.id,
+            { password: pendingReg.password_hash }
+          );
 
-      authUser = { user: newUser.user };
+          if (passwordError) {
+            console.warn('Could not set password for new user:', passwordError);
+            // Send a password reset email as fallback
+            const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+              type: 'recovery',
+              email: pendingReg.email,
+            });
+            if (resetError) {
+              console.warn('Could not send password reset email for new user:', resetError);
+            }
+          } else {
+            console.log('Password set successfully for new user');
+          }
+        } catch (passwordUpdateError) {
+          console.warn('Error setting password for new user:', passwordUpdateError);
+        }
+      }
     }
 
     console.log(`Processed auth user: ${authUser.user?.id} for email: ${pendingReg.email}`);
