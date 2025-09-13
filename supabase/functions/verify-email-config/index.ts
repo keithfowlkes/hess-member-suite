@@ -65,31 +65,54 @@ const handler = async (req: Request): Promise<Response> => {
         // by making a simple API call to list domains
         const domainsResponse = await resend.domains.list();
         
-        // Safely handle the domains response
+        console.log("✅ Resend API call successful");
+        console.log("Raw domains response:", JSON.stringify(domainsResponse, null, 2));
+        
+        // Safely handle the domains response - Resend API might have different response structures
         let domainsList = [];
-        if (domainsResponse && domainsResponse.data) {
-          domainsList = Array.isArray(domainsResponse.data) ? domainsResponse.data : [];
+        if (domainsResponse) {
+          // Handle different possible response structures
+          if (Array.isArray(domainsResponse.data)) {
+            domainsList = domainsResponse.data;
+          } else if (domainsResponse.data && Array.isArray(domainsResponse.data.data)) {
+            domainsList = domainsResponse.data.data;
+          } else if (Array.isArray(domainsResponse)) {
+            domainsList = domainsResponse;
+          }
         }
         
+        console.log("Processed domains list:", JSON.stringify(domainsList, null, 2));
         verificationResults.domains = domainsList;
         
         // Check domain verification
         const domain = fromEmail.split('@')[1];
+        console.log(`Looking for domain '${domain}' in ${domainsList.length} domains`);
+        
         const domainInfo = domainsList.find(d => d && d.name === domain);
         
         if (domainInfo) {
+          console.log("Found domain info:", JSON.stringify(domainInfo, null, 2));
           verificationResults.domainStatus = domainInfo.status;
-          if (domainInfo.status !== 'verified') {
-            verificationResults.recommendations.push(`Domain ${domain} is not verified. Status: ${domainInfo.status}`);
+          
+          // Check if domain is verified - be explicit about what we're checking
+          if (domainInfo.status === 'verified') {
+            console.log(`✅ Domain ${domain} is verified!`);
+            // Don't add any recommendations - domain is good
+          } else {
+            console.log(`⚠️ Domain ${domain} status: ${domainInfo.status}`);
+            verificationResults.recommendations.push(`Domain ${domain} verification status: ${domainInfo.status}. Please verify your domain in Resend.`);
           }
         } else {
-          verificationResults.recommendations.push(`Domain ${domain} is not added to your Resend account`);
+          console.log(`❌ Domain ${domain} not found in Resend account`);
+          console.log("Available domains:", domainsList.map(d => d?.name || 'unknown').join(', '));
+          verificationResults.recommendations.push(`Domain ${domain} is not added to your Resend account. Please add and verify it at resend.com/domains`);
         }
 
-        console.log("✅ Resend API verification successful", { 
-          domainsFound: domainsList.length, 
-          targetDomain: domain 
-        });
+        console.log("Final verification results:", JSON.stringify({
+          hasRecommendations: verificationResults.recommendations.length > 0,
+          recommendationCount: verificationResults.recommendations.length,
+          recommendations: verificationResults.recommendations
+        }, null, 2));
         
       } catch (resendError) {
         console.error("❌ Resend API error:", resendError);
