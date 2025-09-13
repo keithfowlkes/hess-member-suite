@@ -184,7 +184,7 @@ serve(async (req: Request): Promise<Response> => {
     }
     
     // For custom types without template, create a minimal template
-    if (!template) {
+    if (!template && emailRequest.type !== 'custom') {
       template = {
         id: typeKey,
         name: 'Default Template',
@@ -201,7 +201,7 @@ serve(async (req: Request): Promise<Response> => {
       };
     }
     
-    const finalSubject = replaceTemplateVariables(emailRequest.subject || template.subject, templateData);
+    const finalSubject = replaceTemplateVariables(emailRequest.subject || (template?.subject ?? 'HESS Consortium Notification'), templateData);
     
     // For custom template types, use the provided template directly
     // For invoice type with invoice_content, enhance the template
@@ -224,8 +224,11 @@ serve(async (req: Request): Promise<Response> => {
         </div>
       `;
       finalHtml = replaceTemplateVariables(enhancedTemplate, templateData);
-    } else {
+    } else if (template) {
       finalHtml = replaceTemplateVariables(template.html, templateData);
+    } else {
+      // Fallback for custom emails without template
+      finalHtml = emailRequest.template || templateData.message || 'No content provided';
     }
 
     // Preflight: verify API key with domains.list()
