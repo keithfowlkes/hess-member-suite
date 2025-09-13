@@ -582,154 +582,147 @@ export default function MembershipFees() {
   };
 
   const handleSendSelectedInvoices = async () => {
-    if (selectedOrganizations.size === 0) {
-      toast({
-        title: "No organizations selected",
-        description: "Please select organizations to send invoices to.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSendingInvoices(true);
-    try {
-      const today = new Date();
-      const dueDate = new Date();
-      dueDate.setDate(today.getDate() + 30); // 30 days from now
-
-      const periodStart = new Date();
-      const periodEnd = new Date();
-      periodEnd.setFullYear(periodEnd.getFullYear() + 1); // 1 year period
-
-      let successCount = 0;
-      let errorCount = 0;
-      let sentCount = 0;
-
-      for (const organizationId of selectedOrganizations) {
-        try {
-          const organization = organizations.find(org => org.id === organizationId);
-          if (!organization) continue;
-
-          // Check if there's a prorated amount set for this organization
-          const proratedAmount = getProratedAmount(organizationId);
-          // Check if organization has a specific fee tier set
-          const feeTier = organizationFeeTiers[organizationId];
-          const tierAmount = feeTier ? getFeeAmountForTier(feeTier) : null;
-          const invoiceAmount = proratedAmount || tierAmount || organization.annual_fee_amount || 1000;
-
-          // Create the invoice
-          const newInvoice = await createInvoice({
-            organization_id: organizationId,
-            amount: invoiceAmount,
-            prorated_amount: proratedAmount,
-            due_date: format(dueDate, 'yyyy-MM-dd'),
-            period_start_date: format(periodStart, 'yyyy-MM-dd'),
-            period_end_date: format(periodEnd, 'yyyy-MM-dd'),
-            notes: proratedAmount 
-              ? `Prorated membership fee for ${organization.name} (${Math.round((proratedAmount / (organization.annual_fee_amount || 1000)) * 100)}% of annual fee)`
-              : `Annual membership fee for ${organization.name}`
-          });
-
-          successCount++;
-
-          // Now send the invoice automatically using centralized email delivery in background
-          try {
-            const toEmail = organization.email;
-            if (!toEmail) {
-              console.warn(`Organization ${organization.name} has no email, skipping send`);
-              continue;
-            }
-
-            // Add progressive delay to respect Resend's rate limit (2 requests/second max)
-            // Use 550ms delay between emails to be safely under the limit
-            const emailDelay = sentCount * 550; // Progressive delay for each email
-            
-            setTimeout(async () => {
-              try {
-                // Find the created invoice to get the invoice number
-                const createdInvoice = invoices.find(inv => 
-                  inv.organization_id === organizationId && 
-                  inv.status === 'draft'
-                ) || newInvoice;
-
-                if (!createdInvoice) {
-                  console.warn(`Could not find created invoice for ${organization.name}`);
-                  return;
-                }
-
-                const subject = `HESS Consortium - Invoice ${createdInvoice.invoice_number}`;
-
-                const invoiceEmailData = {
-                  organization_name: organization.name || '',
-                  invoice_number: createdInvoice.invoice_number,
-                  amount: `$${(invoiceAmount || 0).toLocaleString()}`,
-                  due_date: format(dueDate, 'yyyy-MM-dd'),
-                  period_start_date: format(periodStart, 'yyyy-MM-dd'),
-                  period_end_date: format(periodEnd, 'yyyy-MM-dd'),
-                  notes: createdInvoice.notes || ''
-                };
-
-                const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
-
-                const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
-                  body: {
-                    type: 'custom',
-                    to: toEmail,
-                    subject,
-                    template: invoiceHTML
-                  }
-                });
-                
-                if (error) {
-                  console.error(`Failed to send invoice email for ${organization.name}:`, error);
-                } else {
-                  // Mark invoice as sent
-                  await sendInvoice(createdInvoice.id);
-                  console.log(`Successfully sent invoice to ${organization.name}`);
-                }
-              } catch (sendError) {
-                console.error(`Failed to send invoice for organization ${organization.name}:`, sendError);
-              }
-            }, emailDelay);
-
-            sentCount++; // Increment for delay calculation
-          } catch (sendError) {
-            console.error(`Failed to prepare invoice send for organization ${organization.name}:`, sendError);
-          }
-        } catch (error) {
-          console.error(`Failed to create/send invoice for organization ${organizationId}:`, error);
-          errorCount++;
-        }
-      }
-
-      if (successCount > 0) {
+      if (selectedOrganizations.size === 0) {
         toast({
-          title: "Invoices created and sent successfully",
-          description: `${successCount} invoice${successCount !== 1 ? 's' : ''} created${sentCount > 0 ? ` and ${sentCount} sent` : ''}${errorCount > 0 ? `, ${errorCount} failed` : ''}.`
-        });
-      }
-
-      if (errorCount > 0 && successCount === 0) {
-        toast({
-          title: "Failed to create invoices",
-          description: "All invoice creation attempts failed. Please try again.",
+          title: "No organizations selected",
+          description: "Please select organizations to send invoices to.",
           variant: "destructive"
         });
+        return;
       }
 
-      // Clear selection after sending
-      setSelectedOrganizations(new Set());
-    } catch (error) {
-      console.error('Error creating/sending invoices:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create and send invoices. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSendingInvoices(false);
-    }
-  };
+      setIsSendingInvoices(true);
+      try {
+        const today = new Date();
+        const dueDate = new Date();
+        dueDate.setDate(today.getDate() + 30); // 30 days from now
+
+        const periodStart = new Date();
+        const periodEnd = new Date();
+        periodEnd.setFullYear(periodEnd.getFullYear() + 1); // 1 year period
+
+        let successCount = 0;
+        let errorCount = 0;
+        const emailsToSend = [];
+
+        for (const organizationId of selectedOrganizations) {
+          try {
+            const organization = organizations.find(org => org.id === organizationId);
+            if (!organization) continue;
+
+            // Check if there's a prorated amount set for this organization
+            const proratedAmount = getProratedAmount(organizationId);
+            // Check if organization has a specific fee tier set
+            const feeTier = organizationFeeTiers[organizationId];
+            const tierAmount = feeTier ? getFeeAmountForTier(feeTier) : null;
+            const invoiceAmount = proratedAmount || tierAmount || organization.annual_fee_amount || 1000;
+
+            // Create the invoice
+            const newInvoice = await createInvoice({
+              organization_id: organizationId,
+              amount: invoiceAmount,
+              prorated_amount: proratedAmount,
+              due_date: format(dueDate, 'yyyy-MM-dd'),
+              period_start_date: format(periodStart, 'yyyy-MM-dd'),
+              period_end_date: format(periodEnd, 'yyyy-MM-dd'),
+              notes: proratedAmount 
+                ? `Prorated membership fee for ${organization.name} (${Math.round((proratedAmount / (organization.annual_fee_amount || 1000)) * 100)}% of annual fee)`
+                : `Annual membership fee for ${organization.name}`
+            });
+
+            successCount++;
+
+            // Prepare email for bulk sending if organization has email
+            if (organization.email) {
+              // Get the invoice number - use a generated one if newInvoice doesn't have it
+              const invoiceNumber = newInvoice?.invoice_number || `INV-${Date.now()}`;
+              const subject = `HESS Consortium - Invoice ${invoiceNumber}`;
+
+              const invoiceEmailData = {
+                organization_name: organization.name || '',
+                invoice_number: invoiceNumber,
+                amount: `$${(invoiceAmount || 0).toLocaleString()}`,
+                due_date: format(dueDate, 'yyyy-MM-dd'),
+                period_start_date: format(periodStart, 'yyyy-MM-dd'),
+                period_end_date: format(periodEnd, 'yyyy-MM-dd'),
+                notes: newInvoice?.notes || ''
+              };
+
+              const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
+
+              emailsToSend.push({
+                to: organization.email,
+                subject,
+                template: invoiceHTML,
+                invoiceId: newInvoice?.id,
+                organizationName: organization.name
+              });
+            }
+          } catch (error) {
+            console.error(`Failed to create invoice for organization ${organizationId}:`, error);
+            errorCount++;
+          }
+        }
+
+        // Send all emails using the bulk email delivery system
+        if (emailsToSend.length > 0) {
+          try {
+            const { data, error } = await supabase.functions.invoke('bulk-email-delivery', {
+              body: {
+                emails: emailsToSend,
+                type: 'invoice_bulk'
+              }
+            });
+
+            if (error) {
+              console.error('Bulk email delivery failed:', error);
+              toast({
+                title: "Invoices created with email issues",
+                description: `${successCount} invoice${successCount !== 1 ? 's' : ''} created, but there were issues sending emails. Check the logs for details.`,
+                variant: "destructive"
+              });
+            } else {
+              toast({
+                title: "Invoices created and queued for sending",
+                description: `${successCount} invoice${successCount !== 1 ? 's' : ''} created and ${emailsToSend.length} email${emailsToSend.length !== 1 ? 's' : ''} queued for delivery with rate limiting.`
+              });
+            }
+          } catch (emailError) {
+            console.error('Failed to invoke bulk email delivery:', emailError);
+            toast({
+              title: "Invoices created but emails failed",
+              description: `${successCount} invoice${successCount !== 1 ? 's' : ''} created successfully, but email delivery failed.`,
+              variant: "destructive"
+            });
+          }
+        } else {
+          toast({
+            title: "Invoices created",
+            description: `${successCount} invoice${successCount !== 1 ? 's' : ''} created successfully. No emails sent (organizations missing email addresses).`
+          });
+        }
+
+        if (errorCount > 0 && successCount === 0) {
+          toast({
+            title: "Failed to create invoices",
+            description: "All invoice creation attempts failed. Please try again.",
+            variant: "destructive"
+          });
+        }
+
+        // Clear selection after processing
+        setSelectedOrganizations(new Set());
+      } catch (error) {
+        console.error('Error creating/sending invoices:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create and send invoices. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsSendingInvoices(false);
+      }
+    };
 
   const handleMarkAsPaid = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
