@@ -1562,6 +1562,12 @@ export default function MembershipFees() {
                                     <CalendarIcon className="h-4 w-4 mr-1" />
                                     Due: {format(new Date(invoice.due_date), 'MMM dd, yyyy')}
                                   </div>
+                                  {invoice.sent_date && (
+                                    <div className="flex items-center">
+                                      <Mail className="h-4 w-4 mr-1" />
+                                      Sent: {format(new Date(invoice.sent_date), 'MMM dd, yyyy')}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
