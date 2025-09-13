@@ -16,18 +16,30 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   }
 });
 
-// Test basic connection
+// Test basic connection and clear any problematic data
 (async () => {
   try {
     console.log('Testing Supabase connection...');
     console.log('Supabase URL:', SUPABASE_URL);
     console.log('API Key (first 20 chars):', SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...');
     
-    // Clear any corrupted session data
+    // Clear any corrupted session data and potential monitoring artifacts
     const clearSession = () => {
+      // Clear Supabase auth tokens
       localStorage.removeItem('sb-tyovnvuluyosjnabrzjc-auth-token');
       localStorage.removeItem('supabase.auth.token');
-      console.log('Cleared potentially corrupted session data');
+      
+      // Clear any potential monitoring or log-related cached data
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('edge-function') || key.includes('logs') || key.includes('monitoring'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      console.log('Cleared potentially corrupted session and monitoring data');
     };
     
     // Test connection with a simple query
@@ -40,8 +52,21 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     }
   } catch (err) {
     console.error('Connection test failed:', err);
-    // Clear session data on connection failure
+    // Clear all localStorage except essential items on connection failure
+    const essentialKeys = ['theme', 'language'];
+    const allData: Record<string, string> = {};
+    essentialKeys.forEach(key => {
+      const value = localStorage.getItem(key);
+      if (value) allData[key] = value;
+    });
+    
     localStorage.clear();
-    console.log('Cleared all localStorage due to connection failure');
+    
+    // Restore essential items
+    Object.entries(allData).forEach(([key, value]) => {
+      localStorage.setItem(key, value);
+    });
+    
+    console.log('Cleared localStorage and restored essential data due to connection failure');
   }
 })();
