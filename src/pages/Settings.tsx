@@ -96,6 +96,10 @@ export default function Settings() {
   const [emailConfigLoading, setEmailConfigLoading] = useState(false);
   const [apiKeyLoading, setApiKeyLoading] = useState(false);
   
+  // TinyMCE API Key state
+  const [tinymceApiKey, setTinymceApiKey] = useState('');
+  const [tinymceKeyLoading, setTinymceKeyLoading] = useState(false);
+  
   // reCaptcha enable/disable state
   const { data: recaptchaEnabledSetting } = useSystemSetting('recaptcha_enabled');
   const [recaptchaEnabled, setRecaptchaEnabled] = useState(true);
@@ -285,6 +289,56 @@ export default function Settings() {
       });
     } finally {
       setApiKeyLoading(false);
+    }
+  };
+
+  // TinyMCE API key management
+  const handleUpdateTinymceApiKey = async () => {
+    if (!tinymceApiKey.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid TinyMCE API key.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setTinymceKeyLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('update-tinymce-key', {
+        body: {
+          apiKey: tinymceApiKey.trim()
+        }
+      });
+
+      if (error) {
+        console.error('TinyMCE API key update error:', error);
+        toast({
+          title: 'TinyMCE Key Update Failed',
+          description: error.message || 'Failed to update TinyMCE API key',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      if (data.success) {
+        toast({
+          title: 'TinyMCE Key Updated',
+          description: 'TinyMCE API key has been updated successfully. The editor will use the new key.',
+        });
+        setTinymceApiKey(''); // Clear for security
+      } else {
+        throw new Error(data.message || 'Update failed');
+      }
+    } catch (error: any) {
+      console.error('TinyMCE API key update error:', error);
+      toast({
+        title: 'Configuration Error',
+        description: error.message || 'Failed to update TinyMCE API key',
+        variant: 'destructive'
+      });
+    } finally {
+      setTinymceKeyLoading(false);
     }
   };
 
@@ -818,12 +872,11 @@ export default function Settings() {
                         id="tinymce-key"
                         type="password"
                         placeholder="Enter your TinyMCE API key"
-                        value=""
-                        onChange={() => {}}
-                        disabled
+                        value={tinymceApiKey}
+                        onChange={(e) => setTinymceApiKey(e.target.value)}
                       />
                       <p className="text-sm text-muted-foreground">
-                        TinyMCE API key is managed securely through Supabase secrets. Get your API key from{' '}
+                        Get your TinyMCE API key from{' '}
                         <a 
                           href="https://www.tiny.cloud/auth/signup/" 
                           target="_blank" 
@@ -835,28 +888,45 @@ export default function Settings() {
                       </p>
                     </div>
 
-                    <div className="bg-green-50 p-4 rounded-md border-l-4 border-green-400">
-                      <h4 className="font-medium text-green-900 mb-2">✓ API Key Configured</h4>
-                      <p className="text-sm text-green-800">
-                        Your TinyMCE API key has been securely stored and is being used by the email template editor.
-                        The rich text editor in the messaging configuration now has full functionality including image resizing capabilities.
-                      </p>
+                    <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
+                      <h4 className="font-medium text-blue-900 mb-2">Setup Instructions:</h4>
+                      <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                        <li>Visit the TinyMCE Cloud Dashboard and sign up/log in</li>
+                        <li>Create a new application or use an existing one</li>
+                        <li>Copy your API key from the dashboard</li>
+                        <li>Paste it in the field above and save</li>
+                        <li>The rich text editor will now have full functionality</li>
+                      </ol>
                     </div>
 
-                    <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
-                      <h4 className="font-medium text-blue-900 mb-2">Setup Information:</h4>
-                      <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-                        <li>TinyMCE provides advanced rich text editing for email templates</li>
-                        <li>Includes built-in image resizing and formatting tools</li>
-                        <li>API key is required for production use beyond the free tier</li>
-                        <li>The key is securely stored in Supabase edge function environment</li>
+                    <div className="bg-green-50 p-4 rounded-md border-l-4 border-green-400">
+                      <h4 className="font-medium text-green-900 mb-2">TinyMCE Features:</h4>
+                      <ul className="text-sm text-green-800 space-y-1 list-disc list-inside">
+                        <li>Advanced rich text editing for email templates</li>
+                        <li>Built-in image upload, resize, and formatting tools</li>
+                        <li>Professional toolbar with formatting options</li>
+                        <li>Drag & drop file support</li>
+                        <li>Right-click context menus for images</li>
                       </ul>
                     </div>
 
-                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium">Editor Status: Active</span>
-                    </div>
+                    <Button 
+                      onClick={handleUpdateTinymceApiKey}
+                      disabled={tinymceKeyLoading || !tinymceApiKey.trim()}
+                      className="w-full sm:w-auto"
+                    >
+                      {tinymceKeyLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Save TinyMCE API Key
+                        </>
+                      )}
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>

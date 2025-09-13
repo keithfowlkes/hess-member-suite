@@ -20,14 +20,26 @@ const TinyMCEEditor: React.FC<TinyMCEEditorProps> = ({
   useEffect(() => {
     const fetchApiKey = async () => {
       try {
+        // First try to get from the edge function (new method)
         const { data, error } = await supabase.functions.invoke('get-tinymce-key');
-        if (error) {
-          console.error('Error fetching TinyMCE API key:', error);
+        if (!error && data?.apiKey) {
+          setApiKey(data.apiKey);
           return;
         }
-        if (data?.apiKey) {
-          setApiKey(data.apiKey);
+
+        // Fallback to system settings (for backward compatibility)
+        const { data: settingsData, error: settingsError } = await supabase
+          .from('system_settings')
+          .select('setting_value')
+          .eq('setting_key', 'tinymce_api_key')
+          .maybeSingle();
+
+        if (!settingsError && settingsData?.setting_value) {
+          setApiKey(settingsData.setting_value);
+          return;
         }
+
+        console.log('No TinyMCE API key found, using default');
       } catch (error) {
         console.error('Error fetching TinyMCE API key:', error);
       }
