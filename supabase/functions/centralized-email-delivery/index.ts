@@ -179,7 +179,7 @@ async function logEmailActivity(emailData: EmailRequest, result: any, success: b
     await supabase.from('email_logs').insert({
       email_type: emailData.type,
       recipient: Array.isArray(emailData.to) ? emailData.to.join(', ') : emailData.to,
-      subject: emailData.subject || EMAIL_TEMPLATES[typeKey]?.subject || 'No Subject',
+      subject: emailData.subject || 'Profile Update Notification',
       success,
       result_data: result,
       sent_at: new Date().toISOString()

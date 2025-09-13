@@ -263,7 +263,7 @@ serve(async (req) => {
         console.log('[APPROVE-REASSIGNMENT] Sending notification email to', newContactEmail);
         
         const emailPayload = {
-          type: 'member_info_update',
+          type: 'profile_update_message_template',
           to: newContactEmail,
           data: {
             primary_contact_name: `${registration?.first_name || ''} ${registration?.last_name || ''}`.trim() || 'Member',
