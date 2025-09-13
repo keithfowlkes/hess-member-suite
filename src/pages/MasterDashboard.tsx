@@ -423,7 +423,6 @@ const MasterDashboard = () => {
       value: pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length,
       icon: Clock,
       color: 'text-orange-600',
-      description: 'Organizations, registrations & profile edits awaiting review',
       clickable: true,
       onClick: () => setShowPendingApprovalsModal(true)
     },
@@ -432,7 +431,6 @@ const MasterDashboard = () => {
       value: invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length,
       icon: Mail,
       color: 'text-blue-600',
-      description: 'Pending email invitations',
       clickable: true,
       onClick: () => setShowActiveInvitationsModal(true)
     },
@@ -441,15 +439,13 @@ const MasterDashboard = () => {
       value: users.length,
       icon: Shield,
       color: 'text-purple-600',
-      description: `Admin users in system`,
       clickable: false
     },
     {
       title: 'Total Student FTE',
       value: statsLoading ? '...' : dashboardStats.totalStudentFte.toLocaleString(),
       icon: BarChart3,
-      color: 'text-indigo-600',
-      description: 'Across all organizations'
+      color: 'text-indigo-600'
     }
   ];
 
@@ -791,7 +787,6 @@ const MasterDashboard = () => {
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-medium text-muted-foreground truncate">{stat.title}</p>
                             <p className="text-xl font-bold truncate">{stat.value}</p>
-                            <p className="text-xs text-muted-foreground mt-1 truncate">{stat.description}</p>
                             {stat.clickable && (
                               <p className="text-xs text-primary mt-1">Click for more</p>
                             )}
@@ -806,9 +801,20 @@ const MasterDashboard = () => {
               {/* System Health Status */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5" />
-                    System Status
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-5 w-5" />
+                      System Status
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => window.location.reload()}
+                      className="text-xs"
+                    >
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Refresh
+                    </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1188,7 +1194,7 @@ const MasterDashboard = () => {
                               <div>
                                 <p className="font-medium">{user.email}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  ID: {user.id}
+                                  {user.organization || 'No organization'}
                                 </p>
                               </div>
                             </TableCell>

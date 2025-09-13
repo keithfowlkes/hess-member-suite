@@ -227,9 +227,8 @@ export function SystemHealthStatus() {
   useEffect(() => {
     runHealthChecks();
     
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(runHealthChecks, 30000);
-    return () => clearInterval(interval);
+    // Only run on initial load, no auto-refresh
+    // Manual refresh available via button in MasterDashboard
   }, []);
 
   const getStatusIcon = (status: string) => {
