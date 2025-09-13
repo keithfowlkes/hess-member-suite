@@ -1760,7 +1760,7 @@ const MasterDashboard = () => {
                       <CardHeader>
                         <CardTitle>Welcome Message for Approved Organizations</CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          Customize the welcome email sent to newly approved organizations. Use variables like {'{{'}`primary_contact_name`{'}}'} and {'{{'}`organization_name`{'}}'} for personalization.
+                          Customize the welcome email sent to newly approved organizations. Use variables like {"{primary_contact_name}"} and {"{organization_name}"} for personalization.
                         </p>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -1792,12 +1792,12 @@ const MasterDashboard = () => {
                           <div className="mt-4 p-3 bg-muted rounded-lg">
                             <p className="text-sm font-medium mb-2">Available Variables:</p>
                             <div className="grid grid-cols-2 gap-2 text-xs">
-                              <code>{'{{'}`primary_contact_name`{'}}'}</code>
-                              <code>{'{{'}`organization_name`{'}}'}</code>
-                              <code>{'{{'}`secondary_contact_email`{'}}'}</code>
-                              <code>{'{{'}`student_fte`{'}}'}</code>
-                              <code>{'{{'}`address`{'}}'}</code>
-                              <code>{'{{'}`city`{'}}'}, {'{{'}`state`{'}}'} {'{{'}`zip_code`{'}}'}</code>
+                              <code>{"{primary_contact_name}"}</code>
+                              <code>{"{organization_name}"}</code>
+                              <code>{"{secondary_contact_email}"}</code>
+                              <code>{"{student_fte}"}</code>
+                              <code>{"{address}"}</code>
+                              <code>{"{city}"}, {"{state}"} {"{zip_code}"}</code>
                             </div>
                           </div>
                         </div>
@@ -1818,7 +1818,7 @@ const MasterDashboard = () => {
                         <CardTitle>Profile Update Message for Member Organizations</CardTitle>
                         <p className="text-sm text-muted-foreground">
                           Customize the profile update email sent to member organizations when their profile changes are approved. 
-                          Use variables like {'{{'}`primary_contact_name`{'}}'} and {'{{'}`organization_name`{'}}'} for personalization.
+                          Use variables like {"{primary_contact_name}"} and {"{organization_name}"} for personalization.
                         </p>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -1832,9 +1832,9 @@ const MasterDashboard = () => {
                         <div className="text-sm text-muted-foreground">
                           <p><strong>Available Variables:</strong></p>
                           <ul className="list-disc list-inside space-y-1">
-                            <li><code>{'{{'}`organization_name`{'}}'}</code> - Organization name</li>
-                            <li><code>{'{{'}`primary_contact_name`{'}}'}</code> - Primary contact name</li>
-                            <li><code>{'{{'}`custom_message`{'}}'}</code> - Custom admin message</li>
+                            <li><code>{"{organization_name}"}</code> - Organization name</li>
+                            <li><code>{"{primary_contact_name}"}</code> - Primary contact name</li>
+                            <li><code>{"{custom_message}"}</code> - Custom admin message</li>
                           </ul>
                         </div>
                         <Button 
@@ -1854,7 +1854,7 @@ const MasterDashboard = () => {
                         <CardTitle>Analytics Feedback Email Template</CardTitle>
                         <p className="text-sm text-muted-foreground">
                           Customize the email template sent to admins when members submit analytics feedback.
-                          Use variables like {'{{'}`member_name`{'}}'} and {'{{'}`feedback_message`{'}}'} for personalization.
+                          Use variables like {"{member_name}"} and {"{feedback_message}"} for personalization.
                         </p>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -1868,11 +1868,11 @@ const MasterDashboard = () => {
                         <div className="text-sm text-muted-foreground">
                           <p><strong>Available Variables:</strong></p>
                           <ul className="list-disc list-inside space-y-1">
-                            <li><code>{'{{'}`member_name`{'}}'}</code> - Member name</li>
-                            <li><code>{'{{'}`member_email`{'}}'}</code> - Member email</li>
-                            <li><code>{'{{'}`organization_name`{'}}'}</code> - Organization name</li>
-                            <li><code>{'{{'}`timestamp`{'}}'}</code> - Submission timestamp</li>
-                            <li><code>{'{{'}`feedback_message`{'}}'}</code> - Feedback content</li>
+                            <li><code>{"{member_name}"}</code> - Member name</li>
+                            <li><code>{"{member_email}"}</code> - Member email</li>
+                            <li><code>{"{organization_name}"}</code> - Organization name</li>
+                            <li><code>{"{timestamp}"}</code> - Submission timestamp</li>
+                            <li><code>{"{feedback_message}"}</code> - Feedback content</li>
                           </ul>
                         </div>
                         <Button 
@@ -1893,7 +1893,7 @@ const MasterDashboard = () => {
                           <CardTitle>Invoice Email Template</CardTitle>
                           <p className="text-sm text-muted-foreground">
                             Customize the email template sent with membership invoices.
-                            Use variables like {'{{'}`organization_name`{'}}'} and {'{{'}`invoice_number`{'}}'} for personalization.
+                            Use variables like {"{organization_name}"} and {"{invoice_number}"} for personalization.
                           </p>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -1907,10 +1907,10 @@ const MasterDashboard = () => {
                           <div className="text-sm text-muted-foreground">
                             <p><strong>Available Variables:</strong></p>
                             <ul className="list-disc list-inside space-y-1">
-                              <li><code>{'{{'}`organization_name`{'}}'}</code> - Organization name</li>
-                              <li><code>{'{{'}`invoice_number`{'}}'}</code> - Invoice number</li>
-                              <li><code>{'{{'}`amount`{'}}'}</code> - Invoice amount</li>
-                              <li><code>{'{{'}`due_date`{'}}'}</code> - Due date</li>
+                              <li><code>{"{organization_name}"}</code> - Organization name</li>
+                              <li><code>{"{invoice_number}"}</code> - Invoice number</li>
+                              <li><code>{"{amount}"}</code> - Invoice amount</li>
+                              <li><code>{"{due_date}"}</code> - Due date</li>
                             </ul>
                           </div>
                           <Button 
@@ -1940,10 +1940,10 @@ const MasterDashboard = () => {
                           <div className="text-sm text-muted-foreground">
                             <p><strong>Available Variables:</strong></p>
                             <ul className="list-disc list-inside space-y-1">
-                              <li><code>{'{{'}`organization_name`{'}}'}</code> - Organization name</li>
-                              <li><code>{'{{'}`invoice_number`{'}}'}</code> - Invoice number</li>
-                              <li><code>{'{{'}`amount`{'}}'}</code> - Outstanding amount</li>
-                              <li><code>{'{{'}`due_date`{'}}'}</code> - Original due date</li>
+                              <li><code>{"{organization_name}"}</code> - Organization name</li>
+                              <li><code>{"{invoice_number}"}</code> - Invoice number</li>
+                              <li><code>{"{amount}"}</code> - Outstanding amount</li>
+                              <li><code>{"{due_date}"}</code> - Original due date</li>
                             </ul>
                           </div>
                           <Button 
@@ -1956,54 +1956,35 @@ const MasterDashboard = () => {
                       </Card>
                     </div>
                   </TabsContent>
+
+                  {/* CC Recipients Subtab */}
+                  <TabsContent value="cc-recipients" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>CC Recipients Configuration</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Configure additional recipients for organization emails (welcome messages, approvals, etc.)
+                        </p>
+                      </CardHeader>
                       <CardContent className="space-y-4">
-                        <div>
-                          <Label htmlFor="profile-update-message">Profile Update Message Template</Label>
-                          <div className="mt-2">
-                            <ReactQuill
-                              theme="snow"
-                              value={profileUpdateMessage}
-                              onChange={setProfileUpdateMessage}
-                              modules={{
-                                toolbar: [
-                                  [{ 'header': [1, 2, 3, false] }],
-                                  ['bold', 'italic', 'underline', 'strike'],
-                                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                                  [{ 'color': [] }, { 'background': [] }],
-                                  ['link', 'image'],
-                                  ['clean']
-                                ],
-                              }}
-                              formats={[
-                                'header', 'bold', 'italic', 'underline', 'strike',
-                                'list', 'bullet', 'color', 'background',
-                                'link', 'image'
-                              ]}
-                              style={{ minHeight: '300px' }}
-                            />
-                          </div>
-                          <div className="mt-4 p-3 bg-muted rounded-lg">
-                            <p className="text-sm font-medium mb-2">Available Variables:</p>
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                              <code>{'{{'}`primary_contact_name`{'}}'}</code>
-                              <code>{'{{'}`organization_name`{'}}'}</code>
-                              <code>{'{{'}`secondary_contact_email`{'}}'}</code>
-                              <code>{'{{'}`student_fte`{'}}'}</code>
-                              <code>{'{{'}`address`{'}}'}</code>
-                              <code>{'{{'}`city`{'}}'}, {'{{'}`state`{'}}'} {'{{'}`zip_code`{'}}'}</code>
-                            </div>
-                          </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cc-recipients">CC Email Recipients (comma-separated)</Label>
+                          <Input
+                            id="cc-recipients"
+                            value={ccRecipients}
+                            onChange={(e) => setCcRecipients(e.target.value)}
+                            placeholder="email1@example.com, email2@example.com"
+                          />
                         </div>
                         <Button 
-                          onClick={handleSaveProfileUpdateMessage}
-                          disabled={savingProfileUpdateMessage}
+                          onClick={handleSaveCcRecipients}
+                          disabled={savingCcRecipients}
                         >
-                          {savingProfileUpdateMessage ? "Saving..." : "Save Profile Update Message"}
+                          {savingCcRecipients ? "Saving..." : "Save CC Recipients"}
                         </Button>
                       </CardContent>
                     </Card>
                   </TabsContent>
-
                 </Tabs>
               </TabsContent>
 
