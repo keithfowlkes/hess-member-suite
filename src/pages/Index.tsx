@@ -30,6 +30,7 @@ const Index = () => {
     const fetchUserOrganization = async () => {
       if (user?.id) {
         const org = await getUserOrganization(user.id);
+        console.log('Fetched user organization:', org);
         setUserOrganization(org);
       }
     };
@@ -86,7 +87,7 @@ const Index = () => {
                       {user.email}
                     </a>
                     {userOrganization?.name && (
-                      <span className="ml-2">
+                      <span className="ml-2 text-foreground">
                         • <span className="font-medium">{userOrganization.name}</span>
                       </span>
                     )}
