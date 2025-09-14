@@ -132,19 +132,29 @@ export function useUnifiedProfile(userId?: string) {
 
       // If there's an organization, submit organization profile edit request
       if (data.organization) {
+        // Create properly merged updated data
+        const updatedOrganizationData = updates.organization 
+          ? { ...data.organization, ...updates.organization }
+          : data.organization;
+        
+        const updatedProfileData = updates.profile 
+          ? { ...data.profile, ...updates.profile }
+          : data.profile;
+
+        console.log('📄 Original org data being stored:', data.organization);
+        console.log('📄 Updated org data being stored:', updatedOrganizationData);
+        console.log('👤 Original profile data being stored:', data.profile);
+        console.log('👤 Updated profile data being stored:', updatedProfileData);
+
         const { error } = await supabase
           .from('organization_profile_edit_requests')
           .insert({
             organization_id: data.organization.id,
             requested_by: data.profile.user_id,
             original_organization_data: data.organization,
-            updated_organization_data: updates.organization 
-              ? { ...data.organization, ...updates.organization } 
-              : data.organization,
+            updated_organization_data: updatedOrganizationData,
             original_profile_data: data.profile,
-            updated_profile_data: updates.profile 
-              ? { ...data.profile, ...updates.profile } 
-              : data.profile
+            updated_profile_data: updatedProfileData
           });
 
         if (error) throw error;

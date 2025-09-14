@@ -91,16 +91,6 @@ export function useOrganizationProfileEditRequests() {
       }));
       
       console.log('Profile edit requests loaded:', enrichedData?.length || 0);
-      
-      // Debug: Log the actual request data structure
-      if (enrichedData && enrichedData.length > 0) {
-        console.log('🔍 First profile edit request structure:', enrichedData[0]);
-        console.log('📄 Original organization data keys:', Object.keys(enrichedData[0].original_organization_data || {}));
-        console.log('📄 Updated organization data keys:', Object.keys(enrichedData[0].updated_organization_data || {}));
-        console.log('👤 Original profile data keys:', Object.keys(enrichedData[0].original_profile_data || {}));
-        console.log('👤 Updated profile data keys:', Object.keys(enrichedData[0].updated_profile_data || {}));
-      }
-      
       setRequests(enrichedData || []);
     } catch (error: any) {
       console.error('Error fetching profile edit requests:', error);
