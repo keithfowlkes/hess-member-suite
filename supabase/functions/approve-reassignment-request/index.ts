@@ -219,8 +219,8 @@ serve(async (req) => {
 
     console.log('[APPROVE-REASSIGNMENT] Successfully updated organization');
 
-    // 5) Update the profile with new contact information if we have registration data
-    if (newContactProfileId && registration) {
+    // 5) Update the profile with new contact information
+    if (newContactProfileId) {
       console.log('[APPROVE-REASSIGNMENT] Updating profile with new contact information');
       
       const allowedProfileKeys = [
@@ -236,10 +236,12 @@ serve(async (req) => {
       // Prepare profile update payload from both registration data and organization data
       const profileUpdatePayload: Record<string, any> = {};
       
-      // Update from registration data
-      if (registration.first_name) profileUpdatePayload.first_name = registration.first_name;
-      if (registration.last_name) profileUpdatePayload.last_name = registration.last_name;
-      if (registration.is_private_nonprofit !== undefined) profileUpdatePayload.is_private_nonprofit = registration.is_private_nonprofit;
+      // Update from registration data if available (for new users)
+      if (registration) {
+        if (registration.first_name) profileUpdatePayload.first_name = registration.first_name;
+        if (registration.last_name) profileUpdatePayload.last_name = registration.last_name;
+        if (registration.is_private_nonprofit !== undefined) profileUpdatePayload.is_private_nonprofit = registration.is_private_nonprofit;
+      }
       
       // Update from organization data (these are typically stored in both places)
       Object.entries(newOrgData || {}).forEach(([key, value]) => {
@@ -260,6 +262,9 @@ serve(async (req) => {
       if (newOrgData?.state) profileUpdatePayload.state = newOrgData.state;
       if (newOrgData?.zip_code) profileUpdatePayload.zip = newOrgData.zip_code;
 
+      // Always update the profile's updated_at timestamp
+      profileUpdatePayload.updated_at = new Date().toISOString();
+
       const { error: updateProfileErr } = await supabaseAdmin
         .from('profiles')
         .update(profileUpdatePayload)
@@ -268,6 +273,10 @@ serve(async (req) => {
       if (updateProfileErr) {
         console.error('[APPROVE-REASSIGNMENT] Failed updating profile', updateProfileErr);
         // Don't fail the entire request for profile update errors, just log
+      } else {
+        console.log('[APPROVE-REASSIGNMENT] Successfully updated profile');
+      }
+    }
       } else {
         console.log('[APPROVE-REASSIGNMENT] Successfully updated profile');
       }
