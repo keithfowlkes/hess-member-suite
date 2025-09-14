@@ -219,7 +219,61 @@ serve(async (req) => {
 
     console.log('[APPROVE-REASSIGNMENT] Successfully updated organization');
 
-    // 5) Mark the reassignment request as approved
+    // 5) Update the profile with new contact information if we have registration data
+    if (newContactProfileId && registration) {
+      console.log('[APPROVE-REASSIGNMENT] Updating profile with new contact information');
+      
+      const allowedProfileKeys = [
+        'first_name', 'last_name', 'email', 'phone', 'organization', 'address', 'city', 'state', 'zip',
+        'primary_contact_title', 'secondary_first_name', 'secondary_last_name', 'secondary_contact_title', 
+        'secondary_contact_email', 'student_information_system', 'financial_system', 'financial_aid',
+        'hcm_hr', 'payroll_system', 'purchasing_system', 'housing_management', 'learning_management',
+        'admissions_crm', 'alumni_advancement_crm', 'primary_office_apple', 'primary_office_asus',
+        'primary_office_dell', 'primary_office_hp', 'primary_office_microsoft', 'primary_office_other',
+        'primary_office_other_details', 'other_software_comments', 'student_fte', 'is_private_nonprofit'
+      ];
+
+      // Prepare profile update payload from both registration data and organization data
+      const profileUpdatePayload: Record<string, any> = {};
+      
+      // Update from registration data
+      if (registration.first_name) profileUpdatePayload.first_name = registration.first_name;
+      if (registration.last_name) profileUpdatePayload.last_name = registration.last_name;
+      if (registration.is_private_nonprofit !== undefined) profileUpdatePayload.is_private_nonprofit = registration.is_private_nonprofit;
+      
+      // Update from organization data (these are typically stored in both places)
+      Object.entries(newOrgData || {}).forEach(([key, value]) => {
+        if (allowedProfileKeys.includes(key) && value !== undefined) {
+          profileUpdatePayload[key] = value;
+        }
+      });
+
+      // Ensure email and organization name are set
+      profileUpdatePayload.email = newContactEmail;
+      if (newOrgData?.name) {
+        profileUpdatePayload.organization = newOrgData.name;
+      }
+
+      // Map organization address fields to profile fields
+      if (newOrgData?.address_line_1) profileUpdatePayload.address = newOrgData.address_line_1;
+      if (newOrgData?.city) profileUpdatePayload.city = newOrgData.city;
+      if (newOrgData?.state) profileUpdatePayload.state = newOrgData.state;
+      if (newOrgData?.zip_code) profileUpdatePayload.zip = newOrgData.zip_code;
+
+      const { error: updateProfileErr } = await supabaseAdmin
+        .from('profiles')
+        .update(profileUpdatePayload)
+        .eq('id', newContactProfileId);
+
+      if (updateProfileErr) {
+        console.error('[APPROVE-REASSIGNMENT] Failed updating profile', updateProfileErr);
+        // Don't fail the entire request for profile update errors, just log
+      } else {
+        console.log('[APPROVE-REASSIGNMENT] Successfully updated profile');
+      }
+    }
+
+    // 6) Mark the reassignment request as approved
     const { error: updReqErr } = await supabaseAdmin
       .from('organization_reassignment_requests')
       .update({
@@ -235,7 +289,7 @@ serve(async (req) => {
       console.log('[APPROVE-REASSIGNMENT] Request marked as approved');
     }
 
-    // 6) Clean up old user if they exist and are different from new user
+    // 7) Clean up old user if they exist and are different from new user
     if (existingOrg?.profiles?.user_id && existingOrg.profiles.user_id !== newUserId) {
       const oldUserId = existingOrg.profiles.user_id;
       console.log('[APPROVE-REASSIGNMENT] Cleaning up old user', oldUserId);
@@ -308,7 +362,7 @@ serve(async (req) => {
       console.error('[APPROVE-REASSIGNMENT] Email notification exception', emailErr);
     }
 
-    // 8) Send password reset email for new users
+    // 9) Send password reset email for new users
     if (newUserId && registration) {
       try {
         console.log('[APPROVE-REASSIGNMENT] Sending password reset email to', newContactEmail);
