@@ -489,87 +489,33 @@ const MasterDashboard = () => {
   const createProfileEditComparisonData = (request) => {
     if (!request) return { originalData: null };
 
-    const organizationChanges = [];
-    const profileChanges = [];
+    // Create flattened original data combining organization and profile data
+    const originalData = {
+      ...(request.original_organization_data || {}),
+      ...(request.original_profile_data || {})
+    };
 
-    // Compare organization data
-    if (request.original_organization_data && request.updated_organization_data) {
-      const orgFields = [
-        { key: 'name', label: 'Organization Name' },
-        { key: 'address_line_1', label: 'Address' },
-        { key: 'city', label: 'City' },
-        { key: 'state', label: 'State' },
-        { key: 'zip_code', label: 'ZIP Code' },
-        { key: 'phone', label: 'Phone' },
-        { key: 'email', label: 'Email' },
-        { key: 'website', label: 'Website' },
-        { key: 'student_fte', label: 'Student FTE', type: 'number' },
-        { key: 'student_information_system', label: 'Student Information System' },
-        { key: 'financial_system', label: 'Financial System' },
-        { key: 'financial_aid', label: 'Financial Aid' },
-        { key: 'hcm_hr', label: 'HCM/HR System' },
-        { key: 'payroll_system', label: 'Payroll System' },
-        { key: 'purchasing_system', label: 'Purchasing System' },
-        { key: 'housing_management', label: 'Housing Management' },
-        { key: 'learning_management', label: 'Learning Management' },
-        { key: 'admissions_crm', label: 'Admissions CRM' },
-        { key: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM' }
-      ];
+    // Create flattened updated data combining organization and profile data  
+    const updatedData = {
+      ...(request.updated_organization_data || {}),
+      ...(request.updated_profile_data || {})
+    };
 
-      orgFields.forEach(field => {
-        const oldValue = request.original_organization_data[field.key];
-        const newValue = request.updated_organization_data[field.key];
-        if (oldValue !== newValue) {
-          organizationChanges.push({
-            field: field.key,
-            label: field.label,
-            oldValue: oldValue || '',
-            newValue: newValue || '',
-            ...(field.type && { type: field.type })
-          });
-        }
-      });
-    }
-
-    // Compare profile data
-    if (request.original_profile_data && request.updated_profile_data) {
-      const profileFields = [
-        { key: 'first_name', label: 'First Name' },
-        { key: 'last_name', label: 'Last Name' },
-        { key: 'email', label: 'Email' },
-        { key: 'phone', label: 'Phone' },
-        { key: 'primary_contact_title', label: 'Title' },
-        { key: 'secondary_first_name', label: 'Secondary Contact First Name' },
-        { key: 'secondary_last_name', label: 'Secondary Contact Last Name' },
-        { key: 'secondary_contact_title', label: 'Secondary Contact Title' },
-        { key: 'secondary_contact_email', label: 'Secondary Contact Email' }
-      ];
-
-      profileFields.forEach(field => {
-        const oldValue = request.original_profile_data[field.key];
-        const newValue = request.updated_profile_data[field.key];
-        if (oldValue !== newValue) {
-          profileChanges.push({
-            field: field.key,
-            label: field.label,
-            oldValue: oldValue || '',
-            newValue: newValue || ''
-          });
-        }
+    // Add special handling for contact changes (email changes are critical)
+    const contactChanges = [];
+    if (request.original_profile_data?.email !== request.updated_profile_data?.email) {
+      contactChanges.push({
+        field: 'email',
+        label: 'Primary Contact Email',
+        oldValue: request.original_profile_data?.email || '',
+        newValue: request.updated_profile_data?.email || ''
       });
     }
 
     return {
-      organizationChanges,
-      profileChanges,
-      originalData: {
-        organization: request.original_organization_data,
-        profile: request.original_profile_data
-      },
-      updatedData: {
-        organization: request.updated_organization_data,
-        profile: request.updated_profile_data
-      }
+      originalData,
+      updatedData,
+      contactChanges
     };
   };
 
