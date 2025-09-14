@@ -11,6 +11,10 @@ const MemberSystemMessages = () => {
   const { data: messages, isLoading } = useSystemMessages(true); // Only active messages
   const [dismissedMessages, setDismissedMessages] = useState<Set<string>>(new Set());
 
+  // Debug logging
+  console.log('MemberSystemMessages - Raw messages:', messages);
+  console.log('MemberSystemMessages - Messages with email_type:', messages?.filter(m => (m as any).email_type));
+
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
       case 'urgent': return <AlertTriangle className="h-5 w-5 text-red-500" />;
@@ -57,8 +61,10 @@ const MemberSystemMessages = () => {
   // Filter out email templates (messages with email_type) and dismissed messages
   const visibleMessages = messages?.filter(message => 
     !dismissedMessages.has(message.id) && 
-    !(message as any).email_type // Only show messages without email_type (not email templates)
+    !message.email_type // Only show messages without email_type (not email templates)
   ) || [];
+
+  console.log('MemberSystemMessages - Visible messages after filtering:', visibleMessages);
 
   if (visibleMessages.length === 0) {
     return null; // Don't render anything if no messages

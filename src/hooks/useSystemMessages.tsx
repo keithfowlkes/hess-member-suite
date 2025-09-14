@@ -11,6 +11,7 @@ export interface SystemMessage {
   updated_at: string;
   created_by: string | null;
   priority: 'low' | 'normal' | 'high' | 'urgent';
+  email_type?: string; // Optional field for email templates
 }
 
 export const useSystemMessages = (activeOnly: boolean = false) => {
