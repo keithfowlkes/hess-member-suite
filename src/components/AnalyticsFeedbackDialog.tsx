@@ -82,6 +82,7 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
       const { error } = await supabase
         .from('user_messages')
         .insert([{
+          user_id: user?.id || null,
           user_name: name.trim(),
           user_email: email.trim(),
           organization: organization.trim() || null,
