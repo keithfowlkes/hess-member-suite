@@ -487,7 +487,17 @@ const MasterDashboard = () => {
 
   // Create comparison data for profile edit requests
   const createProfileEditComparisonData = (request) => {
-    if (!request) return { originalData: null };
+    console.log('🔍 DEBUG: Profile edit request data:', request);
+    
+    if (!request) {
+      console.log('❌ No request data provided');
+      return { originalData: null };
+    }
+
+    console.log('📄 Original org data:', request.original_organization_data);
+    console.log('📄 Updated org data:', request.updated_organization_data);
+    console.log('👤 Original profile data:', request.original_profile_data);
+    console.log('👤 Updated profile data:', request.updated_profile_data);
 
     // Create flattened original data combining organization and profile data
     const originalData = {
@@ -501,6 +511,9 @@ const MasterDashboard = () => {
       ...(request.updated_profile_data || {})
     };
 
+    console.log('🔄 Flattened original data:', originalData);
+    console.log('🔄 Flattened updated data:', updatedData);
+
     // Add special handling for contact changes (email changes are critical)
     const contactChanges = [];
     if (request.original_profile_data?.email !== request.updated_profile_data?.email) {
@@ -512,11 +525,14 @@ const MasterDashboard = () => {
       });
     }
 
-    return {
+    const comparisonData = {
       originalData,
       updatedData,
       contactChanges
     };
+
+    console.log('📋 Final comparison data:', comparisonData);
+    return comparisonData;
   };
 
   const handleApproveProfileEdit = async () => {
