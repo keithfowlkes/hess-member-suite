@@ -20,7 +20,7 @@ import { useFormFields, FormField } from '@/hooks/useFormFields';
 import { useToast } from '@/hooks/use-toast';
 import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDirectory';
 import { SimpleSystemFieldManager } from '@/components/SimpleSystemFieldManager';
-import { TestProfileUpdateEmail } from '@/components/TestProfileUpdateEmail';
+
 import { USMap } from '@/components/USMap';
 import { MessageTextContent } from '@/components/MessageTextContent';
 import { ResendApiConfig } from '@/components/ResendApiConfig';
@@ -1142,8 +1142,6 @@ export default function Settings() {
                       </CardContent>
                     </Card>
 
-                    {/* Profile Update Email Testing */}
-                    <TestProfileUpdateEmail />
                   </TabsContent>
 
                   <TabsContent value="resend-config" className="space-y-6">
