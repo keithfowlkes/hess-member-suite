@@ -67,7 +67,7 @@ export default function ResearchDashboard() {
         {Array.from({ length: count }).map((_, i) => (
           <div key={i} className={viewMode === 'grid' ? "" : "px-6 py-4"}>
             {viewMode === 'grid' ? (
-              <Card>
+              <Card className="bg-[#f1f2e4]">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
@@ -129,7 +129,7 @@ export default function ResearchDashboard() {
 
               {/* Statistics Cards Skeleton */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
+                <Card className="bg-[#f1f2e4]">
                   <CardHeader className="pb-2">
                     <Skeleton className="h-4 w-40" />
                   </CardHeader>
@@ -137,7 +137,7 @@ export default function ResearchDashboard() {
                     <Skeleton className="h-8 w-16" />
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="bg-[#f1f2e4]">
                   <CardHeader className="pb-2">
                     <Skeleton className="h-4 w-32" />
                   </CardHeader>
@@ -183,7 +183,7 @@ export default function ResearchDashboard() {
 
             {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
+              <Card className="bg-[#f1f2e4]">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total Member Organizations</CardTitle>
                 </CardHeader>
@@ -191,7 +191,7 @@ export default function ResearchDashboard() {
                   <div className="text-2xl font-bold text-foreground">{organizations.length.toLocaleString()}</div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="bg-[#f1f2e4]">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total Student FTE</CardTitle>
                 </CardHeader>
@@ -256,7 +256,7 @@ export default function ResearchDashboard() {
                 {filteredOrganizations.map((organization) => (
                   <Card 
                     key={organization.id} 
-                    className="hover:shadow-md transition-shadow"
+                    className="hover:shadow-md transition-shadow bg-[#f1f2e4]"
                   >
                     <CardHeader>
                       <div className="flex items-start justify-between">
