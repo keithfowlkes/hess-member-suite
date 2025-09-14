@@ -260,14 +260,11 @@ export default function ResearchDashboard() {
                   >
                     <CardHeader>
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <Building2 className="h-8 w-8 text-primary" />
-                          <div>
-                            <CardTitle className="text-lg">{organization.name}</CardTitle>
-                            <Badge className={`mt-1 ${getStatusColor(organization.membership_status)}`}>
-                              {organization.membership_status}
-                            </Badge>
-                          </div>
+                        <div>
+                          <CardTitle className="text-base leading-tight">{organization.name}</CardTitle>
+                          <Badge className={`mt-1 ${getStatusColor(organization.membership_status)}`}>
+                            {organization.membership_status}
+                          </Badge>
                         </div>
                       </div>
                     </CardHeader>
@@ -337,17 +334,14 @@ export default function ResearchDashboard() {
                       className="px-6 py-4 hover:bg-muted/30 transition-colors"
                     >
                        <div className="grid grid-cols-11 gap-4 items-center">
-                         <div className="col-span-2">
-                           <div className="flex items-center space-x-3">
-                             <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
-                             <div>
-                               <div className="font-medium text-foreground">{organization.name}</div>
-                               {organization.phone && (
-                                 <div className="text-sm text-muted-foreground">{organization.phone}</div>
-                               )}
-                             </div>
-                           </div>
-                         </div>
+                          <div className="col-span-2">
+                            <div>
+                              <div className="font-medium text-foreground text-sm leading-tight">{organization.name}</div>
+                              {organization.phone && (
+                                <div className="text-sm text-muted-foreground">{organization.phone}</div>
+                              )}
+                            </div>
+                          </div>
                          <div className="col-span-2">
                            {organization.profiles ? (
                              <div className="text-sm">
