@@ -98,14 +98,14 @@ export function MemberOrganizationsView() {
           {filteredOrganizations.map((organization) => (
             <Card 
               key={organization.id} 
-              className="transition-shadow hover:shadow-md"
+              className="transition-shadow hover:shadow-md overflow-hidden"
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Building2 className="h-8 w-8 text-primary" />
-                    <div>
-                      <CardTitle className="text-lg">{organization.name}</CardTitle>
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <Building2 className="h-8 w-8 text-primary flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-lg truncate" title={organization.name}>{organization.name}</CardTitle>
                       <Badge className={`mt-1 ${getStatusColor(organization.membership_status)}`}>
                         {organization.membership_status}
                       </Badge>
@@ -118,35 +118,36 @@ export function MemberOrganizationsView() {
                   {organization.profiles && (
                     <div className="space-y-1">
                       <div className="text-xs text-muted-foreground">Primary Contact</div>
-                      <div className="flex items-center text-foreground">
-                        <User className="h-4 w-4 mr-2" />
-                        <span className="font-medium">
+                      <div className="flex items-center text-foreground min-w-0">
+                        <User className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="font-medium truncate" title={`${organization.profiles.first_name} ${organization.profiles.last_name}`}>
                           {organization.profiles.first_name} {organization.profiles.last_name}
                         </span>
                       </div>
                     </div>
                   )}
                   {organization.email && (
-                    <div className="flex items-center text-muted-foreground">
-                      <Mail className="h-4 w-4 mr-2" />
+                    <div className="flex items-center text-muted-foreground min-w-0">
+                      <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
                       <a 
                         href={`mailto:${organization.email}`}
                         className="truncate text-primary hover:underline"
+                        title={organization.email}
                       >
                         {organization.email}
                       </a>
                     </div>
                   )}
                   {organization.phone && (
-                    <div className="flex items-center text-muted-foreground">
-                      <Phone className="h-4 w-4 mr-2" />
-                      <span>{organization.phone}</span>
+                    <div className="flex items-center text-muted-foreground min-w-0">
+                      <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="truncate" title={organization.phone}>{organization.phone}</span>
                     </div>
                   )}
                   {(organization.city || organization.state) && (
-                    <div className="flex items-center text-muted-foreground">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      <span>
+                    <div className="flex items-center text-muted-foreground min-w-0">
+                      <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="truncate" title={`${organization.city || ''}${organization.city && organization.state ? ', ' : ''}${organization.state || ''}`}>
                         {organization.city}{organization.city && organization.state && ', '}{organization.state}
                       </span>
                     </div>
@@ -186,36 +187,37 @@ export function MemberOrganizationsView() {
                 className="px-6 py-4 hover:bg-muted/30 transition-colors"
               >
                 <div className="grid grid-cols-12 gap-4 items-center">
-                  <div className="col-span-2">
-                    <div className="flex items-center space-x-3">
+                  <div className="col-span-2 min-w-0">
+                    <div className="flex items-center space-x-3 min-w-0">
                       <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
-                      <div>
-                        <div className="font-medium text-foreground">{organization.name}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-foreground truncate" title={organization.name}>{organization.name}</div>
                         {organization.phone && (
-                          <div className="text-sm text-muted-foreground">{organization.phone}</div>
+                          <div className="text-sm text-muted-foreground truncate" title={organization.phone}>{organization.phone}</div>
                         )}
                       </div>
                     </div>
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-2 min-w-0">
                     {organization.profiles ? (
-                      <div className="text-sm">
-                        <div className="font-medium text-foreground">
+                      <div className="text-sm min-w-0">
+                        <div className="font-medium text-foreground truncate" title={`${organization.profiles.first_name} ${organization.profiles.last_name}`}>
                           {organization.profiles.first_name} {organization.profiles.last_name}
                         </div>
                         {organization.profiles.phone && (
-                          <div className="text-muted-foreground">{organization.profiles.phone}</div>
+                          <div className="text-muted-foreground truncate" title={organization.profiles.phone}>{organization.profiles.phone}</div>
                         )}
                       </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">—</span>
                     )}
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-2 min-w-0">
                     {organization.email ? (
                       <a 
                         href={`mailto:${organization.email}`}
-                        className="text-sm text-primary hover:underline"
+                        className="text-sm text-primary hover:underline truncate block"
+                        title={organization.email}
                       >
                         {organization.email}
                       </a>
@@ -223,9 +225,9 @@ export function MemberOrganizationsView() {
                       <span className="text-muted-foreground text-sm">—</span>
                     )}
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-2 min-w-0">
                     {(organization.city || organization.state) ? (
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-muted-foreground truncate" title={`${organization.city || ''}${organization.city && organization.state ? ', ' : ''}${organization.state || ''}`}>
                         {organization.city}{organization.city && organization.state && ', '}{organization.state}
                       </div>
                     ) : (

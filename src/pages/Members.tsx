@@ -181,7 +181,7 @@ export default function Members() {
                     {filteredOrganizations.map((organization) => (
                       <Card 
                         key={organization.id} 
-                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
                         onClick={() => {
                           setSelectedOrganization(organization);
                           setViewModalOpen(true);
