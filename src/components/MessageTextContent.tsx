@@ -7,6 +7,7 @@ import { Loader2, Mail, Edit, MessageSquare } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { useSystemMessages, useCreateSystemMessage, useUpdateSystemMessage } from '@/hooks/useSystemMessages';
 import TinyMCEEditor from '@/components/TinyMCEEditor';
+import { OrganizationInvitationTemplateEditor } from '@/components/OrganizationInvitationTemplateEditor';
 
 export const MessageTextContent = () => {
   const { settings, updateSetting } = useSettings();
@@ -348,6 +349,9 @@ export const MessageTextContent = () => {
           </Button>
         </CardContent>
       </Card>
+      
+      {/* Organization Invitation Message */}
+      <OrganizationInvitationTemplateEditor />
     </div>
   );
 };

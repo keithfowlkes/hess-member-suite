@@ -64,7 +64,6 @@ import { useInvoices } from '@/hooks/useInvoices';
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
 import { SideBySideComparisonModal } from '@/components/SideBySideComparisonModal';
 import { InvitationManagementDialog } from '@/components/InvitationManagementDialog';
-import { OrganizationInvitationTemplateEditor } from '@/components/OrganizationInvitationTemplateEditor';
 import { MemberInfoUpdateRequestsDialog } from '@/components/MemberInfoUpdateRequestsDialog';
 import { PendingRegistrationApprovalDialog } from '@/components/PendingRegistrationApprovalDialog';
 import { AddExternalUserDialog } from '@/components/AddExternalUserDialog';
@@ -1041,71 +1040,65 @@ const MasterDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="grid gap-6 lg:grid-cols-2">
-                    {/* Invitation Management */}
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-medium">Recent Invitations</h3>
-                            <span className="text-xs text-muted-foreground">
-                              {invitations.length} total
-                            </span>
-                          </div>
-                          
-                          {invitations.length > 0 ? (
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Email</TableHead>
-                                  <TableHead>Organization</TableHead>
-                                  <TableHead>Status</TableHead>
-                                  <TableHead>Expires</TableHead>
-                                  <TableHead>Actions</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {invitations.slice(0, 10).map((invitation) => (
-                                  <TableRow key={invitation.id}>
-                                    <TableCell className="font-medium">{invitation.email}</TableCell>
-                                    <TableCell>
-                                      {typeof invitation.organization === 'string' 
-                                        ? invitation.organization 
-                                        : invitation.organization?.name || 'N/A'
-                                      }
-                                    </TableCell>
-                                    <TableCell>
-                                      {invitation.used_at ? (
-                                        <Badge variant="secondary">Used</Badge>
-                                      ) : new Date(invitation.expires_at) > new Date() ? (
-                                        <Badge variant="outline">Active</Badge>
-                                      ) : (
-                                        <Badge variant="destructive">Expired</Badge>
-                                      )}
-                                    </TableCell>
-                                    <TableCell>{format(new Date(invitation.expires_at), 'PPp')}</TableCell>
-                                    <TableCell>
-                                      <Button variant="outline" size="sm">
-                                        <MoreVertical className="h-4 w-4" />
-                                      </Button>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          ) : (
-                            <div className="text-center py-8">
-                              <Mail className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                              <p className="text-muted-foreground">No invitations found</p>
-                            </div>
-                          )}
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-medium">Recent Invitations</h3>
+                          <span className="text-xs text-muted-foreground">
+                            {invitations.length} total
+                          </span>
                         </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Email Template Editor */}
-                    <OrganizationInvitationTemplateEditor />
-                  </div>
+                        
+                        {invitations.length > 0 ? (
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Organization</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Expires</TableHead>
+                                <TableHead>Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {invitations.slice(0, 10).map((invitation) => (
+                                <TableRow key={invitation.id}>
+                                  <TableCell className="font-medium">{invitation.email}</TableCell>
+                                  <TableCell>
+                                    {typeof invitation.organization === 'string' 
+                                      ? invitation.organization 
+                                      : invitation.organization?.name || 'N/A'
+                                    }
+                                  </TableCell>
+                                  <TableCell>
+                                    {invitation.used_at ? (
+                                      <Badge variant="secondary">Used</Badge>
+                                    ) : new Date(invitation.expires_at) > new Date() ? (
+                                      <Badge variant="outline">Active</Badge>
+                                    ) : (
+                                      <Badge variant="destructive">Expired</Badge>
+                                    )}
+                                  </TableCell>
+                                  <TableCell>{format(new Date(invitation.expires_at), 'PPp')}</TableCell>
+                                  <TableCell>
+                                    <Button variant="outline" size="sm">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        ) : (
+                          <div className="text-center py-8">
+                            <Mail className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                            <p className="text-muted-foreground">No invitations found</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
               </Tabs>
             </TabsContent>
