@@ -78,17 +78,18 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
     setIsLoading(true);
 
     try {
-      // Save to database instead of email
-      const { error } = await (supabase as any)
-        .from('user_messages')
-        .insert([{
-          user_name: name.trim(),
-          user_email: email.trim(),
-          organization: organization.trim() || null,
+      // Send feedback via edge function
+      const { data, error } = await supabase.functions.invoke('send-analytics-feedback', {
+        body: {
+          name: name.trim(),
+          email: email.trim(),
+          organization: organization.trim() || '',
           message: message.trim()
-        }]);
+        }
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Feedback Sent!",
