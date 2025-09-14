@@ -311,7 +311,7 @@ export function useApproveOrganizationProfileEditRequest() {
 
           await supabase.functions.invoke('centralized-email-delivery', {
             body: {
-              type: 'profile_update_approved',
+              type: 'profile_update_message_template',
               to: profile.email,
               subject: `HESS Consortium - Profile Update Approved for ${orgData.name}`,
               data: {
