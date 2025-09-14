@@ -277,10 +277,6 @@ serve(async (req) => {
         console.log('[APPROVE-REASSIGNMENT] Successfully updated profile');
       }
     }
-      } else {
-        console.log('[APPROVE-REASSIGNMENT] Successfully updated profile');
-      }
-    }
 
     // 6) Mark the reassignment request as approved
     const { error: updReqErr } = await supabaseAdmin
