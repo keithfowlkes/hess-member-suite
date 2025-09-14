@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 export interface Organization {
   id: string;
@@ -81,14 +82,12 @@ export interface CreateOrganizationData {
 }
 
 export function useMembers() {
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-
-  const fetchOrganizations = useCallback(async () => {
-    try {
-      setLoading(true);
-
+  const queryClient = useQueryClient();
+  
+  const query = useQuery({
+    queryKey: ['organizations'],
+    queryFn: async () => {
       // Fetch all organizations at once
       const { data, error } = await supabase
         .from('organizations')
@@ -112,26 +111,17 @@ export function useMembers() {
         .order('name');
 
       if (error) throw error;
+      return data || [];
+    },
+    refetchOnWindowFocus: false,
+  });
 
-      setOrganizations(data || []);
-    } catch (error: any) {
-      console.error('Error fetching organizations:', error);
-      toast({
-        title: 'Error fetching members',
-        description: error.message,
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['organizations'] });
+  };
 
-  const refresh = useCallback(() => {
-    fetchOrganizations();
-  }, [fetchOrganizations]);
-
-  const createOrganization = async (orgData: CreateOrganizationData) => {
-    try {
+  const createOrganizationMutation = useMutation({
+    mutationFn: async (orgData: CreateOrganizationData) => {
       const { data, error } = await supabase
         .from('organizations')
         .insert(orgData)
@@ -139,26 +129,28 @@ export function useMembers() {
         .single();
 
       if (error) throw error;
-      
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
       toast({
         title: 'Success',
         description: 'Organization created successfully'
       });
-      
-      await refresh();
-      return data;
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast({
         title: 'Error creating organization',
         description: error.message,
         variant: 'destructive'
       });
-      throw error;
     }
-  };
+  });
 
-  const updateOrganization = async (id: string, orgData: Partial<Organization>) => {
-    try {
+  const createOrganization = createOrganizationMutation.mutateAsync;
+
+  const updateOrganizationMutation = useMutation({
+    mutationFn: async ({ id, orgData }: { id: string; orgData: Partial<Organization> }) => {
       const { data, error } = await supabase
         .from('organizations')
         .update(orgData)
@@ -167,26 +159,29 @@ export function useMembers() {
         .single();
 
       if (error) throw error;
-      
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
       toast({
         title: 'Success',
         description: 'Organization updated successfully'
       });
-      
-      await refresh();
-      return data;
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast({
         title: 'Error updating organization',
         description: error.message,
         variant: 'destructive'
       });
-      throw error;
     }
-  };
+  });
 
-  const markAllOrganizationsActive = async () => {
-    try {
+  const updateOrganization = (id: string, orgData: Partial<Organization>) => 
+    updateOrganizationMutation.mutateAsync({ id, orgData });
+
+  const markAllOrganizationsActiveMutation = useMutation({
+    mutationFn: async () => {
       const { data, error } = await supabase
         .from('organizations')
         .update({ 
@@ -198,26 +193,28 @@ export function useMembers() {
         .select();
 
       if (error) throw error;
-      
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
       toast({
         title: 'Success',
         description: `${data?.length || 0} organizations marked as active`
       });
-      
-      await refresh();
-      return data;
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast({
         title: 'Error updating organizations',
         description: error.message,
         variant: 'destructive'
       });
-      throw error;
     }
-  };
+  });
 
-  const deleteOrganization = async (id: string) => {
-    try {
+  const markAllOrganizationsActive = markAllOrganizationsActiveMutation.mutateAsync;
+
+  const deleteOrganizationMutation = useMutation({
+    mutationFn: async (id: string) => {
       // Get current user for admin tracking
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -234,26 +231,29 @@ export function useMembers() {
       });
 
       if (error) throw error;
-
-      await refresh();
-      
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
       toast({
         title: "Success",
         description: data.message || "Organization and all associated data deleted successfully.",
       });
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error('Error deleting organization:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete organization",
         variant: "destructive"
       });
-      throw error;
     }
-  };
+  });
 
-  const unapproveOrganization = async (id: string) => {
-    try {
+  const deleteOrganization = deleteOrganizationMutation.mutateAsync;
+
+  const unapproveOrganizationMutation = useMutation({
+    mutationFn: async (id: string) => {
       // Get current user for admin tracking
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -270,28 +270,29 @@ export function useMembers() {
       });
 
       if (error) throw error;
-
-      await refresh();
-      
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
       toast({
         title: "Success",
         description: data.message || "Organization unapproved and restored to pending approval queue.",
       });
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error('Error unapproving organization:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to unapprove organization",
         variant: "destructive"
       });
-      throw error;
     }
-  };
+  });
 
+  const unapproveOrganization = unapproveOrganizationMutation.mutateAsync;
+
+  // Set up real-time subscription for organization changes
   useEffect(() => {
-    fetchOrganizations();
-
-    // Set up real-time subscription for organization changes with unique channel name
     const channelName = `organizations_changes_${Math.random().toString(36).substr(2, 9)}`;
     const subscription = supabase
       .channel(channelName)
@@ -302,8 +303,8 @@ export function useMembers() {
           table: 'organizations' 
         }, 
         () => {
-          console.log('Organizations table changed, refreshing...');
-          fetchOrganizations();
+          console.log('Organizations table changed, invalidating queries...');
+          queryClient.invalidateQueries({ queryKey: ['organizations'] });
         }
       )
       .subscribe();
@@ -311,11 +312,11 @@ export function useMembers() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchOrganizations]);
+  }, [queryClient]);
 
   return { 
-    organizations,
-    loading,
+    organizations: query.data || [],
+    loading: query.isLoading,
     refresh,
     createOrganization, 
     updateOrganization, 

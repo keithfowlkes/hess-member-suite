@@ -1482,7 +1482,7 @@ export default function MembershipFees() {
 
                         <Button
                           variant="outline"
-                          onClick={markAllOrganizationsActive}
+                          onClick={() => markAllOrganizationsActive()}
                           className="w-full"
                         >
                           <Building2 className="h-4 w-4 mr-2" />
