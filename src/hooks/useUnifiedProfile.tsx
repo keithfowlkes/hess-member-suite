@@ -141,12 +141,7 @@ export function useUnifiedProfile(userId?: string) {
           ? { ...data.profile, ...updates.profile }
           : data.profile;
 
-        console.log('📄 Original org data being stored:', data.organization);
-        console.log('📄 Updated org data being stored:', updatedOrganizationData);
-        console.log('👤 Original profile data being stored:', data.profile);
-        console.log('👤 Updated profile data being stored:', updatedProfileData);
-        console.log('🔍 Organization changes:', JSON.stringify(updates.organization, null, 2));
-        console.log('🔍 Profile changes:', JSON.stringify(updates.profile, null, 2));
+        console.log('🚀 Submitting unified profile edit request:', updates);
 
         const { error } = await supabase
           .from('organization_profile_edit_requests')

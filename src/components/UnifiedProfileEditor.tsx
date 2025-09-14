@@ -72,10 +72,6 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
   };
 
   const handleSave = async () => {
-    console.log('🚀 UnifiedProfileEditor: Save button clicked');
-    console.log('📊 Original data:', data);
-    console.log('✏️ Edited data:', editedData);
-    
     const profileUpdates: Partial<UnifiedProfile['profile']> = {};
     const organizationUpdates: Partial<UnifiedProfile['organization']> = {};
     
@@ -86,7 +82,6 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
       const editedValue = editedData.profile[typedKey];
       
       if (editedValue !== originalValue) {
-        console.log(`📝 Profile change detected - ${key}: ${originalValue} → ${editedValue}`);
         (profileUpdates as any)[typedKey] = editedValue;
       }
     });
@@ -99,14 +94,10 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         const editedValue = editedData.organization![typedKey];
         
         if (editedValue !== originalValue) {
-          console.log(`🏢 Organization change detected - ${key}: ${originalValue} → ${editedValue}`);
           (organizationUpdates as any)[typedKey] = editedValue;
         }
       });
     }
-
-    console.log('📝 Final profile updates:', profileUpdates);
-    console.log('🏢 Final organization updates:', organizationUpdates);
 
     const success = await onSave({
       profile: Object.keys(profileUpdates).length > 0 ? profileUpdates : undefined,

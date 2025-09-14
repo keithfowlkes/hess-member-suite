@@ -487,24 +487,23 @@ const MasterDashboard = () => {
 
   // Create comparison data for profile edit requests
   const createProfileEditComparisonData = (request) => {
-    console.log('🔍 DEBUG: Full profile edit request:', request);
-    
     if (!request) return { originalData: null };
 
-    // Create flattened original data combining organization and profile data
+    // Flatten data with organization fields taking priority over profile fields
+    // (both have some overlapping fields like student_fte, but organization is authoritative)
     const originalData = {
-      ...(request.original_organization_data || {}),
-      ...(request.original_profile_data || {})
+      // Start with profile data
+      ...(request.original_profile_data || {}),
+      // Override with organization data (organization fields take priority)
+      ...(request.original_organization_data || {})
     };
 
-    // Create flattened updated data combining organization and profile data  
     const updatedData = {
-      ...(request.updated_organization_data || {}),
-      ...(request.updated_profile_data || {})
+      // Start with profile data  
+      ...(request.updated_profile_data || {}),
+      // Override with organization data (organization fields take priority)
+      ...(request.updated_organization_data || {})
     };
-
-    console.log('🔄 Comparison - Original:', originalData);
-    console.log('🔄 Comparison - Updated:', updatedData);
 
     // Add special handling for contact changes (email changes are critical)
     const contactChanges = [];
