@@ -395,9 +395,91 @@ serve(async (req) => {
 
     console.log(`Processed auth user: ${authUser.user?.id} for email: ${pendingReg.email}`);
 
-    // The handle_new_user trigger will automatically create the profile and organization
-    // We just need to wait a moment for it to process
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Wait briefly for the handle_new_user trigger, then verify and create missing records
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Ensure profile exists - create it if the trigger failed
+    const { data: existingProfile, error: profileCheckError } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('user_id', authUser.user?.id)
+      .maybeSingle();
+    
+    if (profileCheckError) {
+      console.error('Error checking for existing profile:', profileCheckError);
+    }
+    
+    if (!existingProfile) {
+      console.log('Profile not found, creating manually...');
+      const { data: createdProfile, error: profileCreateError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          user_id: authUser.user?.id,
+          first_name: pendingReg.first_name,
+          last_name: pendingReg.last_name,
+          email: pendingReg.email,
+          organization: pendingReg.organization_name,
+          student_fte: pendingReg.student_fte,
+          address: pendingReg.address,
+          city: pendingReg.city,
+          state: pendingReg.state,
+          zip: pendingReg.zip,
+          primary_contact_title: pendingReg.primary_contact_title,
+          secondary_first_name: pendingReg.secondary_first_name,
+          secondary_last_name: pendingReg.secondary_last_name,
+          secondary_contact_title: pendingReg.secondary_contact_title,
+          secondary_contact_email: pendingReg.secondary_contact_email,
+          student_information_system: pendingReg.student_information_system,
+          financial_system: pendingReg.financial_system,
+          financial_aid: pendingReg.financial_aid,
+          hcm_hr: pendingReg.hcm_hr,
+          payroll_system: pendingReg.payroll_system,
+          purchasing_system: pendingReg.purchasing_system,
+          housing_management: pendingReg.housing_management,
+          learning_management: pendingReg.learning_management,
+          admissions_crm: pendingReg.admissions_crm,
+          alumni_advancement_crm: pendingReg.alumni_advancement_crm,
+          primary_office_apple: pendingReg.primary_office_apple,
+          primary_office_asus: pendingReg.primary_office_asus,
+          primary_office_dell: pendingReg.primary_office_dell,
+          primary_office_hp: pendingReg.primary_office_hp,
+          primary_office_microsoft: pendingReg.primary_office_microsoft,
+          primary_office_other: pendingReg.primary_office_other,
+          primary_office_other_details: pendingReg.primary_office_other_details,
+          other_software_comments: pendingReg.other_software_comments,
+          is_private_nonprofit: pendingReg.is_private_nonprofit
+        })
+        .select('id')
+        .single();
+      
+      if (profileCreateError) {
+        console.error('Failed to create profile manually:', profileCreateError);
+        return new Response(
+          JSON.stringify({ error: `Failed to create user profile: ${profileCreateError.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      console.log('Profile created manually:', createdProfile);
+    } else {
+      console.log('Profile already exists from trigger');
+    }
+    
+    // Ensure user role exists
+    const { error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .insert({
+        user_id: authUser.user?.id,
+        role: isAdminOrg ? 'admin' : 'member'
+      })
+      .select()
+      .maybeSingle();
+    
+    if (roleError && !roleError.message?.includes('duplicate')) {
+      console.error('Error creating user role:', roleError);
+    } else {
+      console.log(`User role assigned: ${isAdminOrg ? 'admin' : 'member'}`);
+    }
 
     // Get the newly created organization and activate it
     // First check if organization already exists by name AND contact person
@@ -446,28 +528,60 @@ serve(async (req) => {
             shouldCreateNew = false;
           }
         } else {
-          // Normal flow: Get the profile ID for the user
+          // Normal flow: Get the profile ID for the user (should exist now)
           const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
             .select('id')
             .eq('user_id', authUser.user?.id)
-            .single();
+            .maybeSingle();
 
           if (profileError) {
-            console.error('Error fetching user profile:', profileError);
-            // Try to find organization by email as fallback
-            const { data: orgByEmail, error: orgByEmailError } = await supabaseAdmin
-              .from('organizations')
-              .select('id, name, email')
-              .eq('email', pendingReg.email)
-              .single();
+            console.error('Error fetching user profile after creation:', profileError);
+            return new Response(
+              JSON.stringify({ error: `Failed to fetch user profile: ${profileError.message}` }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          if (!profile) {
+            console.error('Profile still not found after manual creation attempt');
+            return new Response(
+              JSON.stringify({ error: 'Failed to create or find user profile' }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          // Check if organization already exists
+          const { data: existingOrg, error: orgCheckError } = await supabaseAdmin
+            .from('organizations')
+            .select('id, name, email, membership_status')
+            .eq('name', pendingReg.organization_name)
+            .maybeSingle();
+          
+          if (orgCheckError) {
+            console.error('Error checking for existing organization:', orgCheckError);
+          }
+          
+          if (existingOrg) {
+            console.log('Organization already exists, updating it');
+            newOrganization = existingOrg;
+            shouldCreateNew = false;
             
-            if (!orgByEmailError && orgByEmail) {
-              console.log('Found organization by email as fallback');
-              newOrganization = orgByEmail;
-              shouldCreateNew = false;
+            // Update the existing organization to be active
+            const { error: updateOrgError } = await supabaseAdmin
+              .from('organizations')
+              .update({
+                membership_status: 'active',
+                membership_start_date: new Date().toISOString().split('T')[0],
+                contact_person_id: profile.id
+              })
+              .eq('id', existingOrg.id);
+            
+            if (updateOrgError) {
+              console.error('Error updating existing organization:', updateOrgError);
             }
-          } else if (profile) {
+          } else {
+            // Create new organization
             const { data: createdOrg, error: createError } = await supabaseAdmin
               .from('organizations')
               .insert({
@@ -511,37 +625,27 @@ serve(async (req) => {
               .single();
 
             if (createError) {
-              console.error('Error creating organization manually:', createError);
-              // Don't fail the entire process - user was created successfully
+              console.error('Error creating organization:', createError);
+              return new Response(
+                JSON.stringify({ error: `Failed to create organization: ${createError.message}` }),
+                { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
             } else {
               newOrganization = createdOrg;
-              console.log(`Organization ${newOrganization.name} created manually`);
+              console.log(`Organization ${newOrganization.name} created successfully`);
             }
           }
         }
       }
 
-      // Only activate organization if one was found or created
-      if (newOrganization) {
-        // Update organization to active status upon approval
-        const { error: updateOrgError } = await supabaseAdmin
-          .from('organizations')
-          .update({
-            membership_status: 'active',
-            membership_start_date: new Date().toISOString().split('T')[0],
-            organization_type: isAdminOrg ? 'system' : 'member'
-          })
-          .eq('id', newOrganization.id);
-
-        if (updateOrgError) {
-          console.error('Error activating organization:', updateOrgError);
-        } else {
-          console.log(`Organization ${newOrganization.name} activated successfully`);
-        }
-      }
+      // Organization creation/validation completed successfully
+      console.log(`Organization processing completed: ${newOrganization ? newOrganization.name : 'No organization created'}`);
     } catch (orgCreationError) {
       console.error('Error in organization creation/update process:', orgCreationError);
-      // Don't fail the entire approval process
+      return new Response(
+        JSON.stringify({ error: `Failed to process organization: ${orgCreationError.message}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Update the pending registration status
