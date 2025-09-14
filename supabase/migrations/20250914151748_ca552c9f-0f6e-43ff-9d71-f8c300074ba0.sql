@@ -1,0 +1,31 @@
+-- Update The Coalition profile with the most recent approved organization update data
+UPDATE profiles 
+SET 
+  first_name = 'Tim',
+  last_name = 'James', 
+  address = '127 Creekside Drive',
+  student_fte = 34330,
+  secondary_first_name = 'YO',
+  secondary_last_name = 'MAMA', 
+  secondary_contact_email = 'yo@thecoalition.us',
+  secondary_contact_title = 'Deputy',
+  student_information_system = 'Oracle Cloud',
+  financial_system = 'Oracle Cloud',
+  financial_aid = 'Oracle Cloud',
+  hcm_hr = 'Oracle Cloud',
+  payroll_system = 'Oracle Cloud',
+  purchasing_system = 'Oracle Cloud',
+  housing_management = 'Campus Management Housing',
+  learning_management = 'D2L Brightspace',
+  admissions_crm = 'Slate for Admissions',
+  alumni_advancement_crm = 'Slate for Advancement',
+  primary_office_apple = true,
+  primary_office_asus = false,
+  primary_office_dell = false,
+  primary_office_hp = true,
+  primary_office_microsoft = false,
+  primary_office_other = false,
+  primary_office_other_details = '',
+  other_software_comments = '',
+  updated_at = now()
+WHERE email = 'fowlkes@thecoalition.us';
