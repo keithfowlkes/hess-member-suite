@@ -116,12 +116,32 @@ export function useUnifiedProfile(userId?: string) {
 
       if (profileError) throw profileError;
 
-      // Get organization data if user is a primary contact
-      const { data: orgData } = await supabase
+      // Get organization data if user is a primary contact OR organization member
+      let orgData = null;
+      
+      // First, try to get organization where user is primary contact
+      const { data: primaryOrgData } = await supabase
         .from('organizations')
         .select('*')
         .eq('contact_person_id', profileData.id)
         .single();
+      
+      if (primaryOrgData) {
+        orgData = primaryOrgData;
+      } else {
+        // If not primary contact, check if user belongs to an organization by profile.organization field
+        if (profileData.organization) {
+          const { data: memberOrgData } = await supabase
+            .from('organizations')
+            .select('*')
+            .eq('name', profileData.organization)
+            .single();
+          
+          if (memberOrgData) {
+            orgData = memberOrgData;
+          }
+        }
+      }
 
       setData({
         profile: profileData,
@@ -278,17 +298,29 @@ export function useUnifiedProfile(userId?: string) {
     try {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('id')
+        .select('*')
         .eq('user_id', userId)
         .single();
 
       if (!profileData) return null;
 
-      const { data: orgData } = await supabase
+      // First, try to get organization where user is primary contact
+      let { data: orgData } = await supabase
         .from('organizations')
         .select('*')
         .eq('contact_person_id', profileData.id)
         .single();
+
+      // If not primary contact, check if user belongs to an organization by profile.organization field
+      if (!orgData && profileData.organization) {
+        const { data: memberOrgData } = await supabase
+          .from('organizations')
+          .select('*')
+          .eq('name', profileData.organization)
+          .single();
+        
+        orgData = memberOrgData;
+      }
 
       return orgData;
     } catch (error) {
