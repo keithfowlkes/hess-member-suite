@@ -190,9 +190,11 @@ export default function Members() {
                         <CardHeader>
                           <div className="flex items-start justify-between">
                             <div className="flex items-center space-x-3">
-                              <Building2 className="h-8 w-8 text-primary" />
-                              <div>
-                                <CardTitle className="text-lg">{organization.name}</CardTitle>
+                              <Building2 className="h-8 w-8 text-primary flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <CardTitle className="text-lg truncate" title={organization.name}>
+                                  {organization.name}
+                                </CardTitle>
                                 <Badge className={`mt-1 ${getStatusColor(organization.membership_status)}`}>
                                   {organization.membership_status}
                                 </Badge>
@@ -205,14 +207,15 @@ export default function Members() {
                             {organization.profiles && (
                               <div className="space-y-1">
                                 <div className="text-xs text-muted-foreground">Primary Contact</div>
-                                <div className="flex items-center text-foreground">
-                                  <User className="h-4 w-4 mr-2" />
+                                <div className="flex items-center text-foreground min-w-0">
+                                  <User className="h-4 w-4 mr-2 flex-shrink-0" />
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       navigate(`/organization/${organization.contact_person_id}`);
                                     }}
-                                    className="text-primary hover:text-primary/80 hover:underline font-medium"
+                                    className="text-primary hover:text-primary/80 hover:underline font-medium truncate"
+                                    title={`${organization.profiles.first_name} ${organization.profiles.last_name}`}
                                   >
                                     {organization.profiles.first_name} {organization.profiles.last_name}
                                   </button>
@@ -220,26 +223,31 @@ export default function Members() {
                               </div>
                             )}
                             {organization.email && (
-                              <div className="flex items-center text-muted-foreground">
-                                <Mail className="h-4 w-4 mr-2" />
+                              <div className="flex items-center text-muted-foreground min-w-0">
+                                <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
                                 <a 
                                   href={`mailto:${organization.email}`}
-                                  className="text-primary hover:underline"
+                                  className="text-primary hover:underline truncate"
+                                  title={organization.email}
                                 >
                                   {organization.email}
                                 </a>
                               </div>
                             )}
                             {organization.phone && (
-                              <div className="flex items-center text-muted-foreground">
-                                <Phone className="h-4 w-4 mr-2" />
-                                {organization.phone}
+                              <div className="flex items-center text-muted-foreground min-w-0">
+                                <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                                <span className="truncate" title={organization.phone}>
+                                  {organization.phone}
+                                </span>
                               </div>
                             )}
                             {(organization.city || organization.state) && (
-                              <div className="flex items-center text-muted-foreground">
-                                <MapPin className="h-4 w-4 mr-2" />
-                                {organization.city}{organization.city && organization.state && ', '}{organization.state}
+                              <div className="flex items-center text-muted-foreground min-w-0">
+                                <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                                <span className="truncate" title={`${organization.city}${organization.city && organization.state ? ', ' : ''}${organization.state || ''}`}>
+                                  {organization.city}{organization.city && organization.state && ', '}{organization.state}
+                                </span>
                               </div>
                             )}
                             <div className="pt-2 border-t space-y-1">
@@ -281,18 +289,22 @@ export default function Members() {
                           }}
                         >
                           <div className="grid grid-cols-12 gap-4 items-center">
-                            <div className="col-span-3">
+                            <div className="col-span-3 min-w-0">
                               <div className="flex items-center space-x-3">
                                 <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
-                                <div>
-                                  <div className="font-medium text-foreground">{organization.name}</div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-medium text-foreground truncate" title={organization.name}>
+                                    {organization.name}
+                                  </div>
                                   {organization.phone && (
-                                    <div className="text-sm text-muted-foreground">{organization.phone}</div>
+                                    <div className="text-sm text-muted-foreground truncate" title={organization.phone}>
+                                      {organization.phone}
+                                    </div>
                                   )}
                                 </div>
                               </div>
                             </div>
-                            <div className="col-span-2">
+                            <div className="col-span-2 min-w-0">
                               {organization.profiles ? (
                                 <div className="text-sm">
                                   <button
@@ -300,7 +312,8 @@ export default function Members() {
                                       e.stopPropagation();
                                       navigate(`/organization/${organization.contact_person_id}`);
                                     }}
-                                    className="font-medium text-primary hover:text-primary/80 hover:underline"
+                                    className="font-medium text-primary hover:text-primary/80 hover:underline truncate block"
+                                    title={`${organization.profiles.first_name} ${organization.profiles.last_name}`}
                                   >
                                     {organization.profiles.first_name} {organization.profiles.last_name}
                                   </button>
@@ -309,11 +322,12 @@ export default function Members() {
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </div>
-                            <div className="col-span-2">
+                            <div className="col-span-2 min-w-0">
                               {organization.email ? (
                                 <a 
                                   href={`mailto:${organization.email}`}
-                                  className="text-sm text-primary hover:underline"
+                                  className="text-sm text-primary hover:underline truncate block"
+                                  title={organization.email}
                                 >
                                   {organization.email}
                                 </a>
@@ -321,9 +335,9 @@ export default function Members() {
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </div>
-                            <div className="col-span-2">
+                            <div className="col-span-2 min-w-0">
                               {(organization.city || organization.state) ? (
-                                <div className="text-sm text-muted-foreground">
+                                <div className="text-sm text-muted-foreground truncate" title={`${organization.city || ''}${organization.city && organization.state ? ', ' : ''}${organization.state || ''}`}>
                                   {organization.city}{organization.city && organization.state && ', '}{organization.state}
                                 </div>
                               ) : (
