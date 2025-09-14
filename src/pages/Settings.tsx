@@ -324,12 +324,17 @@ export default function Settings() {
       if (data.success) {
         toast({
           title: 'TinyMCE Key Updated',
-          description: 'TinyMCE API key has been updated successfully. The editor will use the new key.',
+          description: 'TinyMCE API key has been updated successfully. Refreshing editors...',
         });
         setTinymceApiKey(''); // Clear for security
         
         // Trigger refresh of all TinyMCE editors
         window.dispatchEvent(new CustomEvent('tinymce-key-updated'));
+        
+        // Also force a page refresh after a short delay to ensure all editors reload
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       } else {
         throw new Error(data.message || 'Update failed');
       }

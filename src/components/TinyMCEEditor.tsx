@@ -19,6 +19,7 @@ const TinyMCEEditor: React.FC<TinyMCEEditorProps> = ({
   const [keyVersion, setKeyVersion] = useState(0);
 
   const fetchApiKey = async () => {
+    console.log('🔑 Fetching TinyMCE API key...');
     try {
       // First try to get from system settings (where we store it now)
       const { data: settingsData, error: settingsError } = await supabase
@@ -27,23 +28,28 @@ const TinyMCEEditor: React.FC<TinyMCEEditorProps> = ({
         .eq('setting_key', 'tinymce_api_key')
         .maybeSingle();
 
+      console.log('📊 System settings query result:', { settingsData, settingsError });
+
       if (!settingsError && settingsData?.setting_value) {
-        console.log('TinyMCE API key found in settings');
+        console.log('✅ TinyMCE API key found in settings:', settingsData.setting_value.substring(0, 10) + '...');
         setApiKey(settingsData.setting_value);
         return;
       }
 
+      console.log('⚠️ No key in settings, trying edge function...');
       // Fallback to edge function
       const { data, error } = await supabase.functions.invoke('get-tinymce-key');
+      console.log('📡 Edge function result:', { data, error });
+      
       if (!error && data?.apiKey) {
-        console.log('TinyMCE API key found from edge function');
+        console.log('✅ TinyMCE API key found from edge function:', data.apiKey.substring(0, 10) + '...');
         setApiKey(data.apiKey);
         return;
       }
 
-      console.log('No TinyMCE API key found, using default');
+      console.log('❌ No TinyMCE API key found anywhere, using default');
     } catch (error) {
-      console.error('Error fetching TinyMCE API key:', error);
+      console.error('💥 Error fetching TinyMCE API key:', error);
     }
   };
 
