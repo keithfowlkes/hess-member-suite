@@ -22,6 +22,26 @@ export interface UnifiedProfile {
     secondary_contact_email?: string;
     state_association?: string;
     is_private_nonprofit?: boolean;
+    // System fields - available for all users
+    student_information_system?: string;
+    financial_system?: string;
+    financial_aid?: string;
+    hcm_hr?: string;
+    payroll_system?: string;
+    purchasing_system?: string;
+    housing_management?: string;
+    learning_management?: string;
+    admissions_crm?: string;
+    alumni_advancement_crm?: string;
+    // Hardware fields - available for all users
+    primary_office_apple?: boolean;
+    primary_office_asus?: boolean;
+    primary_office_dell?: boolean;
+    primary_office_hp?: boolean;
+    primary_office_microsoft?: boolean;
+    primary_office_other?: boolean;
+    primary_office_other_details?: string;
+    other_software_comments?: string;
   };
   // Organization data (if user is primary contact)
   organization?: {

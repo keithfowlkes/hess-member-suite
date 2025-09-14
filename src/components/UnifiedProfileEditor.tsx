@@ -386,154 +386,150 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         </CardContent>
       </Card>
 
-      {/* Software Systems - Only show if user has an organization */}
-      {editedData.organization && (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle>Software Systems</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <SystemFieldSelect
-                  fieldName="student_information_system"
-                  label="Student Information System"
-                  value={editedData.organization.student_information_system || ''}
-                  onChange={(value) => updateOrganizationField('student_information_system', value)}
-                  disabled={!isEditing}
-                />
-                <SystemFieldSelect
-                  fieldName="financial_system"
-                  label="Financial System"
-                  value={editedData.organization.financial_system || ''}
-                  onChange={(value) => updateOrganizationField('financial_system', value)}
-                  disabled={!isEditing}
-                />
-                <SystemFieldSelect
-                  fieldName="financial_aid"
-                  label="Financial Aid"
-                  value={editedData.organization.financial_aid || ''}
-                  onChange={(value) => updateOrganizationField('financial_aid', value)}
-                  disabled={!isEditing}
-                />
-                <SystemFieldSelect
-                  fieldName="hcm_hr"
-                  label="HCM/HR"
-                  value={editedData.organization.hcm_hr || ''}
-                  onChange={(value) => updateOrganizationField('hcm_hr', value)}
-                  disabled={!isEditing}
-                />
-                <SystemFieldSelect
-                  fieldName="payroll_system"
-                  label="Payroll System"
-                  value={editedData.organization.payroll_system || ''}
-                  onChange={(value) => updateOrganizationField('payroll_system', value)}
-                  disabled={!isEditing}
-                />
-                <SystemFieldSelect
-                  fieldName="purchasing_system"
-                  label="Purchasing System"
-                  value={editedData.organization.purchasing_system || ''}
-                  onChange={(value) => updateOrganizationField('purchasing_system', value)}
-                  disabled={!isEditing}
-                />
-                <SystemFieldSelect
-                  fieldName="housing_management"
-                  label="Housing Management"
-                  value={editedData.organization.housing_management || ''}
-                  onChange={(value) => updateOrganizationField('housing_management', value)}
-                  disabled={!isEditing}
-                />
-                <SystemFieldSelect
-                  fieldName="learning_management"
-                  label="Learning Management"
-                  value={editedData.organization.learning_management || ''}
-                  onChange={(value) => updateOrganizationField('learning_management', value)}
-                  disabled={!isEditing}
-                />
-                <SystemFieldSelect
-                  fieldName="admissions_crm"
-                  label="Admissions CRM"
-                  value={editedData.organization.admissions_crm || ''}
-                  onChange={(value) => updateOrganizationField('admissions_crm', value)}
-                  disabled={!isEditing}
-                />
-                <SystemFieldSelect
-                  fieldName="alumni_advancement_crm"
-                  label="Alumni/Advancement CRM"
-                  value={editedData.organization.alumni_advancement_crm || ''}
-                  onChange={(value) => updateOrganizationField('alumni_advancement_crm', value)}
-                  disabled={!isEditing}
-                />
-              </div>
-            </CardContent>
-          </Card>
+      {/* Software Systems */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Software Systems</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SystemFieldSelect
+              fieldName="student_information_system"
+              label="Student Information System"
+              value={editedData.profile.student_information_system || ''}
+              onChange={(value) => updateProfileField('student_information_system', value)}
+              disabled={!isEditing}
+            />
+            <SystemFieldSelect
+              fieldName="financial_system"
+              label="Financial System"
+              value={editedData.profile.financial_system || ''}
+              onChange={(value) => updateProfileField('financial_system', value)}
+              disabled={!isEditing}
+            />
+            <SystemFieldSelect
+              fieldName="financial_aid"
+              label="Financial Aid"
+              value={editedData.profile.financial_aid || ''}
+              onChange={(value) => updateProfileField('financial_aid', value)}
+              disabled={!isEditing}
+            />
+            <SystemFieldSelect
+              fieldName="hcm_hr"
+              label="HCM/HR"
+              value={editedData.profile.hcm_hr || ''}
+              onChange={(value) => updateProfileField('hcm_hr', value)}
+              disabled={!isEditing}
+            />
+            <SystemFieldSelect
+              fieldName="payroll_system"
+              label="Payroll System"
+              value={editedData.profile.payroll_system || ''}
+              onChange={(value) => updateProfileField('payroll_system', value)}
+              disabled={!isEditing}
+            />
+            <SystemFieldSelect
+              fieldName="purchasing_system"
+              label="Purchasing System"
+              value={editedData.profile.purchasing_system || ''}
+              onChange={(value) => updateProfileField('purchasing_system', value)}
+              disabled={!isEditing}
+            />
+            <SystemFieldSelect
+              fieldName="housing_management"
+              label="Housing Management"
+              value={editedData.profile.housing_management || ''}
+              onChange={(value) => updateProfileField('housing_management', value)}
+              disabled={!isEditing}
+            />
+            <SystemFieldSelect
+              fieldName="learning_management"
+              label="Learning Management"
+              value={editedData.profile.learning_management || ''}
+              onChange={(value) => updateProfileField('learning_management', value)}
+              disabled={!isEditing}
+            />
+            <SystemFieldSelect
+              fieldName="admissions_crm"
+              label="Admissions CRM"
+              value={editedData.profile.admissions_crm || ''}
+              onChange={(value) => updateProfileField('admissions_crm', value)}
+              disabled={!isEditing}
+            />
+            <SystemFieldSelect
+              fieldName="alumni_advancement_crm"
+              label="Alumni/Advancement CRM"
+              value={editedData.profile.alumni_advancement_crm || ''}
+              onChange={(value) => updateProfileField('alumni_advancement_crm', value)}
+              disabled={!isEditing}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-          {/* Hardware Systems */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Hardware Systems</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <Label>Primary Office Hardware</Label>
-                  <div className="space-y-2">
-                    {[
-                      { key: 'primary_office_apple', label: 'Apple' },
-                      { key: 'primary_office_asus', label: 'ASUS' },
-                      { key: 'primary_office_dell', label: 'Dell' },
-                      { key: 'primary_office_hp', label: 'HP' },
-                      { key: 'primary_office_microsoft', label: 'Microsoft' },
-                      { key: 'primary_office_other', label: 'Other' }
-                    ].map(({ key, label }) => (
-                      <div key={key} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={key}
-                          checked={editedData.organization?.[key as keyof UnifiedProfile['organization']] as boolean || false}
-                          onCheckedChange={(checked) => updateOrganizationField(key as keyof UnifiedProfile['organization'], checked)}
-                          disabled={!isEditing}
-                        />
-                        <Label htmlFor={key}>{label}</Label>
-                      </div>
-                    ))}
+      {/* Hardware Systems */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Hardware Systems</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <Label>Primary Office Hardware</Label>
+              <div className="space-y-2">
+                {[
+                  { key: 'primary_office_apple', label: 'Apple' },
+                  { key: 'primary_office_asus', label: 'ASUS' },
+                  { key: 'primary_office_dell', label: 'Dell' },
+                  { key: 'primary_office_hp', label: 'HP' },
+                  { key: 'primary_office_microsoft', label: 'Microsoft' },
+                  { key: 'primary_office_other', label: 'Other' }
+                ].map(({ key, label }) => (
+                  <div key={key} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={key}
+                      checked={editedData.profile[key as keyof UnifiedProfile['profile']] as boolean || false}
+                      onCheckedChange={(checked) => updateProfileField(key as keyof UnifiedProfile['profile'], checked)}
+                      disabled={!isEditing}
+                    />
+                    <Label htmlFor={key}>{label}</Label>
                   </div>
-                </div>
-                <div>
-                  <Label htmlFor="primary_office_other_details">Other Hardware Details</Label>
-                  <Textarea
-                    id="primary_office_other_details"
-                    value={editedData.organization.primary_office_other_details || ''}
-                    onChange={(e) => updateOrganizationField('primary_office_other_details', e.target.value)}
-                    disabled={!isEditing}
-                    rows={4}
-                  />
-                </div>
+                ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div>
+              <Label htmlFor="primary_office_other_details">Other Hardware Details</Label>
+              <Textarea
+                id="primary_office_other_details"
+                value={editedData.profile.primary_office_other_details || ''}
+                onChange={(e) => updateProfileField('primary_office_other_details', e.target.value)}
+                disabled={!isEditing}
+                rows={4}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-          {/* Additional Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Additional Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="other_software_comments">Other Software Comments</Label>
-                <Textarea
-                  id="other_software_comments"
-                  value={editedData.organization.other_software_comments || ''}
-                  onChange={(e) => updateOrganizationField('other_software_comments', e.target.value)}
-                  disabled={!isEditing}
-                  rows={4}
-                  placeholder="Please describe any other software systems or tools your organization uses..."
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
+      {/* Additional Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Additional Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="other_software_comments">Other Software Comments</Label>
+            <Textarea
+              id="other_software_comments"
+              value={editedData.profile.other_software_comments || ''}
+              onChange={(e) => updateProfileField('other_software_comments', e.target.value)}
+              disabled={!isEditing}
+              rows={4}
+              placeholder="Please describe any other software systems or tools you use..."
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
