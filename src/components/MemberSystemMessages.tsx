@@ -54,7 +54,11 @@ const MemberSystemMessages = () => {
     return null; // Don't show loading state to avoid layout shift
   }
 
-  const visibleMessages = messages?.filter(message => !dismissedMessages.has(message.id)) || [];
+  // Filter out email templates (messages with email_type) and dismissed messages
+  const visibleMessages = messages?.filter(message => 
+    !dismissedMessages.has(message.id) && 
+    !(message as any).email_type // Only show messages without email_type (not email templates)
+  ) || [];
 
   if (visibleMessages.length === 0) {
     return null; // Don't render anything if no messages
