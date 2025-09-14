@@ -15,7 +15,7 @@ const TinyMCEEditor: React.FC<TinyMCEEditorProps> = ({
   placeholder = "Enter content...",
   className = ""
 }) => {
-  const [apiKey, setApiKey] = useState<string>('no-api-key');
+  const [apiKey, setApiKey] = useState<string>('dr67kwwgfkm6433kt5s4y3eov00k139jqt0lm33tz3bvhbn7');
   const [keyVersion, setKeyVersion] = useState(0);
 
   const fetchApiKey = async () => {
@@ -47,9 +47,14 @@ const TinyMCEEditor: React.FC<TinyMCEEditorProps> = ({
         return;
       }
 
-      console.log('❌ No TinyMCE API key found anywhere, using default');
+      console.log('❌ Fallback: Using hardcoded API key');
+      // Use the provided API key as fallback
+      setApiKey('dr67kwwgfkm6433kt5s4y3eov00k139jqt0lm33tz3bvhbn7');
     } catch (error) {
       console.error('💥 Error fetching TinyMCE API key:', error);
+      console.log('❌ Error fallback: Using hardcoded API key');
+      // Use the provided API key as fallback
+      setApiKey('dr67kwwgfkm6433kt5s4y3eov00k139jqt0lm33tz3bvhbn7');
     }
   };
 
@@ -79,7 +84,8 @@ const TinyMCEEditor: React.FC<TinyMCEEditorProps> = ({
     }
   }));
 
-  console.log('TinyMCE Editor using API key:', apiKey.substring(0, 10) + '...');
+  console.log('🔧 TinyMCE Editor initializing with API key:', apiKey.substring(0, 10) + '...');
+  
   return (
     <div className={className}>
       <Editor
@@ -104,6 +110,15 @@ const TinyMCEEditor: React.FC<TinyMCEEditorProps> = ({
           automatic_uploads: true,
           file_picker_types: 'image',
           paste_data_images: true,
+          // Remove the onboarding plugin if using a valid API key
+          ...(apiKey !== 'no-api-key' && apiKey !== 'dr67kwwgfkm6433kt5s4y3eov00k139jqt0lm33tz3bvhbn7' ? {} : {
+            plugins: [
+              'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+              'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+              'insertdatetime', 'media', 'table', 'help', 'wordcount', 'emoticons',
+              'template', 'codesample'
+            ]
+          }),
           images_upload_handler: (blobInfo: any) => {
             return new Promise((resolve) => {
               const reader = new FileReader();
