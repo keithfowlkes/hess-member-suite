@@ -78,18 +78,19 @@ export function AnalyticsFeedbackDialog({ open, onOpenChange }: AnalyticsFeedbac
     setIsLoading(true);
 
     try {
-      // Send feedback via edge function
-      const { data, error } = await supabase.functions.invoke('send-analytics-feedback', {
-        body: {
-          name: name.trim(),
-          email: email.trim(),
-          organization: organization.trim() || '',
-          message: message.trim()
-        }
-      });
+      // Save feedback to user_messages table for admin review
+      const { error } = await supabase
+        .from('user_messages')
+        .insert([{
+          user_name: name.trim(),
+          user_email: email.trim(),
+          organization: organization.trim() || null,
+          message: message.trim(),
+          message_type: 'analytics_feedback',
+          is_read: false
+        }]);
 
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Feedback Sent!",
