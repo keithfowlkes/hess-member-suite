@@ -58,6 +58,7 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
         break;
       case 'profile_update':
       case 'profile_update_approved':
+      case 'profile_update_message_template':
         settingKey = 'profile_update_message_template';
         break;
       case 'member_info_update':
