@@ -73,6 +73,8 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
 
   const handleSave = async () => {
     console.log('🚀 UnifiedProfileEditor: Save button clicked');
+    console.log('📊 Original data:', data);
+    console.log('✏️ Edited data:', editedData);
     
     const profileUpdates: Partial<UnifiedProfile['profile']> = {};
     const organizationUpdates: Partial<UnifiedProfile['organization']> = {};
@@ -80,8 +82,12 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
     // Compare profile data
     Object.keys(editedData.profile).forEach(key => {
       const typedKey = key as keyof UnifiedProfile['profile'];
-      if (editedData.profile[typedKey] !== data.profile[typedKey]) {
-        (profileUpdates as any)[typedKey] = editedData.profile[typedKey];
+      const originalValue = data.profile[typedKey];
+      const editedValue = editedData.profile[typedKey];
+      
+      if (editedValue !== originalValue) {
+        console.log(`📝 Profile change detected - ${key}: ${originalValue} → ${editedValue}`);
+        (profileUpdates as any)[typedKey] = editedValue;
       }
     });
 
@@ -89,14 +95,18 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
     if (editedData.organization && data.organization) {
       Object.keys(editedData.organization).forEach(key => {
         const typedKey = key as keyof UnifiedProfile['organization'];
-        if (editedData.organization![typedKey] !== data.organization![typedKey]) {
-          (organizationUpdates as any)[typedKey] = editedData.organization![typedKey];
+        const originalValue = data.organization![typedKey];
+        const editedValue = editedData.organization![typedKey];
+        
+        if (editedValue !== originalValue) {
+          console.log(`🏢 Organization change detected - ${key}: ${originalValue} → ${editedValue}`);
+          (organizationUpdates as any)[typedKey] = editedValue;
         }
       });
     }
 
-    console.log('📝 Profile updates:', profileUpdates);
-    console.log('🏢 Organization updates:', organizationUpdates);
+    console.log('📝 Final profile updates:', profileUpdates);
+    console.log('🏢 Final organization updates:', organizationUpdates);
 
     const success = await onSave({
       profile: Object.keys(profileUpdates).length > 0 ? profileUpdates : undefined,

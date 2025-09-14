@@ -487,6 +487,8 @@ const MasterDashboard = () => {
 
   // Create comparison data for profile edit requests
   const createProfileEditComparisonData = (request) => {
+    console.log('🔍 DEBUG: Full profile edit request:', request);
+    
     if (!request) return { originalData: null };
 
     // Create flattened original data combining organization and profile data
@@ -500,6 +502,9 @@ const MasterDashboard = () => {
       ...(request.updated_organization_data || {}),
       ...(request.updated_profile_data || {})
     };
+
+    console.log('🔄 Comparison - Original:', originalData);
+    console.log('🔄 Comparison - Updated:', updatedData);
 
     // Add special handling for contact changes (email changes are critical)
     const contactChanges = [];
