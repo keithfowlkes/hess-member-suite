@@ -98,7 +98,7 @@ export function MemberOrganizationsView() {
           {filteredOrganizations.map((organization) => (
             <Card 
               key={organization.id} 
-              className="transition-shadow hover:shadow-md overflow-hidden"
+              className="transition-shadow hover:shadow-md overflow-hidden bg-[#faf7d4]"
             >
               <CardHeader className="pb-3">
                 <div className="space-y-2">
