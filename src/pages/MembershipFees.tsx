@@ -1831,6 +1831,178 @@ export default function MembershipFees() {
                       ))}
                     </div>
                     
+                    {/* Prorating Review Section */}
+                    {selectedOrganizations.size > 0 && (
+                      <Card className="mt-4">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <DollarSign className="h-5 w-5" />
+                            Review Invoice Amounts Before Sending
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            <div className="text-sm text-muted-foreground mb-3">
+                              Review and adjust invoice amounts for selected organizations. Organizations that joined mid-year are automatically calculated with prorated fees.
+                            </div>
+                            
+                            <div className="grid grid-cols-12 gap-2 p-3 font-medium text-sm text-muted-foreground border-b">
+                              <div className="col-span-3">Organization</div>
+                              <div className="col-span-2">Status</div>
+                              <div className="col-span-2">Standard Fee</div>
+                              <div className="col-span-2">Invoice Amount</div>
+                              <div className="col-span-2">Proration Details</div>
+                              <div className="col-span-1">Actions</div>
+                            </div>
+                            
+                            <div className="max-h-64 overflow-y-auto space-y-2">
+                              {Array.from(selectedOrganizations).map(orgId => {
+                                const org = organizations.find(o => o.id === orgId);
+                                if (!org) return null;
+                                
+                                const proratedAmount = getProratedAmount(orgId);
+                                const feeTier = organizationFeeTiers[orgId];
+                                const tierAmount = feeTier ? getFeeAmountForTier(feeTier) : null;
+                                const standardFee = tierAmount || org.annual_fee_amount || 1000;
+                                const invoiceAmount = proratedAmount || standardFee;
+                                
+                                const needsProration = org.membership_start_date && (() => {
+                                  const startDate = new Date(org.membership_start_date);
+                                  const currentYear = new Date().getFullYear();
+                                  const startYear = startDate.getFullYear();
+                                  const yearStart = new Date(startYear, 0, 1);
+                                  return startDate > yearStart && (startYear === currentYear || startYear === currentYear);
+                                })();
+                                
+                                const calculatedProrated = needsProration && org.membership_start_date 
+                                  ? calculateProratedFee(org.membership_start_date, standardFee, standardRenewalDate)
+                                  : null;
+                                
+                                return (
+                                  <div key={orgId} className="grid grid-cols-12 gap-2 items-center p-3 border rounded-lg hover:bg-gray-50">
+                                    <div className="col-span-3">
+                                      <div>
+                                        <p className="font-medium text-sm">{org.name}</p>
+                                        <p className="text-xs text-muted-foreground">{org.email}</p>
+                                      </div>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <Badge className={getStatusColor(org.membership_status)}>
+                                        {org.membership_status}
+                                      </Badge>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <span className="text-sm font-medium">
+                                        ${standardFee.toLocaleString()}
+                                      </span>
+                                      {feeTier && (
+                                        <div className="text-xs text-muted-foreground">
+                                          {getTierDisplayName(feeTier)}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="col-span-2">
+                                      <div className="flex items-center space-x-2">
+                                        <Input
+                                          type="number"
+                                          value={invoiceAmount}
+                                          onChange={(e) => {
+                                            const newAmount = parseFloat(e.target.value) || 0;
+                                            updateProratedFee(orgId, newAmount);
+                                          }}
+                                          className="w-20 h-8 text-sm"
+                                          min="0"
+                                          step="1"
+                                        />
+                                        {invoiceAmount !== standardFee && (
+                                          <Badge variant="secondary" className="text-xs">
+                                            {Math.round((invoiceAmount / standardFee) * 100)}%
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="col-span-2">
+                                      {needsProration ? (
+                                        <div className="text-xs">
+                                          <div className="text-muted-foreground">
+                                            Started: {format(new Date(org.membership_start_date!), 'MMM dd, yyyy')}
+                                          </div>
+                                          {calculatedProrated && (
+                                            <div className="text-green-600 font-medium">
+                                              Suggested: ${calculatedProrated.toLocaleString()}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <span className="text-xs text-muted-foreground">Full year</span>
+                                      )}
+                                    </div>
+                                    <div className="col-span-1">
+                                      {needsProration && calculatedProrated && invoiceAmount !== calculatedProrated && (
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => updateProratedFee(orgId, calculatedProrated)}
+                                          className="h-6 px-2 text-xs"
+                                          disabled={updatingProrated.has(orgId)}
+                                        >
+                                          Use Calc
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            
+                            <div className="border-t pt-3">
+                              <div className="flex justify-between items-center text-sm">
+                                <div className="space-y-1">
+                                  <div>
+                                    <span className="font-medium">Total Standard Fees: </span>
+                                    <span>${Array.from(selectedOrganizations).reduce((sum, orgId) => {
+                                      const org = organizations.find(o => o.id === orgId);
+                                      if (!org) return sum;
+                                      const feeTier = organizationFeeTiers[orgId];
+                                      const tierAmount = feeTier ? getFeeAmountForTier(feeTier) : null;
+                                      return sum + (tierAmount || org.annual_fee_amount || 1000);
+                                    }, 0).toLocaleString()}</span>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Total Invoice Amounts: </span>
+                                    <span className="text-green-600">${Array.from(selectedOrganizations).reduce((sum, orgId) => {
+                                      const org = organizations.find(o => o.id === orgId);
+                                      if (!org) return sum;
+                                      const proratedAmount = getProratedAmount(orgId);
+                                      const feeTier = organizationFeeTiers[orgId];
+                                      const tierAmount = feeTier ? getFeeAmountForTier(feeTier) : null;
+                                      const standardFee = tierAmount || org.annual_fee_amount || 1000;
+                                      return sum + (proratedAmount || standardFee);
+                                    }, 0).toLocaleString()}</span>
+                                  </div>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {Array.from(selectedOrganizations).filter(orgId => {
+                                    const org = organizations.find(o => o.id === orgId);
+                                    return org?.membership_start_date && (() => {
+                                      const startDate = new Date(org.membership_start_date);
+                                      const currentYear = new Date().getFullYear();
+                                      const startYear = startDate.getFullYear();
+                                      const yearStart = new Date(startYear, 0, 1);
+                                      return startDate > yearStart && (startYear === currentYear);
+                                    })();
+                                  }).length} organization{Array.from(selectedOrganizations).filter(orgId => {
+                                    const org = organizations.find(o => o.id === orgId);
+                                    return org?.membership_start_date;
+                                  }).length !== 1 ? 's' : ''} eligible for proration
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
                     <div className="flex justify-between items-center pt-4 border-t">
                       <p className="text-sm text-muted-foreground">
                         {selectedOrganizations.size} organization{selectedOrganizations.size !== 1 ? 's' : ''} selected
