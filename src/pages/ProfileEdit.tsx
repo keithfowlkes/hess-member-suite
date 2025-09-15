@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
+import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Edit, Save, X, ArrowLeft } from 'lucide-react';
 

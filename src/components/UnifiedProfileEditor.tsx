@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Edit, Save, X } from 'lucide-react';
 import { UnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
+import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
 
 interface UnifiedProfileEditorProps {
   data: UnifiedProfile;
@@ -393,70 +394,70 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SystemFieldSelect
+            <EnhancedSystemFieldSelect
               fieldName="student_information_system"
               label="Student Information System"
               value={editedData.profile.student_information_system || ''}
               onChange={(value) => updateProfileField('student_information_system', value)}
               disabled={!isEditing}
             />
-            <SystemFieldSelect
+            <EnhancedSystemFieldSelect
               fieldName="financial_system"
               label="Financial System"
               value={editedData.profile.financial_system || ''}
               onChange={(value) => updateProfileField('financial_system', value)}
               disabled={!isEditing}
             />
-            <SystemFieldSelect
+            <EnhancedSystemFieldSelect
               fieldName="financial_aid"
               label="Financial Aid"
               value={editedData.profile.financial_aid || ''}
               onChange={(value) => updateProfileField('financial_aid', value)}
               disabled={!isEditing}
             />
-            <SystemFieldSelect
+            <EnhancedSystemFieldSelect
               fieldName="hcm_hr"
               label="HCM/HR"
               value={editedData.profile.hcm_hr || ''}
               onChange={(value) => updateProfileField('hcm_hr', value)}
               disabled={!isEditing}
             />
-            <SystemFieldSelect
+            <EnhancedSystemFieldSelect
               fieldName="payroll_system"
               label="Payroll System"
               value={editedData.profile.payroll_system || ''}
               onChange={(value) => updateProfileField('payroll_system', value)}
               disabled={!isEditing}
             />
-            <SystemFieldSelect
+            <EnhancedSystemFieldSelect
               fieldName="purchasing_system"
               label="Purchasing System"
               value={editedData.profile.purchasing_system || ''}
               onChange={(value) => updateProfileField('purchasing_system', value)}
               disabled={!isEditing}
             />
-            <SystemFieldSelect
+            <EnhancedSystemFieldSelect
               fieldName="housing_management"
               label="Housing Management"
               value={editedData.profile.housing_management || ''}
               onChange={(value) => updateProfileField('housing_management', value)}
               disabled={!isEditing}
             />
-            <SystemFieldSelect
+            <EnhancedSystemFieldSelect
               fieldName="learning_management"
               label="Learning Management"
               value={editedData.profile.learning_management || ''}
               onChange={(value) => updateProfileField('learning_management', value)}
               disabled={!isEditing}
             />
-            <SystemFieldSelect
+            <EnhancedSystemFieldSelect
               fieldName="admissions_crm"
               label="Admissions CRM"
               value={editedData.profile.admissions_crm || ''}
               onChange={(value) => updateProfileField('admissions_crm', value)}
               disabled={!isEditing}
             />
-            <SystemFieldSelect
+            <EnhancedSystemFieldSelect
               fieldName="alumni_advancement_crm"
               label="Alumni/Advancement CRM"
               value={editedData.profile.alumni_advancement_crm || ''}

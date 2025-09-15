@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
+import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useCreateReassignmentRequest } from '@/hooks/useReassignmentRequests';
 
@@ -112,70 +113,8 @@ export default function Auth() {
     recaptchaEnabledSetting: recaptchaEnabledSetting?.setting_value
   });
 
-  // System field select component
-  const SystemFieldSelect = ({ 
-    fieldName, 
-    label, 
-    value, 
-    onChange, 
-    disabled,
-    customValue,
-    onCustomValueChange,
-    required = false
-  }: {
-    fieldName: SystemField;
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    disabled: boolean;
-    customValue: string;
-    onCustomValueChange: (value: string) => void;
-    required?: boolean;
-  }) => {
-    const options = useSimpleFieldOptions(fieldName);
-    
-    return (
-      <div className="space-y-3">
-        <Label htmlFor={fieldName} className="text-gray-700 font-medium text-sm">
-          {label} {required && <span className="text-red-500">*</span>}
-        </Label>
-        <Select 
-          value={value || "none"} 
-          onValueChange={(val) => onChange(val === "none" ? "" : val)} 
-          disabled={disabled}
-          required={required}
-        >
-          <SelectTrigger className="h-11 bg-white border-gray-300 shadow-sm">
-            <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
-          </SelectTrigger>
-          <SelectContent className="max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-input shadow-lg z-[9999] pointer-events-auto">
-            <SelectItem value="none" className="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <span className="text-muted-foreground">None specified</span>
-            </SelectItem>
-            {options.map((option) => (
-              <SelectItem key={option} value={option} className="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {value === 'Other' && (
-          <div className="mt-2">
-            <Input
-              placeholder={`Please specify ${label.toLowerCase()}`}
-              value={customValue}
-              onChange={(e) => onCustomValueChange(e.target.value)}
-              className="h-10 bg-gray-50 border-gray-300"
-              disabled={disabled}
-              required={required}
-            />
-          </div>
-        )}
-      </div>
-    );
-  };
   
-  const initialSignUpFormState = { 
+  const initialSignUpFormState = {
     isPrivateNonProfit: false,
     email: '', 
     password: '', 
@@ -1354,25 +1293,19 @@ export default function Auth() {
                     <div>
                       <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Academic Systems</h4>
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <SystemFieldSelect
+                        <EnhancedSystemFieldSelect
                           fieldName="student_information_system"
                           label="Student Information System"
                           value={signUpForm.studentInformationSystem}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
-                          customValue={signUpForm.studentInformationSystemOther}
-                          onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystemOther: value }))}
-                          required={true}
                         />
-                        <SystemFieldSelect
+                        <EnhancedSystemFieldSelect
                           fieldName="learning_management"
                           label="Learning Management System"
                           value={signUpForm.learningManagement}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagement: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
-                          customValue={signUpForm.learningManagementOther}
-                          onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagementOther: value }))}
-                          required={true}
                         />
                       </div>
                     </div>
@@ -1381,35 +1314,26 @@ export default function Auth() {
                     <div>
                       <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Financial Systems</h4>
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <SystemFieldSelect
+                        <EnhancedSystemFieldSelect
                           fieldName="financial_system"
                           label="Financial System"
                           value={signUpForm.financialSystem}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystem: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
-                          customValue={signUpForm.financialSystemOther}
-                          onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystemOther: value }))}
-                          required={true}
                         />
-                        <SystemFieldSelect
+                        <EnhancedSystemFieldSelect
                           fieldName="financial_aid"
                           label="Financial Aid System"
                           value={signUpForm.financialAid}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, financialAid: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
-                          customValue={signUpForm.financialAidOther}
-                          onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, financialAidOther: value }))}
-                          required={true}
                         />
-                        <SystemFieldSelect
+                        <EnhancedSystemFieldSelect
                           fieldName="purchasing_system"
                           label="Purchasing System"
                           value={signUpForm.purchasingSystem}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystem: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
-                          customValue={signUpForm.purchasingSystemOther}
-                          onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystemOther: value }))}
-                          required={true}
                         />
                       </div>
                     </div>
@@ -1418,35 +1342,26 @@ export default function Auth() {
                     <div>
                       <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">HR & Operations</h4>
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <SystemFieldSelect
+                        <EnhancedSystemFieldSelect
                           fieldName="hcm_hr"
                           label="Human Capital Management"
                           value={signUpForm.hcmHr}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHr: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
-                          customValue={signUpForm.hcmHrOther}
-                          onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHrOther: value }))}
-                          required={true}
                         />
-                        <SystemFieldSelect
+                        <EnhancedSystemFieldSelect
                           fieldName="payroll_system"
                           label="Payroll System"
                           value={signUpForm.payrollSystem}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystem: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
-                          customValue={signUpForm.payrollSystemOther}
-                          onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystemOther: value }))}
-                          required={true}
                         />
-                        <SystemFieldSelect
+                        <EnhancedSystemFieldSelect
                           fieldName="housing_management"
                           label="Housing Management"
                           value={signUpForm.housingManagement}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagement: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
-                          customValue={signUpForm.housingManagementOther}
-                          onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagementOther: value }))}
-                          required={true}
                         />
                       </div>
                     </div>
@@ -1455,25 +1370,19 @@ export default function Auth() {
                     <div>
                       <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">CRM Systems</h4>
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <SystemFieldSelect
+                        <EnhancedSystemFieldSelect
                           fieldName="admissions_crm"
                           label="Admissions CRM"
                           value={signUpForm.admissionsCrm}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrm: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
-                          customValue={signUpForm.admissionsCrmOther}
-                          onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrmOther: value }))}
-                          required={true}
                         />
-                        <SystemFieldSelect
+                        <EnhancedSystemFieldSelect
                           fieldName="alumni_advancement_crm"
                           label="Alumni & Advancement CRM"
                           value={signUpForm.alumniAdvancementCrm}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
-                          customValue={signUpForm.alumniAdvancementCrmOther}
-                          onCustomValueChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrmOther: value }))}
-                          required={true}
                         />
                       </div>
                     </div>
