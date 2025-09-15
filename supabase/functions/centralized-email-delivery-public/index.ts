@@ -41,7 +41,7 @@ interface EmailTemplate {
   variables: string[];
 }
 
-// Function to get and replace logo URL in template
+// Function to get and replace logo URL in template with proper email embedding
 async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
   try {
     // Get the uploaded logo URL from system settings
@@ -56,8 +56,10 @@ async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
     if (logoUrl && logoUrl.trim()) {
       console.log('[centralized-email-delivery-public] Using uploaded logo:', logoUrl);
       
+      // Create a properly formatted img tag for email clients
+      const emailOptimizedImg = `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto;" border="0">`;
+      
       // Replace any existing logo image sources with the uploaded logo
-      // This covers various patterns that might exist in email templates
       let updatedContent = htmlContent;
       
       // Replace direct image URLs that might be HESS logos
@@ -66,16 +68,22 @@ async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
         `src="${logoUrl}"`
       );
       
-      // Replace any other existing logo references
+      // Replace any other existing logo references with the email-optimized version
       updatedContent = updatedContent.replace(
-        /src="[^"]*hess[^"]*logo[^"]*"/gi,
-        `src="${logoUrl}"`
+        /<img[^>]*src="[^"]*hess[^"]*logo[^"]*"[^>]*>/gi,
+        emailOptimizedImg
       );
       
-      // Replace base64 encoded images (fallback)
+      // Replace base64 encoded images with the email-optimized version
       updatedContent = updatedContent.replace(
-        /src="data:image\/[^;]*;base64,[^"]*"/g,
-        `src="${logoUrl}"`
+        /<img[^>]*src="data:image\/[^;]*;base64,[^"]*"[^>]*>/g,
+        emailOptimizedImg
+      );
+      
+      // Also replace any generic logo placeholders
+      updatedContent = updatedContent.replace(
+        /\{\{logo\}\}/gi,
+        emailOptimizedImg
       );
       
       return updatedContent;
