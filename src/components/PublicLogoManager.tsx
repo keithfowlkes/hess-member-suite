@@ -129,8 +129,15 @@ export function PublicLogoManager() {
   };
 
   const handleViewPublic = () => {
-    const publicUrl = `https://members.hessconsortium.app/public/logo`;
-    window.open(publicUrl, '_blank');
+    if (currentLogoUrl) {
+      window.open(currentLogoUrl, '_blank');
+    } else {
+      toast({
+        title: "No logo available",
+        description: "Please upload a logo first",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleUpdateName = async () => {
@@ -169,12 +176,12 @@ export function PublicLogoManager() {
                 Logo Display Preview
               </CardTitle>
               <p className="text-muted-foreground mt-1">
-                This shows what visitors will see on your public logo page
+                This shows your uploaded logo that can be used in other applications
               </p>
             </div>
-            <Button onClick={handleViewPublic} variant="outline" className="gap-2">
+            <Button onClick={handleViewPublic} variant="outline" className="gap-2" disabled={!currentLogoUrl}>
               <ExternalLink className="h-4 w-4" />
-              View Public Page
+              View Logo File
             </Button>
           </div>
         </CardHeader>
@@ -197,15 +204,20 @@ export function PublicLogoManager() {
                   </div>
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">{currentLogoName}</h2>
-                <p className="text-muted-foreground">
-                  This logo is publicly accessible and can be shared with anyone
-                </p>
+                <div className="space-y-2">
+                  <p className="text-muted-foreground">
+                    This logo is publicly accessible and can be embedded in other applications
+                  </p>
+                  <div className="bg-muted/50 p-3 rounded text-sm font-mono">
+                    {currentLogoUrl}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-muted-foreground">
                 <ImageIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
                 <p>No logo uploaded yet</p>
-                <p className="text-sm">Upload a logo to display it on the public page</p>
+                <p className="text-sm">Upload a logo to get a direct file URL for use in other applications</p>
               </div>
             )}
           </div>
@@ -230,7 +242,7 @@ export function PublicLogoManager() {
               onChange={(e) => setLogoName(e.target.value)}
             />
             <p className="text-sm text-muted-foreground">
-              This will be displayed as the title below the logo
+              Upload an image to get a direct file URL that can be used in other applications, websites, or documents
             </p>
           </div>
 
@@ -245,7 +257,7 @@ export function PublicLogoManager() {
               disabled={uploading}
             />
             <p className="text-sm text-muted-foreground">
-              Supported formats: PNG, JPG, GIF, WebP. Maximum size: 5MB.
+              Supported formats: PNG, JPG, GIF, WebP. Maximum size: 5MB. The uploaded file will be directly accessible via URL.
             </p>
           </div>
 
@@ -291,7 +303,10 @@ export function PublicLogoManager() {
                 <div>
                   <p className="font-medium">{currentLogoName}</p>
                   <p className="text-sm text-muted-foreground">
-                    Currently displayed on public page
+                    Direct file URL - can be used in other applications
+                  </p>
+                  <p className="text-xs text-muted-foreground font-mono break-all">
+                    {currentLogoUrl}
                   </p>
                 </div>
               </div>

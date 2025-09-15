@@ -15,7 +15,6 @@ import MembershipFees from "./pages/MembershipFees";
 import Invoices from "./pages/Invoices";
 import PublicDirectory from "./pages/PublicDirectory";
 import PublicMap from "./pages/PublicMap";
-import PublicLogo from "./pages/PublicLogo";
 import MemberMap from "./pages/MemberMap";
 import RegistrationConfirmation from "./pages/RegistrationConfirmation";
 import Settings from "./pages/Settings";
@@ -63,7 +62,6 @@ const App = () => (
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
             <Route path="/public/directory" element={<PublicDirectory />} />
             <Route path="/public/map" element={<PublicMap />} />
-            <Route path="/public/logo" element={<PublicLogo />} />
             <Route path="/public-map" element={<ProtectedRoute><MemberMap /></ProtectedRoute>} />
             <Route path="/registration-confirmation" element={<RegistrationConfirmation />} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
