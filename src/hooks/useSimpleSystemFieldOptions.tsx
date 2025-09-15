@@ -28,7 +28,7 @@ export type SystemField = typeof SYSTEM_FIELDS[number];
 export const FIELD_LABELS: Record<SystemField, string> = {
   student_information_system: 'Student Information System',
   financial_system: 'Finance System',
-  financial_aid: 'Financial Aid',
+  financial_aid: 'FinAid System',
   hcm_hr: 'HCM (HR)',
   payroll_system: 'Payroll System',
   purchasing_system: 'Purchasing System',
