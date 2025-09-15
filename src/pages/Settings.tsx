@@ -20,6 +20,7 @@ import { useFormFields, FormField } from '@/hooks/useFormFields';
 import { useToast } from '@/hooks/use-toast';
 import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDirectory';
 import { SimpleSystemFieldManager } from '@/components/SimpleSystemFieldManager';
+import { PublicLogoManager } from '@/components/PublicLogoManager';
 
 import { USMap } from '@/components/USMap';
 import { MessageTextContent } from '@/components/MessageTextContent';
@@ -46,7 +47,8 @@ import {
   Mail,
   Send,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Image as ImageIcon
 } from 'lucide-react';
 
 const availableSections = [
@@ -688,7 +690,7 @@ export default function Settings() {
                 </div>
                 
                 <Tabs defaultValue="directory" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-2 max-w-md">
+                  <TabsList className="grid w-full grid-cols-3 max-w-lg">
                     <TabsTrigger value="directory" className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
                       Organization Directory
@@ -696,6 +698,10 @@ export default function Settings() {
                     <TabsTrigger value="map" className="flex items-center gap-2">
                       <Eye className="h-4 w-4" />
                       U.S. Map
+                    </TabsTrigger>
+                    <TabsTrigger value="logo" className="flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4" />
+                      Logo Upload
                     </TabsTrigger>
                   </TabsList>
 
@@ -713,6 +719,16 @@ export default function Settings() {
                         Interactive map showing the geographic distribution of HESS member organizations across the United States
                       </p>
                       <USMap />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="logo" className="space-y-6">
+                    <div>
+                      <h3 className="text-xl font-semibold text-foreground mb-4">Logo Upload</h3>
+                      <p className="text-muted-foreground mb-6">
+                        Upload and display your organization logo on a public page
+                      </p>
+                      <PublicLogoManager />
                     </div>
                   </TabsContent>
                 </Tabs>
