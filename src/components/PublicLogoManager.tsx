@@ -129,7 +129,7 @@ export function PublicLogoManager() {
   };
 
   const handleViewPublic = () => {
-    const publicUrl = `${window.location.origin}/public/logo`;
+    const publicUrl = `https://members.hessconsortium.app/public/logo`;
     window.open(publicUrl, '_blank');
   };
 
