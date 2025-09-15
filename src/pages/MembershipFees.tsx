@@ -161,17 +161,27 @@ export default function MembershipFees() {
     const periodEnd = new Date();
     periodEnd.setFullYear(periodEnd.getFullYear() + 1);
 
+    // Get prorated amount for this organization from the interface
+    const proratedAmount = getProratedAmount(organization.id);
+    // Check if organization has a specific fee tier set
+    const feeTier = organizationFeeTiers[organization.id];
+    const tierAmount = feeTier ? getFeeAmountForTier(feeTier) : null;
+    const invoiceAmount = proratedAmount || tierAmount || organization.annual_fee_amount || 1000;
+
     return {
       id: `preview-${organization.id}`,
       organization_id: organization.id,
       invoice_number: `INV-PREVIEW-${Date.now()}`,
-      amount: organization.annual_fee_amount || 1000,
+      amount: invoiceAmount,
+      prorated_amount: proratedAmount, // Include prorated amount for preview
       invoice_date: format(today, 'yyyy-MM-dd'),
       due_date: format(dueDate, 'yyyy-MM-dd'),
       period_start_date: format(periodStart, 'yyyy-MM-dd'),
       period_end_date: format(periodEnd, 'yyyy-MM-dd'),
       status: 'draft' as const,
-      notes: `Annual membership fee for ${organization.name}`,
+      notes: proratedAmount 
+        ? `Prorated membership fee for ${organization.name} (${Math.round((proratedAmount / (tierAmount || organization.annual_fee_amount || 1000)) * 100)}% of annual fee)`
+        : `Annual membership fee for ${organization.name}`,
       created_at: today.toISOString(),
       updated_at: today.toISOString(),
       organizations: {
@@ -642,6 +652,7 @@ export default function MembershipFees() {
                 organization_name: organization.name || '',
                 invoice_number: invoiceNumber,
                 amount: `$${(invoiceAmount || 0).toLocaleString()}`,
+                prorated_amount: proratedAmount ? `$${proratedAmount.toLocaleString()}` : undefined,
                 due_date: format(dueDate, 'yyyy-MM-dd'),
                 period_start_date: format(periodStart, 'yyyy-MM-dd'),
                 period_end_date: format(periodEnd, 'yyyy-MM-dd'),
@@ -746,7 +757,8 @@ export default function MembershipFees() {
       const invoiceEmailData = {
         organization_name: invoice.organizations?.name || '',
         invoice_number: invoice.invoice_number,
-        amount: `$${(invoice.amount || 0).toLocaleString()}`,
+        amount: `$${(invoice.prorated_amount || invoice.amount || 0).toLocaleString()}`,
+        prorated_amount: invoice.prorated_amount ? `$${invoice.prorated_amount.toLocaleString()}` : undefined,
         due_date: invoice.due_date,
         period_start_date: invoice.period_start_date,
         period_end_date: invoice.period_end_date,
@@ -852,12 +864,13 @@ export default function MembershipFees() {
               <tr>
                 <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
                   <strong>Annual Membership Fee</strong>
+                  ${dummyInvoice.prorated_amount ? '<div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">Prorated from membership start date</div>' : ''}
                 </td>
                 <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
                   ${format(new Date(dummyInvoice.period_start_date), 'MMM dd, yyyy')} - ${format(new Date(dummyInvoice.period_end_date), 'MMM dd, yyyy')}
                 </td>
                 <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">
-                  $${dummyInvoice.amount.toLocaleString()}
+                  $${(dummyInvoice.prorated_amount || dummyInvoice.amount).toLocaleString()}
                 </td>
               </tr>
             </tbody>
@@ -865,7 +878,7 @@ export default function MembershipFees() {
               <tr style="background: #f8fafc; font-weight: bold; font-size: 1.1rem;">
                 <td colspan="2" style="padding: 15px;"><strong>Total Due:</strong></td>
                 <td style="padding: 15px; text-align: right;">
-                  <strong>$${dummyInvoice.amount.toLocaleString()}</strong>
+                  <strong>${(dummyInvoice.prorated_amount || dummyInvoice.amount).toLocaleString()}</strong>
                 </td>
               </tr>
             </tfoot>
