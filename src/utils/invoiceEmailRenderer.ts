@@ -22,7 +22,7 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
       <!-- Header with Logo and Invoice Title -->
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #666;">
         <div>
-          <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS LOGO" style="max-height: 80px; width: auto; margin-bottom: 1rem;">
+          <img src="https://tyovnvuluyosjnabrzjc.supabase.co/storage/v1/object/public/invoice-logos/4a98a7dc-4bad-4f5b-94d4-fa028adbc2f6.png" alt="HESS LOGO" style="max-height: 80px; width: auto; margin-bottom: 1rem;">
           <div>
             <h3 style="font-size: 1rem; font-weight: bold; margin: 0 0 0.25rem 0;">HESS Consortium</h3>
             <p style="margin: 0.1rem 0; font-size: 0.9rem; color: #555;">Higher Education Systems & Services Consortium</p>
