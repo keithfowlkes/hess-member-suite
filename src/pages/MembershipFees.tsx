@@ -111,6 +111,7 @@ export default function MembershipFees() {
   const [pendingModalOpen, setPendingModalOpen] = useState(false);
 
   // Prorated fee states
+  const [defaultTermEndDate, setDefaultTermEndDate] = useState<Date>(new Date(new Date().getFullYear(), 11, 31)); // Dec 31st by default
   const [standardRenewalDate, setStandardRenewalDate] = useState<Date>(new Date(new Date().getFullYear(), 11, 31)); // Dec 31st by default
   const [proratedOrganizations, setProratedOrganizations] = useState<any[]>([]);
   const [updatingProrated, setUpdatingProrated] = useState<Set<string>>(new Set());
@@ -132,12 +133,13 @@ export default function MembershipFees() {
     setupDefaultInvoiceTemplate();
   }, []);
 
-  // Load fee tier settings on mount
+  // Load fee tier settings and default term end date on mount
   React.useEffect(() => {
     if (systemSettings) {
       const fullFee = systemSettings.find(s => s.setting_key === 'full_member_fee')?.setting_value;
       const affiliateFee = systemSettings.find(s => s.setting_key === 'affiliate_member_fee')?.setting_value;
       const additionalTiers = systemSettings.find(s => s.setting_key === 'additional_fee_tiers')?.setting_value;
+      const defaultTermEnd = systemSettings.find(s => s.setting_key === 'default_term_end_date')?.setting_value;
       
       if (fullFee) setFullMemberFee(fullFee);
       if (affiliateFee) setAffiliateMemberFee(affiliateFee);
@@ -147,6 +149,11 @@ export default function MembershipFees() {
         } catch (error) {
           console.error('Error parsing additional fee tiers:', error);
         }
+      }
+      if (defaultTermEnd) {
+        const termEndDate = new Date(defaultTermEnd);
+        setDefaultTermEndDate(termEndDate);
+        setStandardRenewalDate(termEndDate);
       }
     }
   }, [systemSettings]);
@@ -193,21 +200,25 @@ export default function MembershipFees() {
     };
   };
 
-  // Calculate prorated fee based on membership start date
-  const calculateProratedFee = (membershipStartDate: string, annualFee: number, renewalDate: Date): number => {
+  // Calculate prorated fee based on membership start date to default term end date
+  const calculateProratedFee = (membershipStartDate: string, annualFee: number, termEndDate: Date = defaultTermEndDate): number => {
     const startDate = new Date(membershipStartDate);
-    const endDate = new Date(renewalDate);
+    const endDate = new Date(termEndDate);
     
-    // If start date is after renewal date, use next year's renewal date
+    // If start date is after term end date, use next year's term end date
     if (startDate > endDate) {
       endDate.setFullYear(endDate.getFullYear() + 1);
     }
     
-    const totalDays = 365; // Standard year
+    // Calculate days from start to term end
     const remainingDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     
-    // Calculate prorated amount (minimum 25% of annual fee)
-    const proratedAmount = Math.max((remainingDays / totalDays) * annualFee, annualFee * 0.25);
+    // Calculate total days in the billing period (from Jan 1 to term end date)
+    const yearStart = new Date(endDate.getFullYear(), 0, 1);
+    const totalDaysInPeriod = Math.ceil((endDate.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Calculate prorated amount based on remaining days (minimum 25% of annual fee)
+    const proratedAmount = Math.max((remainingDays / totalDaysInPeriod) * annualFee, annualFee * 0.25);
     
     return Math.round(proratedAmount);
   };
@@ -215,7 +226,7 @@ export default function MembershipFees() {
   // Get organizations that need prorated calculation
   const getOrganizationsNeedingProration = () => {
     const currentYear = new Date().getFullYear();
-    const renewalYear = standardRenewalDate.getFullYear();
+    const termEndYear = defaultTermEndDate.getFullYear();
     
     return organizations.filter(org => {
       if (!org.membership_start_date || !org.annual_fee_amount) return false;
@@ -227,21 +238,21 @@ export default function MembershipFees() {
       const yearStart = new Date(startYear, 0, 1);
       const isNewMember = startDate > yearStart;
       
-      // Check if they joined in current renewal period
-      const isCurrentPeriod = startYear === currentYear || startYear === renewalYear;
+      // Check if they joined in current billing period
+      const isCurrentPeriod = startYear === currentYear || startYear === termEndYear;
       
       return isNewMember && isCurrentPeriod;
     }).map(org => {
       const calculatedProrated = calculateProratedFee(
         org.membership_start_date!, 
         org.annual_fee_amount!, 
-        standardRenewalDate
+        defaultTermEndDate
       );
       
       return {
         ...org,
         calculatedProratedFee: calculatedProrated,
-        remainingDays: Math.ceil((standardRenewalDate.getTime() - new Date(org.membership_start_date!).getTime()) / (1000 * 60 * 60 * 24))
+        remainingDays: Math.ceil((defaultTermEndDate.getTime() - new Date(org.membership_start_date!).getTime()) / (1000 * 60 * 60 * 24))
       };
     });
   };
@@ -441,6 +452,31 @@ export default function MembershipFees() {
     
     const additionalTier = additionalFeeTiers.find(t => t.id === tier);
     return additionalTier ? additionalTier.name : 'Unknown Tier';
+  };
+
+  // Save default term end date
+  const handleSaveDefaultTermEnd = async () => {
+    try {
+      await updateSystemSetting.mutateAsync({
+        settingKey: 'default_term_end_date',
+        settingValue: defaultTermEndDate.toISOString(),
+        description: 'Default membership term end date for billing calculations'
+      });
+      
+      setStandardRenewalDate(defaultTermEndDate);
+      
+      toast({
+        title: "Success",
+        description: "Default membership term end date updated successfully."
+      });
+    } catch (error) {
+      console.error('Error saving default term end date:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save default term end date.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Filter organizations based on search term
@@ -1306,6 +1342,60 @@ export default function MembershipFees() {
               </TabsList>
 
               <TabsContent value="overview">
+                {/* Membership Term Settings */}
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CalendarIcon className="h-5 w-5" />
+                      Membership Term Settings
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Set the default membership term end date for billing calculations. This affects prorated fee calculations for new members.
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Label htmlFor="default-term-end">Default Membership Term End Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !defaultTermEndDate && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {defaultTermEndDate ? format(defaultTermEndDate, "PPP") : "Select date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={defaultTermEndDate}
+                              onSelect={(date) => date && setDefaultTermEndDate(date)}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <Button onClick={handleSaveDefaultTermEnd} className="mt-6">
+                        Save Term End Date
+                      </Button>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm">
+                        <strong>Current Setting:</strong> {format(defaultTermEndDate, "MMMM dd, yyyy")}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        New members joining after January 1st will have their fees prorated from their registration date to this term end date.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Annual Fee Tier Pricing Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                   <Card className="lg:col-span-2">
