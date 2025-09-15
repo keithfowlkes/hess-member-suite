@@ -334,7 +334,7 @@ serve(async (req) => {
     };
     
     const templateData = {
-      '{{LOGO}}': '<img src="https://tyovnvuluyosjnabrzjc.supabase.co/storage/v1/object/public/invoice-logos/4a98a7dc-4bad-4f5b-94d4-fa028adbc2f6.png" alt="HESS Consortium Logo" style="max-height: 80px; width: auto;">',
+      '{{LOGO}}': '<img src="https://mail.hessconsortium.app/assets/hess-logo.png" alt="HESS Consortium Logo" style="max-height: 80px; width: auto;">',
       '{{INVOICE_NUMBER}}': invoice.invoice_number,
       '{{INVOICE_DATE}}': formatDate(invoice.invoice_date),
       '{{DUE_DATE}}': formatDate(invoice.due_date),
