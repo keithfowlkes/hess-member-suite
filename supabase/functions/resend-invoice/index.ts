@@ -183,7 +183,7 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
       <!-- Header with Logo and Invoice Title -->
       <div class="invoice-header">
         <div class="logo-section">
-          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS Consortium Logo" style="width: 150px; height: auto;">
+          <img src="https://9f0afb12-d741-415b-9bbb-e40cfcba281a.lovableproject.com/assets/hess-logo.png" alt="HESS Consortium Logo" style="width: 150px; height: auto;">
           <div class="company-info">
             <h3>HESS Consortium</h3>
             <p>Higher Education Systems & Services Consortium</p>
