@@ -344,13 +344,12 @@ export default function MembershipFees() {
         description: 'Annual fee amount for affiliate members'
       });
 
-      if (additionalFeeTiers.length > 0) {
-        await updateSystemSetting.mutateAsync({
-          settingKey: 'additional_fee_tiers',
-          settingValue: JSON.stringify(additionalFeeTiers),
-          description: 'Additional custom fee tiers'
-        });
-      }
+      // Always save additional fee tiers to persist deletions
+      await updateSystemSetting.mutateAsync({
+        settingKey: 'additional_fee_tiers',
+        settingValue: JSON.stringify(additionalFeeTiers),
+        description: 'Additional custom fee tiers'
+      });
 
       toast({
         title: "Success",
