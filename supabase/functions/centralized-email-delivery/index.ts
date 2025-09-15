@@ -43,6 +43,53 @@ interface EmailTemplate {
   variables: string[];
 }
 
+// Function to get and replace logo URL in template
+async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
+  try {
+    // Get the uploaded logo URL from system settings
+    const { data: logoSetting } = await supabase
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_key', 'public_logo_url')
+      .maybeSingle();
+    
+    const logoUrl = logoSetting?.setting_value;
+    
+    if (logoUrl && logoUrl.trim()) {
+      console.log('[centralized-email-delivery] Using uploaded logo:', logoUrl);
+      
+      // Replace any existing logo image sources with the uploaded logo
+      // This covers various patterns that might exist in email templates
+      let updatedContent = htmlContent;
+      
+      // Replace direct image URLs that might be HESS logos
+      updatedContent = updatedContent.replace(
+        /src="https:\/\/9f0afb12-d741-415b-9bbb-e40cfcba281a\.lovableproject\.com\/assets\/hess-logo\.png"/g,
+        `src="${logoUrl}"`
+      );
+      
+      // Replace any other existing logo references
+      updatedContent = updatedContent.replace(
+        /src="[^"]*hess[^"]*logo[^"]*"/gi,
+        `src="${logoUrl}"`
+      );
+      
+      // Replace base64 encoded images (fallback)
+      updatedContent = updatedContent.replace(
+        /src="data:image\/[^;]*;base64,[^"]*"/g,
+        `src="${logoUrl}"`
+      );
+      
+      return updatedContent;
+    }
+    
+    return htmlContent;
+  } catch (error) {
+    console.error('[centralized-email-delivery] Error replacing logo:', error);
+    return htmlContent;
+  }
+}
+
 // Function to get email template from system_settings table (primary) or system_messages (fallback)
 async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null> {
   try {
@@ -77,6 +124,10 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
 
     if (!settingError && settingTemplate?.setting_value) {
       console.log(`Found template in system_settings for: ${emailType}`);
+      
+      // Replace logo in template content
+      const htmlWithLogo = await replaceLogoInTemplate(settingTemplate.setting_value);
+      
       return {
         id: emailType,
         name: `${emailType.charAt(0).toUpperCase() + emailType.slice(1)} Template`,
@@ -84,11 +135,7 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
                 emailType === 'password_reset' ? 'Password Reset Request' :
                 (emailType === 'profile_update' || emailType === 'profile_update_approved' || emailType === 'member_info_update') ? 'Profile Update Approved' :
                 'HESS Consortium Notification',
-        html: settingTemplate.setting_value || `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            {{message}}
-          </div>
-        `,
+        html: htmlWithLogo,
         variables: []
       };
     }
@@ -107,15 +154,18 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
       return null;
     }
 
+    // Replace logo in fallback template content
+    const htmlWithLogo = await replaceLogoInTemplate(messageTemplate.content || `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        {{message}}
+      </div>
+    `);
+
     return {
       id: emailType,
       name: messageTemplate.title,
       subject: messageTemplate.title,
-      html: messageTemplate.content || `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          {{message}}
-        </div>
-      `,
+      html: htmlWithLogo,
       variables: []
     };
   } catch (error) {
@@ -215,12 +265,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     let template = await getEmailTemplate(typeKey);
     if (!template && emailRequest.template) {
-      // Custom template provided
+      // Custom template provided - replace logo here too
+      const htmlWithLogo = await replaceLogoInTemplate(emailRequest.template);
       template = {
         id: 'custom',
         name: 'Custom Template',
         subject: emailRequest.subject || 'HESS Consortium Email',
-        html: emailRequest.template,
+        html: htmlWithLogo,
         variables: []
       };
     }
