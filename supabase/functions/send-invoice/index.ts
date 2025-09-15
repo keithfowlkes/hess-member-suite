@@ -191,7 +191,7 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
       <!-- Header with Logo and Invoice Title -->
       <div class="invoice-header">
         <div class="logo-section">
-          <img src="http://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS Consortium Logo" style="width: 150px; height: auto;">
+          <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS Consortium Logo" style="width: 150px; height: auto;">
           <div class="company-info">
             <h3>HESS Consortium</h3>
             <p>Higher Education Systems & Services Consortium</p>
@@ -399,7 +399,7 @@ serve(async (req) => {
     };
     
     const templateData = {
-      '{{LOGO}}': '', // Not used in new design, logo is embedded directly
+      '{{LOGO}}': '<img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS Consortium Logo" style="max-height: 80px; width: auto;">',
       '{{INVOICE_NUMBER}}': invoiceNumber,
       '{{INVOICE_DATE}}': formatDate(new Date().toISOString()),
       '{{DUE_DATE}}': formatDate(dueDate.toISOString()),

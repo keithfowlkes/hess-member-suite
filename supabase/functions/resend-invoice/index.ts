@@ -334,7 +334,7 @@ serve(async (req) => {
     };
     
     const templateData = {
-      '{{LOGO}}': '', // Not used in new design, logo is embedded directly
+      '{{LOGO}}': '<img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/03/HESSlogoMasterFLAT.png" alt="HESS Consortium Logo" style="max-height: 80px; width: auto;">',
       '{{INVOICE_NUMBER}}': invoice.invoice_number,
       '{{INVOICE_DATE}}': formatDate(invoice.invoice_date),
       '{{DUE_DATE}}': formatDate(invoice.due_date),
