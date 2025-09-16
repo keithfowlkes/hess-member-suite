@@ -318,8 +318,8 @@ export async function previewNormalization(fieldNames: string[] = []) {
   return preview;
 }
 
-// Execute normalization (simplified version without backup)
-export async function executeNormalization(fieldNames: string[] = [], confirm: boolean = false): Promise<{
+// Execute normalization with auto-confirmation for admin usage
+export async function executeNormalization(fieldNames: string[] = [], confirm: boolean = true): Promise<{
   success: boolean;
   processed: number;
   errors: string[];
