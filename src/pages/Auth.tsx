@@ -1813,6 +1813,7 @@ export default function Auth() {
                         value={signUpForm.studentInformationSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: value }))}
                         disabled={!isReassignment}
+                        organizationId={selectedOrganizationId || undefined}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1821,6 +1822,7 @@ export default function Auth() {
                         value={signUpForm.financialSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystem: value }))}
                         disabled={!isReassignment}
+                        organizationId={selectedOrganizationId || undefined}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1829,6 +1831,7 @@ export default function Auth() {
                         value={signUpForm.financialAid}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, financialAid: value }))}
                         disabled={!isReassignment}
+                        organizationId={selectedOrganizationId || undefined}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1837,6 +1840,7 @@ export default function Auth() {
                         value={signUpForm.hcmHr}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHr: value }))}
                         disabled={!isReassignment}
+                        organizationId={selectedOrganizationId || undefined}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1845,6 +1849,7 @@ export default function Auth() {
                         value={signUpForm.payrollSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystem: value }))}
                         disabled={!isReassignment}
+                        organizationId={selectedOrganizationId || undefined}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1853,6 +1858,7 @@ export default function Auth() {
                         value={signUpForm.purchasingSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystem: value }))}
                         disabled={!isReassignment}
+                        organizationId={selectedOrganizationId || undefined}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1861,6 +1867,7 @@ export default function Auth() {
                         value={signUpForm.housingManagement}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagement: value }))}
                         disabled={!isReassignment}
+                        organizationId={selectedOrganizationId || undefined}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1869,6 +1876,7 @@ export default function Auth() {
                         value={signUpForm.learningManagement}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagement: value }))}
                         disabled={!isReassignment}
+                        organizationId={selectedOrganizationId || undefined}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1877,6 +1885,7 @@ export default function Auth() {
                         value={signUpForm.admissionsCrm}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrm: value }))}
                         disabled={!isReassignment}
+                        organizationId={selectedOrganizationId || undefined}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1885,6 +1894,7 @@ export default function Auth() {
                         value={signUpForm.alumniAdvancementCrm}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
                         disabled={!isReassignment}
+                        organizationId={selectedOrganizationId || undefined}
                       />
                     </div>
                   </div>
