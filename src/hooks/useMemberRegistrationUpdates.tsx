@@ -131,7 +131,7 @@ export function useMemberRegistrationUpdates() {
     isLoading,
     error,
     refetch,
-    createRegistrationUpdate: createRegistrationUpdate.mutate,
+    createRegistrationUpdate: createRegistrationUpdate.mutateAsync,
     processRegistrationUpdate: processRegistrationUpdate.mutate,
     isCreating: createRegistrationUpdate.isPending,
     isProcessing: processRegistrationUpdate.isPending

@@ -404,7 +404,13 @@ export default function Auth() {
           other_software_comments: signUpForm.otherSoftwareComments
         };
 
-        createRegistrationUpdate({
+        console.log('🔍 DEBUG: About to call createRegistrationUpdate with data:', {
+          submitted_email: signUpForm.email,
+          existing_organization_id: selectedOrganizationId,
+          existing_organization_name: currentOrg.name
+        });
+
+        await createRegistrationUpdate({
           submitted_email: signUpForm.email,
           registration_data: {
             email: signUpForm.email,
@@ -428,6 +434,8 @@ export default function Auth() {
           existing_organization_name: currentOrg.name,
           submission_type: 'member_update'
         });
+
+        console.log('✅ DEBUG: createRegistrationUpdate call completed');
 
         // Redirect to confirmation page  
         console.log('📍 REASSIGNMENT DEBUG: Navigating to: /registration-confirmation?type=reassignment');
