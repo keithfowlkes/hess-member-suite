@@ -342,8 +342,8 @@ export default function Auth() {
     console.log('✅ REGISTRATION DEBUG: Validation passed, setting submitting state');
     setIsSubmitting(true);
 
-    // If this is a reassignment request, handle differently
-    if (isReassignment && selectedOrganizationId) {
+    // If this is a member update request or reassignment request, handle differently
+    if ((isReassignment && selectedOrganizationId) || (activeTab === 'member-update' && selectedOrganizationId)) {
       try {
         // Get the current organization data
         const { data: currentOrg, error: fetchError } = await supabase
@@ -447,16 +447,18 @@ export default function Auth() {
         }
 
         // Redirect to confirmation page  
-        console.log('📍 REASSIGNMENT DEBUG: Navigating to: /registration-confirmation?type=reassignment');
+        console.log('📍 MEMBER UPDATE DEBUG: Navigating to: /registration-confirmation?type=reassignment');
         
         // Reset form state before navigation
         setSignUpForm(initialSignUpFormState);
+        setSelectedOrganizationId('');
+        setIsReassignment(false);
         
         try {
           navigate('/registration-confirmation?type=reassignment', { replace: true });
-          console.log('✅ REASSIGNMENT DEBUG: Navigate call completed successfully');
+          console.log('✅ MEMBER UPDATE DEBUG: Navigate call completed successfully');
           setIsSubmitting(false);
-          return; // Exit early for reassignment flow
+          return; // Exit early for member update flow
         } catch (error) {
           console.error('❌ REASSIGNMENT DEBUG: Navigate call failed:', error);
         }
@@ -711,9 +713,10 @@ export default function Auth() {
       <div className="w-full max-w-4xl mx-auto">
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 bg-white">
+          <TabsList className="grid w-full grid-cols-3 mb-6 bg-white">
             <TabsTrigger value="signin" className="text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Sign In</TabsTrigger>
             <TabsTrigger value="signup" className="text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">New Member Registration</TabsTrigger>
+            <TabsTrigger value="member-update" className="text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Current Member Updates</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
@@ -1573,6 +1576,432 @@ export default function Auth() {
                     : (isReassignment ? 'Submit Information Update Request' : 'Register Organization')
                   }
                 </Button>
+                </form>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="member-update">
+            <div className="bg-auth-form rounded-lg shadow-sm border border-gray-200">
+              <div className="p-8 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">Current Member Updates</h2>
+                <p className="text-gray-600">
+                  Update information for your existing institution
+                </p>
+              </div>
+              <div className="p-8 space-y-8">
+                <form onSubmit={handleSignUp} className="space-y-8">
+                  {/* Primary Contact Section */}
+                  <div className="space-y-6">
+                    <div className="border-b border-gray-200 pb-2">
+                      <h3 className="text-lg font-semibold text-gray-800">Primary Contact Information</h3>
+                      <p className="text-sm text-gray-600">Enter the primary contact details for your institution</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="member-update-first-name" className="text-gray-700 font-medium text-sm">
+                          First Name <span className="text-red-600">*</span>
+                        </Label>
+                        <Input
+                          id="member-update-first-name"
+                          type="text"
+                          placeholder="Enter first name"
+                          value={signUpForm.firstName}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="member-update-last-name" className="text-gray-700 font-medium text-sm">
+                          Last Name <span className="text-red-600">*</span>
+                        </Label>
+                        <Input
+                          id="member-update-last-name"
+                          type="text"
+                          placeholder="Enter last name"
+                          value={signUpForm.lastName}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="member-update-email" className="text-gray-700 font-medium text-sm">
+                          Email Address <span className="text-red-600">*</span>
+                        </Label>
+                        <Input
+                          id="member-update-email"
+                          type="email"
+                          placeholder="Enter email address"
+                          value={signUpForm.email}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, email: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="member-update-password" className="text-gray-700 font-medium text-sm">
+                          Password <span className="text-red-600">*</span>
+                        </Label>
+                        <Input
+                          id="member-update-password"
+                          type="password"
+                          placeholder="Create a secure password"
+                          value={signUpForm.password}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          required
+                          minLength={6}
+                        />
+                        <p className="text-xs text-gray-500">Minimum 6 characters required</p>
+                      </div>
+                      <div className="lg:col-span-2 space-y-2">
+                        <Label htmlFor="member-update-title" className="text-gray-700 font-medium text-sm">
+                          Title/Position
+                        </Label>
+                        <Input
+                          id="member-update-title"
+                          type="text"
+                          placeholder="e.g., IT Director, System Administrator"
+                          value={signUpForm.primaryContactTitle}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactTitle: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300 max-w-md"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Institution Information Section */}
+                  <div className="space-y-6">
+                    <div className="border-b border-gray-200 pb-2">
+                      <h3 className="text-lg font-semibold text-gray-800">Institution Information</h3>
+                      <p className="text-sm text-gray-600">Select and update your institution details</p>
+                    </div>
+
+                    {/* Institution Selector */}
+                    <div className="space-y-2">
+                      <Label htmlFor="member-update-existing-organization" className="text-gray-700 font-medium text-sm">
+                        Select Existing Institution <span className="text-red-600">*</span>
+                      </Label>
+                      <Select
+                        value={selectedOrganizationId}
+                        onValueChange={setSelectedOrganizationId}
+                        required
+                      >
+                        <SelectTrigger className="h-11 bg-gray-50 border-gray-300 max-w-lg">
+                          <SelectValue placeholder="Choose your institution..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {organizations.map((org) => (
+                            <SelectItem key={org.id} value={org.id}>
+                              {org.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-sm text-muted-foreground">
+                        Select your institution from the list above. This will update the existing record.
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="lg:col-span-2 space-y-2">
+                        <Label htmlFor="member-update-organization" className="text-gray-700 font-medium text-sm">
+                          Institution Name <span className="text-red-600">*</span>
+                        </Label>
+                        <Input
+                          id="member-update-organization"
+                          type="text"
+                          placeholder="Enter your institution's full name"
+                          value={signUpForm.organization}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="lg:col-span-2 flex items-center space-x-2">
+                        <Checkbox
+                          id="member-update-is-private-nonprofit"
+                          checked={signUpForm.isPrivateNonProfit}
+                          onCheckedChange={(checked) => 
+                            setSignUpForm(prev => ({ ...prev, isPrivateNonProfit: checked as boolean }))
+                          }
+                        />
+                        <Label htmlFor="member-update-is-private-nonprofit" className="text-sm text-gray-700">
+                          This is a private non-profit institution
+                        </Label>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="member-update-state-association" className="text-gray-700 font-medium text-sm">
+                          State Association
+                        </Label>
+                        <Input
+                          id="member-update-state-association"
+                          type="text"
+                          placeholder="e.g., ACCS, CTC, etc."
+                          value={signUpForm.stateAssociation}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="member-update-student-fte" className="text-gray-700 font-medium text-sm">
+                          Student FTE
+                        </Label>
+                        <Input
+                          id="member-update-student-fte"
+                          type="number"
+                          placeholder="e.g., 5000"
+                          value={signUpForm.studentFte}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, studentFte: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                        />
+                      </div>
+                      <div className="lg:col-span-2 space-y-2">
+                        <Label htmlFor="member-update-address" className="text-gray-700 font-medium text-sm">
+                          Address
+                        </Label>
+                        <Input
+                          id="member-update-address"
+                          type="text"
+                          placeholder="123 Main Street"
+                          value={signUpForm.address}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="member-update-city" className="text-gray-700 font-medium text-sm">
+                          City
+                        </Label>
+                        <Input
+                          id="member-update-city"
+                          type="text"
+                          placeholder="City"
+                          value={signUpForm.city}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="member-update-state" className="text-gray-700 font-medium text-sm">
+                          State
+                        </Label>
+                        <Input
+                          id="member-update-state"
+                          type="text"
+                          placeholder="State"
+                          value={signUpForm.state}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="member-update-zip" className="text-gray-700 font-medium text-sm">
+                          ZIP Code
+                        </Label>
+                        <Input
+                          id="member-update-zip"
+                          type="text"
+                          placeholder="12345"
+                          value={signUpForm.zip}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* System Information (same as signup) */}
+                  <div className="space-y-6">
+                    <div className="border-b border-gray-200 pb-2">
+                      <h3 className="text-lg font-semibold text-gray-800">System Information</h3>
+                      <p className="text-sm text-gray-600">Software systems used at your institution</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <EnhancedSystemFieldSelect
+                        fieldName="student_information_system"
+                        label="Student Information System"
+                        value={signUpForm.studentInformationSystem}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: value }))}
+                      />
+
+                      <EnhancedSystemFieldSelect
+                        fieldName="financial_system"
+                        label="Financial System"
+                        value={signUpForm.financialSystem}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystem: value }))}
+                      />
+
+                      <EnhancedSystemFieldSelect
+                        fieldName="financial_aid"
+                        label="Financial Aid"
+                        value={signUpForm.financialAid}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, financialAid: value }))}
+                      />
+
+                      <EnhancedSystemFieldSelect
+                        fieldName="hcm_hr"
+                        label="HCM/HR"
+                        value={signUpForm.hcmHr}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHr: value }))}
+                      />
+
+                      <EnhancedSystemFieldSelect
+                        fieldName="payroll_system"
+                        label="Payroll System"
+                        value={signUpForm.payrollSystem}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystem: value }))}
+                      />
+
+                      <EnhancedSystemFieldSelect
+                        fieldName="purchasing_system"
+                        label="Purchasing System"
+                        value={signUpForm.purchasingSystem}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystem: value }))}
+                      />
+
+                      <EnhancedSystemFieldSelect
+                        fieldName="housing_management"
+                        label="Housing Management"
+                        value={signUpForm.housingManagement}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagement: value }))}
+                      />
+
+                      <EnhancedSystemFieldSelect
+                        fieldName="learning_management"
+                        label="Learning Management"
+                        value={signUpForm.learningManagement}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagement: value }))}
+                      />
+
+                      <EnhancedSystemFieldSelect
+                        fieldName="admissions_crm"
+                        label="Admissions CRM"
+                        value={signUpForm.admissionsCrm}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrm: value }))}
+                      />
+
+                      <EnhancedSystemFieldSelect
+                        fieldName="alumni_advancement_crm" 
+                        label="Alumni/Advancement CRM"
+                        value={signUpForm.alumniAdvancementCrm}
+                        onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Hardware Section */}
+                  <div className="space-y-6">
+                    <div className="border-b border-gray-200 pb-2">
+                      <h3 className="text-lg font-semibold text-gray-800">Primary Office Hardware</h3>
+                      <p className="text-sm text-gray-600">Select the hardware brands used at your institution</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {[
+                        { key: 'primaryOfficeApple', label: 'Apple' },
+                        { key: 'primaryOfficeAsus', label: 'ASUS' },
+                        { key: 'primaryOfficeDell', label: 'Dell' },
+                        { key: 'primaryOfficeHp', label: 'HP' },
+                        { key: 'primaryOfficeMicrosoft', label: 'Microsoft' },
+                        { key: 'primaryOfficeOther', label: 'Other' }
+                      ].map(({ key, label }) => (
+                        <div key={`member-update-${key}`} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`member-update-${key}`}
+                            checked={signUpForm[key as keyof typeof signUpForm] as boolean}
+                            onCheckedChange={(checked) => 
+                              setSignUpForm(prev => ({ ...prev, [key]: checked }))
+                            }
+                          />
+                          <Label htmlFor={`member-update-${key}`} className="text-sm text-gray-700">
+                            {label}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    {signUpForm.primaryOfficeOther && (
+                      <div className="space-y-2">
+                        <Label htmlFor="member-update-primary-office-other-details" className="text-gray-700 font-medium text-sm">
+                          Other Hardware Details
+                        </Label>
+                        <Input
+                          id="member-update-primary-office-other-details"
+                          type="text"
+                          placeholder="Please specify other hardware"
+                          value={signUpForm.primaryOfficeOtherDetails}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeOtherDetails: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300 max-w-md"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Additional Comments */}
+                  <div className="space-y-6">
+                    <div className="border-b border-gray-200 pb-2">
+                      <h3 className="text-lg font-semibold text-gray-800">Additional Information</h3>
+                      <p className="text-sm text-gray-600">Optional additional details</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="lg:col-span-2 space-y-2">
+                        <Label htmlFor="member-update-other-software-comments" className="text-gray-700 font-medium text-sm">
+                          Additional Comments
+                        </Label>
+                        <Input
+                          id="member-update-other-software-comments"
+                          type="text"
+                          placeholder="Any additional software or comments"
+                          value={signUpForm.otherSoftwareComments}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, otherSoftwareComments: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                        />
+                      </div>
+                      <div className="lg:col-span-2 space-y-2">
+                        <Label htmlFor="member-update-login-hint" className="text-gray-700 font-medium text-sm">
+                          Login Reminder (Optional)
+                        </Label>
+                        <Input
+                          id="member-update-login-hint"
+                          type="text"
+                          placeholder="e.g., Same as Active Directory password, or a personal reminder"
+                          value={signUpForm.loginHint}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, loginHint: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                        />
+                        <p className="text-sm text-muted-foreground mt-1">
+                          This hint will be included in your welcome email to help you remember your login credentials.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* reCAPTCHA */}
+                  {recaptchaEnabled && recaptchaSiteKey && (
+                    <div className="flex justify-center">
+                      <ReCAPTCHA
+                        ref={signUpCaptchaRef}
+                        sitekey={recaptchaSiteKey}
+                        onChange={setSignUpCaptcha}
+                      />
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <Button 
+                    type="submit" 
+                    className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Submitting update request...' : 'Submit Information Update Request'}
+                  </Button>
                 </form>
               </div>
             </div>
