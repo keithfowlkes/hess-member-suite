@@ -1745,7 +1745,7 @@ export default function Auth() {
                       </div>
                       <div className="lg:col-span-2 space-y-2">
                         <Label htmlFor="member-update-address" className="text-gray-700 font-medium text-sm">
-                          Address
+                          Address <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="member-update-address"
@@ -1755,11 +1755,12 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
                           disabled={!isReassignment}
+                          required
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="member-update-city" className="text-gray-700 font-medium text-sm">
-                          City
+                          City <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="member-update-city"
@@ -1769,11 +1770,12 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
                           disabled={!isReassignment}
+                          required
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="member-update-state" className="text-gray-700 font-medium text-sm">
-                          State
+                          State <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="member-update-state"
@@ -1783,11 +1785,12 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
                           disabled={!isReassignment}
+                          required
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="member-update-zip" className="text-gray-700 font-medium text-sm">
-                          ZIP Code
+                          ZIP Code <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="member-update-zip"
@@ -1797,6 +1800,7 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
                           disabled={!isReassignment}
+                          required
                         />
                       </div>
                     </div>
