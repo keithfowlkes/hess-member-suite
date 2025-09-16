@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, XCircle, Clock, User, Building2, Mail, Phone, MapPin } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react';
 import { MemberRegistrationUpdate } from '@/hooks/useMemberRegistrationUpdates';
+import { SideBySideComparisonModal } from '@/components/SideBySideComparisonModal';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MemberRegistrationUpdateDialogProps {
   open: boolean;
@@ -29,13 +29,94 @@ export function MemberRegistrationUpdateDialog({
   isProcessing = false
 }: MemberRegistrationUpdateDialogProps) {
   const [adminNotes, setAdminNotes] = useState('');
+  const [existingOrganization, setExistingOrganization] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch existing organization data for comparison
+  useEffect(() => {
+    const fetchExistingOrganization = async () => {
+      if (!registrationUpdate?.existing_organization_id || !open) return;
+      
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('organizations')
+          .select('*')
+          .eq('id', registrationUpdate.existing_organization_id)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching existing organization:', error);
+          return;
+        }
+        
+        setExistingOrganization(data);
+      } catch (error) {
+        console.error('Failed to fetch existing organization:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchExistingOrganization();
+  }, [registrationUpdate?.existing_organization_id, open]);
+
+  // Create comparison data for SideBySideComparisonModal
+  const comparisonData = React.useMemo(() => {
+    if (!existingOrganization || !registrationUpdate) return { originalData: {}, updatedData: {} };
+
+    const regData = registrationUpdate.registration_data;
+    const orgData = registrationUpdate.organization_data;
+
+    // Map registration data to organization structure for comparison
+    const updatedOrgData = {
+      name: orgData.name || regData.organization_name,
+      address_line_1: orgData.address_line_1 || regData.address || regData.address_line_1,
+      address_line_2: orgData.address_line_2,
+      city: orgData.city || regData.city,
+      state: orgData.state || regData.state,
+      zip_code: orgData.zip_code || regData.zip || regData.zip_code,
+      phone: regData.phone,
+      email: regData.email,
+      student_fte: orgData.student_fte || regData.student_fte,
+      primary_contact_title: orgData.primary_contact_title || regData.primary_contact_title,
+      secondary_first_name: orgData.secondary_first_name || regData.secondary_first_name,
+      secondary_last_name: orgData.secondary_last_name || regData.secondary_last_name,
+      secondary_contact_title: orgData.secondary_contact_title || regData.secondary_contact_title,
+      secondary_contact_email: orgData.secondary_contact_email || regData.secondary_contact_email,
+      student_information_system: orgData.student_information_system || regData.student_information_system,
+      financial_system: orgData.financial_system || regData.financial_system,
+      financial_aid: orgData.financial_aid || regData.financial_aid,
+      hcm_hr: orgData.hcm_hr || regData.hcm_hr,
+      payroll_system: orgData.payroll_system || regData.payroll_system,
+      purchasing_system: orgData.purchasing_system || regData.purchasing_system,
+      housing_management: orgData.housing_management || regData.housing_management,
+      learning_management: orgData.learning_management || regData.learning_management,
+      admissions_crm: orgData.admissions_crm || regData.admissions_crm,
+      alumni_advancement_crm: orgData.alumni_advancement_crm || regData.alumni_advancement_crm,
+      primary_office_apple: regData.primary_office_apple,
+      primary_office_asus: regData.primary_office_asus,
+      primary_office_dell: regData.primary_office_dell,
+      primary_office_hp: regData.primary_office_hp,
+      primary_office_microsoft: regData.primary_office_microsoft,
+      primary_office_other: regData.primary_office_other,
+      primary_office_other_details: regData.primary_office_other_details,
+      other_software_comments: regData.other_software_comments,
+      // Contact information
+      contact_first_name: regData.first_name,
+      contact_last_name: regData.last_name,
+      contact_email: regData.email
+    };
+
+    return {
+      originalData: existingOrganization,
+      updatedData: updatedOrgData
+    };
+  }, [existingOrganization, registrationUpdate]);
 
   if (!registrationUpdate) {
     return null;
   }
-
-  const regData = registrationUpdate.registration_data;
-  const orgData = registrationUpdate.organization_data;
 
   const handleApprove = () => {
     if (!adminUserId) {
@@ -73,245 +154,64 @@ export function MemberRegistrationUpdateDialog({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Member Registration Update</span>
-            <Badge className={`${getStatusColor(registrationUpdate.status)} flex items-center gap-1`}>
-              {getStatusIcon(registrationUpdate.status)}
-              {registrationUpdate.status.charAt(0).toUpperCase() + registrationUpdate.status.slice(1)}
-            </Badge>
-          </DialogTitle>
-        </DialogHeader>
+  // Show loading state while fetching existing organization
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Loading Comparison Data</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Fetching organization data...</span>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
-        <div className="space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Submitted Email</Label>
-              <p className="text-sm font-semibold">{registrationUpdate.submitted_email}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Submission Type</Label>
-              <p className="text-sm">{registrationUpdate.submission_type.replace('_', ' ')}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Submitted At</Label>
-              <p className="text-sm">{new Date(registrationUpdate.submitted_at).toLocaleDateString()}</p>
-            </div>
-            {registrationUpdate.existing_organization_name && (
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Existing Organization</Label>
-                <p className="text-sm font-semibold">{registrationUpdate.existing_organization_name}</p>
-              </div>
+  return (
+    <SideBySideComparisonModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={`Member Registration Update - ${registrationUpdate.existing_organization_name || 'Organization Update'}`}
+      data={comparisonData}
+      showActions={registrationUpdate.status === 'pending'}
+      actionNotes={adminNotes}
+      onActionNotesChange={setAdminNotes}
+      onApprove={handleApprove}
+      onReject={handleReject}
+      isSubmitting={isProcessing}
+    >
+      {/* Additional submission info */}
+      <div className="mb-4 p-4 bg-muted/30 rounded-lg space-y-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Submitted by: {registrationUpdate.submitted_email}</p>
+            <p className="text-xs text-muted-foreground">
+              Type: {registrationUpdate.submission_type.replace('_', ' ')} • 
+              Submitted: {new Date(registrationUpdate.submitted_at).toLocaleDateString()}
+            </p>
+          </div>
+          <Badge className={`${getStatusColor(registrationUpdate.status)} flex items-center gap-1`}>
+            {getStatusIcon(registrationUpdate.status)}
+            {registrationUpdate.status.charAt(0).toUpperCase() + registrationUpdate.status.slice(1)}
+          </Badge>
+        </div>
+        
+        {registrationUpdate.admin_notes && (
+          <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
+            <p className="font-medium">Previous Admin Notes:</p>
+            <p>{registrationUpdate.admin_notes}</p>
+            {registrationUpdate.reviewed_at && (
+              <p className="text-muted-foreground mt-1">
+                Reviewed: {new Date(registrationUpdate.reviewed_at).toLocaleDateString()}
+              </p>
             )}
           </div>
-
-          <Tabs defaultValue="organization" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="organization">Organization Details</TabsTrigger>
-              <TabsTrigger value="contact">Contact Information</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="organization" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5" />
-                    Organization Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Organization Name</Label>
-                      <p className="font-semibold">{orgData.name}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Student FTE</Label>
-                      <p>{orgData.student_fte || regData.student_fte || 'Not specified'}</p>
-                    </div>
-                  </div>
-
-                  {/* Address */}
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Address</Label>
-                    <div className="space-y-1">
-                      {orgData.address_line_1 || regData.address ? (
-                        <p>{orgData.address_line_1 || regData.address}</p>
-                      ) : null}
-                      {orgData.address_line_2 && <p>{orgData.address_line_2}</p>}
-                      {(orgData.city || regData.city || orgData.state || regData.state) && (
-                        <p>{orgData.city || regData.city}{orgData.city || regData.city ? ', ' : ''}{orgData.state || regData.state} {orgData.zip_code || regData.zip}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* System Information */}
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground mb-2 block">System Information</Label>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      {[
-                        { label: 'Student Information System', value: regData.student_information_system },
-                        { label: 'Financial System', value: regData.financial_system },
-                        { label: 'Financial Aid', value: regData.financial_aid },
-                        { label: 'HCM/HR', value: regData.hcm_hr },
-                        { label: 'Payroll System', value: regData.payroll_system },
-                        { label: 'Purchasing System', value: regData.purchasing_system },
-                        { label: 'Housing Management', value: regData.housing_management },
-                        { label: 'Learning Management', value: regData.learning_management },
-                        { label: 'Admissions CRM', value: regData.admissions_crm },
-                        { label: 'Alumni/Advancement CRM', value: regData.alumni_advancement_crm }
-                      ].filter(item => item.value).map((item) => (
-                        <div key={item.label}>
-                          <span className="font-medium text-muted-foreground">{item.label}:</span>
-                          <span className="ml-2">{item.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Hardware Information */}
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground mb-2 block">Primary Office Hardware</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {regData.primary_office_apple && <Badge variant="outline">Apple</Badge>}
-                      {regData.primary_office_asus && <Badge variant="outline">ASUS</Badge>}
-                      {regData.primary_office_dell && <Badge variant="outline">Dell</Badge>}
-                      {regData.primary_office_hp && <Badge variant="outline">HP</Badge>}
-                      {regData.primary_office_microsoft && <Badge variant="outline">Microsoft</Badge>}
-                      {regData.primary_office_other && <Badge variant="outline">Other: {regData.primary_office_other_details}</Badge>}
-                    </div>
-                  </div>
-
-                  {regData.other_software_comments && (
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Additional Software Comments</Label>
-                      <p className="text-sm bg-muted/30 p-2 rounded">{regData.other_software_comments}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="contact" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Primary Contact Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Name</Label>
-                      <p className="font-semibold">{regData.first_name} {regData.last_name}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Title</Label>
-                      <p>{regData.primary_contact_title || 'Not specified'}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Email</Label>
-                      <p>{regData.email}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
-                      <p>{regData.phone || 'Not specified'}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Secondary Contact */}
-              {(regData.secondary_first_name || regData.secondary_last_name || regData.secondary_contact_email) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <User className="h-5 w-5" />
-                      Secondary Contact Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Name</Label>
-                        <p>{regData.secondary_first_name} {regData.secondary_last_name}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Title</Label>
-                        <p>{regData.secondary_contact_title || 'Not specified'}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Email</Label>
-                        <p>{regData.secondary_contact_email}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
-
-          {/* Admin Notes */}
-          {registrationUpdate.status === 'pending' && (
-            <div className="space-y-2">
-              <Label htmlFor="admin-notes">Admin Notes (Optional)</Label>
-              <Textarea
-                id="admin-notes"
-                placeholder="Add any notes about this approval/rejection..."
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                rows={3}
-              />
-            </div>
-          )}
-
-          {/* Previous Admin Notes */}
-          {registrationUpdate.admin_notes && (
-            <div className="p-4 bg-muted/50 rounded-lg">
-              <Label className="text-sm font-medium text-muted-foreground">Admin Notes</Label>
-              <p className="text-sm mt-1">{registrationUpdate.admin_notes}</p>
-              {registrationUpdate.reviewed_at && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Reviewed on {new Date(registrationUpdate.reviewed_at).toLocaleDateString()}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-
-        <DialogFooter>
-          {registrationUpdate.status === 'pending' ? (
-            <div className="flex gap-2 w-full">
-              <Button
-                variant="outline"
-                onClick={handleReject}
-                disabled={isProcessing}
-                className="flex-1"
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Reject
-              </Button>
-              <Button
-                onClick={handleApprove}
-                disabled={isProcessing}
-                className="flex-1"
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Approve & Process
-              </Button>
-            </div>
-          ) : (
-            <Button onClick={() => onOpenChange(false)} variant="outline">
-              Close
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        )}
+      </div>
+    </SideBySideComparisonModal>
   );
 }
