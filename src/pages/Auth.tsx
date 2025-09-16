@@ -924,7 +924,7 @@ export default function Auth() {
                   />
                 </div>
               </div>
-              <div className="p-8 space-y-8">
+              <div className="px-8 pt-5 pb-8 space-y-8">
                 <form onSubmit={handleSignUp} className="space-y-8">
                   {/* Eligibility Section */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
