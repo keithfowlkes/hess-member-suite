@@ -342,8 +342,8 @@ export default function Auth() {
     console.log('✅ REGISTRATION DEBUG: Validation passed, setting submitting state');
     setIsSubmitting(true);
 
-    // If this is a member update request or reassignment request, handle differently
-    if ((isReassignment && selectedOrganizationId) || (activeTab === 'member-update' && selectedOrganizationId)) {
+    // If this is a member update request (only from member-update tab), handle differently
+    if (activeTab === 'member-update' && selectedOrganizationId) {
       try {
         // Get the current organization data
         const { data: currentOrg, error: fetchError } = await supabase
@@ -934,38 +934,6 @@ export default function Auth() {
                           </div>
                         </div>
                       </div>
-
-                      <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-                        <div className="flex items-start space-x-3">
-                          <Checkbox
-                            id="reassignment-request"
-                            checked={isReassignment}
-                            onCheckedChange={(checked) => {
-                              setIsReassignment(checked === true);
-                              if (!checked) {
-                                setSelectedOrganizationId('');
-                                setSignUpForm(prev => ({ ...prev, organization: '' }));
-                              }
-                            }}
-                            className="mt-0.5"
-                          />
-                          <div className="flex-1">
-                            <label htmlFor="reassignment-request" className="text-gray-800 font-medium cursor-pointer">
-                              This is member information update request
-                            </label>
-                            <p className="text-sm text-gray-600 mt-1">
-                              Check this if you're requesting an information update for an existing member institution.
-                            </p>
-                          </div>
-                        </div>
-                        {isReassignment && (
-                          <div className="mt-3 p-3 bg-blue-50 rounded-md border-l-4 border-blue-400">
-                            <p className="text-sm text-blue-800">
-                              <strong>Note:</strong> Your information update request will be reviewed by an administrator before approval. You will not be able to log in until the request is approved.
-                            </p>
-                          </div>
-                        )}
-                      </div>
                     </div>
                   </div>
 
@@ -1081,30 +1049,16 @@ export default function Auth() {
                         <Label htmlFor="organization" className="text-gray-700 font-medium text-sm">
                           Institution Name <span className="text-red-500">*</span>
                         </Label>
-                        {isReassignment ? (
-                          <Select value={selectedOrganizationId} onValueChange={handleOrganizationSelect}>
-                            <SelectTrigger className="h-11 bg-gray-50 border-gray-300">
-                              <SelectValue placeholder="Select existing institution" />
-                            </SelectTrigger>
-                            <SelectContent className="max-h-60 overflow-y-auto bg-white border border-gray-300 shadow-lg z-50">
-                              {organizations.map((org) => (
-                                <SelectItem key={org.id} value={org.id}>
-                                  {org.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Input
-                            id="organization"
-                            placeholder="Full institution name"
-                            value={signUpForm.organization}
-                            onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300"
-                            disabled={!signUpForm.isPrivateNonProfit}
-                            required
-                          />
-                        )}
+                        <Input
+                          id="organization"
+                          type="text"
+                          placeholder="Enter your institution's full name"
+                          value={signUpForm.organization}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required
+                        />
                       </div>
                       
                       <div className="space-y-2">
@@ -1566,15 +1520,10 @@ export default function Auth() {
                     disabled={
                       isSubmitting || 
                       !signUpForm.isPrivateNonProfit || 
-                      (recaptchaEnabled && !signUpCaptcha) ||
-                      (isReassignment && !selectedOrganizationId) ||
-                      (isReassignment && !signUpForm.password)
+                      (recaptchaEnabled && !signUpCaptcha)
                     }
                 >
-                  {isSubmitting 
-                    ? (isReassignment ? 'Submitting update request...' : 'Creating account...') 
-                    : (isReassignment ? 'Submit Information Update Request' : 'Register Organization')
-                  }
+                  {isSubmitting ? 'Creating account...' : 'Register Organization'}
                 </Button>
                 </form>
               </div>
