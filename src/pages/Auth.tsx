@@ -1538,26 +1538,35 @@ export default function Auth() {
                   Update information for your existing member institution. Note, these entries are subject to review and approval to eliminate spam entries.
                 </p>
               </div>
-              <div className="p-8 pt-4 space-y-8">
+              <div className="p-8 space-y-8">
                 <form onSubmit={handleSignUp} className="space-y-8">
-                  {/* Member Update Request Identifier */}
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2 p-4 border rounded-md bg-muted/50">
-                      <Checkbox
-                        id="member-update-is-reassignment"
-                        checked={isReassignment}
-                        onCheckedChange={(checked) => setIsReassignment(checked === true)}
-                      />
-                      <Label 
-                        htmlFor="member-update-is-reassignment" 
-                        className="text-base font-medium leading-relaxed cursor-pointer"
-                      >
-                        This is member information update request. I am an authorized agent from my current HESS member institutions and updating information for my own existing institution.
-                      </Label>
+                  {/* Eligibility Section */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Update Type</h3>
+                      <p className="text-gray-600 text-sm">Please confirm this is an information update for an existing member institution.</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Check this if you're requesting an information update for an existing member institution
-                    </p>
+                    
+                    <div className="space-y-6">
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-start space-x-3">
+                          <Checkbox
+                            id="member-update-is-reassignment"
+                            checked={isReassignment}
+                            onCheckedChange={(checked) => setIsReassignment(checked === true)}
+                            className="mt-0.5"
+                          />
+                          <div className="flex-1">
+                            <label htmlFor="member-update-is-reassignment" className="text-gray-800 font-medium cursor-pointer">
+                              This is a member information update request <span className="text-red-500">*</span>
+                            </label>
+                            <p className="text-sm text-gray-600 mt-1">
+                              I am an authorized agent from my current HESS member institution and am updating information for my own existing institution.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Primary Contact Section */}
@@ -1799,213 +1808,241 @@ export default function Auth() {
                     </div>
                   </div>
 
-                  {/* System Information (same as signup) */}
-                  <div className="space-y-6">
-                    <div className="border-b border-gray-200 pb-2">
-                      <h3 className="text-lg font-semibold text-gray-800">System Information</h3>
-                      <p className="text-sm text-gray-600">Software systems used at your institution</p>
+                  {/* Technology Systems */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Technology Systems</h3>
+                      <p className="text-gray-600 text-sm">Select the systems your institution currently uses.</p>
                     </div>
                     
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <EnhancedSystemFieldSelect
-                        fieldName="student_information_system"
-                        label="Student Information System"
-                        value={signUpForm.studentInformationSystem}
-                        onChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: value }))}
-                        disabled={!isReassignment}
-                        organizationId={selectedOrganizationId || undefined}
-                      />
+                    <div className="space-y-8">
+                    
+                      {/* Academic Systems */}
+                      <div>
+                        <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Academic Systems</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <EnhancedSystemFieldSelect
+                            fieldName="student_information_system"
+                            label="Student Information System"
+                            value={signUpForm.studentInformationSystem}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                          />
+                          <EnhancedSystemFieldSelect
+                            fieldName="learning_management"
+                            label="Learning Management System"
+                            value={signUpForm.learningManagement}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagement: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                          />
+                        </div>
+                      </div>
 
-                      <EnhancedSystemFieldSelect
-                        fieldName="financial_system"
-                        label="Financial System"
-                        value={signUpForm.financialSystem}
-                        onChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystem: value }))}
-                        disabled={!isReassignment}
-                        organizationId={selectedOrganizationId || undefined}
-                      />
+                      {/* Financial Systems */}
+                      <div>
+                        <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Financial Systems</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <EnhancedSystemFieldSelect
+                            fieldName="financial_system"
+                            label="Financial System"
+                            value={signUpForm.financialSystem}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystem: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                          />
+                          <EnhancedSystemFieldSelect
+                            fieldName="financial_aid"
+                            label="Financial Aid System"
+                            value={signUpForm.financialAid}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, financialAid: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                          />
+                          <EnhancedSystemFieldSelect
+                            fieldName="purchasing_system"
+                            label="Purchasing System"
+                            value={signUpForm.purchasingSystem}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystem: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                          />
+                        </div>
+                      </div>
 
-                      <EnhancedSystemFieldSelect
-                        fieldName="financial_aid"
-                        label="Financial Aid"
-                        value={signUpForm.financialAid}
-                        onChange={(value) => setSignUpForm(prev => ({ ...prev, financialAid: value }))}
-                        disabled={!isReassignment}
-                        organizationId={selectedOrganizationId || undefined}
-                      />
+                      {/* HR & Operations */}
+                      <div>
+                        <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">HR & Operations</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <EnhancedSystemFieldSelect
+                            fieldName="hcm_hr"
+                            label="Human Capital Management"
+                            value={signUpForm.hcmHr}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHr: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                          />
+                          <EnhancedSystemFieldSelect
+                            fieldName="payroll_system"
+                            label="Payroll System"
+                            value={signUpForm.payrollSystem}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystem: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                          />
+                          <EnhancedSystemFieldSelect
+                            fieldName="housing_management"
+                            label="Housing Management"
+                            value={signUpForm.housingManagement}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagement: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                          />
+                        </div>
+                      </div>
 
-                      <EnhancedSystemFieldSelect
-                        fieldName="hcm_hr"
-                        label="HCM/HR"
-                        value={signUpForm.hcmHr}
-                        onChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHr: value }))}
-                        disabled={!isReassignment}
-                        organizationId={selectedOrganizationId || undefined}
-                      />
-
-                      <EnhancedSystemFieldSelect
-                        fieldName="payroll_system"
-                        label="Payroll System"
-                        value={signUpForm.payrollSystem}
-                        onChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystem: value }))}
-                        disabled={!isReassignment}
-                        organizationId={selectedOrganizationId || undefined}
-                      />
-
-                      <EnhancedSystemFieldSelect
-                        fieldName="purchasing_system"
-                        label="Purchasing System"
-                        value={signUpForm.purchasingSystem}
-                        onChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystem: value }))}
-                        disabled={!isReassignment}
-                        organizationId={selectedOrganizationId || undefined}
-                      />
-
-                      <EnhancedSystemFieldSelect
-                        fieldName="housing_management"
-                        label="Housing Management"
-                        value={signUpForm.housingManagement}
-                        onChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagement: value }))}
-                        disabled={!isReassignment}
-                        organizationId={selectedOrganizationId || undefined}
-                      />
-
-                      <EnhancedSystemFieldSelect
-                        fieldName="learning_management"
-                        label="Learning Management"
-                        value={signUpForm.learningManagement}
-                        onChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagement: value }))}
-                        disabled={!isReassignment}
-                        organizationId={selectedOrganizationId || undefined}
-                      />
-
-                      <EnhancedSystemFieldSelect
-                        fieldName="admissions_crm"
-                        label="Admissions CRM"
-                        value={signUpForm.admissionsCrm}
-                        onChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrm: value }))}
-                        disabled={!isReassignment}
-                        organizationId={selectedOrganizationId || undefined}
-                      />
-
-                      <EnhancedSystemFieldSelect
-                        fieldName="alumni_advancement_crm" 
-                        label="Alumni/Advancement CRM"
-                        value={signUpForm.alumniAdvancementCrm}
-                        onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
-                        disabled={!isReassignment}
-                        organizationId={selectedOrganizationId || undefined}
-                      />
+                      {/* CRM Systems */}
+                      <div>
+                        <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">CRM Systems</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <EnhancedSystemFieldSelect
+                            fieldName="admissions_crm"
+                            label="Admissions CRM"
+                            value={signUpForm.admissionsCrm}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrm: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                          />
+                          <EnhancedSystemFieldSelect
+                            fieldName="alumni_advancement_crm"
+                            label="Alumni & Advancement CRM"
+                            value={signUpForm.alumniAdvancementCrm}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Hardware Section */}
-                  <div className="space-y-6">
-                    <div className="border-b border-gray-200 pb-2">
-                      <h3 className="text-lg font-semibold text-gray-800">Primary Office Hardware</h3>
-                      <p className="text-sm text-gray-600">Select the hardware brands used at your institution</p>
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Primary Office Hardware</h3>
+                      <p className="text-gray-600 text-sm">Select the hardware brands used at your institution.</p>
                     </div>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {[
-                        { key: 'primaryOfficeApple', label: 'Apple' },
-                        { key: 'primaryOfficeAsus', label: 'ASUS' },
-                        { key: 'primaryOfficeDell', label: 'Dell' },
-                        { key: 'primaryOfficeHp', label: 'HP' },
-                        { key: 'primaryOfficeMicrosoft', label: 'Microsoft' },
-                        { key: 'primaryOfficeOther', label: 'Other' }
-                      ].map(({ key, label }) => (
-                        <div key={`member-update-${key}`} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`member-update-${key}`}
-                            checked={signUpForm[key as keyof typeof signUpForm] as boolean}
-                            disabled={!isReassignment}
-                            onCheckedChange={(checked) => 
-                              setSignUpForm(prev => ({ ...prev, [key]: checked }))
-                            }
-                          />
-                          <Label htmlFor={`member-update-${key}`} className="text-sm text-gray-700">
-                            {label}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                    {signUpForm.primaryOfficeOther && (
-                      <div className="space-y-2">
-                        <Label htmlFor="member-update-primary-office-other-details" className="text-gray-700 font-medium text-sm">
-                          Other Hardware Details
-                        </Label>
-                        <Input
-                          id="member-update-primary-office-other-details"
-                          type="text"
-                          placeholder="Please specify other hardware"
-                          value={signUpForm.primaryOfficeOtherDetails}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeOtherDetails: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300 max-w-md"
-                          disabled={!isReassignment}
-                        />
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {[
+                          { key: 'primaryOfficeApple', label: 'Apple' },
+                          { key: 'primaryOfficeAsus', label: 'ASUS' },
+                          { key: 'primaryOfficeDell', label: 'Dell' },
+                          { key: 'primaryOfficeHp', label: 'HP' },
+                          { key: 'primaryOfficeMicrosoft', label: 'Microsoft' },
+                          { key: 'primaryOfficeOther', label: 'Other' }
+                        ].map(({ key, label }) => (
+                          <div key={`member-update-${key}`} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <Checkbox
+                              id={`member-update-${key}`}
+                              checked={signUpForm[key as keyof typeof signUpForm] as boolean}
+                              disabled={!isReassignment}
+                              onCheckedChange={(checked) => 
+                                setSignUpForm(prev => ({ ...prev, [key]: checked }))
+                              }
+                            />
+                            <Label htmlFor={`member-update-${key}`} className="text-sm font-medium cursor-pointer">
+                              {label}
+                            </Label>
+                          </div>
+                        ))}
                       </div>
-                    )}
+                      
+                      {signUpForm.primaryOfficeOther && (
+                        <div className="mt-4 space-y-2">
+                          <Label htmlFor="member-update-primary-office-other-details" className="text-gray-700 font-medium text-sm">
+                            Please specify other computer types <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="member-update-primary-office-other-details"
+                            placeholder="Please specify other computer types..."
+                            value={signUpForm.primaryOfficeOtherDetails}
+                            onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeOtherDetails: e.target.value }))}
+                            className="h-11 bg-gray-50 border-gray-300"
+                            disabled={!isReassignment}
+                            required
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Additional Comments */}
-                  <div className="space-y-6">
-                    <div className="border-b border-gray-200 pb-2">
-                      <h3 className="text-lg font-semibold text-gray-800">Additional Information</h3>
-                      <p className="text-sm text-gray-600">Optional additional details</p>
+                  {/* Additional Information */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Additional Information</h3>
+                      <p className="text-gray-600 text-sm">Optional additional details about your software and operations.</p>
                     </div>
                     
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="lg:col-span-2 space-y-2">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
                         <Label htmlFor="member-update-other-software-comments" className="text-gray-700 font-medium text-sm">
-                          Additional Comments
+                          Additional software and operational comments
                         </Label>
-                        <Input
+                        <textarea
                           id="member-update-other-software-comments"
-                          type="text"
-                          placeholder="Any additional software or comments"
+                          placeholder="Please share any additional information about your software, operations, or special requirements..."
                           value={signUpForm.otherSoftwareComments}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, otherSoftwareComments: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
                           disabled={!isReassignment}
+                          className="w-full min-h-[120px] p-4 bg-gray-50 border border-gray-300 rounded-lg resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                          rows={4}
                         />
-                      </div>
-                      <div className="lg:col-span-2 space-y-2">
-                        <Label htmlFor="member-update-login-hint" className="text-gray-700 font-medium text-sm">
-                          Login Reminder (Optional)
-                        </Label>
-                        <Input
-                          id="member-update-login-hint"
-                          type="text"
-                          placeholder="e.g., Same as Active Directory password, or a personal reminder"
-                          value={signUpForm.loginHint}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, loginHint: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!isReassignment}
-                        />
-                        <p className="text-sm text-muted-foreground mt-1">
-                          This hint will be included in your welcome email to help you remember your login credentials.
-                        </p>
-                      </div>
+                  
+                  {/* Security Verification */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Security Verification</h3>
+                      <p className="text-gray-600 text-sm">Complete the verification to submit your request.</p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {recaptchaEnabled ? (
+                        isLoadingRecaptcha ? (
+                          <div className="h-20 bg-gray-100 animate-pulse rounded flex items-center justify-center">
+                            <span className="text-gray-500 text-sm">Loading verification...</span>
+                          </div>
+                        ) : recaptchaSiteKey ? (
+                          <ReCAPTCHA
+                            ref={signUpCaptchaRef}
+                            sitekey={recaptchaSiteKey}
+                            onChange={setSignUpCaptcha}
+                          />
+                        ) : (
+                          <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                            <div className="font-medium">reCAPTCHA Configuration Missing</div>
+                            <div className="mt-1">Administrator needs to configure reCAPTCHA site key in Settings → Security Settings.</div>
+                          </div>
+                        )
+                      ) : (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+                          reCAPTCHA verification is disabled by administrator
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* reCAPTCHA */}
-                  {recaptchaEnabled && recaptchaSiteKey && (
-                    <div className="flex justify-center">
-                      <ReCAPTCHA
-                        ref={signUpCaptchaRef}
-                        sitekey={recaptchaSiteKey}
-                        onChange={setSignUpCaptcha}
-                      />
-                    </div>
-                  )}
-
-                  {/* Submit Button */}
                   <Button 
                     type="submit" 
-                    className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground" 
-                    disabled={isSubmitting || !isReassignment || (activeTab === 'member-update' && !selectedOrganizationId)}
+                    className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" 
+                    disabled={
+                      isSubmitting || 
+                      !isReassignment || 
+                      (recaptchaEnabled && !signUpCaptcha) ||
+                      !selectedOrganizationId
+                    }
                   >
                     {isSubmitting ? 'Submitting update request...' : 'Submit Information Update Request'}
                   </Button>
