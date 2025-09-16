@@ -1545,15 +1545,14 @@ export default function Auth() {
                     <div className="flex items-center space-x-2 p-4 border rounded-md bg-muted/50">
                       <Checkbox
                         id="member-update-is-reassignment"
-                        checked={true}
-                        onCheckedChange={() => {}} // Always checked for this tab
-                        disabled={true} // Disabled since this tab is specifically for updates
+                        checked={isReassignment}
+                        onCheckedChange={(checked) => setIsReassignment(checked === true)}
                       />
                       <Label 
                         htmlFor="member-update-is-reassignment" 
                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
-                        This is member information update request (I am updating information for an existing institution)
+                        This is member information update request. I am an authorized agent from my current HESS member institutions and updating information for my own existing institution.
                       </Label>
                     </div>
                     <p className="text-sm text-muted-foreground">
