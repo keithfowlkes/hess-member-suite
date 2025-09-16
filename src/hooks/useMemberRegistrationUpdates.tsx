@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -22,19 +23,31 @@ export interface MemberRegistrationUpdate {
 export function useMemberRegistrationUpdates() {
   const queryClient = useQueryClient();
 
-  // Fetch all pending registration updates
+  // Fetch only pending registration updates
   const { data: registrationUpdates = [], isLoading, error, refetch } = useQuery({
     queryKey: ['member-registration-updates'],
     queryFn: async () => {
+      console.log('🔍 REGISTRATION UPDATES DEBUG: Fetching pending member registration updates...');
       const { data, error } = await supabase
         .from('member_registration_updates')
         .select('*')
+        .eq('status', 'pending')
         .order('submitted_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching registration updates:', error);
+        console.error('❌ REGISTRATION UPDATES DEBUG: Error fetching registration updates:', error);
         throw error;
       }
+
+      console.log('✅ REGISTRATION UPDATES DEBUG: Successfully fetched pending registration updates:', {
+        count: data?.length || 0,
+        updates: data?.map(u => ({ 
+          id: u.id, 
+          email: u.submitted_email, 
+          organization: (u.organization_data as any)?.name || 'Unknown', 
+          status: u.status 
+        }))
+      });
 
       return data as MemberRegistrationUpdate[];
     }
@@ -125,6 +138,49 @@ export function useMemberRegistrationUpdates() {
       toast.error(`Failed to process registration update: ${error.message}`);
     }
   });
+
+  // Set up real-time subscription to remove approved/rejected items immediately
+  useEffect(() => {
+    console.log('📡 REGISTRATION UPDATES DEBUG: Setting up real-time subscription');
+    const subscription = supabase
+      .channel('member_registration_updates_channel')
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'member_registration_updates' },
+        (payload) => {
+          console.log('🔔 REGISTRATION UPDATES DEBUG: Real-time UPDATE event received:', {
+            old: payload.old,
+            new: payload.new,
+            status: payload.new?.status
+          });
+          if (payload.new?.status !== 'pending') {
+            // If status changed to approved/rejected, refetch to remove from pending list
+            refetch();
+          }
+        }
+      )
+      .on('postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'member_registration_updates' },
+        (payload) => {
+          console.log('🔔 REGISTRATION UPDATES DEBUG: Real-time DELETE event received:', payload.old);
+          refetch();
+        }
+      )
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'member_registration_updates' },
+        (payload) => {
+          console.log('🔔 REGISTRATION UPDATES DEBUG: Real-time INSERT event received:', payload.new);
+          refetch();
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 REGISTRATION UPDATES DEBUG: Subscription status changed:', status);
+      });
+
+    return () => {
+      console.log('🛑 REGISTRATION UPDATES DEBUG: Cleaning up subscription');
+      subscription.unsubscribe();
+    };
+  }, [refetch]);
 
   return {
     registrationUpdates,
