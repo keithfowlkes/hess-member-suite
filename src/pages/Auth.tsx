@@ -1586,7 +1586,7 @@ export default function Auth() {
               <div className="p-8 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-800 mb-2">Current Member Updates</h2>
                 <p className="text-gray-600">
-                  Update information for your existing institution
+                  Update information for your existing member institution. Note, these entries are subject to review and approval to eliminate spam entries.
                 </p>
               </div>
               <div className="p-8 space-y-8">
