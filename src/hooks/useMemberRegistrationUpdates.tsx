@@ -50,6 +50,8 @@ export function useMemberRegistrationUpdates() {
       existing_organization_name?: string;
       submission_type?: 'new_member' | 'member_update' | 'primary_contact_change';
     }) => {
+      console.log('🚀 DEBUG: createRegistrationUpdate called with:', updateData);
+      
       const { data, error } = await supabase
         .from('member_registration_updates')
         .insert({
@@ -65,18 +67,20 @@ export function useMemberRegistrationUpdates() {
         .single();
 
       if (error) {
-        console.error('Error creating registration update:', error);
+        console.error('❌ DEBUG: Error creating registration update:', error);
         throw error;
       }
 
+      console.log('✅ DEBUG: Registration update created successfully:', data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['member-registration-updates'] });
       toast.success('Registration update submitted successfully');
+      console.log('✅ DEBUG: onSuccess callback called');
     },
     onError: (error: any) => {
-      console.error('Failed to create registration update:', error);
+      console.error('❌ DEBUG: Failed to create registration update:', error);
       toast.error(`Failed to submit registration update: ${error.message}`);
     }
   });
