@@ -58,6 +58,7 @@ import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
 import { useReassignmentRequests, useApproveReassignmentRequest, useRejectReassignmentRequest, useDeleteReassignmentRequest } from '@/hooks/useReassignmentRequests';
 import { useOrganizationProfileEditRequests, useApproveOrganizationProfileEditRequest, useRejectOrganizationProfileEditRequest } from '@/hooks/useOrganizationProfileEditRequests';
 import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
+import { useMemberRegistrationUpdates } from '@/hooks/useMemberRegistrationUpdates';
 import { useInvoices } from '@/hooks/useInvoices';
 
 // Components
@@ -119,10 +120,12 @@ const MasterDashboard = () => {
   const { approveRequest: approveProfileEditRequest } = useApproveOrganizationProfileEditRequest();
   const { rejectRequest: rejectProfileEditRequest } = useRejectOrganizationProfileEditRequest();
   const { pendingRegistrations, loading: pendingRegistrationsLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
+  const { registrationUpdates, isLoading: registrationUpdatesLoading } = useMemberRegistrationUpdates();
   const { invoices, loading: invoicesLoading } = useInvoices();
   
   // Calculate pending counts
-  const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length;
+  const pendingRegistrationUpdatesCount = registrationUpdates?.filter(r => r.status === 'pending').length || 0;
+  const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length + pendingRegistrationUpdatesCount;
   const activeInvitationsCount = invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length;
   const totalOrganizationActions = pendingApprovalsCount + activeInvitationsCount;
   const approveMemberInfoUpdate = useApproveReassignmentRequest();
@@ -1011,6 +1014,64 @@ const MasterDashboard = () => {
                              </CardContent>
                            </Card>
                          ))}
+                      </div>
+                     )}
+
+                    {/* Member Registration Updates */}
+                    {registrationUpdates && registrationUpdates.filter(r => r.status === 'pending').length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-teal-600 flex items-center gap-2">
+                          <RefreshCw className="h-5 w-5" />
+                          Member Registration Updates ({registrationUpdates.filter(r => r.status === 'pending').length})
+                        </h3>
+                        {registrationUpdates.filter(r => r.status === 'pending').map((update) => (
+                          <Card key={`registration-update-${update.id}`} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="space-y-2 min-w-0 flex-1 mr-4">
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-semibold truncate">
+                                      {update.organization_data?.name || 'Organization Update'}
+                                    </h3>
+                                    <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 text-xs flex-shrink-0">
+                                      {update.submission_type === 'primary_contact_change' ? 'Contact Change' : 'Member Update'}
+                                    </Badge>
+                                    {update.existing_organization_name && (
+                                      <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-orange-200 text-xs flex-shrink-0">
+                                        Replacing: {update.existing_organization_name}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground space-y-1">
+                                    <p className="truncate">
+                                      <strong>New Contact:</strong> {update.registration_data?.first_name} {update.registration_data?.last_name}
+                                    </p>
+                                    <p className="truncate">
+                                      <strong>Email:</strong> {update.submitted_email}
+                                    </p>
+                                    <p>
+                                      <strong>Submitted:</strong> {format(new Date(update.submitted_at), 'PP')}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2 flex-shrink-0">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => {
+                                      // This will be handled by the Settings page's simplified interface
+                                      window.location.href = '/settings';
+                                    }}
+                                    className="text-xs"
+                                  >
+                                    <Eye className="h-3 w-3 mr-1" />
+                                    Review
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
                     )}
 
