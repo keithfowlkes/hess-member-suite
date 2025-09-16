@@ -14,6 +14,7 @@ interface EnhancedSystemFieldSelectProps {
   onChange: (value: string) => void;
   disabled: boolean;
   organizationId?: string;
+  required?: boolean;
 }
 
 export const EnhancedSystemFieldSelect = ({ 
@@ -22,7 +23,8 @@ export const EnhancedSystemFieldSelect = ({
   value, 
   onChange, 
   disabled,
-  organizationId
+  organizationId,
+  required = false
 }: EnhancedSystemFieldSelectProps) => {
   const options = useSimpleFieldOptions(fieldName);
   const submitCustomEntry = useSubmitCustomEntry();
@@ -64,13 +66,16 @@ export const EnhancedSystemFieldSelect = ({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={fieldName}>{label}</Label>
+      <Label htmlFor={fieldName} className="text-gray-700 font-medium text-sm">
+        {label} {required && <span className="text-red-500">*</span>}
+      </Label>
       
       {!showCustomInput ? (
         <Select 
           value={value || "none"} 
           onValueChange={handleSelectChange} 
           disabled={disabled}
+          required={required}
         >
           <SelectTrigger className="bg-background border-input">
             <SelectValue placeholder={`Select ${label.toLowerCase()}`} />

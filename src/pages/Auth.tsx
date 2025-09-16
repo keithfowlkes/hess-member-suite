@@ -1285,6 +1285,7 @@ export default function Auth() {
                           value={signUpForm.studentInformationSystem}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
                         />
                         <EnhancedSystemFieldSelect
                           fieldName="learning_management"
@@ -1292,6 +1293,7 @@ export default function Auth() {
                           value={signUpForm.learningManagement}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagement: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
                         />
                       </div>
                     </div>
@@ -1306,6 +1308,7 @@ export default function Auth() {
                           value={signUpForm.financialSystem}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystem: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
                         />
                         <EnhancedSystemFieldSelect
                           fieldName="financial_aid"
@@ -1313,6 +1316,7 @@ export default function Auth() {
                           value={signUpForm.financialAid}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, financialAid: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
                         />
                         <EnhancedSystemFieldSelect
                           fieldName="purchasing_system"
@@ -1320,6 +1324,7 @@ export default function Auth() {
                           value={signUpForm.purchasingSystem}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystem: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
                         />
                       </div>
                     </div>
@@ -1334,6 +1339,7 @@ export default function Auth() {
                           value={signUpForm.hcmHr}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHr: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
                         />
                         <EnhancedSystemFieldSelect
                           fieldName="payroll_system"
@@ -1341,6 +1347,7 @@ export default function Auth() {
                           value={signUpForm.payrollSystem}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystem: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
                         />
                         <EnhancedSystemFieldSelect
                           fieldName="housing_management"
@@ -1348,6 +1355,7 @@ export default function Auth() {
                           value={signUpForm.housingManagement}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagement: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
                         />
                       </div>
                     </div>
@@ -1362,6 +1370,7 @@ export default function Auth() {
                           value={signUpForm.admissionsCrm}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrm: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
                         />
                         <EnhancedSystemFieldSelect
                           fieldName="alumni_advancement_crm"
@@ -1369,6 +1378,7 @@ export default function Auth() {
                           value={signUpForm.alumniAdvancementCrm}
                           onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
                         />
                       </div>
                     </div>
@@ -1736,7 +1746,7 @@ export default function Auth() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="member-update-student-fte" className="text-gray-700 font-medium text-sm">
-                          Student FTE
+                          Student FTE <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="member-update-student-fte"
@@ -1746,6 +1756,7 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, studentFte: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
                           disabled={!isReassignment}
+                          required
                         />
                       </div>
                       <div className="lg:col-span-2 space-y-2">
@@ -1827,6 +1838,7 @@ export default function Auth() {
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
+                            required={true}
                           />
                           <EnhancedSystemFieldSelect
                             fieldName="learning_management"
@@ -1835,6 +1847,7 @@ export default function Auth() {
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagement: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
+                            required={true}
                           />
                         </div>
                       </div>
@@ -1850,6 +1863,7 @@ export default function Auth() {
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystem: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
+                            required={true}
                           />
                           <EnhancedSystemFieldSelect
                             fieldName="financial_aid"
@@ -1858,6 +1872,7 @@ export default function Auth() {
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, financialAid: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
+                            required={true}
                           />
                           <EnhancedSystemFieldSelect
                             fieldName="purchasing_system"
@@ -1866,6 +1881,7 @@ export default function Auth() {
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystem: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
+                            required={true}
                           />
                         </div>
                       </div>
@@ -1881,6 +1897,7 @@ export default function Auth() {
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHr: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
+                            required={true}
                           />
                           <EnhancedSystemFieldSelect
                             fieldName="payroll_system"
@@ -1889,6 +1906,7 @@ export default function Auth() {
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystem: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
+                            required={true}
                           />
                           <EnhancedSystemFieldSelect
                             fieldName="housing_management"
@@ -1897,6 +1915,7 @@ export default function Auth() {
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagement: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
+                            required={true}
                           />
                         </div>
                       </div>
@@ -1912,6 +1931,7 @@ export default function Auth() {
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrm: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
+                            required={true}
                           />
                           <EnhancedSystemFieldSelect
                             fieldName="alumni_advancement_crm"
@@ -1920,6 +1940,7 @@ export default function Auth() {
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
+                            required={true}
                           />
                         </div>
                       </div>
