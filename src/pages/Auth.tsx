@@ -899,10 +899,19 @@ export default function Auth() {
           <TabsContent value="signup">
             <div className="bg-auth-form rounded-lg shadow-sm border border-gray-200">
               <div className="p-8 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">New Member Registration</h2>
-                <p className="text-gray-600">
-                  Join the HESS Consortium community or request reassignment as primary contact
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-2">New Member Registration</h2>
+                    <p className="text-gray-600">
+                      Join the HESS Consortium community or request reassignment as primary contact
+                    </p>
+                  </div>
+                  <img 
+                    src="/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" 
+                    alt="HESS Consortium" 
+                    className="h-14 w-auto"
+                  />
+                </div>
               </div>
               <div className="p-8 space-y-8">
                 <form onSubmit={handleSignUp} className="space-y-8">
@@ -1543,10 +1552,19 @@ export default function Auth() {
           <TabsContent value="member-update">
             <div className="bg-auth-form rounded-lg shadow-sm border border-gray-200">
               <div className="p-8 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">Current Member Updates</h2>
-                <p className="text-gray-600">
-                  Update information for your existing member institution. Note, these entries are subject to review and approval to eliminate spam entries.
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-2">Current Member Updates</h2>
+                    <p className="text-gray-600">
+                      Update information for your existing member institution. Note, these entries are subject to review and approval to eliminate spam entries.
+                    </p>
+                  </div>
+                  <img 
+                    src="/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" 
+                    alt="HESS Consortium" 
+                    className="h-14 w-auto"
+                  />
+                </div>
               </div>
               <div className="p-8 space-y-8">
                 <form onSubmit={handleSignUp} className="space-y-8">
