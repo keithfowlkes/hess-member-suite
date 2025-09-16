@@ -76,6 +76,8 @@ export default function Settings() {
   } = useFormFields();
   const { toast } = useToast();
   
+  const [activeSection, setActiveSection] = useState('overview');
+  
   const [recaptchaKey, setRecaptchaKey] = useState('');
   const [editingField, setEditingField] = useState<FormField | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -579,17 +581,54 @@ export default function Settings() {
               </p>
             </div>
 
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="forms">Member Management</TabsTrigger>
-                <TabsTrigger value="fields">Field Options</TabsTrigger>
-                <TabsTrigger value="public">Public Views</TabsTrigger>
-                <TabsTrigger value="security">Security Settings</TabsTrigger>
-                <TabsTrigger value="messaging">Messaging Config</TabsTrigger>
-              </TabsList>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Vertical Navigation */}
+              <div className="lg:col-span-1">
+                <div className="sticky top-6 space-y-2">
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Settings</h2>
+                  <nav className="space-y-1">
+                    {[
+                      { id: 'overview', label: 'Overview', icon: BarChart3, description: 'System statistics and analytics' },
+                      { id: 'forms', label: 'Member Management', icon: Users, description: 'Registration and user management' },
+                      { id: 'fields', label: 'Field Options', icon: FormInput, description: 'Configure dropdown options' },
+                      { id: 'public', label: 'Public Views', icon: Eye, description: 'Public-facing content' },
+                      { id: 'security', label: 'Security Settings', icon: Shield, description: 'Authentication and security' },
+                      { id: 'messaging', label: 'Messaging Config', icon: Mail, description: 'Email and notifications' }
+                    ].map((section) => (
+                      <button
+                        key={section.id}
+                        onClick={() => setActiveSection(section.id)}
+                        className={`w-full text-left p-3 rounded-lg transition-colors ${
+                          activeSection === section.id 
+                            ? 'bg-primary text-primary-foreground shadow-sm' 
+                            : 'hover:bg-muted'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <section.icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium">{section.label}</div>
+                            <div className={`text-xs mt-0.5 ${
+                              activeSection === section.id 
+                                ? 'text-primary-foreground/70' 
+                                : 'text-muted-foreground'
+                            }`}>
+                              {section.description}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+              </div>
 
-              <TabsContent value="overview" className="space-y-6">
+              {/* Content Area */}
+              <div className="lg:col-span-3 space-y-6">
+
+                {/* Overview Section */}
+                {activeSection === 'overview' && (
+                  <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -679,9 +718,12 @@ export default function Settings() {
                     </div>
                   </CardContent>
                 </Card>
-              </TabsContent>
+                  </div>
+                )}
 
-              <TabsContent value="forms" className="space-y-6">
+                {/* Member Management Section */}
+                {activeSection === 'forms' && (
+                  <div className="space-y-6">
                 {/* New Simplified Registration Management */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -709,9 +751,12 @@ export default function Settings() {
                   <EnhancedRegistrationManagement />
                 </div>
                 
-              </TabsContent>
+                  </div>
+                )}
 
-              <TabsContent value="fields" className="space-y-6">
+                {/* Field Options Section */}
+                {activeSection === 'fields' && (
+                  <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-semibold">Field Options Management</h2>
                   <p className="text-muted-foreground mt-2">
@@ -725,9 +770,12 @@ export default function Settings() {
                     <SystemFieldNormalizer />
                   </div>
                 </div>
-              </TabsContent>
+                  </div>
+                )}
 
-              <TabsContent value="public" className="space-y-6">
+                {/* Public Views Section */}
+                {activeSection === 'public' && (
+                  <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-semibold">Public Views</h2>
                   <p className="text-muted-foreground mt-2">
@@ -778,9 +826,12 @@ export default function Settings() {
                     </div>
                   </TabsContent>
                 </Tabs>
-              </TabsContent>
+                  </div>
+                )}
 
-              <TabsContent value="security" className="space-y-6">
+                {/* Security Settings Section */}
+                {activeSection === 'security' && (
+                  <div className="space-y-6">
                 {/* User Management Cleanup */}
                 <Card>
                   <CardHeader>
@@ -1000,9 +1051,12 @@ export default function Settings() {
                     </Button>
                   </CardContent>
                 </Card>
-              </TabsContent>
+                  </div>
+                )}
 
-              <TabsContent value="messaging" className="space-y-6">
+                {/* Messaging Config Section */}
+                {activeSection === 'messaging' && (
+                  <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-semibold">Messaging Configuration</h2>
                   <p className="text-muted-foreground mt-2">
@@ -1195,27 +1249,29 @@ export default function Settings() {
                                 {emailTestResult.template && (
                                   <p className="text-xs mt-1 opacity-75">
                                     Template: {emailTestResult.template}
-                                  </p>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )}
-                      </CardContent>
-                    </Card>
+                                   </p>
+                                 )}
+                               </div>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </CardContent>
+                      </Card>
 
-                  </TabsContent>
+                    </TabsContent>
 
-                  <TabsContent value="resend-config" className="space-y-6">
-                    <ResendApiConfig />
-                  </TabsContent>
+                    <TabsContent value="resend-config" className="space-y-6">
+                      <ResendApiConfig />
+                    </TabsContent>
 
-                  <TabsContent value="message-text" className="space-y-6">
-                    <MessageTextContent />
-                  </TabsContent>
-                </Tabs>
-              </TabsContent>
-            </Tabs>
+                    <TabsContent value="message-text" className="space-y-6">
+                      <MessageTextContent />
+                    </TabsContent>
+                  </Tabs>
+                    </div>
+                )}
+              </div>
+            </div>
           </div>
         </main>
       </div>
