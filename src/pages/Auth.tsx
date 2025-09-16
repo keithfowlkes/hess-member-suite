@@ -118,6 +118,7 @@ export default function Auth() {
     isPrivateNonProfit: true,
     email: '', 
     password: '', 
+    confirmPassword: '',
     firstName: '', 
     lastName: '',
     organization: '',
@@ -328,6 +329,16 @@ export default function Auth() {
     console.log('🔍 CRITICAL DEBUG: selectedOrganizationId =', selectedOrganizationId);
     console.log('🔍 CRITICAL DEBUG: Will enter reassignment block?', isReassignment && selectedOrganizationId);
     
+    // Validate password confirmation
+    if (signUpForm.password !== signUpForm.confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please ensure both password fields match.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
     
     if (recaptchaEnabled && !signUpCaptcha) {
       console.warn('reCAPTCHA validation failed or incomplete');
@@ -974,21 +985,39 @@ export default function Auth() {
                       
                         {isReassignment ? (
                           <>
-                            <div className="lg:col-span-2 space-y-2">
-                              <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
-                                New Contact Password <span className="text-red-500">*</span>
-                              </Label>
-                              <Input
-                                id="signup-password"
-                                type="password"
-                                placeholder="Password for the new contact"
-                                value={signUpForm.password}
-                                onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                                className="h-11 bg-gray-50 border-gray-300 max-w-md"
-                                required
-                                minLength={6}
-                              />
-                              <p className="text-xs text-gray-500">This password will be set for the new contact after admin approval</p>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              <div className="space-y-2">
+                                <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
+                                  New Contact Password <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                  id="signup-password"
+                                  type="password"
+                                  placeholder="Password for the new contact"
+                                  value={signUpForm.password}
+                                  onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                                  className="h-11 bg-gray-50 border-gray-300"
+                                  required
+                                  minLength={6}
+                                />
+                                <p className="text-xs text-gray-500">This password will be set for the new contact after admin approval</p>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="signup-confirm-password" className="text-gray-700 font-medium text-sm">
+                                  Confirm Password <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                  id="signup-confirm-password"
+                                  type="password"
+                                  placeholder="Confirm password"
+                                  value={signUpForm.confirmPassword}
+                                  onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                  className="h-11 bg-gray-50 border-gray-300"
+                                  required
+                                  minLength={6}
+                                />
+                                <p className="text-xs text-gray-500">Must match password above</p>
+                              </div>
                             </div>
                             <div className="lg:col-span-2 space-y-2">
                               <Label htmlFor="signup-login-hint" className="text-gray-700 font-medium text-sm">
@@ -1007,22 +1036,41 @@ export default function Auth() {
                           </>
                         ) : (
                           <>
-                            <div className="lg:col-span-2 space-y-2">
-                              <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
-                                Password <span className="text-red-500">*</span>
-                              </Label>
-                              <Input
-                                id="signup-password"
-                                type="password"
-                                placeholder="Create a secure password"
-                                value={signUpForm.password}
-                                onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                                className="h-11 bg-gray-50 border-gray-300 max-w-md"
-                                disabled={!signUpForm.isPrivateNonProfit}
-                                required
-                                minLength={6}
-                              />
-                              <p className="text-xs text-gray-500">Minimum 6 characters required</p>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              <div className="space-y-2">
+                                <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
+                                  Password <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                  id="signup-password"
+                                  type="password"
+                                  placeholder="Create a secure password"
+                                  value={signUpForm.password}
+                                  onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                                  className="h-11 bg-gray-50 border-gray-300"
+                                  disabled={!signUpForm.isPrivateNonProfit}
+                                  required
+                                  minLength={6}
+                                />
+                                <p className="text-xs text-gray-500">Minimum 6 characters required</p>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="signup-confirm-password" className="text-gray-700 font-medium text-sm">
+                                  Confirm Password <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                  id="signup-confirm-password"
+                                  type="password"
+                                  placeholder="Confirm password"
+                                  value={signUpForm.confirmPassword}
+                                  onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                  className="h-11 bg-gray-50 border-gray-300"
+                                  disabled={!signUpForm.isPrivateNonProfit}
+                                  required
+                                  minLength={6}
+                                />
+                                <p className="text-xs text-gray-500">Must match password above</p>
+                              </div>
                             </div>
                             <div className="lg:col-span-2 space-y-2">
                               <Label htmlFor="signup-login-hint" className="text-gray-700 font-medium text-sm">
@@ -1650,22 +1698,41 @@ export default function Auth() {
                           required
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="member-update-password" className="text-gray-700 font-medium text-sm">
-                          Password <span className="text-red-600">*</span>
-                        </Label>
-                        <Input
-                          id="member-update-password"
-                          type="password"
-                          placeholder="Create a secure password"
-                          value={signUpForm.password}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!isReassignment}
-                          required
-                          minLength={6}
-                        />
-                        <p className="text-xs text-gray-500">Minimum 6 characters required</p>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="member-update-password" className="text-gray-700 font-medium text-sm">
+                            Password <span className="text-red-600">*</span>
+                          </Label>
+                          <Input
+                            id="member-update-password"
+                            type="password"
+                            placeholder="Create a secure password"
+                            value={signUpForm.password}
+                            onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                            className="h-11 bg-gray-50 border-gray-300"
+                            disabled={!isReassignment}
+                            required
+                            minLength={6}
+                          />
+                          <p className="text-xs text-gray-500">Minimum 6 characters required</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="member-update-confirm-password" className="text-gray-700 font-medium text-sm">
+                            Confirm Password <span className="text-red-600">*</span>
+                          </Label>
+                          <Input
+                            id="member-update-confirm-password"
+                            type="password"
+                            placeholder="Confirm password"
+                            value={signUpForm.confirmPassword}
+                            onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                            className="h-11 bg-gray-50 border-gray-300"
+                            disabled={!isReassignment}
+                            required
+                            minLength={6}
+                          />
+                          <p className="text-xs text-gray-500">Must match password above</p>
+                        </div>
                       </div>
                       <div className="lg:col-span-2 space-y-2">
                         <Label htmlFor="member-update-title" className="text-gray-700 font-medium text-sm">
