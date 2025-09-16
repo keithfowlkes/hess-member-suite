@@ -1651,7 +1651,7 @@ export default function Auth() {
                       </div>
                       <div className="lg:col-span-2 space-y-2">
                         <Label htmlFor="member-update-title" className="text-gray-700 font-medium text-sm">
-                          Title/Position
+                          Title/Position <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="member-update-title"
@@ -1661,6 +1661,7 @@ export default function Auth() {
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactTitle: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300 max-w-md"
                           disabled={!isReassignment}
+                          required
                         />
                       </div>
                     </div>
