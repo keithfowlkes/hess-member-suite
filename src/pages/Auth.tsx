@@ -324,6 +324,10 @@ export default function Auth() {
       selectedOrganizationId
     });
     
+    console.log('🔍 CRITICAL DEBUG: isReassignment =', isReassignment);
+    console.log('🔍 CRITICAL DEBUG: selectedOrganizationId =', selectedOrganizationId);
+    console.log('🔍 CRITICAL DEBUG: Will enter reassignment block?', isReassignment && selectedOrganizationId);
+    
     
     if (recaptchaEnabled && !signUpCaptcha) {
       console.warn('reCAPTCHA validation failed or incomplete');
