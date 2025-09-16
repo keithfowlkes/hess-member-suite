@@ -142,6 +142,8 @@ export function SideBySideComparisonModal({
   // Organization fields
   const organizationFields = [
     { key: 'name', label: 'Organization Name', type: 'text' },
+    { key: 'primary_contact_first_name', label: 'Primary Contact First Name', type: 'text' },
+    { key: 'primary_contact_last_name', label: 'Primary Contact Last Name', type: 'text' },
     { key: 'address_line_1', label: 'Address Line 1', type: 'text' },
     { key: 'address_line_2', label: 'Address Line 2', type: 'text' },
     { key: 'city', label: 'City', type: 'text' },

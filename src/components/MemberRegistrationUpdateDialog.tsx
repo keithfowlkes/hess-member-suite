@@ -68,9 +68,18 @@ export function MemberRegistrationUpdateDialog({
     const regData = registrationUpdate.registration_data;
     const orgData = registrationUpdate.organization_data;
 
+    // Add missing primary contact info to existing organization data for comparison
+    const enhancedExistingOrg = {
+      ...existingOrganization,
+      primary_contact_first_name: existingOrganization.contact_first_name || '',
+      primary_contact_last_name: existingOrganization.contact_last_name || ''
+    };
+
     // Map registration data to organization structure for comparison
     const updatedOrgData = {
       name: orgData.name || regData.organization_name,
+      primary_contact_first_name: regData.first_name,
+      primary_contact_last_name: regData.last_name,
       address_line_1: orgData.address_line_1 || regData.address || regData.address_line_1,
       address_line_2: orgData.address_line_2,
       city: orgData.city || regData.city,
@@ -109,7 +118,7 @@ export function MemberRegistrationUpdateDialog({
     };
 
     return {
-      originalData: existingOrganization,
+      originalData: enhancedExistingOrg,
       updatedData: updatedOrgData
     };
   }, [existingOrganization, registrationUpdate]);
