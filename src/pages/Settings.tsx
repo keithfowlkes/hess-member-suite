@@ -580,9 +580,10 @@ export default function Settings() {
             </div>
 
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="forms">Member Management</TabsTrigger>
+                <TabsTrigger value="fields">Field Options</TabsTrigger>
                 <TabsTrigger value="public">Public Views</TabsTrigger>
                 <TabsTrigger value="security">Security Settings</TabsTrigger>
                 <TabsTrigger value="messaging">Messaging Config</TabsTrigger>
@@ -708,9 +709,21 @@ export default function Settings() {
                   <EnhancedRegistrationManagement />
                 </div>
                 
-                <div className="border-t pt-6">
+              </TabsContent>
+
+              <TabsContent value="fields" className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-semibold">Field Options Management</h2>
+                  <p className="text-muted-foreground mt-2">
+                    Configure dropdown options and normalize system field data across the platform
+                  </p>
+                </div>
+                
+                <div className="space-y-8">
                   <SimpleSystemFieldManager />
-                  <SystemFieldNormalizer />
+                  <div className="border-t pt-8">
+                    <SystemFieldNormalizer />
+                  </div>
                 </div>
               </TabsContent>
 
