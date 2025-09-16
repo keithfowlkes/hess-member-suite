@@ -115,7 +115,7 @@ export default function Auth() {
 
   
   const initialSignUpFormState = {
-    isPrivateNonProfit: false,
+    isPrivateNonProfit: true,
     email: '', 
     password: '', 
     firstName: '', 
@@ -1700,26 +1700,10 @@ export default function Auth() {
                     </div>
                     
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="lg:col-span-2 space-y-2">
-                        <Label htmlFor="member-update-organization" className="text-gray-700 font-medium text-sm">
-                          Institution Name <span className="text-red-600">*</span>
-                        </Label>
-                        <Input
-                          id="member-update-organization"
-                          type="text"
-                          placeholder="Enter your institution's full name"
-                          value={signUpForm.organization}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!isReassignment}
-                          required
-                        />
-                      </div>
-                      
                       <div className="lg:col-span-2 flex items-center space-x-2">
                         <Checkbox
                           id="member-update-is-private-nonprofit"
-                          checked={signUpForm.isPrivateNonProfit}
+                          checked={signUpForm.isPrivateNonProfit ?? true}
                           disabled={!isReassignment}
                           onCheckedChange={(checked) => 
                             setSignUpForm(prev => ({ ...prev, isPrivateNonProfit: checked as boolean }))
