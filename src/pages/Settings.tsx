@@ -20,6 +20,7 @@ import { useFormFields, FormField } from '@/hooks/useFormFields';
 import { useToast } from '@/hooks/use-toast';
 import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDirectory';
 import { SimpleSystemFieldManager } from '@/components/SimpleSystemFieldManager';
+import { SystemFieldNormalizer } from '@/components/SystemFieldNormalizer';
 import { PublicLogoManager } from '@/components/PublicLogoManager';
 
 import { USMap } from '@/components/USMap';
@@ -679,6 +680,7 @@ export default function Settings() {
 
               <TabsContent value="forms" className="space-y-6">
                 <SimpleSystemFieldManager />
+                <SystemFieldNormalizer />
               </TabsContent>
 
               <TabsContent value="public" className="space-y-6">

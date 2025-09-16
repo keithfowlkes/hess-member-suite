@@ -43,6 +43,7 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "Unit4 / CAMS": "Unit4 CAMS",
     "CAMS/ Microsoft Dynamics": "Unit4 CAMS",
     "Unit4 Agresso EMS": "Unit4 CAMS",
+    "CAMS": "Unit4 CAMS",
     
     // Other standardizations
     "In-house Developed": "In-House Developed",
@@ -53,7 +54,8 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "Campus Cafe": "Campus Cafe",
     "Collegix": "Collegix",
     "Aptron Collegix": "Collegix",
-    "EDC Campus Anywhere": "Campus Anywhere"
+    "EDC Campus Anywhere": "Campus Anywhere",
+    "SONIS": "Jenzabar ONE"
   },
   
   financial_system: {
@@ -80,12 +82,17 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "Great Plains": "Microsoft Dynamics GP",
     "Dynamics GP": "Microsoft Dynamics GP",
     
+    // Unit4/CAMS variations  
+    "Unit4 / CAMS": "Unit4 CAMS",
+    "CAMS": "Unit4 CAMS",
+    "Unit4": "Unit4 CAMS",
+    
     // Other common systems
     "Workday": "Workday",
     "Oracle": "Oracle Cloud",
     "Jenzabar EX": "Jenzabar EX",
-    "Unit4": "Unit4 CAMS",
-    "Populi": "Populi"
+    "Populi": "Populi",
+    "QuickBooks": "QuickBooks"
   },
   
   financial_aid: {
@@ -109,10 +116,70 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "Blackbaud Financial Edge": "Blackbaud Financial Edge",
     "Financial Edge": "Blackbaud Financial Edge",
     
+    // Unit4/CAMS variations
+    "Unit4 / CAMS": "Unit4 CAMS", 
+    "CAMS": "Unit4 CAMS",
+    
     // Other systems
     "Jenzabar EX": "Jenzabar EX",
     "Workday": "Workday Student",
     "Populi": "Populi"
+  },
+  
+  admissions_crm: {
+    // Slate variations
+    "Slate": "Technolutions Slate",
+    "Technolutions Slate": "Technolutions Slate",
+    "SLATE from Technolutions": "Technolutions Slate",
+    "Technolutions-Slate": "Technolutions Slate",
+    "Slate for Admissions": "Technolutions Slate",
+    
+    // TargetX variations
+    "TargetX": "TargetX",
+    "Target X": "TargetX",
+    "TargetX/Salesforce": "TargetX",
+    
+    // Ellucian variations
+    "Ellucian CRM Recruit": "Ellucian CRM Recruit",
+    "CRM Recruit": "Ellucian CRM Recruit",
+    "Recruit": "Ellucian CRM Recruit",
+    "Banner": "Ellucian Banner",
+    "Ellucian Banner": "Ellucian Banner",
+    "Colleague": "Ellucian Colleague",
+    "Ellucian Colleague": "Ellucian Colleague",
+    
+    // Anthology variations
+    "Anthology/Campus Management": "Anthology/Campus Management",
+    "Campus Management": "Anthology/Campus Management",
+    "Campus Management Connect": "Anthology/Campus Management",
+    
+    // Other systems
+    "Salesforce": "Salesforce",
+    "Jenzabar EX": "Jenzabar EX",
+    "Populi": "Populi",
+    "In-house Developed": "In-House Developed"
+  },
+  
+  alumni_advancement_crm: {
+    // Blackbaud variations
+    "Blackbaud Raiser's Edge": "Blackbaud Raiser's Edge",
+    "Raiser's Edge": "Blackbaud Raiser's Edge",
+    "Blackbaud RaisersEdge": "Blackbaud Raiser's Edge",
+    
+    // Ellucian variations
+    "Ellucian Banner Advancement": "Ellucian Banner Advancement", 
+    "Banner Advancement": "Ellucian Banner Advancement",
+    "Ellucian Colleague Advancement": "Ellucian Colleague Advancement",
+    "Colleage Advancement": "Ellucian Colleague Advancement",
+    
+    // DonorPerfect variations
+    "DonorPerfect": "DonorPerfect",
+    
+    // Other systems
+    "iModules": "iModules",
+    "Anthology/Campus Management": "Anthology/Campus Management",
+    "Campus Management": "Anthology/Campus Management",
+    "In-house Developed": "In-House Developed"
   }
 };
 
@@ -163,13 +230,39 @@ export function normalizeFieldValue(fieldName: string, currentValue: string | nu
     if (currentValue.toLowerCase().includes('colleague')) return 'Ellucian Colleague';
     if (currentValue.toLowerCase().includes('banner')) return 'Ellucian Banner';
     if (currentValue.toLowerCase().includes('jenzabar')) {
-      if (currentValue.toLowerCase().includes('one')) return 'Jenzabar ONE';
+      if (currentValue.toLowerCase().includes('one') || currentValue.toLowerCase().includes('sonis')) return 'Jenzabar ONE';
       return 'Jenzabar EX';
     }
     if (currentValue.toLowerCase().includes('powercampus')) return 'Ellucian PowerCampus';
     if (currentValue.toLowerCase().includes('campus management') || currentValue.toLowerCase().includes('anthology')) {
       return 'Anthology/Campus Management';
     }
+    if (currentValue.toLowerCase().includes('cams') || currentValue.toLowerCase().includes('unit4')) {
+      return 'Unit4 CAMS';
+    }
+    if (currentValue.toLowerCase().includes('workday')) return 'Workday Student';
+  }
+  
+  if (fieldName === 'financial_system') {
+    if (currentValue.toLowerCase().includes('banner')) return 'Ellucian Banner';
+    if (currentValue.toLowerCase().includes('colleague')) return 'Ellucian Colleague';
+    if (currentValue.toLowerCase().includes('dynamics') || currentValue.toLowerCase().includes('great plains')) return 'Microsoft Dynamics GP';
+    if (currentValue.toLowerCase().includes('blackbaud') && currentValue.toLowerCase().includes('financial')) return 'Blackbaud Financial Edge';
+    if (currentValue.toLowerCase().includes('cams') || currentValue.toLowerCase().includes('unit4')) return 'Unit4 CAMS';
+  }
+  
+  if (fieldName === 'admissions_crm') {
+    if (currentValue.toLowerCase().includes('slate') || currentValue.toLowerCase().includes('technolutions')) return 'Technolutions Slate';
+    if (currentValue.toLowerCase().includes('targetx') || currentValue.toLowerCase().includes('target x')) return 'TargetX';
+    if (currentValue.toLowerCase().includes('crm recruit') || currentValue.toLowerCase().includes('recruit')) return 'Ellucian CRM Recruit';
+    if (currentValue.toLowerCase().includes('salesforce')) return 'Salesforce';
+  }
+  
+  if (fieldName === 'alumni_advancement_crm') {
+    if (currentValue.toLowerCase().includes("raiser's edge") || currentValue.toLowerCase().includes('raisersedge')) return "Blackbaud Raiser's Edge";
+    if (currentValue.toLowerCase().includes('donorperfect')) return 'DonorPerfect';
+    if (currentValue.toLowerCase().includes('banner') && currentValue.toLowerCase().includes('advancement')) return 'Ellucian Banner Advancement';
+    if (currentValue.toLowerCase().includes('colleague') && currentValue.toLowerCase().includes('advancement')) return 'Ellucian Colleague Advancement';
   }
   
   return currentValue; // Return original if no mapping found
