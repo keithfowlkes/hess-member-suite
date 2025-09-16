@@ -53,7 +53,9 @@ export default function Auth() {
     try {
       const sp = new URLSearchParams(window.location.search)
       const t = sp.get('tab')?.toLowerCase()
-      return t === 'register' || t === 'signup' ? 'signup' : 'signin'
+      if (t === 'register' || t === 'signup') return 'signup'
+      if (t === 'member-update') return 'member-update'
+      return 'signin'
     } catch {
       return 'signin'
     }
@@ -67,6 +69,8 @@ export default function Auth() {
     const t = sp.get('tab')?.toLowerCase()
     if (t === 'register' || t === 'signup') {
       setActiveTab('signup')
+    } else if (t === 'member-update') {
+      setActiveTab('member-update')
     }
   }, [])
   const [emailNotFoundAddress, setEmailNotFoundAddress] = useState('');
