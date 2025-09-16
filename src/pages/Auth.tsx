@@ -1569,14 +1569,14 @@ export default function Auth() {
                     </div>
                   </div>
 
-                  {/* Primary Contact Section */}
-                  <div className="space-y-6">
-                    <div className="border-b border-gray-200 pb-2">
-                      <h3 className="text-lg font-semibold text-gray-800">Primary Contact Information</h3>
-                      <p className="text-sm text-gray-600">Enter the primary contact details for your institution</p>
+                  {/* Account Information */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Account Information</h3>
+                      <p className="text-gray-600 text-sm">Your login credentials and contact information.</p>
                     </div>
                     
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-6">
                       <div className="space-y-2">
                         <Label htmlFor="member-update-first-name" className="text-gray-700 font-medium text-sm">
                           First Name <span className="text-red-600">*</span>
@@ -1656,15 +1656,14 @@ export default function Auth() {
                     </div>
                   </div>
 
-                  {/* Institution Information Section */}
-                  <div className="space-y-6">
-                    <div className="border-b border-gray-200 pb-2">
-                      <h3 className="text-lg font-semibold text-gray-800">Institution Information</h3>
-                      <p className="text-sm text-gray-600">Select and update your institution details</p>
+                  {/* Institution Information */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Institution Information</h3>
+                      <p className="text-gray-600 text-sm">Details about your college or university.</p>
                     </div>
-
-                    {/* Institution Selector */}
-                    <div className="space-y-2">
+                    
+                    <div className="space-y-6">
                       <Label htmlFor="member-update-existing-organization" className="text-gray-700 font-medium text-sm">
                         Select Existing Institution <span className="text-red-600">*</span>
                       </Label>
@@ -1805,6 +1804,7 @@ export default function Auth() {
                           disabled={!isReassignment}
                         />
                       </div>
+                    </div>
                     </div>
                   </div>
 
@@ -2000,6 +2000,9 @@ export default function Auth() {
                           className="w-full min-h-[120px] p-4 bg-gray-50 border border-gray-300 rounded-lg resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                           rows={4}
                         />
+                      </div>
+                    </div>
+                  </div>
                   
                   {/* Security Verification */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
