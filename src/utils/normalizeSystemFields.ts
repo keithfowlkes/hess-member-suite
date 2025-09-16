@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 interface FieldMapping {
   [currentValue: string]: string;
@@ -117,52 +116,6 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
   }
 };
 
-export interface NormalizationBackup {
-  id: string;
-  organizationId: string;
-  fieldName: string;
-  originalValue: string | null;
-  normalizedValue: string | null;
-  timestamp: string;
-}
-
-// Create backup table for original values
-export async function createBackupTable(): Promise<boolean> {
-  try {
-    const { error } = await supabase.rpc('execute_sql', {
-      sql: `
-        CREATE TABLE IF NOT EXISTS organization_field_backups (
-          id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-          organization_id uuid NOT NULL,
-          field_name text NOT NULL,
-          original_value text,
-          normalized_value text,
-          created_at timestamp with time zone DEFAULT now(),
-          created_by uuid DEFAULT auth.uid()
-        );
-        
-        -- Enable RLS
-        ALTER TABLE organization_field_backups ENABLE ROW LEVEL SECURITY;
-        
-        -- Create admin-only policy
-        CREATE POLICY IF NOT EXISTS "Admins can manage field backups" 
-        ON organization_field_backups 
-        FOR ALL 
-        USING (has_role(auth.uid(), 'admin'::app_role));
-      `
-    });
-    
-    if (error) {
-      console.error('Error creating backup table:', error);
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error('Error creating backup table:', error);
-    return false;
-  }
-}
-
 // Get current system field options for validation
 export async function getSystemFieldOptions(): Promise<{[fieldName: string]: string[]}> {
   const { data, error } = await supabase
@@ -234,41 +187,49 @@ export async function previewNormalization(fieldNames: string[] = []) {
   }> = [];
   
   for (const fieldName of fields) {
-    const { data, error } = await supabase
-      .from('organizations')
-      .select(`id, name, ${fieldName}`)
-      .not(fieldName, 'is', null);
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select(`id, name, ${fieldName}`)
+        .not(fieldName, 'is', null);
+        
+      if (error) {
+        console.error(`Error fetching ${fieldName}:`, error);
+        continue;
+      }
       
-    if (error) {
-      console.error(`Error fetching ${fieldName}:`, error);
-      continue;
-    }
-    
-    data.forEach(org => {
-      const currentValue = org[fieldName];
-      const proposedValue = normalizeFieldValue(fieldName, currentValue);
-      
-      if (currentValue !== proposedValue) {
-        preview.push({
-          organizationId: org.id,
-          fieldName,
-          currentValue,
-          proposedValue,
-          organizationName: org.name
+      if (data && Array.isArray(data)) {
+        data.forEach((orgRecord) => {
+          const org = orgRecord as Record<string, any>;
+          if (org?.id && org?.name) {
+            const currentValue = org[fieldName];
+            const proposedValue = normalizeFieldValue(fieldName, currentValue);
+            
+            if (currentValue !== proposedValue) {
+              preview.push({
+                organizationId: org.id,
+                fieldName,
+                currentValue,
+                proposedValue,
+                organizationName: org.name
+              });
+            }
+          }
         });
       }
-    });
+    } catch (error) {
+      console.error(`Error processing preview for ${fieldName}:`, error);
+    }
   }
   
   return preview;
 }
 
-// Execute normalization with backup
+// Execute normalization (simplified version without backup)
 export async function executeNormalization(fieldNames: string[] = [], confirm: boolean = false): Promise<{
   success: boolean;
   processed: number;
   errors: string[];
-  backupId?: string;
 }> {
   if (!confirm) {
     return {
@@ -281,16 +242,6 @@ export async function executeNormalization(fieldNames: string[] = [], confirm: b
   const fields = fieldNames.length ? fieldNames : Object.keys(FIELD_MAPPINGS);
   let processed = 0;
   const errors: string[] = [];
-  
-  // Create backup table if needed
-  const backupCreated = await createBackupTable();
-  if (!backupCreated) {
-    return {
-      success: false,
-      processed: 0,
-      errors: ['Failed to create backup table']
-    };
-  }
   
   // Get system field options for validation
   const systemOptions = await getSystemFieldOptions();
@@ -307,43 +258,33 @@ export async function executeNormalization(fieldNames: string[] = [], confirm: b
         continue;
       }
       
-      for (const org of orgs || []) {
-        const currentValue = org[fieldName];
-        const normalizedValue = normalizeFieldValue(fieldName, currentValue);
-        
-        if (currentValue !== normalizedValue) {
-          // Create backup first
-          const { error: backupError } = await supabase
-            .from('organization_field_backups')
-            .insert({
-              organization_id: org.id,
-              field_name: fieldName,
-              original_value: currentValue,
-              normalized_value: normalizedValue
-            });
+      if (orgs && Array.isArray(orgs)) {
+        for (const orgRecord of orgs) {
+          const org = orgRecord as Record<string, any>;
+          if (org?.id && org?.name) {
+            const currentValue = org[fieldName];
+            const normalizedValue = normalizeFieldValue(fieldName, currentValue);
             
-          if (backupError) {
-            errors.push(`Backup failed for org ${org.name}: ${backupError.message}`);
-            continue;
+            if (currentValue !== normalizedValue) {
+              // Validate against system options if available
+              if (systemOptions[fieldName] && normalizedValue && !systemOptions[fieldName].includes(normalizedValue)) {
+                console.warn(`Warning: ${normalizedValue} not in system options for ${fieldName}`);
+              }
+              
+              // Update organization
+              const { error: updateError } = await supabase
+                .from('organizations')
+                .update({ [fieldName]: normalizedValue })
+                .eq('id', org.id);
+                
+              if (updateError) {
+                errors.push(`Update failed for org ${org.name}: ${updateError.message}`);
+                continue;
+              }
+              
+              processed++;
+            }
           }
-          
-          // Validate against system options if available
-          if (systemOptions[fieldName] && normalizedValue && !systemOptions[fieldName].includes(normalizedValue)) {
-            console.warn(`Warning: ${normalizedValue} not in system options for ${fieldName}`);
-          }
-          
-          // Update organization
-          const { error: updateError } = await supabase
-            .from('organizations')
-            .update({ [fieldName]: normalizedValue })
-            .eq('id', org.id);
-            
-          if (updateError) {
-            errors.push(`Update failed for org ${org.name}: ${updateError.message}`);
-            continue;
-          }
-          
-          processed++;
         }
       }
     } catch (error) {
@@ -354,58 +295,6 @@ export async function executeNormalization(fieldNames: string[] = [], confirm: b
   return {
     success: errors.length === 0,
     processed,
-    errors
-  };
-}
-
-// Revert normalization using backup
-export async function revertNormalization(backupTimestamp?: string): Promise<{
-  success: boolean;
-  reverted: number;
-  errors: string[];
-}> {
-  let query = supabase
-    .from('organization_field_backups')
-    .select('*');
-    
-  if (backupTimestamp) {
-    query = query.gte('created_at', backupTimestamp);
-  }
-  
-  const { data: backups, error: fetchError } = await query;
-  
-  if (fetchError) {
-    return {
-      success: false,
-      reverted: 0,
-      errors: [`Error fetching backups: ${fetchError.message}`]
-    };
-  }
-  
-  let reverted = 0;
-  const errors: string[] = [];
-  
-  for (const backup of backups || []) {
-    try {
-      const { error: updateError } = await supabase
-        .from('organizations')
-        .update({ [backup.field_name]: backup.original_value })
-        .eq('id', backup.organization_id);
-        
-      if (updateError) {
-        errors.push(`Revert failed for ${backup.organization_id}: ${updateError.message}`);
-        continue;
-      }
-      
-      reverted++;
-    } catch (error) {
-      errors.push(`Error reverting ${backup.organization_id}: ${error}`);
-    }
-  }
-  
-  return {
-    success: errors.length === 0,
-    reverted,
     errors
   };
 }

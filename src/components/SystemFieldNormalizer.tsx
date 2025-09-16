@@ -12,15 +12,12 @@ import {
   CheckCircle, 
   Database, 
   Eye, 
-  RotateCcw, 
   Play,
   Info
 } from 'lucide-react';
 import {
   previewNormalization,
-  executeNormalization,
-  revertNormalization,
-  type NormalizationBackup
+  executeNormalization
 } from '@/utils/normalizeSystemFields';
 
 interface PreviewItem {
@@ -85,8 +82,7 @@ export const SystemFieldNormalizer = () => {
     }
 
     const confirmed = window.confirm(
-      `This will normalize ${preview.length} records across ${selectedFields.length} field(s). ` +
-      'Original values will be backed up. Continue?'
+      `This will normalize ${preview.length} records across ${selectedFields.length} field(s). Continue?`
     );
     
     if (!confirmed) return;
@@ -111,31 +107,6 @@ export const SystemFieldNormalizer = () => {
     }
   };
 
-  const handleRevert = async () => {
-    const confirmed = window.confirm(
-      'This will revert all recent normalization changes using the backup data. Continue?'
-    );
-    
-    if (!confirmed) return;
-
-    setLoading(true);
-    try {
-      const result = await revertNormalization();
-      
-      if (result.success) {
-        toast.success(`Successfully reverted ${result.reverted} records`);
-      } else {
-        toast.error(`Revert completed with ${result.errors.length} errors`);
-        console.error('Revert errors:', result.errors);
-      }
-    } catch (error) {
-      toast.error('Error reverting normalization');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const groupedPreview = preview.reduce((acc, item) => {
     if (!acc[item.fieldName]) acc[item.fieldName] = [];
     acc[item.fieldName].push(item);
@@ -152,7 +123,7 @@ export const SystemFieldNormalizer = () => {
           </CardTitle>
           <CardDescription>
             Normalize organization system field data to match configured System Field Options.
-            This process will backup original values before making changes.
+            This process will standardize variations in system field data.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -202,15 +173,6 @@ export const SystemFieldNormalizer = () => {
             >
               <Play className="h-4 w-4 mr-2" />
               Execute Normalization
-            </Button>
-            
-            <Button
-              onClick={handleRevert}
-              disabled={loading}
-              variant="destructive"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Revert Last Changes
             </Button>
           </div>
         </CardContent>
