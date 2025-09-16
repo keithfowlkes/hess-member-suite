@@ -1589,7 +1589,7 @@ export default function Auth() {
                   Update information for your existing member institution. Note, these entries are subject to review and approval to eliminate spam entries.
                 </p>
               </div>
-              <div className="p-8 space-y-8">
+              <div className="p-8 pt-4 space-y-8">
                 <form onSubmit={handleSignUp} className="space-y-8">
                   {/* Member Update Request Identifier */}
                   <div className="space-y-4">
