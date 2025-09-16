@@ -1829,6 +1829,7 @@ export default function Auth() {
                         label="Student Information System"
                         value={signUpForm.studentInformationSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: value }))}
+                        disabled={false}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1836,6 +1837,7 @@ export default function Auth() {
                         label="Financial System"
                         value={signUpForm.financialSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystem: value }))}
+                        disabled={false}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1843,6 +1845,7 @@ export default function Auth() {
                         label="Financial Aid"
                         value={signUpForm.financialAid}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, financialAid: value }))}
+                        disabled={false}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1850,6 +1853,7 @@ export default function Auth() {
                         label="HCM/HR"
                         value={signUpForm.hcmHr}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHr: value }))}
+                        disabled={false}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1857,6 +1861,7 @@ export default function Auth() {
                         label="Payroll System"
                         value={signUpForm.payrollSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystem: value }))}
+                        disabled={false}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1864,6 +1869,7 @@ export default function Auth() {
                         label="Purchasing System"
                         value={signUpForm.purchasingSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystem: value }))}
+                        disabled={false}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1871,6 +1877,7 @@ export default function Auth() {
                         label="Housing Management"
                         value={signUpForm.housingManagement}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagement: value }))}
+                        disabled={false}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1878,6 +1885,7 @@ export default function Auth() {
                         label="Learning Management"
                         value={signUpForm.learningManagement}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagement: value }))}
+                        disabled={false}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1885,6 +1893,7 @@ export default function Auth() {
                         label="Admissions CRM"
                         value={signUpForm.admissionsCrm}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrm: value }))}
+                        disabled={false}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1892,6 +1901,7 @@ export default function Auth() {
                         label="Alumni/Advancement CRM"
                         value={signUpForm.alumniAdvancementCrm}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
+                        disabled={false}
                       />
                     </div>
                   </div>
