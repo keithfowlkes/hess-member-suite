@@ -15,7 +15,7 @@ import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
 import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
 import { useOrganizations } from '@/hooks/useOrganizations';
-import { useCreateReassignmentRequest } from '@/hooks/useReassignmentRequests';
+import { useMemberRegistrationUpdates } from '@/hooks/useMemberRegistrationUpdates';
 
 // Store the actual password for later use during approval
 const storeActualPassword = (password: string): string => {
@@ -36,7 +36,7 @@ export default function Auth() {
     window.scrollTo(0, 0);
   }, []);
   const { data: organizations = [] } = useOrganizations();
-  const createReassignmentRequest = useCreateReassignmentRequest();
+  const { createRegistrationUpdate } = useMemberRegistrationUpdates();
   const { data: recaptchaSetting, isLoading: isLoadingRecaptcha } = useSystemSetting('recaptcha_site_key');
   const { data: recaptchaEnabledSetting, isLoading: isLoadingRecaptchaEnabled } = useSystemSetting('recaptcha_enabled');
   
@@ -404,17 +404,29 @@ export default function Auth() {
           other_software_comments: signUpForm.otherSoftwareComments
         };
 
-        await createReassignmentRequest.mutateAsync({
-          organization_id: selectedOrganizationId,
-          new_contact_email: signUpForm.email,
-          new_organization_data: newOrgData,
-          user_registration_data: {
+        createRegistrationUpdate({
+          submitted_email: signUpForm.email,
+          registration_data: {
             email: signUpForm.email,
-            password_hash: storeActualPassword(signUpForm.password),
+            password: storeActualPassword(signUpForm.password),
             first_name: signUpForm.firstName,
             last_name: signUpForm.lastName,
-            is_private_nonprofit: signUpForm.isPrivateNonProfit
-          }
+            address: signUpForm.address,
+            city: signUpForm.city,
+            state: signUpForm.state,
+            zip: signUpForm.zip,
+            primary_contact_title: signUpForm.primaryContactTitle,
+            secondary_first_name: signUpForm.secondaryFirstName,
+            secondary_last_name: signUpForm.secondaryLastName,
+            secondary_contact_title: signUpForm.secondaryContactTitle,
+            secondary_contact_email: signUpForm.secondaryContactEmail,
+            is_private_nonprofit: signUpForm.isPrivateNonProfit,
+            ...newOrgData
+          },
+          organization_data: newOrgData,
+          existing_organization_id: selectedOrganizationId,
+          existing_organization_name: currentOrg.name,
+          submission_type: 'member_update'
         });
 
         // Redirect to confirmation page  

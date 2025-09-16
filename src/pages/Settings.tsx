@@ -21,6 +21,8 @@ import { useToast } from '@/hooks/use-toast';
 import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDirectory';
 import { SimpleSystemFieldManager } from '@/components/SimpleSystemFieldManager';
 import { SystemFieldNormalizer } from '@/components/SystemFieldNormalizer';
+import { SimplifiedMemberRegistrationManagement } from '@/components/SimplifiedMemberRegistrationManagement';
+import { EnhancedRegistrationManagement } from '@/components/EnhancedRegistrationManagement';
 import { PublicLogoManager } from '@/components/PublicLogoManager';
 
 import { USMap } from '@/components/USMap';
@@ -580,7 +582,7 @@ export default function Settings() {
             <Tabs defaultValue="overview" className="space-y-6">
               <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="forms">Registration Forms</TabsTrigger>
+                <TabsTrigger value="forms">Member Management</TabsTrigger>
                 <TabsTrigger value="public">Public Views</TabsTrigger>
                 <TabsTrigger value="security">Security Settings</TabsTrigger>
                 <TabsTrigger value="messaging">Messaging Config</TabsTrigger>
@@ -679,8 +681,37 @@ export default function Settings() {
               </TabsContent>
 
               <TabsContent value="forms" className="space-y-6">
-                <SimpleSystemFieldManager />
-                <SystemFieldNormalizer />
+                {/* New Simplified Registration Management */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold">Member Registration Updates</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Review and approve member registration updates and primary contact changes
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <SimplifiedMemberRegistrationManagement />
+                </div>
+                
+                <div className="border-t pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Legacy Registration Management</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Legacy system for pending registrations (being phased out)
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <EnhancedRegistrationManagement />
+                </div>
+                
+                <div className="border-t pt-6">
+                  <SimpleSystemFieldManager />
+                  <SystemFieldNormalizer />
+                </div>
               </TabsContent>
 
               <TabsContent value="public" className="space-y-6">

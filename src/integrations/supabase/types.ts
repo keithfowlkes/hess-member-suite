@@ -377,6 +377,57 @@ export type Database = {
         }
         Relationships: []
       }
+      member_registration_updates: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          existing_organization_id: string | null
+          existing_organization_name: string | null
+          id: string
+          organization_data: Json
+          registration_data: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submission_type: string
+          submitted_at: string
+          submitted_email: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          existing_organization_id?: string | null
+          existing_organization_name?: string | null
+          id?: string
+          organization_data?: Json
+          registration_data?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submission_type?: string
+          submitted_at?: string
+          submitted_email: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          existing_organization_id?: string | null
+          existing_organization_name?: string | null
+          id?: string
+          organization_data?: Json
+          registration_data?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submission_type?: string
+          submitted_at?: string
+          submitted_email?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       organization_invitations: {
         Row: {
           created_at: string
