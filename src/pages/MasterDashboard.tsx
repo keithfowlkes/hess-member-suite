@@ -69,6 +69,7 @@ import { MemberInfoUpdateRequestsDialog } from '@/components/MemberInfoUpdateReq
 import { PendingRegistrationApprovalDialog } from '@/components/PendingRegistrationApprovalDialog';
 import { AddExternalUserDialog } from '@/components/AddExternalUserDialog';
 import { DebugRequestsComponent } from '@/components/DebugRequestsComponent';
+import { MemberRegistrationUpdateDialog } from '@/components/MemberRegistrationUpdateDialog';
 import type { PendingRegistration } from '@/hooks/usePendingRegistrations';
 
 // Icons
@@ -120,7 +121,7 @@ const MasterDashboard = () => {
   const { approveRequest: approveProfileEditRequest } = useApproveOrganizationProfileEditRequest();
   const { rejectRequest: rejectProfileEditRequest } = useRejectOrganizationProfileEditRequest();
   const { pendingRegistrations, loading: pendingRegistrationsLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
-  const { registrationUpdates, isLoading: registrationUpdatesLoading } = useMemberRegistrationUpdates();
+  const { registrationUpdates, isLoading: registrationUpdatesLoading, processRegistrationUpdate, isProcessing: isProcessingRegistrationUpdate } = useMemberRegistrationUpdates();
   const { invoices, loading: invoicesLoading } = useInvoices();
   
   // Calculate pending counts
@@ -136,6 +137,7 @@ const MasterDashboard = () => {
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [selectedPendingRegistration, setSelectedPendingRegistration] = useState<PendingRegistration | null>(null);
   const [selectedMemberInfoUpdate, setSelectedMemberInfoUpdate] = useState(null);
+  const [selectedRegistrationUpdate, setSelectedRegistrationUpdate] = useState(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showRegistrationApprovalDialog, setShowRegistrationApprovalDialog] = useState(false);
   const [showInvitationDialog, setShowInvitationDialog] = useState(false);
@@ -1055,18 +1057,15 @@ const MasterDashboard = () => {
                                   </div>
                                 </div>
                                 <div className="flex gap-2 flex-shrink-0">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => {
-                                      // This will be handled by the Settings page's simplified interface
-                                      window.location.href = '/settings';
-                                    }}
-                                    className="text-xs"
-                                  >
-                                    <Eye className="h-3 w-3 mr-1" />
-                                    Review
-                                  </Button>
+                                   <Button 
+                                     variant="outline" 
+                                     size="sm" 
+                                     onClick={() => setSelectedRegistrationUpdate(update)}
+                                     className="text-xs"
+                                   >
+                                     <Eye className="h-3 w-3 mr-1" />
+                                     Review
+                                   </Button>
                                 </div>
                               </div>
                             </CardContent>
@@ -1633,6 +1632,31 @@ const MasterDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Member Registration Update Dialog */}
+      <MemberRegistrationUpdateDialog
+        open={!!selectedRegistrationUpdate}
+        onOpenChange={(open) => !open && setSelectedRegistrationUpdate(null)}
+        registrationUpdate={selectedRegistrationUpdate}
+        onApprove={(registrationUpdateId, adminUserId, adminNotes) => 
+          processRegistrationUpdate({
+            registrationUpdateId,
+            action: 'approve',
+            adminUserId,
+            adminNotes
+          })
+        }
+        onReject={(registrationUpdateId, adminUserId, adminNotes) => 
+          processRegistrationUpdate({
+            registrationUpdateId,
+            action: 'reject',
+            adminUserId,
+            adminNotes
+          })
+        }
+        adminUserId={user?.id}
+        isProcessing={isProcessingRegistrationUpdate}
+      />
     </SidebarProvider>
   );
 };
