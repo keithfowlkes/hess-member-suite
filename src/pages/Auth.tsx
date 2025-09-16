@@ -1550,7 +1550,7 @@ export default function Auth() {
                       />
                       <Label 
                         htmlFor="member-update-is-reassignment" 
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        className="text-base font-medium leading-relaxed cursor-pointer"
                       >
                         This is member information update request. I am an authorized agent from my current HESS member institutions and updating information for my own existing institution.
                       </Label>
@@ -1579,6 +1579,7 @@ export default function Auth() {
                           value={signUpForm.firstName}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                           required
                         />
                       </div>
@@ -1593,6 +1594,7 @@ export default function Auth() {
                           value={signUpForm.lastName}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                           required
                         />
                       </div>
@@ -1607,6 +1609,7 @@ export default function Auth() {
                           value={signUpForm.email}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, email: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                           required
                         />
                       </div>
@@ -1621,6 +1624,7 @@ export default function Auth() {
                           value={signUpForm.password}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                           required
                           minLength={6}
                         />
@@ -1637,6 +1641,7 @@ export default function Auth() {
                           value={signUpForm.primaryContactTitle}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactTitle: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300 max-w-md"
+                          disabled={!isReassignment}
                         />
                       </div>
                     </div>
@@ -1657,6 +1662,7 @@ export default function Auth() {
                       <Select
                         value={selectedOrganizationId}
                         onValueChange={setSelectedOrganizationId}
+                        disabled={!isReassignment}
                         required
                       >
                         <SelectTrigger className="h-11 bg-gray-50 border-gray-300 max-w-lg">
@@ -1687,6 +1693,7 @@ export default function Auth() {
                           value={signUpForm.organization}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                           required
                         />
                       </div>
@@ -1695,6 +1702,7 @@ export default function Auth() {
                         <Checkbox
                           id="member-update-is-private-nonprofit"
                           checked={signUpForm.isPrivateNonProfit}
+                          disabled={!isReassignment}
                           onCheckedChange={(checked) => 
                             setSignUpForm(prev => ({ ...prev, isPrivateNonProfit: checked as boolean }))
                           }
@@ -1715,6 +1723,7 @@ export default function Auth() {
                           value={signUpForm.stateAssociation}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                         />
                       </div>
                       <div className="space-y-2">
@@ -1728,6 +1737,7 @@ export default function Auth() {
                           value={signUpForm.studentFte}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, studentFte: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                         />
                       </div>
                       <div className="lg:col-span-2 space-y-2">
@@ -1741,6 +1751,7 @@ export default function Auth() {
                           value={signUpForm.address}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                         />
                       </div>
                       <div className="space-y-2">
@@ -1754,6 +1765,7 @@ export default function Auth() {
                           value={signUpForm.city}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                         />
                       </div>
                       <div className="space-y-2">
@@ -1767,6 +1779,7 @@ export default function Auth() {
                           value={signUpForm.state}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                         />
                       </div>
                       <div className="space-y-2">
@@ -1780,6 +1793,7 @@ export default function Auth() {
                           value={signUpForm.zip}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                         />
                       </div>
                     </div>
@@ -1798,7 +1812,7 @@ export default function Auth() {
                         label="Student Information System"
                         value={signUpForm.studentInformationSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, studentInformationSystem: value }))}
-                        disabled={false}
+                        disabled={!isReassignment}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1806,7 +1820,7 @@ export default function Auth() {
                         label="Financial System"
                         value={signUpForm.financialSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, financialSystem: value }))}
-                        disabled={false}
+                        disabled={!isReassignment}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1814,7 +1828,7 @@ export default function Auth() {
                         label="Financial Aid"
                         value={signUpForm.financialAid}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, financialAid: value }))}
-                        disabled={false}
+                        disabled={!isReassignment}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1822,7 +1836,7 @@ export default function Auth() {
                         label="HCM/HR"
                         value={signUpForm.hcmHr}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, hcmHr: value }))}
-                        disabled={false}
+                        disabled={!isReassignment}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1830,7 +1844,7 @@ export default function Auth() {
                         label="Payroll System"
                         value={signUpForm.payrollSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, payrollSystem: value }))}
-                        disabled={false}
+                        disabled={!isReassignment}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1838,7 +1852,7 @@ export default function Auth() {
                         label="Purchasing System"
                         value={signUpForm.purchasingSystem}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, purchasingSystem: value }))}
-                        disabled={false}
+                        disabled={!isReassignment}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1846,7 +1860,7 @@ export default function Auth() {
                         label="Housing Management"
                         value={signUpForm.housingManagement}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, housingManagement: value }))}
-                        disabled={false}
+                        disabled={!isReassignment}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1854,7 +1868,7 @@ export default function Auth() {
                         label="Learning Management"
                         value={signUpForm.learningManagement}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, learningManagement: value }))}
-                        disabled={false}
+                        disabled={!isReassignment}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1862,7 +1876,7 @@ export default function Auth() {
                         label="Admissions CRM"
                         value={signUpForm.admissionsCrm}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, admissionsCrm: value }))}
-                        disabled={false}
+                        disabled={!isReassignment}
                       />
 
                       <EnhancedSystemFieldSelect
@@ -1870,7 +1884,7 @@ export default function Auth() {
                         label="Alumni/Advancement CRM"
                         value={signUpForm.alumniAdvancementCrm}
                         onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
-                        disabled={false}
+                        disabled={!isReassignment}
                       />
                     </div>
                   </div>
@@ -1895,6 +1909,7 @@ export default function Auth() {
                           <Checkbox
                             id={`member-update-${key}`}
                             checked={signUpForm[key as keyof typeof signUpForm] as boolean}
+                            disabled={!isReassignment}
                             onCheckedChange={(checked) => 
                               setSignUpForm(prev => ({ ...prev, [key]: checked }))
                             }
@@ -1917,6 +1932,7 @@ export default function Auth() {
                           value={signUpForm.primaryOfficeOtherDetails}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryOfficeOtherDetails: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300 max-w-md"
+                          disabled={!isReassignment}
                         />
                       </div>
                     )}
@@ -1941,6 +1957,7 @@ export default function Auth() {
                           value={signUpForm.otherSoftwareComments}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, otherSoftwareComments: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                         />
                       </div>
                       <div className="lg:col-span-2 space-y-2">
@@ -1954,6 +1971,7 @@ export default function Auth() {
                           value={signUpForm.loginHint}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, loginHint: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!isReassignment}
                         />
                         <p className="text-sm text-muted-foreground mt-1">
                           This hint will be included in your welcome email to help you remember your login credentials.
@@ -1977,7 +1995,7 @@ export default function Auth() {
                   <Button 
                     type="submit" 
                     className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground" 
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !isReassignment || (activeTab === 'member-update' && !selectedOrganizationId)}
                   >
                     {isSubmitting ? 'Submitting update request...' : 'Submit Information Update Request'}
                   </Button>
