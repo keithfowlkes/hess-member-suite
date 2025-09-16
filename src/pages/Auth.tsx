@@ -407,35 +407,40 @@ export default function Auth() {
         console.log('🔍 DEBUG: About to call createRegistrationUpdate with data:', {
           submitted_email: signUpForm.email,
           existing_organization_id: selectedOrganizationId,
-          existing_organization_name: currentOrg.name
+          existing_organization_name: currentOrg?.name || 'No org name'
         });
 
-        await createRegistrationUpdate({
-          submitted_email: signUpForm.email,
-          registration_data: {
-            email: signUpForm.email,
-            password: storeActualPassword(signUpForm.password),
-            first_name: signUpForm.firstName,
-            last_name: signUpForm.lastName,
-            address: signUpForm.address,
-            city: signUpForm.city,
-            state: signUpForm.state,
-            zip: signUpForm.zip,
-            primary_contact_title: signUpForm.primaryContactTitle,
-            secondary_first_name: signUpForm.secondaryFirstName,
-            secondary_last_name: signUpForm.secondaryLastName,
-            secondary_contact_title: signUpForm.secondaryContactTitle,
-            secondary_contact_email: signUpForm.secondaryContactEmail,
-            is_private_nonprofit: signUpForm.isPrivateNonProfit,
-            ...newOrgData
-          },
-          organization_data: newOrgData,
-          existing_organization_id: selectedOrganizationId,
-          existing_organization_name: currentOrg.name,
-          submission_type: 'member_update'
-        });
-
-        console.log('✅ DEBUG: createRegistrationUpdate call completed');
+        try {
+          const result = await createRegistrationUpdate({
+            submitted_email: signUpForm.email,
+            registration_data: {
+              email: signUpForm.email,
+              password: storeActualPassword(signUpForm.password),
+              first_name: signUpForm.firstName,
+              last_name: signUpForm.lastName,
+              address: signUpForm.address,
+              city: signUpForm.city,
+              state: signUpForm.state,
+              zip: signUpForm.zip,
+              primary_contact_title: signUpForm.primaryContactTitle,
+              secondary_first_name: signUpForm.secondaryFirstName,
+              secondary_last_name: signUpForm.secondaryLastName,
+              secondary_contact_title: signUpForm.secondaryContactTitle,
+              secondary_contact_email: signUpForm.secondaryContactEmail,
+              is_private_nonprofit: signUpForm.isPrivateNonProfit,
+              ...newOrgData
+            },
+            organization_data: newOrgData,
+            existing_organization_id: selectedOrganizationId,
+            existing_organization_name: currentOrg?.name,
+            submission_type: 'member_update'
+          });
+          
+          console.log('✅ DEBUG: createRegistrationUpdate call completed successfully:', result);
+        } catch (error) {
+          console.error('❌ ERROR in createRegistrationUpdate:', error);
+          throw error; // Re-throw to be caught by the outer try-catch
+        }
 
         // Redirect to confirmation page  
         console.log('📍 REASSIGNMENT DEBUG: Navigating to: /registration-confirmation?type=reassignment');
