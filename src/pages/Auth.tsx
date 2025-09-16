@@ -1591,6 +1591,27 @@ export default function Auth() {
               </div>
               <div className="p-8 space-y-8">
                 <form onSubmit={handleSignUp} className="space-y-8">
+                  {/* Member Update Request Identifier */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 p-4 border rounded-md bg-muted/50">
+                      <Checkbox
+                        id="member-update-is-reassignment"
+                        checked={true}
+                        onCheckedChange={() => {}} // Always checked for this tab
+                        disabled={true} // Disabled since this tab is specifically for updates
+                      />
+                      <Label 
+                        htmlFor="member-update-is-reassignment" 
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        This is member information update request (I am updating information for an existing institution)
+                      </Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Check this if you're requesting an information update for an existing member institution
+                    </p>
+                  </div>
+
                   {/* Primary Contact Section */}
                   <div className="space-y-6">
                     <div className="border-b border-gray-200 pb-2">
