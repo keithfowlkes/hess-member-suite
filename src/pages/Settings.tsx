@@ -24,6 +24,7 @@ import { SystemFieldNormalizer } from '@/components/SystemFieldNormalizer';
 import { SimplifiedMemberRegistrationManagement } from '@/components/SimplifiedMemberRegistrationManagement';
 import { EnhancedRegistrationManagement } from '@/components/EnhancedRegistrationManagement';
 import { PublicLogoManager } from '@/components/PublicLogoManager';
+import FixMissingOrganizationNames from '@/components/FixMissingOrganizationNames';
 
 import { USMap } from '@/components/USMap';
 import { MessageTextContent } from '@/components/MessageTextContent';
@@ -736,6 +737,19 @@ export default function Settings() {
                   </div>
                   
                   <SimplifiedMemberRegistrationManagement />
+                </div>
+                
+                <div className="border-t pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Data Fix Utilities</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Fix data issues from member registration approvals
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <FixMissingOrganizationNames />
                 </div>
                 
                 <div className="border-t pt-6">
