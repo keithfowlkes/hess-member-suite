@@ -137,13 +137,23 @@ export function SideBySideComparisonModal({
               
               const normalizedCurrent = normalizeValue(currentValue);
               const normalizedNew = normalizeValue(newValue);
-              const isChanged = normalizedCurrent !== normalizedNew;
+              
+              // Special logic: if new value is empty but current has value, treat as unchanged
+              // This handles cases where fields weren't included in the update form
+              let isChanged = normalizedCurrent !== normalizedNew;
+              let displayNewValue = newValue;
+              
+              // If new value is empty and current value exists, treat as unchanged
+              if (normalizedNew === null && normalizedCurrent !== null) {
+                isChanged = false;
+                displayNewValue = currentValue; // Use current value for "unchanged" display
+              }
               
               return (
                 <div key={field.key} className="grid grid-cols-3 gap-4 items-center">
                   <div className="text-sm font-medium">{field.label}</div>
                   {renderValueCell(currentValue, field.type, false, isChanged, false)}
-                  {renderValueCell(newValue, field.type, true, isChanged, true, currentValue)}
+                  {renderValueCell(displayNewValue, field.type, true, isChanged, true, currentValue)}
                 </div>
               );
             })}
