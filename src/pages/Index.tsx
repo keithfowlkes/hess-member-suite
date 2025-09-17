@@ -220,7 +220,7 @@ const Index = () => {
                           className="w-full"
                           size="lg"
                         >
-                          Review / Update Your Organization Profile Information
+                          Update Your Profile
                         </Button>
                       </div>
                     </div>
