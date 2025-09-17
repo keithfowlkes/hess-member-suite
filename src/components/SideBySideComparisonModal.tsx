@@ -73,26 +73,32 @@ export function SideBySideComparisonModal({
     }
   };
 
-  const renderValueCell = (value: any, type = 'text', isChanged = false, isHighlighted = false, isNewValue = false, originalValue?: any) => {
+  const renderValueCell = (value: any, type = 'text', isChanged = false, isHighlighted = false, isNewValue = false, originalValue?: any, showAsUnchanged = false) => {
     const isEmpty = value === null || value === undefined || value === '';
     
-    // For new values that haven't changed, show "Unchanged" instead of "Not set"
-    const showUnchanged = isNewValue && !isChanged && isEmpty;
-    let formattedValue = formatValue(value, type, showUnchanged);
+    let formattedValue: string;
     
-    // Special case: if this is a new value that's unchanged, use a different display
-    if (isNewValue && !isChanged) {
-      if (isEmpty) {
-        formattedValue = 'Unchanged';
-      } else {
-        // If there's a value but it's unchanged, show the value normally
-        formattedValue = formatValue(value, type, false);
-      }
+    // Handle the special case where we want to show "Unchanged" for unchanged empty fields
+    if (isNewValue && !isChanged && showAsUnchanged) {
+      formattedValue = 'Unchanged';
+    } else if (isNewValue && !isChanged && !isEmpty) {
+      // If there's a value but it's unchanged, show the value normally
+      formattedValue = formatValue(value, type, false);
+    } else {
+      // Standard formatting
+      formattedValue = formatValue(value, type, false);
     }
     
     return (
       <div className={`p-3 rounded ${isHighlighted ? (isChanged ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200') : 'bg-muted/30'}`}>
-        <span className={`text-sm ${isNewValue && !isChanged ? 'text-blue-600 italic' : isEmpty && isChanged ? 'text-muted-foreground italic' : isChanged && isHighlighted ? 'text-green-800 font-medium' : isEmpty ? 'text-muted-foreground italic' : 'text-foreground'}`}>
+        <span className={`text-sm ${
+          showAsUnchanged && isNewValue ? 'text-blue-600 italic' : 
+          isNewValue && !isChanged ? 'text-blue-600 italic' : 
+          isEmpty && isChanged ? 'text-muted-foreground italic' : 
+          isChanged && isHighlighted ? 'text-green-800 font-medium' : 
+          isEmpty ? 'text-muted-foreground italic' : 
+          'text-foreground'
+        }`}>
           {formattedValue}
         </span>
       </div>
@@ -148,24 +154,33 @@ export function SideBySideComparisonModal({
               const normalizedCurrent = normalizeValue(currentValue);
               const normalizedNew = normalizeValue(newValue);
               
-              // Special logic: if new value is empty but current has value, treat as unchanged
-              // This handles cases where fields weren't included in the update form
+              // Determine if this field has actually changed
               let isChanged = normalizedCurrent !== normalizedNew;
               let displayNewValue = newValue;
+              let showAsUnchanged = false;
               
-              // If new value is empty and current value exists, treat as unchanged
-              if (normalizedNew === null && normalizedCurrent !== null) {
+              // If both values are empty/null, treat as unchanged
+              if (normalizedCurrent === null && normalizedNew === null) {
                 isChanged = false;
-                displayNewValue = currentValue; // Use current value for "unchanged" display
+                showAsUnchanged = true;
+              }
+              // If new value is empty but current has value, treat as unchanged
+              else if (normalizedNew === null && normalizedCurrent !== null) {
+                isChanged = false;
+                displayNewValue = currentValue; // Use current value for display
+              }
+              // If current is empty but new has value, it's a change
+              else if (normalizedCurrent === null && normalizedNew !== null) {
+                isChanged = true;
               }
               
-              return (
-                <div key={field.key} className="grid grid-cols-3 gap-4 items-center">
-                  <div className="text-sm font-medium">{field.label}</div>
-                  {renderValueCell(currentValue, field.type, false, isChanged, false)}
-                  {renderValueCell(displayNewValue, field.type, true, isChanged, true, currentValue)}
-                </div>
-              );
+               return (
+                 <div key={field.key} className="grid grid-cols-3 gap-4 items-center">
+                   <div className="text-sm font-medium">{field.label}</div>
+                   {renderValueCell(currentValue, field.type, false, isChanged, false)}
+                   {renderValueCell(displayNewValue, field.type, true, isChanged, true, currentValue, showAsUnchanged)}
+                 </div>
+               );
             })}
           </div>
         </CardContent>
