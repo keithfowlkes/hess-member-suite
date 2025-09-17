@@ -49,15 +49,22 @@ const Index = () => {
 
   const hasOutstandingBalance = outstandingBalance > 0;
 
-  // Define member stats - moved here so it updates when userOrganization loads  
-  const memberStats = [
-    { title: 'Membership Status', value: 'Active', icon: Building2, color: 'text-green-600' },
-    { title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600' },
+  // Define member stats for first row
+  const firstRowStats = [
+    { title: 'Membership Status', value: 'Active', icon: Building2, color: 'text-green-600', isClickable: false, hasAlert: false, onClick: undefined },
+    { title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600', isClickable: false, hasAlert: false, onClick: undefined },
+  ];
+
+  // Define member stats for second row  
+  const secondRowStats = [
     {
       title: 'Annual Member Fee',
       value: userOrganization?.annual_fee_amount ? `$${userOrganization.annual_fee_amount.toFixed(2)}` : '$0.00',
       icon: DollarSign,
-      color: 'text-blue-600'
+      color: 'text-blue-600',
+      isClickable: false,
+      hasAlert: false,
+      onClick: undefined
     },
     { 
       title: 'Outstanding Balance', 
@@ -116,35 +123,70 @@ const Index = () => {
             <MemberSystemMessages />
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {memberStats.map((stat) => {
-                const Icon = stat.icon;
-                return (
-                  <Card 
-                    key={stat.title}
-                    className={stat.isClickable ? "cursor-pointer hover:shadow-md transition-shadow" : ""}
-                    onClick={stat.onClick}
-                  >
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        {stat.title}
-                        {stat.hasAlert && (
-                          <Badge variant="destructive" className="flex items-center gap-1 text-xs">
-                            <AlertTriangle className="h-3 w-3" />
-                            Alert
-                          </Badge>
-                        )}
-                      </CardTitle>
-                      <Icon className={`h-4 w-4 ${stat.color}`} />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold flex items-center gap-2">
-                        {invoicesLoading && stat.title === 'Outstanding Balance' ? '...' : stat.value}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            <div className="space-y-6">
+              {/* First Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {firstRowStats.map((stat) => {
+                  const Icon = stat.icon;
+                  return (
+                    <Card 
+                      key={stat.title}
+                      className={stat.isClickable ? "cursor-pointer hover:shadow-md transition-shadow" : ""}
+                      onClick={stat.onClick}
+                    >
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                          {stat.title}
+                          {stat.hasAlert && (
+                            <Badge variant="destructive" className="flex items-center gap-1 text-xs">
+                              <AlertTriangle className="h-3 w-3" />
+                              Alert
+                            </Badge>
+                          )}
+                        </CardTitle>
+                        <Icon className={`h-4 w-4 ${stat.color}`} />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold flex items-center gap-2">
+                          {stat.value}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+              
+              {/* Second Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {secondRowStats.map((stat) => {
+                  const Icon = stat.icon;
+                  return (
+                    <Card 
+                      key={stat.title}
+                      className={stat.isClickable ? "cursor-pointer hover:shadow-md transition-shadow" : ""}
+                      onClick={stat.onClick}
+                    >
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                          {stat.title}
+                          {stat.hasAlert && (
+                            <Badge variant="destructive" className="flex items-center gap-1 text-xs">
+                              <AlertTriangle className="h-3 w-3" />
+                              Alert
+                            </Badge>
+                          )}
+                        </CardTitle>
+                        <Icon className={`h-4 w-4 ${stat.color}`} />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold flex items-center gap-2">
+                          {invoicesLoading && stat.title === 'Outstanding Balance' ? '...' : stat.value}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Member Totals */}
