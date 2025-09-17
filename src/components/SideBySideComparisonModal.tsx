@@ -76,6 +76,11 @@ export function SideBySideComparisonModal({
   const renderValueCell = (value: any, type = 'text', isChanged = false, isHighlighted = false, isNewValue = false, originalValue?: any, showAsUnchanged = false) => {
     const isEmpty = value === null || value === undefined || value === '';
     
+    // Debug for Software Systems values
+    if (value === 'Slate for Admissions' || value === 'Campus Cafe' || value === 'ADP' || value === 'Salesforce Nonprofit Cloud' || originalValue === 'Slate for Admissions') {
+      console.log(`renderValueCell: value="${value}" type="${type}" isEmpty=${isEmpty} isChanged=${isChanged} isNewValue=${isNewValue}`);
+    }
+    
     let formattedValue: string;
     
     // Simplified logic - just format the value as is, don't try to be too clever about "unchanged" status
@@ -101,6 +106,19 @@ export function SideBySideComparisonModal({
 
   const renderComparisonSection = (title: string, icon: React.ReactNode, fields: any[]) => {
     if (!fields || fields.length === 0) return null;
+    
+    // Debug Software Systems specifically
+    if (title === 'Software Systems') {
+      console.log('=== SOFTWARE SYSTEMS RENDERING DEBUG ===');
+      console.log('Fields to render:', fields);
+      console.log('originalData:', data.originalData);
+      console.log('updatedData:', data.updatedData);
+      fields.forEach(field => {
+        const currentValue = data.originalData?.[field.key];
+        const newValue = data.updatedData?.[field.key];
+        console.log(`Field ${field.key}: current="${currentValue}" new="${newValue}"`);
+      });
+    }
     
     const hasChanges = fields.some(field => {
       const currentValue = data.originalData?.[field.key];
