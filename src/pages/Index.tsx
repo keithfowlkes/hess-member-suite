@@ -83,44 +83,48 @@ const Index = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8 space-y-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">
-                  Member Dashboard
-                </h1>
-                <p className="text-muted-foreground mt-2">
-                  View your membership status and invoices
-                </p>
-                {user?.email && (
-                  <div className="text-sm text-muted-foreground mt-1">
-                    <span>Logged in as: </span>
-                    <a 
-                      href={`mailto:${user.email}`}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      {user.email}
-                    </a>
-                    {userOrganization?.name && (
-                      <span className="ml-2 text-foreground">
-                        • <span className="font-medium">{userOrganization.name}</span>
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <Button
-                  variant="outline"
-                  onClick={signOut}
-                  className="flex items-center gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </Button>
+        <main className="flex-1 flex flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-8 pb-0">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground">
+                    Member Dashboard
+                  </h1>
+                  <p className="text-muted-foreground mt-2">
+                    View your membership status and invoices
+                  </p>
+                  {user?.email && (
+                    <div className="text-sm text-muted-foreground mt-1">
+                      <span>Logged in as: </span>
+                      <a 
+                        href={`mailto:${user.email}`}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        {user.email}
+                      </a>
+                      {userOrganization?.name && (
+                        <span className="ml-2 text-foreground">
+                          • <span className="font-medium">{userOrganization.name}</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={signOut}
+                    className="flex items-center gap-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </div>
               </div>
             </div>
+
+            <div className="p-8 space-y-6">
 
             <MemberSystemMessages />
 
@@ -353,25 +357,25 @@ const Index = () => {
                 </CardContent>
               </Card>
             </div>
+            {/* Footer */}
+            <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
+              <img 
+                src="/lovable-uploads/95b9e225-2202-4407-bdb2-f95edf683d93.png" 
+                alt="DeusLogic Logo" 
+                className="h-8 w-auto mb-2 opacity-70"
+              />
+              <p className="text-xs text-muted-foreground">
+                Copyright 2025 DeusLogic, LLC.
+              </p>
+            </div>
+            </div>
+          </div>
           
           {/* Profile Edit Modal */}
           <ProfileEditModal 
             open={profileModalOpen} 
             onOpenChange={setProfileModalOpen} 
           />
-          
-          {/* Footer */}
-          <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
-            <img 
-              src="/lovable-uploads/95b9e225-2202-4407-bdb2-f95edf683d93.png" 
-              alt="DeusLogic Logo" 
-              className="h-8 w-auto mb-2 opacity-70"
-            />
-            <p className="text-xs text-muted-foreground">
-              Copyright 2025 DeusLogic, LLC.
-            </p>
-          </div>
-          </div>
         </main>
       </div>
     </SidebarProvider>
