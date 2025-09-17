@@ -107,9 +107,15 @@ export function SideBySideComparisonModal({
   const renderComparisonSection = (title: string, icon: React.ReactNode, fields: any[]) => {
     if (!fields || fields.length === 0) return null;
     
-    // Debug logging for software systems
+    // Debug all sections
+    console.log(`=== ${title} Section Debug ===`);
+    console.log('fields:', fields.map(f => f.key));
+    console.log('originalData keys:', Object.keys(data.originalData || {}));
+    console.log('updatedData keys:', Object.keys(data.updatedData || {}));
+    
+    // Debug logging for software systems - using section title, not dialog title
     if (title === 'Software Systems') {
-      console.log('SideBySideComparisonModal - Software Systems data:');
+      console.log('SideBySideComparisonModal - Software Systems section:');
       console.log('originalData:', data.originalData);
       console.log('updatedData:', data.updatedData);
       console.log('Specific field checks:');
