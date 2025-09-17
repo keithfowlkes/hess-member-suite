@@ -76,11 +76,6 @@ export function SideBySideComparisonModal({
   const renderValueCell = (value: any, type = 'text', isChanged = false, isHighlighted = false, isNewValue = false, originalValue?: any, showAsUnchanged = false) => {
     const isEmpty = value === null || value === undefined || value === '';
     
-    // Debug logging for software system fields
-    if (value === 'Slate for Admissions' || value === 'Campus Cafe' || value === 'ADP' || originalValue === 'Slate for Admissions') {
-      console.log(`renderValueCell DEBUG: value="${value}" (type: ${typeof value}) isEmpty=${isEmpty} isChanged=${isChanged} isNewValue=${isNewValue}`);
-    }
-    
     let formattedValue: string;
     
     // Simplified logic - just format the value as is, don't try to be too clever about "unchanged" status
@@ -93,10 +88,10 @@ export function SideBySideComparisonModal({
     return (
       <div className={`p-3 rounded ${isHighlighted ? (isChanged ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200') : 'bg-muted/30'}`}>
         <span className={`text-sm ${
-          isEmpty && isChanged ? 'text-muted-foreground italic' : 
+          isEmpty && isChanged ? 'text-gray-500 italic' : 
           isChanged && isHighlighted ? 'text-green-800 font-medium' : 
-          isEmpty ? 'text-muted-foreground italic' : 
-          'text-foreground'
+          isEmpty ? 'text-gray-500 italic' : 
+          'text-gray-900 dark:text-gray-100'
         }`}>
           {formattedValue}
         </span>
@@ -106,31 +101,6 @@ export function SideBySideComparisonModal({
 
   const renderComparisonSection = (title: string, icon: React.ReactNode, fields: any[]) => {
     if (!fields || fields.length === 0) return null;
-    
-    // Debug all sections
-    console.log(`=== ${title} Section Debug ===`);
-    console.log('fields:', fields.map(f => f.key));
-    console.log('originalData keys:', Object.keys(data.originalData || {}));
-    console.log('updatedData keys:', Object.keys(data.updatedData || {}));
-    
-    // Debug logging for software systems - using section title, not dialog title
-    if (title === 'Software Systems') {
-      console.log('SideBySideComparisonModal - Software Systems section:');
-      console.log('originalData:', data.originalData);
-      console.log('updatedData:', data.updatedData);
-      console.log('Specific field checks:');
-      console.log('originalData.admissions_crm:', data.originalData?.admissions_crm);
-      console.log('originalData.alumni_advancement_crm:', data.originalData?.alumni_advancement_crm);
-      console.log('originalData.payroll_system:', data.originalData?.payroll_system);
-      console.log('updatedData.admissions_crm:', data.updatedData?.admissions_crm);
-      console.log('updatedData.alumni_advancement_crm:', data.updatedData?.alumni_advancement_crm);
-      console.log('updatedData.payroll_system:', data.updatedData?.payroll_system);
-      fields.forEach(field => {
-        const orig = data.originalData?.[field.key];
-        const upd = data.updatedData?.[field.key];
-        console.log(`${field.key}: original="${orig}" (type: ${typeof orig}) updated="${upd}" (type: ${typeof upd})`);
-      });
-    }
     
     const hasChanges = fields.some(field => {
       const currentValue = data.originalData?.[field.key];
