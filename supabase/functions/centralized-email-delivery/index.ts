@@ -43,6 +43,75 @@ interface EmailTemplate {
   variables: string[];
 }
 
+// Function to wrap content in standardized HESS email template
+function wrapInStandardTemplate(content: string, logoUrl?: string): string {
+  const emailOptimizedLogo = logoUrl 
+    ? `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 180px; height: auto; display: block; margin: 0 auto 24px auto;" border="0">`
+    : '';
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HESS Consortium</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #2c3e50; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); min-height: 100vh;">
+    <!-- Email Container -->
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); min-height: 100vh; padding: 40px 20px;">
+        <tr>
+            <td align="center" valign="top">
+                <!-- Main Content Card -->
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px -10px rgba(44, 62, 80, 0.15); overflow: hidden;">
+                    <!-- Header with Gradient -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, hsl(196, 30%, 25%) 0%, hsl(196, 35%, 35%) 100%); padding: 32px; text-align: center;">
+                            ${emailOptimizedLogo}
+                            <div style="height: 4px; background: linear-gradient(90deg, hsl(43, 90%, 58%) 0%, hsl(43, 85%, 65%) 100%); border-radius: 2px; margin: 0 auto; width: 80px;"></div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content Area -->
+                    <tr>
+                        <td style="padding: 40px 32px; background: #ffffff;">
+                            <div style="color: hsl(216, 19%, 27%); font-size: 16px; line-height: 1.7;">
+                                ${content}
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer with Accent -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, hsl(220, 14%, 98%) 0%, hsl(220, 14%, 96%) 100%); padding: 24px 32px; border-top: 3px solid hsl(43, 90%, 58%); text-align: center;">
+                            <p style="margin: 0; color: hsl(220, 9%, 46%); font-size: 14px;">
+                                © ${new Date().getFullYear()} HESS Consortium. All rights reserved.
+                            </p>
+                            <p style="margin: 8px 0 0 0; color: hsl(220, 9%, 46%); font-size: 12px;">
+                                This email was sent from the HESS Consortium Member Portal
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Spacer for mobile -->
+                <div style="height: 40px;"></div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`;
+}
+
 // Function to get and replace logo URL in template with proper email embedding
 async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
   try {
@@ -55,46 +124,43 @@ async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
     
     const logoUrl = logoSetting?.setting_value;
     
-    if (logoUrl && logoUrl.trim()) {
-      console.log('[centralized-email-delivery] Using uploaded logo:', logoUrl);
-      
-      // Create a properly formatted img tag for email clients
-      const emailOptimizedImg = `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto;" border="0">`;
-      
-      // Replace any existing logo image sources with the uploaded logo
-      let updatedContent = htmlContent;
-      
-      // Replace direct image URLs that might be HESS logos
-      updatedContent = updatedContent.replace(
-        /src="https:\/\/9f0afb12-d741-415b-9bbb-e40cfcba281a\.lovableproject\.com\/assets\/hess-logo\.png"/g,
-        `src="${logoUrl}"`
-      );
-      
-      // Replace any other existing logo references with the email-optimized version
-      updatedContent = updatedContent.replace(
-        /<img[^>]*src="[^"]*hess[^"]*logo[^"]*"[^>]*>/gi,
-        emailOptimizedImg
-      );
-      
-      // Replace base64 encoded images with the email-optimized version
-      updatedContent = updatedContent.replace(
-        /<img[^>]*src="data:image\/[^;]*;base64,[^"]*"[^>]*>/g,
-        emailOptimizedImg
-      );
-      
-      // Also replace any generic logo placeholders
-      updatedContent = updatedContent.replace(
-        /\{\{logo\}\}/gi,
-        emailOptimizedImg
-      );
-      
-      return updatedContent;
-    }
+    // Clean the content first - remove any existing HTML, HEAD, BODY tags since we'll wrap it
+    let cleanContent = htmlContent;
+    cleanContent = cleanContent.replace(/<!DOCTYPE[^>]*>/gi, '');
+    cleanContent = cleanContent.replace(/<\/?html[^>]*>/gi, '');
+    cleanContent = cleanContent.replace(/<\/?head[^>]*>/gi, '');
+    cleanContent = cleanContent.replace(/<\/?body[^>]*>/gi, '');
+    cleanContent = cleanContent.replace(/<meta[^>]*>/gi, '');
+    cleanContent = cleanContent.replace(/<title[^>]*>.*?<\/title>/gi, '');
     
-    return htmlContent;
+    // Replace old logo references with placeholder for now (will be handled by template)
+    cleanContent = cleanContent.replace(
+      /src="https:\/\/9f0afb12-d741-415b-9bbb-e40cfcba281a\.lovableproject\.com\/assets\/hess-logo\.png"/g,
+      'src="LOGO_PLACEHOLDER"'
+    );
+    
+    cleanContent = cleanContent.replace(
+      /<img[^>]*src="[^"]*hess[^"]*logo[^"]*"[^>]*>/gi,
+      ''
+    );
+    
+    cleanContent = cleanContent.replace(
+      /<img[^>]*src="data:image\/[^;]*;base64,[^"]*"[^>]*>/g,
+      ''
+    );
+    
+    cleanContent = cleanContent.replace(/\{\{logo\}\}/gi, '');
+    
+    // Remove any standalone logo images at the top
+    cleanContent = cleanContent.replace(/^[\s]*<p[^>]*>[\s]*<img[^>]*>[\s]*<\/p>[\s]*/gi, '');
+    cleanContent = cleanContent.replace(/^[\s]*<img[^>]*>[\s]*/gi, '');
+    
+    // Wrap the cleaned content in the standard template
+    return wrapInStandardTemplate(cleanContent.trim(), logoUrl);
+    
   } catch (error) {
     console.error('[centralized-email-delivery] Error replacing logo:', error);
-    return htmlContent;
+    return wrapInStandardTemplate(htmlContent);
   }
 }
 
