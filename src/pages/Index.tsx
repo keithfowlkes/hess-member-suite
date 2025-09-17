@@ -52,6 +52,12 @@ const Index = () => {
   const memberStats = [
     { title: 'Membership Status', value: 'Active', icon: Building2, color: 'text-green-600' },
     { title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600' },
+    {
+      title: 'Annual Member Fee',
+      value: userOrganization?.annual_fee_amount ? `$${userOrganization.annual_fee_amount.toFixed(2)}` : '$0.00',
+      icon: DollarSign,
+      color: 'text-blue-600'
+    },
     { 
       title: 'Outstanding Balance', 
       value: `$${outstandingBalance.toFixed(2)}`, 
@@ -60,12 +66,6 @@ const Index = () => {
       isClickable: true,
       hasAlert: hasOutstandingBalance,
       onClick: () => navigate('/invoices')
-    },
-    {
-      title: 'Annual Member Fee',
-      value: userOrganization?.annual_fee_amount ? `$${userOrganization.annual_fee_amount.toFixed(2)}` : '$0.00',
-      icon: DollarSign,
-      color: 'text-blue-600'
     },
   ];
 
