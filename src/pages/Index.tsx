@@ -83,8 +83,8 @@ const Index = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1 p-8 overflow-y-auto">
-          <div className="space-y-4">
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8 space-y-4">
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
@@ -353,7 +353,6 @@ const Index = () => {
                 </CardContent>
               </Card>
             </div>
-          </div>
           
           {/* Profile Edit Modal */}
           <ProfileEditModal 
@@ -371,6 +370,7 @@ const Index = () => {
             <p className="text-xs text-muted-foreground">
               Copyright 2025 DeusLogic, LLC.
             </p>
+          </div>
           </div>
         </main>
       </div>
