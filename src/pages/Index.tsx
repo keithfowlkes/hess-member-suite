@@ -122,6 +122,84 @@ const Index = () => {
 
             <MemberSystemMessages />
 
+            {/* Institution Information - Moved to top */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Institution Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {userOrganization ? (
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold text-foreground">{userOrganization.name}</h3>
+                    </div>
+                    
+                    {(userOrganization.address_line_1 || userOrganization.city || userOrganization.state) && (
+                      <div className="flex items-start gap-2 text-sm">
+                        <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                        <div className="text-muted-foreground">
+                          {userOrganization.address_line_1 && (
+                            <div>{userOrganization.address_line_1}</div>
+                          )}
+                          {userOrganization.address_line_2 && (
+                            <div>{userOrganization.address_line_2}</div>
+                          )}
+                          {(userOrganization.city || userOrganization.state) && (
+                            <div>
+                              {userOrganization.city}
+                              {userOrganization.city && userOrganization.state && ', '}
+                              {userOrganization.state} {userOrganization.zip_code}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {userOrganization.email && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <a 
+                          href={`mailto:${userOrganization.email}`}
+                          className="text-primary hover:underline"
+                        >
+                          {userOrganization.email}
+                        </a>
+                      </div>
+                    )}
+
+                    {user?.email && (
+                      <div className="pt-2 border-t">
+                        <div className="flex items-center gap-2 text-sm">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <div className="font-medium text-foreground">Primary Contact</div>
+                            <div className="text-muted-foreground">{user.email}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {userOrganization.updated_at && (
+                      <div className="pt-2 border-t">
+                        <div className="text-sm text-muted-foreground">
+                          <span className="font-medium">Last Updated:</span> {new Date(userOrganization.updated_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">Loading institution information...</div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Stats Grid */}
             <div className="space-y-6">
               {/* First Row */}
@@ -213,7 +291,7 @@ const Index = () => {
               </Card>
             </div>
 
-            {/* Recent Activity and Member Institution Info */}
+            {/* Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -243,72 +321,6 @@ const Index = () => {
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Member Institution Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5" />
-                    Institution Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {userOrganization ? (
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-semibold text-foreground">{userOrganization.name}</h3>
-                      </div>
-                      
-                      {(userOrganization.address_line_1 || userOrganization.city || userOrganization.state) && (
-                        <div className="flex items-start gap-2 text-sm">
-                          <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                          <div className="text-muted-foreground">
-                            {userOrganization.address_line_1 && (
-                              <div>{userOrganization.address_line_1}</div>
-                            )}
-                            {userOrganization.address_line_2 && (
-                              <div>{userOrganization.address_line_2}</div>
-                            )}
-                            {(userOrganization.city || userOrganization.state) && (
-                              <div>
-                                {userOrganization.city}
-                                {userOrganization.city && userOrganization.state && ', '}
-                                {userOrganization.state} {userOrganization.zip_code}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {userOrganization.email && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <a 
-                            href={`mailto:${userOrganization.email}`}
-                            className="text-primary hover:underline"
-                          >
-                            {userOrganization.email}
-                          </a>
-                        </div>
-                      )}
-
-                      {user?.email && (
-                        <div className="pt-2 border-t">
-                          <div className="flex items-center gap-2 text-sm">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <div>
-                              <div className="font-medium text-foreground">Primary Contact</div>
-                              <div className="text-muted-foreground">{user.email}</div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">Loading institution information...</div>
-                  )}
                 </CardContent>
               </Card>
             </div>
