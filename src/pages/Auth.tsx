@@ -49,6 +49,18 @@ export default function Auth() {
   const [resetEmail, setResetEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // Login attempt tracking
+  const [loginAttempts, setLoginAttempts] = useState(() => {
+    const stored = localStorage.getItem('loginAttempts');
+    return stored ? parseInt(stored) : 0;
+  });
+  const [lockoutUntil, setLockoutUntil] = useState(() => {
+    const stored = localStorage.getItem('lockoutUntil');
+    return stored ? parseInt(stored) : 0;
+  });
+  const [showUserNotFoundModal, setShowUserNotFoundModal] = useState(false);
+  const [showTooManyAttemptsModal, setShowTooManyAttemptsModal] = useState(false);
   const initialTab = React.useMemo(() => {
     try {
       const sp = new URLSearchParams(window.location.search)
@@ -73,6 +85,23 @@ export default function Auth() {
       setActiveTab('member-update')
     }
   }, [])
+  
+  // Clear lockout when time expires
+  useEffect(() => {
+    if (lockoutUntil > 0) {
+      const now = Date.now();
+      if (lockoutUntil <= now) {
+        setLockoutUntil(0);
+        localStorage.removeItem('lockoutUntil');
+      } else {
+        const timeoutId = setTimeout(() => {
+          setLockoutUntil(0);
+          localStorage.removeItem('lockoutUntil');
+        }, lockoutUntil - now);
+        return () => clearTimeout(timeoutId);
+      }
+    }
+  }, [lockoutUntil]);
   const [emailNotFoundAddress, setEmailNotFoundAddress] = useState('');
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
   const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
@@ -187,6 +216,13 @@ export default function Auth() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check if user is currently locked out
+    const now = Date.now();
+    if (lockoutUntil > now) {
+      setShowTooManyAttemptsModal(true);
+      return;
+    }
+    
     if (recaptchaEnabled && !signInCaptcha) {
       toast({
         title: "Verification required",
@@ -201,17 +237,46 @@ export default function Auth() {
     const { error } = await signIn(signInForm.email, signInForm.password);
     
     if (error) {
-      toast({
-        title: "Sign in failed",
-        description: error.message,
-        variant: "destructive"
-      });
+      const isUserNotFound = 
+        error.message?.includes('Invalid login credentials') ||
+        error.message?.includes('User not found') ||
+        error.message?.includes('Email not confirmed') ||
+        error.message?.includes('not found in the membership database');
+      
+      if (isUserNotFound) {
+        const newAttempts = loginAttempts + 1;
+        setLoginAttempts(newAttempts);
+        localStorage.setItem('loginAttempts', newAttempts.toString());
+        
+        if (newAttempts >= 3) {
+          // Lock out for 30 minutes
+          const lockoutTime = now + (30 * 60 * 1000);
+          setLockoutUntil(lockoutTime);
+          localStorage.setItem('lockoutUntil', lockoutTime.toString());
+          setShowTooManyAttemptsModal(true);
+        } else {
+          setShowUserNotFoundModal(true);
+        }
+      } else {
+        toast({
+          title: "Sign in failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+      
       // Reset captcha on error
       if (recaptchaEnabled) {
         signInCaptchaRef.current?.reset();
         setSignInCaptcha(null);
       }
     } else {
+      // Reset login attempts on successful login
+      setLoginAttempts(0);
+      localStorage.removeItem('loginAttempts');
+      localStorage.removeItem('lockoutUntil');
+      setLockoutUntil(0);
+      
       toast({
         title: "Welcome back!",
         description: "You have been signed in successfully.",
@@ -2188,6 +2253,56 @@ export default function Auth() {
               className="w-full sm:w-auto"
             >
               New Member Registration
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* User Not Found Modal */}
+      <AlertDialog open={showUserNotFoundModal} onOpenChange={setShowUserNotFoundModal}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-semibold text-center">
+              User Not Found
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center pt-2">
+              This user is not found in our membership database.
+              <br /><br />
+              If this is in error, please contact <strong>info@hessconsortium.org</strong>.
+              <br /><br />
+              You have <strong>{3 - loginAttempts}</strong> attempts remaining.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction 
+              onClick={() => setShowUserNotFoundModal(false)}
+              className="w-full"
+            >
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Too Many Attempts Modal */}
+      <AlertDialog open={showTooManyAttemptsModal} onOpenChange={setShowTooManyAttemptsModal}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-semibold text-center">
+              Too Many Login Attempts
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center pt-2">
+              You have exceeded the maximum number of login attempts.
+              <br /><br />
+              Please wait 30 minutes before trying again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction 
+              onClick={() => setShowTooManyAttemptsModal(false)}
+              className="w-full"
+            >
+              OK
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
