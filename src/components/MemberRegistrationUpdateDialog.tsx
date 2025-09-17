@@ -30,35 +30,50 @@ export function MemberRegistrationUpdateDialog({
 }: MemberRegistrationUpdateDialogProps) {
   const [adminNotes, setAdminNotes] = useState('');
   const [existingOrganization, setExistingOrganization] = useState<any>(null);
+  const [existingContactData, setExistingContactData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch existing organization data for comparison
+  // Fetch existing organization and contact data for comparison
   useEffect(() => {
-    const fetchExistingOrganization = async () => {
+    const fetchExistingData = async () => {
       if (!registrationUpdate?.existing_organization_id || !open) return;
       
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
+        // Fetch organization data
+        const { data: orgData, error: orgError } = await supabase
           .from('organizations')
           .select('*')
           .eq('id', registrationUpdate.existing_organization_id)
           .single();
         
-        if (error) {
-          console.error('Error fetching existing organization:', error);
+        if (orgError) {
+          console.error('Error fetching existing organization:', orgError);
           return;
         }
         
-        setExistingOrganization(data);
+        setExistingOrganization(orgData);
+
+        // Fetch contact person data if available
+        if (orgData.contact_person_id) {
+          const { data: contactData, error: contactError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', orgData.contact_person_id)
+            .single();
+          
+          if (!contactError) {
+            setExistingContactData(contactData);
+          }
+        }
       } catch (error) {
-        console.error('Failed to fetch existing organization:', error);
+        console.error('Failed to fetch existing data:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchExistingOrganization();
+    fetchExistingData();
   }, [registrationUpdate?.existing_organization_id, open]);
 
   // Create comparison data for SideBySideComparisonModal
@@ -68,60 +83,95 @@ export function MemberRegistrationUpdateDialog({
     const regData = registrationUpdate.registration_data;
     const orgData = registrationUpdate.organization_data;
 
-    // Add missing primary contact info to existing organization data for comparison
+    // Create enhanced existing organization data with proper field mapping
     const enhancedExistingOrg = {
-      ...existingOrganization,
-      primary_contact_first_name: existingOrganization.contact_first_name || '',
-      primary_contact_last_name: existingOrganization.contact_last_name || ''
+      // Organization details
+      name: existingOrganization.name || '',
+      primary_contact_first_name: existingContactData?.first_name || '',
+      primary_contact_last_name: existingContactData?.last_name || '',
+      address_line_1: existingOrganization.address_line_1 || '',
+      address_line_2: existingOrganization.address_line_2 || '',
+      city: existingOrganization.city || '',
+      state: existingOrganization.state || '',
+      zip_code: existingOrganization.zip_code || '',
+      phone: existingOrganization.phone || '',
+      email: existingOrganization.email || '',
+      website: existingOrganization.website || '',
+      student_fte: existingOrganization.student_fte || null,
+      primary_contact_title: existingOrganization.primary_contact_title || '',
+      secondary_first_name: existingOrganization.secondary_first_name || '',
+      secondary_last_name: existingOrganization.secondary_last_name || '',
+      secondary_contact_title: existingOrganization.secondary_contact_title || '',
+      secondary_contact_email: existingOrganization.secondary_contact_email || '',
+      // Software systems
+      student_information_system: existingOrganization.student_information_system || '',
+      financial_system: existingOrganization.financial_system || '',
+      financial_aid: existingOrganization.financial_aid || '',
+      hcm_hr: existingOrganization.hcm_hr || '',
+      payroll_system: existingOrganization.payroll_system || '',
+      purchasing_system: existingOrganization.purchasing_system || '',
+      housing_management: existingOrganization.housing_management || '',
+      learning_management: existingOrganization.learning_management || '',
+      admissions_crm: existingOrganization.admissions_crm || '',
+      alumni_advancement_crm: existingOrganization.alumni_advancement_crm || '',
+      // Hardware preferences
+      primary_office_apple: existingOrganization.primary_office_apple || false,
+      primary_office_asus: existingOrganization.primary_office_asus || false,
+      primary_office_dell: existingOrganization.primary_office_dell || false,
+      primary_office_hp: existingOrganization.primary_office_hp || false,
+      primary_office_microsoft: existingOrganization.primary_office_microsoft || false,
+      primary_office_other: existingOrganization.primary_office_other || false,
+      primary_office_other_details: existingOrganization.primary_office_other_details || '',
+      other_software_comments: existingOrganization.other_software_comments || ''
     };
 
     // Map registration data to organization structure for comparison
     const updatedOrgData = {
-      name: orgData.name || regData.organization_name,
-      primary_contact_first_name: regData.first_name,
-      primary_contact_last_name: regData.last_name,
-      address_line_1: orgData.address_line_1 || regData.address || regData.address_line_1,
-      address_line_2: orgData.address_line_2,
-      city: orgData.city || regData.city,
-      state: orgData.state || regData.state,
-      zip_code: orgData.zip_code || regData.zip || regData.zip_code,
-      phone: regData.phone,
-      email: regData.email,
-      student_fte: orgData.student_fte || regData.student_fte,
-      primary_contact_title: orgData.primary_contact_title || regData.primary_contact_title,
-      secondary_first_name: orgData.secondary_first_name || regData.secondary_first_name,
-      secondary_last_name: orgData.secondary_last_name || regData.secondary_last_name,
-      secondary_contact_title: orgData.secondary_contact_title || regData.secondary_contact_title,
-      secondary_contact_email: orgData.secondary_contact_email || regData.secondary_contact_email,
-      student_information_system: orgData.student_information_system || regData.student_information_system,
-      financial_system: orgData.financial_system || regData.financial_system,
-      financial_aid: orgData.financial_aid || regData.financial_aid,
-      hcm_hr: orgData.hcm_hr || regData.hcm_hr,
-      payroll_system: orgData.payroll_system || regData.payroll_system,
-      purchasing_system: orgData.purchasing_system || regData.purchasing_system,
-      housing_management: orgData.housing_management || regData.housing_management,
-      learning_management: orgData.learning_management || regData.learning_management,
-      admissions_crm: orgData.admissions_crm || regData.admissions_crm,
-      alumni_advancement_crm: orgData.alumni_advancement_crm || regData.alumni_advancement_crm,
-      primary_office_apple: regData.primary_office_apple,
-      primary_office_asus: regData.primary_office_asus,
-      primary_office_dell: regData.primary_office_dell,
-      primary_office_hp: regData.primary_office_hp,
-      primary_office_microsoft: regData.primary_office_microsoft,
-      primary_office_other: regData.primary_office_other,
-      primary_office_other_details: regData.primary_office_other_details,
-      other_software_comments: regData.other_software_comments,
-      // Contact information
-      contact_first_name: regData.first_name,
-      contact_last_name: regData.last_name,
-      contact_email: regData.email
+      // Organization details
+      name: orgData.name || regData.organization_name || '',
+      primary_contact_first_name: regData.first_name || '',
+      primary_contact_last_name: regData.last_name || '',
+      address_line_1: orgData.address_line_1 || regData.address || regData.address_line_1 || '',
+      address_line_2: orgData.address_line_2 || regData.address_line_2 || '',
+      city: orgData.city || regData.city || '',
+      state: orgData.state || regData.state || '',
+      zip_code: orgData.zip_code || regData.zip || regData.zip_code || '',
+      phone: regData.phone || orgData.phone || '',
+      email: regData.email || orgData.email || '',
+      website: orgData.website || regData.website || '',
+      student_fte: orgData.student_fte || regData.student_fte || null,
+      primary_contact_title: orgData.primary_contact_title || regData.primary_contact_title || '',
+      secondary_first_name: orgData.secondary_first_name || regData.secondary_first_name || '',
+      secondary_last_name: orgData.secondary_last_name || regData.secondary_last_name || '',
+      secondary_contact_title: orgData.secondary_contact_title || regData.secondary_contact_title || '',
+      secondary_contact_email: orgData.secondary_contact_email || regData.secondary_contact_email || '',
+      // Software systems
+      student_information_system: orgData.student_information_system || regData.student_information_system || '',
+      financial_system: orgData.financial_system || regData.financial_system || '',
+      financial_aid: orgData.financial_aid || regData.financial_aid || '',
+      hcm_hr: orgData.hcm_hr || regData.hcm_hr || '',
+      payroll_system: orgData.payroll_system || regData.payroll_system || '',
+      purchasing_system: orgData.purchasing_system || regData.purchasing_system || '',
+      housing_management: orgData.housing_management || regData.housing_management || '',
+      learning_management: orgData.learning_management || regData.learning_management || '',
+      admissions_crm: orgData.admissions_crm || regData.admissions_crm || '',
+      alumni_advancement_crm: orgData.alumni_advancement_crm || regData.alumni_advancement_crm || '',
+      // Hardware preferences
+      primary_office_apple: regData.primary_office_apple !== undefined ? regData.primary_office_apple : false,
+      primary_office_asus: regData.primary_office_asus !== undefined ? regData.primary_office_asus : false,
+      primary_office_dell: regData.primary_office_dell !== undefined ? regData.primary_office_dell : false,
+      primary_office_hp: regData.primary_office_hp !== undefined ? regData.primary_office_hp : false,
+      primary_office_microsoft: regData.primary_office_microsoft !== undefined ? regData.primary_office_microsoft : false,
+      primary_office_other: regData.primary_office_other !== undefined ? regData.primary_office_other : false,
+      primary_office_other_details: orgData.primary_office_other_details || regData.primary_office_other_details || '',
+      other_software_comments: orgData.other_software_comments || regData.other_software_comments || ''
     };
 
     return {
       originalData: enhancedExistingOrg,
       updatedData: updatedOrgData
     };
-  }, [existingOrganization, registrationUpdate]);
+  }, [existingOrganization, existingContactData, registrationUpdate]);
 
   if (!registrationUpdate) {
     return null;

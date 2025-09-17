@@ -54,7 +54,7 @@ export function SideBySideComparisonModal({
   isSubmitting = false,
   children
 }: SideBySideComparisonModalProps) {
-  const formatValue = (value: any, type = 'text'): string => {
+  const formatValue = (value: any, type = 'text', compareValue?: any): string => {
     if (value === null || value === undefined || value === '') return 'Not set';
     
     switch (type) {
@@ -71,13 +71,18 @@ export function SideBySideComparisonModal({
     }
   };
 
-  const renderValueCell = (value: any, type = 'text', isChanged = false, isHighlighted = false) => {
-    const formattedValue = formatValue(value, type);
+  const renderValueCell = (value: any, type = 'text', isChanged = false, isHighlighted = false, isNewValue = false, originalValue?: any) => {
+    let formattedValue = formatValue(value, type);
     const isEmpty = value === null || value === undefined || value === '';
     
+    // Show "unchanged" for new values that are the same as original
+    if (isNewValue && !isChanged && !isEmpty) {
+      formattedValue = 'unchanged';
+    }
+    
     return (
-      <div className={`p-3 rounded ${isHighlighted ? (isChanged ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200') : 'bg-muted/30'}`}>
-        <span className={`text-sm ${isEmpty ? 'text-muted-foreground italic' : isChanged && isHighlighted ? 'text-green-800 font-medium' : 'text-foreground'}`}>
+      <div className={`p-3 rounded ${isHighlighted ? (isChanged ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200') : 'bg-muted/30'}`}>
+        <span className={`text-sm ${isEmpty ? 'text-muted-foreground italic' : isChanged && isHighlighted ? 'text-green-800 font-medium' : isNewValue && !isChanged ? 'text-blue-600 italic' : 'text-foreground'}`}>
           {formattedValue}
         </span>
       </div>
@@ -123,13 +128,22 @@ export function SideBySideComparisonModal({
             {fields.map((field) => {
               const currentValue = data.originalData?.[field.key];
               const newValue = data.updatedData?.[field.key];
-              const isChanged = currentValue !== newValue;
+              
+              // Normalize values for comparison (handle empty strings, null, undefined)
+              const normalizeValue = (val: any) => {
+                if (val === null || val === undefined || val === '') return null;
+                return val;
+              };
+              
+              const normalizedCurrent = normalizeValue(currentValue);
+              const normalizedNew = normalizeValue(newValue);
+              const isChanged = normalizedCurrent !== normalizedNew;
               
               return (
                 <div key={field.key} className="grid grid-cols-3 gap-4 items-center">
                   <div className="text-sm font-medium">{field.label}</div>
-                  {renderValueCell(currentValue, field.type, false, isChanged)}
-                  {renderValueCell(newValue, field.type, true, isChanged)}
+                  {renderValueCell(currentValue, field.type, false, isChanged, false)}
+                  {renderValueCell(newValue, field.type, true, isChanged, true, currentValue)}
                 </div>
               );
             })}
