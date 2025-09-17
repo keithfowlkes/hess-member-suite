@@ -49,6 +49,7 @@ const Index = () => {
 
   const hasOutstandingBalance = outstandingBalance > 0;
 
+  // Define member stats - moved here so it updates when userOrganization loads  
   const memberStats = [
     { title: 'Membership Status', value: 'Active', icon: Building2, color: 'text-green-600' },
     { title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600' },
