@@ -173,10 +173,15 @@ export function MemberRegistrationUpdateDialog({
 
     // Debug software systems specifically
     console.log('Software Systems Debug:');
-    console.log('Original admissions_crm:', enhancedExistingOrg.admissions_crm);
+    console.log('Raw existingOrganization.admissions_crm:', existingOrganization.admissions_crm);
+    console.log('Raw existingOrganization.alumni_advancement_crm:', existingOrganization.alumni_advancement_crm);
+    console.log('Raw existingOrganization.payroll_system:', existingOrganization.payroll_system);
+    console.log('Enhanced admissions_crm:', enhancedExistingOrg.admissions_crm);
+    console.log('Enhanced alumni_advancement_crm:', enhancedExistingOrg.alumni_advancement_crm);
+    console.log('Enhanced payroll_system:', enhancedExistingOrg.payroll_system);
     console.log('Updated admissions_crm:', updatedOrgData.admissions_crm);
-    console.log('Original alumni_advancement_crm:', enhancedExistingOrg.alumni_advancement_crm);
     console.log('Updated alumni_advancement_crm:', updatedOrgData.alumni_advancement_crm);
+    console.log('Updated payroll_system:', updatedOrgData.payroll_system);
 
     return {
       originalData: enhancedExistingOrg,

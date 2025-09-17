@@ -76,6 +76,11 @@ export function SideBySideComparisonModal({
   const renderValueCell = (value: any, type = 'text', isChanged = false, isHighlighted = false, isNewValue = false, originalValue?: any, showAsUnchanged = false) => {
     const isEmpty = value === null || value === undefined || value === '';
     
+    // Debug logging for software system fields
+    if (value === 'Slate for Admissions' || value === 'Campus Cafe' || value === 'ADP' || originalValue === 'Slate for Admissions') {
+      console.log(`renderValueCell DEBUG: value="${value}" (type: ${typeof value}) isEmpty=${isEmpty} isChanged=${isChanged} isNewValue=${isNewValue}`);
+    }
+    
     let formattedValue: string;
     
     // Simplified logic - just format the value as is, don't try to be too clever about "unchanged" status
@@ -107,8 +112,17 @@ export function SideBySideComparisonModal({
       console.log('SideBySideComparisonModal - Software Systems data:');
       console.log('originalData:', data.originalData);
       console.log('updatedData:', data.updatedData);
+      console.log('Specific field checks:');
+      console.log('originalData.admissions_crm:', data.originalData?.admissions_crm);
+      console.log('originalData.alumni_advancement_crm:', data.originalData?.alumni_advancement_crm);
+      console.log('originalData.payroll_system:', data.originalData?.payroll_system);
+      console.log('updatedData.admissions_crm:', data.updatedData?.admissions_crm);
+      console.log('updatedData.alumni_advancement_crm:', data.updatedData?.alumni_advancement_crm);
+      console.log('updatedData.payroll_system:', data.updatedData?.payroll_system);
       fields.forEach(field => {
-        console.log(`${field.key}: original="${data.originalData?.[field.key]}" updated="${data.updatedData?.[field.key]}"`);
+        const orig = data.originalData?.[field.key];
+        const upd = data.updatedData?.[field.key];
+        console.log(`${field.key}: original="${orig}" (type: ${typeof orig}) updated="${upd}" (type: ${typeof upd})`);
       });
     }
     
