@@ -22,7 +22,6 @@ import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDire
 import { SimpleSystemFieldManager } from '@/components/SimpleSystemFieldManager';
 import { SystemFieldNormalizer } from '@/components/SystemFieldNormalizer';
 import { SimplifiedMemberRegistrationManagement } from '@/components/SimplifiedMemberRegistrationManagement';
-import { EnhancedRegistrationManagement } from '@/components/EnhancedRegistrationManagement';
 import { PublicLogoManager } from '@/components/PublicLogoManager';
 
 import { USMap } from '@/components/USMap';
@@ -737,20 +736,6 @@ export default function Settings() {
                   
                   <SimplifiedMemberRegistrationManagement />
                 </div>
-                
-                <div className="border-t pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold">Legacy Registration Management</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Legacy system for pending registrations (being phased out)
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <EnhancedRegistrationManagement />
-                </div>
-                
                   </div>
                 )}
 
