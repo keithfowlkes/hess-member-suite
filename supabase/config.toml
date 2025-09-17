@@ -1,5 +1,8 @@
 project_id = "tyovnvuluyosjnabrzjc"
 
+[functions.fix-organization-status]
+verify_jwt = true
+
 [functions.bulk-email-delivery]
 verify_jwt = true
 
