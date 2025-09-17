@@ -54,8 +54,10 @@ export function SideBySideComparisonModal({
   isSubmitting = false,
   children
 }: SideBySideComparisonModalProps) {
-  const formatValue = (value: any, type = 'text', compareValue?: any): string => {
-    if (value === null || value === undefined || value === '') return 'Not set';
+  const formatValue = (value: any, type = 'text', showUnchanged = false): string => {
+    if (value === null || value === undefined || value === '') {
+      return showUnchanged ? 'Unchanged' : 'Not set';
+    }
     
     switch (type) {
       case 'boolean':
@@ -72,12 +74,20 @@ export function SideBySideComparisonModal({
   };
 
   const renderValueCell = (value: any, type = 'text', isChanged = false, isHighlighted = false, isNewValue = false, originalValue?: any) => {
-    let formattedValue = formatValue(value, type);
     const isEmpty = value === null || value === undefined || value === '';
     
-    // Show "unchanged" for new values that are the same as original (regardless of whether they're empty)
+    // For new values that haven't changed, show "Unchanged" instead of "Not set"
+    const showUnchanged = isNewValue && !isChanged && isEmpty;
+    let formattedValue = formatValue(value, type, showUnchanged);
+    
+    // Special case: if this is a new value that's unchanged, use a different display
     if (isNewValue && !isChanged) {
-      formattedValue = 'unchanged';
+      if (isEmpty) {
+        formattedValue = 'Unchanged';
+      } else {
+        // If there's a value but it's unchanged, show the value normally
+        formattedValue = formatValue(value, type, false);
+      }
     }
     
     return (
