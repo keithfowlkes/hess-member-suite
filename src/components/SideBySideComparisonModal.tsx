@@ -78,22 +78,16 @@ export function SideBySideComparisonModal({
     
     let formattedValue: string;
     
-    // Handle the special case where we want to show "Unchanged" for unchanged empty fields
-    if (isNewValue && !isChanged && showAsUnchanged) {
-      formattedValue = 'Unchanged';
-    } else if (isNewValue && !isChanged && !isEmpty) {
-      // If there's a value but it's unchanged, show the value normally
-      formattedValue = formatValue(value, type, false);
+    // Simplified logic - just format the value as is, don't try to be too clever about "unchanged" status
+    if (isEmpty) {
+      formattedValue = 'Not set';
     } else {
-      // Standard formatting
       formattedValue = formatValue(value, type, false);
     }
     
     return (
       <div className={`p-3 rounded ${isHighlighted ? (isChanged ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200') : 'bg-muted/30'}`}>
         <span className={`text-sm ${
-          showAsUnchanged && isNewValue ? 'text-blue-600 italic' : 
-          isNewValue && !isChanged ? 'text-blue-600 italic' : 
           isEmpty && isChanged ? 'text-muted-foreground italic' : 
           isChanged && isHighlighted ? 'text-green-800 font-medium' : 
           isEmpty ? 'text-muted-foreground italic' : 
@@ -160,40 +154,14 @@ export function SideBySideComparisonModal({
                 console.log(`Field ${field.key}: currentValue="${currentValue}" newValue="${newValue}"`);
               }
               
-              // Normalize values for comparison (handle empty strings, null, undefined)
-              const normalizeValue = (val: any) => {
-                if (val === null || val === undefined || val === '') return null;
-                return val;
-              };
-              
-              const normalizedCurrent = normalizeValue(currentValue);
-              const normalizedNew = normalizeValue(newValue);
-              
-              // Determine if this field has actually changed
-              let isChanged = normalizedCurrent !== normalizedNew;
-              let displayNewValue = newValue;
-              let showAsUnchanged = false;
-              
-              // If both values are empty/null, treat as unchanged
-              if (normalizedCurrent === null && normalizedNew === null) {
-                isChanged = false;
-                showAsUnchanged = true;
-              }
-              // If new value is empty but current has value, treat as unchanged
-              else if (normalizedNew === null && normalizedCurrent !== null) {
-                isChanged = false;
-                displayNewValue = currentValue; // Use current value for display
-              }
-              // If current is empty but new has value, it's a change
-              else if (normalizedCurrent === null && normalizedNew !== null) {
-                isChanged = true;
-              }
+              // Simple comparison - if values are different, it's a change
+              const isChanged = currentValue !== newValue;
               
                return (
                  <div key={field.key} className="grid grid-cols-3 gap-4 items-center">
                    <div className="text-sm font-medium">{field.label}</div>
                    {renderValueCell(currentValue, field.type, false, isChanged, false)}
-                   {renderValueCell(displayNewValue, field.type, true, isChanged, true, currentValue, showAsUnchanged)}
+                   {renderValueCell(newValue, field.type, true, isChanged, true, currentValue)}
                  </div>
                );
             })}
@@ -252,13 +220,16 @@ export function SideBySideComparisonModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto" aria-describedby="comparison-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5" />
             {title}
           </DialogTitle>
         </DialogHeader>
+        <div id="comparison-description" className="sr-only">
+          Side-by-side comparison of organization data changes for review and approval
+        </div>
 
         <div className="space-y-6">
           {/* Contact Email Change - Special Section */}
