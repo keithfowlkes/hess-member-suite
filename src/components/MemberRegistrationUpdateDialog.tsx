@@ -52,6 +52,7 @@ export function MemberRegistrationUpdateDialog({
           return;
         }
         
+        console.log('Fetched organization data:', orgData);
         setExistingOrganization(orgData);
 
         // Fetch contact person data if available
@@ -86,43 +87,43 @@ export function MemberRegistrationUpdateDialog({
     // Create enhanced existing organization data with proper field mapping
     const enhancedExistingOrg = {
       // Organization details
-      name: existingOrganization.name || '',
-      primary_contact_first_name: existingContactData?.first_name || '',
-      primary_contact_last_name: existingContactData?.last_name || '',
-      address_line_1: existingOrganization.address_line_1 || '',
-      address_line_2: existingOrganization.address_line_2 || '',
-      city: existingOrganization.city || '',
-      state: existingOrganization.state || '',
-      zip_code: existingOrganization.zip_code || '',
-      phone: existingOrganization.phone || '',
-      email: existingOrganization.email || '',
-      website: existingOrganization.website || '',
-      student_fte: existingOrganization.student_fte || null,
-      primary_contact_title: existingOrganization.primary_contact_title || '',
-      secondary_first_name: existingOrganization.secondary_first_name || '',
-      secondary_last_name: existingOrganization.secondary_last_name || '',
-      secondary_contact_title: existingOrganization.secondary_contact_title || '',
-      secondary_contact_email: existingOrganization.secondary_contact_email || '',
-      // Software systems
-      student_information_system: existingOrganization.student_information_system || '',
-      financial_system: existingOrganization.financial_system || '',
-      financial_aid: existingOrganization.financial_aid || '',
-      hcm_hr: existingOrganization.hcm_hr || '',
-      payroll_system: existingOrganization.payroll_system || '',
-      purchasing_system: existingOrganization.purchasing_system || '',
-      housing_management: existingOrganization.housing_management || '',
-      learning_management: existingOrganization.learning_management || '',
-      admissions_crm: existingOrganization.admissions_crm || '',
-      alumni_advancement_crm: existingOrganization.alumni_advancement_crm || '',
+      name: existingOrganization.name ?? '',
+      primary_contact_first_name: existingContactData?.first_name ?? '',
+      primary_contact_last_name: existingContactData?.last_name ?? '',
+      address_line_1: existingOrganization.address_line_1 ?? '',
+      address_line_2: existingOrganization.address_line_2 ?? '',
+      city: existingOrganization.city ?? '',
+      state: existingOrganization.state ?? '',
+      zip_code: existingOrganization.zip_code ?? '',
+      phone: existingOrganization.phone ?? '',
+      email: existingOrganization.email ?? '',
+      website: existingOrganization.website ?? '',
+      student_fte: existingOrganization.student_fte ?? null,
+      primary_contact_title: existingOrganization.primary_contact_title ?? '',
+      secondary_first_name: existingOrganization.secondary_first_name ?? '',
+      secondary_last_name: existingOrganization.secondary_last_name ?? '',
+      secondary_contact_title: existingOrganization.secondary_contact_title ?? '',
+      secondary_contact_email: existingOrganization.secondary_contact_email ?? '',
+      // Software systems - preserve actual database values
+      student_information_system: existingOrganization.student_information_system ?? '',
+      financial_system: existingOrganization.financial_system ?? '',
+      financial_aid: existingOrganization.financial_aid ?? '',
+      hcm_hr: existingOrganization.hcm_hr ?? '',
+      payroll_system: existingOrganization.payroll_system ?? '',
+      purchasing_system: existingOrganization.purchasing_system ?? '',
+      housing_management: existingOrganization.housing_management ?? '',
+      learning_management: existingOrganization.learning_management ?? '',
+      admissions_crm: existingOrganization.admissions_crm ?? '',
+      alumni_advancement_crm: existingOrganization.alumni_advancement_crm ?? '',
       // Hardware preferences
-      primary_office_apple: existingOrganization.primary_office_apple || false,
-      primary_office_asus: existingOrganization.primary_office_asus || false,
-      primary_office_dell: existingOrganization.primary_office_dell || false,
-      primary_office_hp: existingOrganization.primary_office_hp || false,
-      primary_office_microsoft: existingOrganization.primary_office_microsoft || false,
-      primary_office_other: existingOrganization.primary_office_other || false,
-      primary_office_other_details: existingOrganization.primary_office_other_details || '',
-      other_software_comments: existingOrganization.other_software_comments || ''
+      primary_office_apple: existingOrganization.primary_office_apple ?? false,
+      primary_office_asus: existingOrganization.primary_office_asus ?? false,
+      primary_office_dell: existingOrganization.primary_office_dell ?? false,
+      primary_office_hp: existingOrganization.primary_office_hp ?? false,
+      primary_office_microsoft: existingOrganization.primary_office_microsoft ?? false,
+      primary_office_other: existingOrganization.primary_office_other ?? false,
+      primary_office_other_details: existingOrganization.primary_office_other_details ?? '',
+      other_software_comments: existingOrganization.other_software_comments ?? ''
     };
 
     // Map registration data to organization structure for comparison
@@ -166,6 +167,9 @@ export function MemberRegistrationUpdateDialog({
       primary_office_other_details: orgData.primary_office_other_details || regData.primary_office_other_details || '',
       other_software_comments: orgData.other_software_comments || regData.other_software_comments || ''
     };
+
+    console.log('Original data (existing org):', enhancedExistingOrg);
+    console.log('Updated data (from registration):', updatedOrgData);
 
     return {
       originalData: enhancedExistingOrg,
