@@ -6,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle } from 'lucide-react';
+import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle, Edit3 } from 'lucide-react';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { useInvoices } from '@/hooks/useInvoices';
 import MemberSystemMessages from '@/components/MemberSystemMessages';
+import { ProfileEditModal } from '@/components/ProfileEditModal';
 
 import { useState, useEffect } from 'react';
 
@@ -18,6 +19,7 @@ const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
   const navigate = useNavigate();
   const [userOrganization, setUserOrganization] = useState<any>(null);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const { getUserOrganization } = useUnifiedProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
   const { invoices, loading: invoicesLoading } = useInvoices();
@@ -131,72 +133,99 @@ const Index = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {userOrganization ? (
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold text-foreground">{userOrganization.name}</h3>
-                    </div>
-                    
-                    {(userOrganization.address_line_1 || userOrganization.city || userOrganization.state) && (
-                      <div className="flex items-start gap-2 text-sm">
-                        <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                        <div className="text-muted-foreground">
-                          {userOrganization.address_line_1 && (
-                            <div>{userOrganization.address_line_1}</div>
-                          )}
-                          {userOrganization.address_line_2 && (
-                            <div>{userOrganization.address_line_2}</div>
-                          )}
-                          {(userOrganization.city || userOrganization.state) && (
-                            <div>
-                              {userOrganization.city}
-                              {userOrganization.city && userOrganization.state && ', '}
-                              {userOrganization.state} {userOrganization.zip_code}
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Organization Information */}
+                  <div className="flex-1">
+                    {userOrganization ? (
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="font-semibold text-foreground">{userOrganization.name}</h3>
+                        </div>
+                        
+                        {(userOrganization.address_line_1 || userOrganization.city || userOrganization.state) && (
+                          <div className="flex items-start gap-2 text-sm">
+                            <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                            <div className="text-muted-foreground">
+                              {userOrganization.address_line_1 && (
+                                <div>{userOrganization.address_line_1}</div>
+                              )}
+                              {userOrganization.address_line_2 && (
+                                <div>{userOrganization.address_line_2}</div>
+                              )}
+                              {(userOrganization.city || userOrganization.state) && (
+                                <div>
+                                  {userOrganization.city}
+                                  {userOrganization.city && userOrganization.state && ', '}
+                                  {userOrganization.state} {userOrganization.zip_code}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {userOrganization.email && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <a 
-                          href={`mailto:${userOrganization.email}`}
-                          className="text-primary hover:underline"
-                        >
-                          {userOrganization.email}
-                        </a>
-                      </div>
-                    )}
-
-                    {user?.email && (
-                      <div className="pt-2 border-t">
-                        <div className="flex items-center gap-2 text-sm">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <div className="font-medium text-foreground">Primary Contact</div>
-                            <div className="text-muted-foreground">{user.email}</div>
                           </div>
-                        </div>
-                      </div>
-                    )}
+                        )}
 
-                    {userOrganization.updated_at && (
-                      <div className="pt-2 border-t">
-                        <div className="text-sm text-muted-foreground">
-                          <span className="font-medium">Last Updated:</span> {new Date(userOrganization.updated_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </div>
+                        {userOrganization.email && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <a 
+                              href={`mailto:${userOrganization.email}`}
+                              className="text-primary hover:underline"
+                            >
+                              {userOrganization.email}
+                            </a>
+                          </div>
+                        )}
+
+                        {user?.email && (
+                          <div className="pt-2 border-t">
+                            <div className="flex items-center gap-2 text-sm">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <div className="font-medium text-foreground">Primary Contact</div>
+                                <div className="text-muted-foreground">{user.email}</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {userOrganization.updated_at && (
+                          <div className="pt-2 border-t">
+                            <div className="text-sm text-muted-foreground">
+                              <span className="font-medium">Last Updated:</span> {new Date(userOrganization.updated_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">Loading institution information...</div>
                     )}
                   </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground">Loading institution information...</div>
-                )}
+
+                  {/* Profile Update Button */}
+                  <div className="flex-shrink-0 lg:w-64">
+                    <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 h-full flex flex-col justify-center">
+                      <div className="text-center space-y-3">
+                        <Edit3 className="h-8 w-8 text-primary mx-auto" />
+                        <div>
+                          <h4 className="font-medium text-foreground mb-1">Keep Your Profile Current</h4>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Update your organization and contact information
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={() => setProfileModalOpen(true)}
+                          className="w-full"
+                          size="lg"
+                        >
+                          Review / Update Your Organization Profile Information
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -325,6 +354,12 @@ const Index = () => {
               </Card>
             </div>
           </div>
+          
+          {/* Profile Edit Modal */}
+          <ProfileEditModal 
+            open={profileModalOpen} 
+            onOpenChange={setProfileModalOpen} 
+          />
           
           {/* Footer */}
           <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
