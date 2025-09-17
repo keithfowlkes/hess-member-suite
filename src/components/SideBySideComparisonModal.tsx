@@ -75,14 +75,14 @@ export function SideBySideComparisonModal({
     let formattedValue = formatValue(value, type);
     const isEmpty = value === null || value === undefined || value === '';
     
-    // Show "unchanged" for new values that are the same as original
-    if (isNewValue && !isChanged && !isEmpty) {
+    // Show "unchanged" for new values that are the same as original (regardless of whether they're empty)
+    if (isNewValue && !isChanged) {
       formattedValue = 'unchanged';
     }
     
     return (
       <div className={`p-3 rounded ${isHighlighted ? (isChanged ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200') : 'bg-muted/30'}`}>
-        <span className={`text-sm ${isEmpty ? 'text-muted-foreground italic' : isChanged && isHighlighted ? 'text-green-800 font-medium' : isNewValue && !isChanged ? 'text-blue-600 italic' : 'text-foreground'}`}>
+        <span className={`text-sm ${isNewValue && !isChanged ? 'text-blue-600 italic' : isEmpty && isChanged ? 'text-muted-foreground italic' : isChanged && isHighlighted ? 'text-green-800 font-medium' : isEmpty ? 'text-muted-foreground italic' : 'text-foreground'}`}>
           {formattedValue}
         </span>
       </div>
