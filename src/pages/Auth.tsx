@@ -1837,7 +1837,7 @@ export default function Auth() {
                       </Label>
                       <Select
                         value={selectedOrganizationId}
-                        onValueChange={setSelectedOrganizationId}
+                        onValueChange={handleOrganizationSelect}
                         disabled={!isReassignment}
                         required
                       >
