@@ -61,6 +61,12 @@ const Index = () => {
       hasAlert: hasOutstandingBalance,
       onClick: () => navigate('/invoices')
     },
+    {
+      title: 'Annual Member Fee',
+      value: userOrganization?.annual_fee_amount ? `$${userOrganization.annual_fee_amount.toFixed(2)}` : '$0.00',
+      icon: DollarSign,
+      color: 'text-blue-600'
+    },
   ];
 
   return (
