@@ -23,6 +23,7 @@ import { SimpleSystemFieldManager } from '@/components/SimpleSystemFieldManager'
 import { SystemFieldNormalizer } from '@/components/SystemFieldNormalizer';
 import { SimplifiedMemberRegistrationManagement } from '@/components/SimplifiedMemberRegistrationManagement';
 import { PublicLogoManager } from '@/components/PublicLogoManager';
+import { HeaderGraphicManager } from '@/components/HeaderGraphicManager';
 
 import { USMap } from '@/components/USMap';
 import { MessageTextContent } from '@/components/MessageTextContent';
@@ -717,6 +718,9 @@ export default function Settings() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Header Graphic Management */}
+                <HeaderGraphicManager />
                   </div>
                 )}
 
