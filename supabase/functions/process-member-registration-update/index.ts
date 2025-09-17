@@ -356,16 +356,18 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Failed to mark registration update as approved:', updateError);
     }
 
-    // Step 8: Send welcome email using centralized email delivery
+    // Step 8: Send profile update approval email using centralized email delivery
     try {
       const { data: emailResult, error: emailError } = await supabase.functions.invoke('centralized-email-delivery', {
         body: {
-          type: 'welcome_approved',
+          type: 'profile_update_approved',
           to: registrationData.email,
           data: {
             organization_name: organizationName,
             primary_contact_name: `${registrationData.first_name} ${registrationData.last_name}`,
-            custom_message: 'Your member registration has been approved and your organization has been updated in our system.'
+            custom_message: 'Your profile update request has been approved and your organization information has been updated in our system.',
+            updated_organization: organizationName,
+            contact_email: registrationData.email
           }
         }
       });
@@ -374,7 +376,7 @@ const handler = async (req: Request): Promise<Response> => {
         console.error('Failed to send welcome email:', emailError);
         // Don't fail the entire process for email issues
       } else {
-        console.log('Welcome email sent successfully');
+        console.log('Profile update approval email sent successfully');
       }
     } catch (emailErr) {
       console.error('Email function error:', emailErr);
