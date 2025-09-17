@@ -1,5 +1,5 @@
 import React from 'react';
-import headerImage from '@/assets/memberportalheader-clean.png';
+import headerImage from '@/assets/memberportalheader-final.png';
 
 export const AuthHeader = () => {
   return (
