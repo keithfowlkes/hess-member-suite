@@ -103,7 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
         user_id: adminUserId,
         details: {
           submitted_email: registrationUpdate.submitted_email,
-          organization_name: registrationUpdate.organization_data?.name,
+          organization_name: organizationName,
           rejection_reason: adminNotes
         }
       });
@@ -121,9 +121,19 @@ const handler = async (req: Request): Promise<Response> => {
     const registrationData = registrationUpdate.registration_data as any;
     const organizationData = registrationUpdate.organization_data as any;
 
+    // Determine the organization name from multiple sources
+    const organizationName = organizationData.name || 
+                             registrationUpdate.existing_organization_name || 
+                             registrationData.organization || 
+                             registrationData.organization_name ||
+                             'Unknown Organization';
+
     console.log('Processing approval for:', {
       email: registrationUpdate.submitted_email,
-      organizationName: organizationData.name
+      organizationName: organizationName,
+      organizationDataName: organizationData.name,
+      existingOrgName: registrationUpdate.existing_organization_name,
+      registrationDataOrg: registrationData.organization
     });
 
     // Step 1: Find existing organization by name or email
@@ -135,12 +145,12 @@ const handler = async (req: Request): Promise<Response> => {
         .eq('id', registrationUpdate.existing_organization_id)
         .single();
       existingOrganization = data;
-    } else if (organizationData.name) {
+    } else if (organizationName && organizationName !== 'Unknown Organization') {
       // Try to find by organization name
       const { data } = await supabase
         .from('organizations')
         .select('*')
-        .ilike('name', organizationData.name)
+        .ilike('name', organizationName)
         .single();
       existingOrganization = data;
     }
@@ -206,7 +216,7 @@ const handler = async (req: Request): Promise<Response> => {
         last_name: registrationData.last_name,
         email: registrationData.email,
         phone: registrationData.phone,
-        organization: organizationData.name,
+        organization: organizationName,
         state_association: registrationData.state_association,
         address: registrationData.address,
         city: registrationData.city,
@@ -266,7 +276,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: newOrganization, error: orgError } = await supabase
       .from('organizations')
       .insert({
-        name: organizationData.name,
+        name: organizationName,
         contact_person_id: profileId,
         student_fte: organizationData.student_fte,
         address_line_1: organizationData.address_line_1 || registrationData.address,
@@ -353,7 +363,7 @@ const handler = async (req: Request): Promise<Response> => {
           type: 'welcome_approved',
           to: registrationData.email,
           data: {
-            organization_name: organizationData.name,
+            organization_name: organizationName,
             primary_contact_name: `${registrationData.first_name} ${registrationData.last_name}`,
             custom_message: 'Your member registration has been approved and your organization has been updated in our system.'
           }
@@ -378,7 +388,7 @@ const handler = async (req: Request): Promise<Response> => {
       user_id: adminUserId,
       details: {
         submitted_email: registrationUpdate.submitted_email,
-        organization_name: organizationData.name,
+        organization_name: organizationName,
         new_user_id: newUser.user.id,
         new_organization_id: newOrganization.id,
         replaced_organization_id: existingOrganization?.id
@@ -402,7 +412,7 @@ const handler = async (req: Request): Promise<Response> => {
         details: {
           newUserId: newUser.user.id,
           newOrganizationId: newOrganization.id,
-          organizationName: organizationData.name,
+          organizationName: organizationName,
           contactEmail: registrationData.email,
           replacedExisting: !!existingOrganization
         }
