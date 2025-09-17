@@ -81,7 +81,7 @@ const Index = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 overflow-y-auto">
           <div className="space-y-4">
             <div className="flex justify-between items-start">
               <div>
