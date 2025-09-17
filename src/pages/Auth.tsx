@@ -16,6 +16,7 @@ import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystem
 import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useMemberRegistrationUpdates } from '@/hooks/useMemberRegistrationUpdates';
+import { AuthHeader } from '@/components/AuthHeader';
 
 // Store the actual password for later use during approval
 const storeActualPassword = (password: string): string => {
@@ -789,8 +790,10 @@ export default function Auth() {
   console.log('🔍 Current URL searchParams:', Object.fromEntries(searchParams));
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="w-full max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-100">
+      <AuthHeader />
+      <div className="p-4">
+        <div className="w-full max-w-4xl mx-auto">
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6 bg-white">
@@ -2307,6 +2310,7 @@ export default function Auth() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </div>
   );
 }
