@@ -108,6 +108,16 @@ export function SideBySideComparisonModal({
   const renderComparisonSection = (title: string, icon: React.ReactNode, fields: any[]) => {
     if (!fields || fields.length === 0) return null;
     
+    // Debug logging for software systems
+    if (title === 'Software Systems') {
+      console.log('SideBySideComparisonModal - Software Systems data:');
+      console.log('originalData:', data.originalData);
+      console.log('updatedData:', data.updatedData);
+      fields.forEach(field => {
+        console.log(`${field.key}: original="${data.originalData?.[field.key]}" updated="${data.updatedData?.[field.key]}"`);
+      });
+    }
+    
     const hasChanges = fields.some(field => {
       const currentValue = data.originalData?.[field.key];
       const newValue = data.updatedData?.[field.key];
@@ -144,6 +154,11 @@ export function SideBySideComparisonModal({
             {fields.map((field) => {
               const currentValue = data.originalData?.[field.key];
               const newValue = data.updatedData?.[field.key];
+              
+              // Debug logging for software fields
+              if (title === 'Software Systems') {
+                console.log(`Field ${field.key}: currentValue="${currentValue}" newValue="${newValue}"`);
+              }
               
               // Normalize values for comparison (handle empty strings, null, undefined)
               const normalizeValue = (val: any) => {

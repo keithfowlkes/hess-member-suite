@@ -171,6 +171,13 @@ export function MemberRegistrationUpdateDialog({
     console.log('Original data (existing org):', enhancedExistingOrg);
     console.log('Updated data (from registration):', updatedOrgData);
 
+    // Debug software systems specifically
+    console.log('Software Systems Debug:');
+    console.log('Original admissions_crm:', enhancedExistingOrg.admissions_crm);
+    console.log('Updated admissions_crm:', updatedOrgData.admissions_crm);
+    console.log('Original alumni_advancement_crm:', enhancedExistingOrg.alumni_advancement_crm);
+    console.log('Updated alumni_advancement_crm:', updatedOrgData.alumni_advancement_crm);
+
     return {
       originalData: enhancedExistingOrg,
       updatedData: updatedOrgData
