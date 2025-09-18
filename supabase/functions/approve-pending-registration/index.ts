@@ -26,7 +26,7 @@ serve(async (req) => {
       }
     );
 
-    const { registrationId, adminUserId } = await req.json();
+    const { registrationId, adminUserId, selectedFeeTier } = await req.json();
     
     if (!registrationId || !adminUserId) {
       return new Response(
@@ -34,6 +34,9 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Use selectedFeeTier or default to 1000
+    const annualFeeAmount = selectedFeeTier || 1000;
 
     console.log(`Processing approval for registration: ${registrationId} by admin: ${adminUserId}`);
 
@@ -558,6 +561,7 @@ serve(async (req) => {
               membership_status: 'active',
               membership_start_date: new Date().toISOString().split('T')[0],
               contact_person_id: userProfile.id,
+              annual_fee_amount: annualFeeAmount,
               student_fte: pendingReg.student_fte,
               address_line_1: pendingReg.address,
               city: pendingReg.city,
@@ -674,6 +678,7 @@ serve(async (req) => {
                 membership_status: 'active',
                 membership_start_date: new Date().toISOString().split('T')[0],
                 contact_person_id: profile.id,
+                annual_fee_amount: annualFeeAmount,
                 student_fte: pendingReg.student_fte,
                 address_line_1: pendingReg.address,
                 city: pendingReg.city,
@@ -727,6 +732,7 @@ serve(async (req) => {
               .insert({
                 name: pendingReg.organization_name,
                 contact_person_id: profile.id,
+                annual_fee_amount: annualFeeAmount,
                 student_fte: pendingReg.student_fte,
                 address_line_1: pendingReg.address,
                 city: pendingReg.city,

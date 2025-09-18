@@ -76,7 +76,7 @@ export function AddExternalUserDialog({ open, onOpenChange, onUserCreated }: Add
       if (!adminUserId) throw new Error('Missing admin session');
 
       const { error: approveErr } = await supabase.functions.invoke('approve-pending-registration', {
-        body: { registrationId: pending.id, adminUserId }
+        body: { registrationId: pending.id, adminUserId, selectedFeeTier: 1000 }
       });
       if (approveErr) {
         // Fallback to direct functions URL
@@ -92,7 +92,7 @@ export function AddExternalUserDialog({ open, onOpenChange, onUserCreated }: Add
             'apikey': anonKey,
             ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
           },
-          body: JSON.stringify({ registrationId: pending.id, adminUserId })
+          body: JSON.stringify({ registrationId: pending.id, adminUserId, selectedFeeTier: 1000 })
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({} as any));

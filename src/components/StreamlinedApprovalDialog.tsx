@@ -34,7 +34,7 @@ interface StreamlinedApprovalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   registration: PendingRegistration | null;
-  onApprove: (registrationId: string, adminUserId?: string) => Promise<boolean | { success: boolean; organizationId?: string }>;
+  onApprove: (registrationId: string, adminUserId?: string, selectedFeeTier?: number) => Promise<boolean | { success: boolean; organizationId?: string }>;
   onReject: (registrationId: string, reason: string, adminUserId?: string) => Promise<boolean>;
   onUpdatePriority?: (registrationId: string, priority: string, adminUserId?: string) => Promise<boolean>;
 }
@@ -105,7 +105,7 @@ export function StreamlinedApprovalDialog({
     setIsSubmitting(true);
     try {
       if (actionType === 'approve') {
-        const result = await onApprove(registration.id, user?.id);
+        const result = await onApprove(registration.id, user?.id, parseFloat(invoiceAmount));
         
         // Handle invoice sending if requested
         if (sendInvoice && membershipStartDate) {

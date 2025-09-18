@@ -165,14 +165,15 @@ export function usePendingRegistrations() {
     }
   };
 
-  const approveRegistration = async (registrationId: string, adminUserId?: string): Promise<boolean | { success: boolean; organizationId?: string }> => {
+  const approveRegistration = async (registrationId: string, adminUserId?: string, selectedFeeTier?: number): Promise<boolean | { success: boolean; organizationId?: string }> => {
     try {
       setLoading(true);
       
       const { data, error } = await supabase.functions.invoke('approve-pending-registration', {
         body: {
           registrationId,
-          adminUserId
+          adminUserId,
+          selectedFeeTier
         }
       });
 

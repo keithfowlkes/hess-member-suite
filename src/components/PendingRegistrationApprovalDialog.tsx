@@ -20,7 +20,7 @@ interface PendingRegistrationApprovalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   registration: PendingRegistration | null;
-  onApprove: (registrationId: string, adminUserId?: string) => Promise<boolean | { success: boolean; organizationId?: string }>;
+  onApprove: (registrationId: string, adminUserId?: string, selectedFeeTier?: number) => Promise<boolean | { success: boolean; organizationId?: string }>;
   onReject: (registrationId: string, reason: string, adminUserId?: string) => Promise<boolean>;
 }
 
@@ -102,7 +102,7 @@ export function PendingRegistrationApprovalDialog({
     
     setIsSubmitting(true);
     try {
-      const result = await onApprove(registration.id, user?.id);
+      const result = await onApprove(registration.id, user?.id, parseFloat(invoiceAmount));
       
       // Check if result includes organization ID (updated approval function returns this)
       let organizationId = registration.id; // fallback to registration ID
