@@ -601,6 +601,7 @@ serve(async (req) => {
             shouldCreateNew = false;
             
             // Update the existing organization to be active with all current data
+            console.log(`Updating existing organization ${existingOrg.name} to active status...`);
             const { data: updatedOrg, error: updateOrgError } = await supabaseAdmin
               .from('organizations')
               .update({
@@ -654,6 +655,7 @@ serve(async (req) => {
             }
           } else {
             // Create new organization
+            console.log(`Creating new organization: ${pendingReg.organization_name} with active status...`);
             const { data: createdOrg, error: createError } = await supabaseAdmin
               .from('organizations')
               .insert({
@@ -693,7 +695,7 @@ serve(async (req) => {
                 country: 'United States',
                 organization_type: isAdminOrg ? 'system' : 'member'
               })
-              .select('id, name, email')
+              .select('id, name, email, membership_status')
               .single();
 
             if (createError) {
