@@ -1347,6 +1347,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_reassignment_placeholders: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cleaned_count: number
+        }[]
+      }
       fix_user_password_from_registration: {
         Args: Record<PropertyKey, never>
         Returns: string
