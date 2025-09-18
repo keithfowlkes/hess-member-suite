@@ -169,6 +169,10 @@ export function useUnifiedProfile(userId?: string) {
 
     try {
       console.log('🚀 Submitting unified profile edit request:', updates);
+      console.log('🚀 canEditDirectly value:', canEditDirectly());
+      console.log('🚀 isAdmin:', isAdmin);
+      console.log('🚀 data.organization?.contact_person_id:', data?.organization?.contact_person_id);
+      console.log('🚀 data.profile?.id:', data?.profile?.id);
 
       // If there's an organization, submit organization profile edit request
       if (data.organization) {
@@ -230,6 +234,10 @@ export function useUnifiedProfile(userId?: string) {
 
     try {
       console.log('🚀 Updating unified profile directly:', updates);
+      console.log('🚀 Direct update - canEditDirectly value:', canEditDirectly());
+      console.log('🚀 Direct update - isAdmin:', isAdmin);
+      console.log('🚀 Direct update - data.organization?.contact_person_id:', data?.organization?.contact_person_id);
+      console.log('🚀 Direct update - data.profile?.id:', data?.profile?.id);
 
       const promises = [];
 

@@ -22,15 +22,19 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     organization?: Partial<any>;
   }) => {
     console.log('🚀 Profile modal: handleSave called with:', updates);
+    console.log('🚀 Profile modal: canEditDirectly():', canEditDirectly());
+    console.log('🚀 Profile modal: data:', data);
     setSaving(true);
     
     try {
       let success = false;
       
       if (canEditDirectly()) {
+        console.log('🚀 Profile modal: Taking direct update path');
         // Admin can update directly
         success = await updateProfileDirect(updates);
       } else {
+        console.log('🚀 Profile modal: Taking approval request path');
         // Regular users submit for approval
         success = await submitEditRequest(updates);
       }
