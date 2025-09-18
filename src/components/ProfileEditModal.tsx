@@ -14,7 +14,14 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   open,
   onOpenChange
 }) => {
-  const { data, loading, submitEditRequest, updateProfileDirect, canEditDirectly } = useUnifiedProfile();
+  const { 
+    data, 
+    loading, 
+    submitEditRequest, 
+    updateProfileDirect, 
+    updatePrimaryContactProfile,
+    canEditDirectly 
+  } = useUnifiedProfile();
   const [saving, setSaving] = useState(false);
 
   const handleSave = async (updates: {
@@ -22,20 +29,24 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     organization?: Partial<any>;
   }) => {
     console.log('🚀 Profile modal: handleSave called with:', updates);
-    console.log('🚀 Profile modal: canEditDirectly():', canEditDirectly());
-    console.log('🚀 Profile modal: data:', data);
     setSaving(true);
     
     try {
+      // Check if user is primary contact of their organization
+      const isPrimaryContact = data?.organization?.contact_person_id === data?.profile?.id;
+      console.log('🚀 Profile modal: isPrimaryContact:', isPrimaryContact);
+      console.log('🚀 Profile modal: contact_person_id:', data?.organization?.contact_person_id);
+      console.log('🚀 Profile modal: profile.id:', data?.profile?.id);
+      
       let success = false;
       
-      if (canEditDirectly()) {
-        console.log('🚀 Profile modal: Taking direct update path');
-        // Admin can update directly
-        success = await updateProfileDirect(updates);
+      if (isPrimaryContact) {
+        console.log('🚀 Profile modal: Using primary contact direct update');
+        // Primary contact users can update directly through this modal
+        success = await updatePrimaryContactProfile(updates);
       } else {
-        console.log('🚀 Profile modal: Taking approval request path');
-        // Regular users submit for approval
+        console.log('🚀 Profile modal: Using approval request workflow');
+        // All other users go through approval
         success = await submitEditRequest(updates);
       }
       

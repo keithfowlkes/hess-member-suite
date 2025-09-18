@@ -381,12 +381,86 @@ export function useUnifiedProfile(userId?: string) {
     };
   }, [userId]);
 
+  // Simplified method specifically for primary contact users updating through profile modal
+  const updatePrimaryContactProfile = async (
+    updates: {
+      profile?: Partial<UnifiedProfile['profile']>;
+      organization?: Partial<UnifiedProfile['organization']>;
+    }
+  ) => {
+    if (!data) return false;
+
+    // Only allow primary contact users to use this method
+    const isPrimaryContact = data.organization?.contact_person_id === data.profile.id;
+    if (!isPrimaryContact && !isAdmin) {
+      console.log('❌ User is not primary contact or admin, cannot use direct update');
+      return false;
+    }
+
+    try {
+      console.log('🚀 Primary contact direct update:', updates);
+      const promises = [];
+
+      // Update profile if provided
+      if (updates.profile) {
+        console.log('🚀 Updating profile directly:', updates.profile);
+        promises.push(
+          supabase
+            .from('profiles')
+            .update(updates.profile)
+            .eq('id', data.profile.id)
+        );
+      }
+
+      // Update organization if provided and exists
+      if (updates.organization && data.organization) {
+        console.log('🚀 Updating organization directly:', updates.organization);
+        promises.push(
+          supabase
+            .from('organizations')
+            .update(updates.organization)
+            .eq('id', data.organization.id)
+        );
+      }
+
+      // Execute all updates
+      const results = await Promise.all(promises);
+
+      // Check for errors
+      for (const result of results) {
+        if (result.error) {
+          console.error('❌ Database update error:', result.error);
+          throw result.error;
+        }
+      }
+
+      // Refresh data
+      await fetchUnifiedProfile();
+
+      toast({
+        title: 'Success',
+        description: 'Profile updated successfully'
+      });
+
+      return true;
+    } catch (error: any) {
+      console.error('❌ Error in primary contact update:', error);
+      toast({
+        title: 'Error updating profile',
+        description: error.message,
+        variant: 'destructive'
+      });
+      return false;
+    }
+  };
+
   return {
     data,
     loading,
     isAdmin,
     submitEditRequest,
     updateProfileDirect,
+    updatePrimaryContactProfile,
     canEditDirectly,
     getDisplayName,
     getOrganizationName,
