@@ -423,8 +423,11 @@ export default function Auth() {
     console.log('✅ REGISTRATION DEBUG: Validation passed, setting submitting state');
     setIsSubmitting(true);
 
-    // If this is a member update request (only from member-update tab AND user is updating existing org), handle differently
-    if (activeTab === 'member-update' && selectedOrganizationId && isReassignment) {
+    // If this is a true member update request (only from member-update tab AND user is updating existing org), handle differently
+    // This should NEVER run for new registrations - only for existing members updating their org info
+    if (activeTab === 'member-update' && selectedOrganizationId && isReassignment && organizations.find(org => org.id === selectedOrganizationId)) {
+      console.log('🔄 MEMBER UPDATE FLOW: Processing as member update (reassignment) - this should NOT happen for new registrations');
+      console.log('📝 Selected organization ID:', selectedOrganizationId);
       try {
         // Get the current organization data
         const { data: currentOrg, error: fetchError } = await supabase
