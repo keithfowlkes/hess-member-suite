@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,31 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
   saving = false
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState<UnifiedProfile>(data);
+  
+  // Initialize editedData with address sync
+  const initializeEditedData = (data: UnifiedProfile): UnifiedProfile => {
+    const initialized = { ...data };
+    
+    // Sync organization address with profile address if both exist
+    if (initialized.organization && initialized.profile.address) {
+      initialized.organization = {
+        ...initialized.organization,
+        address_line_1: initialized.profile.address,
+        city: initialized.profile.city,
+        state: initialized.profile.state,
+        zip_code: initialized.profile.zip
+      };
+    }
+    
+    return initialized;
+  };
+  
+  const [editedData, setEditedData] = useState<UnifiedProfile>(initializeEditedData(data));
+  
+  // Update editedData when data prop changes
+  useEffect(() => {
+    setEditedData(initializeEditedData(data));
+  }, [data]);
 
   // System field select component
   const SystemFieldSelect = ({ 
@@ -76,6 +100,9 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
     const profileUpdates: Partial<UnifiedProfile['profile']> = {};
     const organizationUpdates: Partial<UnifiedProfile['organization']> = {};
     
+    console.log('🚀 handleSave - Original data:', data);
+    console.log('🚀 handleSave - Edited data:', editedData);
+    
     // Compare profile data
     Object.keys(editedData.profile).forEach(key => {
       const typedKey = key as keyof UnifiedProfile['profile'];
@@ -83,6 +110,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
       const editedValue = editedData.profile[typedKey];
       
       if (editedValue !== originalValue) {
+        console.log(`🚀 Profile change detected - ${key}: "${originalValue}" -> "${editedValue}"`);
         (profileUpdates as any)[typedKey] = editedValue;
       }
     });
@@ -95,10 +123,14 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         const editedValue = editedData.organization![typedKey];
         
         if (editedValue !== originalValue) {
+          console.log(`🚀 Organization change detected - ${key}: "${originalValue}" -> "${editedValue}"`);
           (organizationUpdates as any)[typedKey] = editedValue;
         }
       });
     }
+
+    console.log('🚀 handleSave - Profile updates:', profileUpdates);
+    console.log('🚀 handleSave - Organization updates:', organizationUpdates);
 
     const success = await onSave({
       profile: Object.keys(profileUpdates).length > 0 ? profileUpdates : undefined,
@@ -111,7 +143,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
   };
 
   const handleCancel = () => {
-    setEditedData(data);
+    setEditedData(initializeEditedData(data));
     setIsEditing(false);
   };
 
