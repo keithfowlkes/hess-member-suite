@@ -527,13 +527,79 @@ serve(async (req) => {
 
       // Check if the found organization belongs to the current user
       let shouldCreateNew = true;
+      let shouldUpdateExisting = false;
       if (!orgError && existingOrg && existingOrg.profiles?.user_id === authUser.user?.id) {
         console.log('Found existing organization for same user');
         shouldCreateNew = false;
+        shouldUpdateExisting = true;
         newOrganization = existingOrg;
       } else if (!orgError && existingOrg) {
         console.log('Found organization with same name but different user - will create new one');
         shouldCreateNew = true;
+      }
+
+      // If we found an existing organization for this user, activate it
+      if (shouldUpdateExisting && existingOrg) {
+        console.log(`Activating existing organization ${existingOrg.name}...`);
+        
+        // Get the profile ID for this user
+        const { data: userProfile, error: profileError } = await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .eq('user_id', authUser.user?.id)
+          .single();
+        
+        if (profileError || !userProfile) {
+          console.error('Error fetching user profile for organization update:', profileError);
+        } else {
+          const { data: updatedOrg, error: updateOrgError } = await supabaseAdmin
+            .from('organizations')
+            .update({
+              membership_status: 'active',
+              membership_start_date: new Date().toISOString().split('T')[0],
+              contact_person_id: userProfile.id,
+              student_fte: pendingReg.student_fte,
+              address_line_1: pendingReg.address,
+              city: pendingReg.city,
+              state: pendingReg.state,
+              zip_code: pendingReg.zip,
+              email: pendingReg.email,
+              primary_contact_title: pendingReg.primary_contact_title,
+              secondary_first_name: pendingReg.secondary_first_name,
+              secondary_last_name: pendingReg.secondary_last_name,
+              secondary_contact_title: pendingReg.secondary_contact_title,
+              secondary_contact_email: pendingReg.secondary_contact_email,
+              student_information_system: pendingReg.student_information_system,
+              financial_system: pendingReg.financial_system,
+              financial_aid: pendingReg.financial_aid,
+              hcm_hr: pendingReg.hcm_hr,
+              payroll_system: pendingReg.payroll_system,
+              purchasing_system: pendingReg.purchasing_system,
+              housing_management: pendingReg.housing_management,
+              learning_management: pendingReg.learning_management,
+              admissions_crm: pendingReg.admissions_crm,
+              alumni_advancement_crm: pendingReg.alumni_advancement_crm,
+              primary_office_apple: pendingReg.primary_office_apple,
+              primary_office_asus: pendingReg.primary_office_asus,
+              primary_office_dell: pendingReg.primary_office_dell,
+              primary_office_hp: pendingReg.primary_office_hp,
+              primary_office_microsoft: pendingReg.primary_office_microsoft,
+              primary_office_other: pendingReg.primary_office_other,
+              primary_office_other_details: pendingReg.primary_office_other_details,
+              other_software_comments: pendingReg.other_software_comments,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingOrg.id)
+            .select('id, name, membership_status')
+            .single();
+          
+          if (updateOrgError) {
+            console.error('Error activating existing organization:', updateOrgError);
+          } else {
+            console.log(`Organization ${updatedOrg.name} activated with status: ${updatedOrg.membership_status}`);
+            newOrganization = updatedOrg;
+          }
+        }
       }
 
       // If organization doesn't exist for this user, create it manually
