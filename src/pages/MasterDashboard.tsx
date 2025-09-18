@@ -1514,7 +1514,7 @@ const MasterDashboard = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-orange-600" />
-              Pending Approvals ({pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length})
+              Pending Approvals ({pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length + pendingRegistrationUpdatesCount})
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
@@ -1582,6 +1582,32 @@ const MasterDashboard = () => {
                     </div>
                   </Card>
                 ))}
+              </div>
+            )}
+
+            {/* Member Registration Updates */}
+            {registrationUpdates && registrationUpdates.filter(r => r.status === 'pending').length > 0 && (
+              <div className="space-y-3">
+                <h4 className="font-medium text-teal-600">Member Registration Updates ({registrationUpdates.filter(r => r.status === 'pending').length})</h4>
+                {registrationUpdates.filter(r => r.status === 'pending').slice(0, 5).map((update) => (
+                  <Card key={update.id} className="p-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{update.organization_data?.name || 'Organization Update'}</p>
+                        <p className="text-sm text-muted-foreground">{update.submitted_email}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {update.submission_type === 'primary_contact_change' ? 'Contact Change' : 'Member Update'}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200">Pending</Badge>
+                    </div>
+                  </Card>
+                ))}
+                {registrationUpdates.filter(r => r.status === 'pending').length > 5 && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    ...and {registrationUpdates.filter(r => r.status === 'pending').length - 5} more
+                  </p>
+                )}
               </div>
             )}
           </div>

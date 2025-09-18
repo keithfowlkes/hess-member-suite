@@ -55,6 +55,39 @@ serve(async (req) => {
 
     console.log(`Found pending registration for: ${pendingReg.email}`);
 
+    // Check for and clean up any corresponding member registration updates to prevent double approval
+    try {
+      const { data: memberUpdates, error: memberUpdatesFetchError } = await supabaseAdmin
+        .from('member_registration_updates')
+        .select('*')
+        .eq('submitted_email', pendingReg.email)
+        .eq('status', 'pending');
+
+      if (!memberUpdatesFetchError && memberUpdates && memberUpdates.length > 0) {
+        console.log(`Found ${memberUpdates.length} pending member registration updates for ${pendingReg.email}, marking as auto-resolved`);
+        
+        const { error: cleanupError } = await supabaseAdmin
+          .from('member_registration_updates')
+          .update({
+            status: 'approved',
+            reviewed_by: adminUserId,
+            reviewed_at: new Date().toISOString(),
+            admin_notes: 'Auto-resolved: New registration approved, member update no longer needed'
+          })
+          .eq('submitted_email', pendingReg.email)
+          .eq('status', 'pending');
+
+        if (cleanupError) {
+          console.warn('Error cleaning up member registration updates:', cleanupError);
+        } else {
+          console.log('Successfully cleaned up pending member registration updates');
+        }
+      }
+    } catch (cleanupError) {
+      console.warn('Error checking for member registration updates to clean up:', cleanupError);
+      // Don't fail the approval process if cleanup fails
+    }
+
     const isAdminOrg = /^Administrator/i.test(pendingReg.organization_name || '');
     console.log('isAdminOrg:', isAdminOrg, 'orgName:', pendingReg.organization_name);
     // Check if user already exists

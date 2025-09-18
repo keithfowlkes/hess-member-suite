@@ -423,8 +423,8 @@ export default function Auth() {
     console.log('✅ REGISTRATION DEBUG: Validation passed, setting submitting state');
     setIsSubmitting(true);
 
-    // If this is a member update request (only from member-update tab), handle differently
-    if (activeTab === 'member-update' && selectedOrganizationId) {
+    // If this is a member update request (only from member-update tab AND user is updating existing org), handle differently
+    if (activeTab === 'member-update' && selectedOrganizationId && isReassignment) {
       try {
         // Get the current organization data
         const { data: currentOrg, error: fetchError } = await supabase
