@@ -282,7 +282,15 @@ export function useUnifiedProfile(userId?: string) {
   };
 
   const canEditDirectly = () => {
-    return isAdmin;
+    // Admins can always edit directly
+    if (isAdmin) return true;
+    
+    // Primary account holders (contact persons) can edit their organization directly
+    if (data?.organization?.contact_person_id === data?.profile?.id) {
+      return true;
+    }
+    
+    return false;
   };
 
   const getDisplayName = () => {
