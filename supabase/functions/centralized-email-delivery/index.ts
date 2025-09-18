@@ -43,10 +43,10 @@ interface EmailTemplate {
   variables: string[];
 }
 
-// Function to wrap content in standardized HESS email template
+// Function to wrap content in standardized HESS watercolor email template
 function wrapInStandardTemplate(content: string, logoUrl?: string): string {
   const emailOptimizedLogo = logoUrl 
-    ? `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 180px; height: auto; display: block; margin: 0 auto 24px auto;" border="0">`
+    ? `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto 20px auto;" border="0">`
     : '';
 
   return `
@@ -66,25 +66,25 @@ function wrapInStandardTemplate(content: string, logoUrl?: string): string {
     </noscript>
     <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #2c3e50; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); min-height: 100vh;">
+<body style="margin: 0; padding: 0; font-family: Georgia, 'Times New Roman', serif; line-height: 1.6; background-image: url('https://9f0afb12-d741-415b-9bbb-e40cfcba281a.lovableproject.com/assets/email-background.png'); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh; background-color: #8B7355;">
     <!-- Email Container -->
-    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); min-height: 100vh; padding: 40px 20px;">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="min-height: 100vh; padding: 60px 20px;">
         <tr>
             <td align="center" valign="top">
-                <!-- Main Content Card -->
-                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px -10px rgba(44, 62, 80, 0.15); overflow: hidden;">
-                    <!-- Header with Gradient -->
+                <!-- Main Content Card with Watercolor Background -->
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background: rgba(248, 245, 238, 0.95); border-radius: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px);">
+                    <!-- Header with Logo -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, hsl(196, 30%, 25%) 0%, hsl(196, 35%, 35%) 100%); padding: 32px; text-align: center;">
+                        <td style="padding: 40px 40px 20px 40px; text-align: center;">
                             ${emailOptimizedLogo}
-                            <div style="height: 4px; background: linear-gradient(90deg, hsl(43, 90%, 58%) 0%, hsl(43, 85%, 65%) 100%); border-radius: 2px; margin: 0 auto; width: 80px;"></div>
+                            <div style="height: 3px; background: linear-gradient(90deg, #D4AF37 0%, #F4E4BC 50%, #D4AF37 100%); border-radius: 2px; margin: 15px auto 0 auto; width: 120px;"></div>
                         </td>
                     </tr>
                     
                     <!-- Content Area -->
                     <tr>
-                        <td style="padding: 40px 32px; background: #ffffff;">
-                            <div style="color: hsl(216, 19%, 27%); font-size: 16px; line-height: 1.7;">
+                        <td style="padding: 20px 50px 40px 50px;">
+                            <div style="color: #4A4A4A; font-size: 16px; line-height: 1.8; text-align: left;">
                                 ${content}
                             </div>
                         </td>
@@ -92,11 +92,11 @@ function wrapInStandardTemplate(content: string, logoUrl?: string): string {
                     
                     <!-- Footer with Accent -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, hsl(220, 14%, 98%) 0%, hsl(220, 14%, 96%) 100%); padding: 24px 32px; border-top: 3px solid hsl(43, 90%, 58%); text-align: center;">
-                            <p style="margin: 0; color: hsl(220, 9%, 46%); font-size: 14px;">
+                        <td style="background: rgba(212, 175, 55, 0.1); padding: 30px 40px; border-top: 2px solid rgba(212, 175, 55, 0.3); text-align: center;">
+                            <p style="margin: 0; color: #6B5B47; font-size: 14px; font-weight: 500;">
                                 © ${new Date().getFullYear()} HESS Consortium. All rights reserved.
                             </p>
-                            <p style="margin: 8px 0 0 0; color: hsl(220, 9%, 46%); font-size: 12px;">
+                            <p style="margin: 8px 0 0 0; color: #8B7355; font-size: 12px;">
                                 This email was sent from the HESS Consortium Member Portal
                             </p>
                         </td>
