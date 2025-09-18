@@ -13,12 +13,6 @@ export default function RegistrationConfirmation() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  
-  // Debug logging
-  console.log('🎯 CONFIRMATION DEBUG: Page loaded');
-  console.log('🔍 CONFIRMATION DEBUG: URL params:', Object.fromEntries(searchParams));
-  console.log('📝 CONFIRMATION DEBUG: Type parameter:', typeParam);
-  console.log('🔄 CONFIRMATION DEBUG: isReassignment:', isReassignment);
 
   const title = isReassignment 
     ? 'Member Information Update Request Submitted'
@@ -28,21 +22,11 @@ export default function RegistrationConfirmation() {
     ? 'Your member information update request has been received and is currently under review by our administrative team.'
     : 'Your membership application has been received and is currently under review by our administrative team.';
 
-  console.log('📋 CONFIRMATION DEBUG: Rendering with title:', title);
-  console.log('📄 CONFIRMATION DEBUG: Rendering with description:', description);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex items-start justify-center pt-8 p-4">
       <div className="w-full max-w-2xl">
         <Card className="border-border/50 shadow-2xl bg-card/95 backdrop-blur-sm">
           <CardContent className="p-12 text-center space-y-8">
-            {/* Debug info - only visible in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded mb-4">
-                DEBUG: type={typeParam}, isReassignment={String(isReassignment)}
-              </div>
-            )}
-
             {/* Logo */}
             <div className="flex justify-center mb-8">
               <img 
@@ -50,7 +34,6 @@ export default function RegistrationConfirmation() {
                 alt="The HESS Consortium" 
                 className="h-24 w-auto object-contain"
                 onError={(e) => {
-                  console.error('🖼️ CONFIRMATION DEBUG: Logo failed to load');
                   e.currentTarget.style.display = 'none';
                 }}
               />
