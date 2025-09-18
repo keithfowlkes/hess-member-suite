@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,8 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PendingRegistration } from '@/hooks/usePendingRegistrations';
 import { useAuth } from '@/hooks/useAuth';
 import { useSendInvoice } from '@/hooks/useSendInvoice';
+import { useFeeTiers } from '@/hooks/useFeeTiers';
 import { Mail, DollarSign, Calendar, FileText, Eye } from 'lucide-react';
 import { InvoicePreviewModal } from '@/components/InvoicePreviewModal';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface PendingRegistrationApprovalDialogProps {
   open: boolean;
@@ -33,12 +36,31 @@ export function PendingRegistrationApprovalDialog({
   const [rejectionReason, setRejectionReason] = useState('');
   const [showInvoiceOptions, setShowInvoiceOptions] = useState(false);
   const [sendInvoice, setSendInvoice] = useState(false);
+  const [selectedFeeTier, setSelectedFeeTier] = useState('full');
   const [invoiceAmount, setInvoiceAmount] = useState('1000');
   const [membershipStartDate, setMembershipStartDate] = useState('');
   const [invoiceNotes, setInvoiceNotes] = useState('');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const { user } = useAuth();
   const sendInvoiceMutation = useSendInvoice();
+  const { feeTiers } = useFeeTiers();
+
+  // Reset form when dialog opens/closes or fee tiers change
+  React.useEffect(() => {
+    if (!open) {
+      setSendInvoice(false);
+      setSelectedFeeTier('full');
+      setShowInvoiceOptions(false);
+      setMembershipStartDate('');
+      setInvoiceNotes('');
+    }
+    
+    // Set default invoice amount to full member fee
+    const fullTier = feeTiers.find(t => t.id === 'full');
+    if (fullTier) {
+      setInvoiceAmount(fullTier.amount.toString());
+    }
+  }, [open, feeTiers]);
 
   // Calculate prorated amount based on membership start date
   const calculateProratedAmount = () => {
@@ -122,10 +144,6 @@ export function PendingRegistrationApprovalDialog({
         onOpenChange(false);
         setShowRejectForm(false);
         setRejectionReason('');
-        setSendInvoice(false);
-        setShowInvoiceOptions(false);
-        setMembershipStartDate('');
-        setInvoiceNotes('');
       }
     } finally {
       setIsSubmitting(false);
@@ -321,15 +339,28 @@ export function PendingRegistrationApprovalDialog({
                 <div className="space-y-4 pl-6 border-l-2 border-blue-200">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="invoice-amount">Annual Membership Fee ($)</Label>
-                      <Input
-                        id="invoice-amount"
-                        type="number"
-                        value={invoiceAmount}
-                        onChange={(e) => setInvoiceAmount(e.target.value)}
-                        min="0"
-                        step="0.01"
-                      />
+                      <Label htmlFor="fee-tier">Annual Membership Fee Tier</Label>
+                      <Select 
+                        value={selectedFeeTier} 
+                        onValueChange={(value) => {
+                          setSelectedFeeTier(value);
+                          const tier = feeTiers.find(t => t.id === value);
+                          if (tier) {
+                            setInvoiceAmount(tier.amount.toString());
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select fee tier" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {feeTiers.map((tier) => (
+                            <SelectItem key={tier.id} value={tier.id}>
+                              {tier.name} - ${tier.amount.toLocaleString()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label htmlFor="membership-start-date" className="flex items-center gap-2">

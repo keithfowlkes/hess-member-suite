@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { PendingRegistration } from '@/hooks/usePendingRegistrations';
 import { useAuth } from '@/hooks/useAuth';
 import { useSendInvoice } from '@/hooks/useSendInvoice';
+import { useFeeTiers } from '@/hooks/useFeeTiers';
 import { 
   CheckCircle, 
   XCircle, 
@@ -54,12 +55,14 @@ export function StreamlinedApprovalDialog({
   
   // Invoice options
   const [sendInvoice, setSendInvoice] = useState(false);
+  const [selectedFeeTier, setSelectedFeeTier] = useState('full');
   const [invoiceAmount, setInvoiceAmount] = useState('1000');
   const [membershipStartDate, setMembershipStartDate] = useState('');
   const [invoiceNotes, setInvoiceNotes] = useState('');
   
   const { user } = useAuth();
   const sendInvoiceMutation = useSendInvoice();
+  const { feeTiers } = useFeeTiers();
 
   // Reset form when dialog closes
   React.useEffect(() => {
@@ -69,10 +72,16 @@ export function StreamlinedApprovalDialog({
       setPriority('normal');
       setAdminNotes('');
       setSendInvoice(false);
+      setSelectedFeeTier('full');
       setMembershipStartDate('');
       setInvoiceNotes('');
+      // Set default invoice amount to full member fee when dialog opens
+      const fullTier = feeTiers.find(t => t.id === 'full');
+      if (fullTier) {
+        setInvoiceAmount(fullTier.amount.toString());
+      }
     }
-  }, [open]);
+  }, [open, feeTiers]);
 
   const calculateProratedAmount = () => {
     if (!membershipStartDate || !invoiceAmount) return null;
@@ -374,14 +383,28 @@ export function StreamlinedApprovalDialog({
                     <div className="space-y-4 pl-6 border-l-2 border-green-200">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>Annual Fee ($)</Label>
-                          <Input
-                            type="number"
-                            value={invoiceAmount}
-                            onChange={(e) => setInvoiceAmount(e.target.value)}
-                            min="0"
-                            step="0.01"
-                          />
+                          <Label>Annual Fee Tier</Label>
+                          <Select 
+                            value={selectedFeeTier} 
+                            onValueChange={(value) => {
+                              setSelectedFeeTier(value);
+                              const tier = feeTiers.find(t => t.id === value);
+                              if (tier) {
+                                setInvoiceAmount(tier.amount.toString());
+                              }
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select fee tier" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {feeTiers.map((tier) => (
+                                <SelectItem key={tier.id} value={tier.id}>
+                                  {tier.name} - ${tier.amount.toLocaleString()}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <Label>Membership Start Date</Label>
