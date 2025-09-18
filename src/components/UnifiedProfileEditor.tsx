@@ -136,6 +136,37 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
     });
   };
 
+  // Special handler for address fields that need to sync between profile and organization
+  const updateAddressField = (field: 'address' | 'city' | 'state' | 'zip', value: any) => {
+    // Update profile field
+    setEditedData(prev => ({
+      ...prev,
+      profile: {
+        ...prev.profile,
+        [field]: value
+      }
+    }));
+
+    // Also update corresponding organization field if organization exists
+    if (editedData.organization) {
+      const orgFieldMap = {
+        address: 'address_line_1',
+        city: 'city',
+        state: 'state', 
+        zip: 'zip_code'
+      };
+      
+      const orgField = orgFieldMap[field];
+      setEditedData(prev => ({
+        ...prev,
+        organization: prev.organization ? {
+          ...prev.organization,
+          [orgField]: value
+        } : prev.organization
+      }));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
@@ -240,7 +271,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               <Input
                 id="address"
                 value={editedData.profile.address || ''}
-                onChange={(e) => updateProfileField('address', e.target.value)}
+                onChange={(e) => updateAddressField('address', e.target.value)}
                 disabled={!isEditing}
               />
             </div>
@@ -249,7 +280,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               <Input
                 id="city"
                 value={editedData.profile.city || ''}
-                onChange={(e) => updateProfileField('city', e.target.value)}
+                onChange={(e) => updateAddressField('city', e.target.value)}
                 disabled={!isEditing}
               />
             </div>
@@ -258,7 +289,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               <Input
                 id="state"
                 value={editedData.profile.state || ''}
-                onChange={(e) => updateProfileField('state', e.target.value)}
+                onChange={(e) => updateAddressField('state', e.target.value)}
                 disabled={!isEditing}
               />
             </div>
@@ -267,7 +298,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               <Input
                 id="zip"
                 value={editedData.profile.zip || ''}
-                onChange={(e) => updateProfileField('zip', e.target.value)}
+                onChange={(e) => updateAddressField('zip', e.target.value)}
                 disabled={!isEditing}
               />
             </div>
