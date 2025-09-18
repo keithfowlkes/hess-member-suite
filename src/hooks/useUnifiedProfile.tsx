@@ -434,8 +434,8 @@ export function useUnifiedProfile(userId?: string) {
         }
       }
 
-      // Refresh data
-      await fetchUnifiedProfile();
+      // Don't manually refresh - realtime subscription will handle it
+      console.log('🚀 Primary contact update completed successfully');
 
       toast({
         title: 'Success',
