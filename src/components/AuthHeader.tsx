@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import headerImage from '@/assets/memberportalheader-final.png';
+import headerImage from '@/assets/memberportal-header-master.png';
 import { supabase } from '@/integrations/supabase/client';
 
 export const AuthHeader = () => {
