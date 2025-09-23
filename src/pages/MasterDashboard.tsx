@@ -46,6 +46,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -98,7 +101,8 @@ import {
   Search,
   MoreVertical,
   ChevronDown,
-  Activity
+  Activity,
+  Check
 } from 'lucide-react';
 import { SystemHealthStatus } from '@/components/SystemHealthStatus';
 import { format } from 'date-fns';
@@ -460,24 +464,9 @@ const MasterDashboard = () => {
     setShowApprovalDialog(true);
   };
 
-  const handleRoleUpdate = async (userId: string, currentRole: string = 'member') => {
+  const setUserRole = async (userId: string, newRole: 'admin' | 'member' | 'cohort_leader') => {
     setUpdatingUser(userId);
     try {
-      // Cycle through roles: member -> cohort_leader -> admin -> member
-      let newRole: 'admin' | 'member' | 'cohort_leader';
-      switch (currentRole) {
-        case 'member':
-          newRole = 'cohort_leader';
-          break;
-        case 'cohort_leader':
-          newRole = 'admin';
-          break;
-        case 'admin':
-          newRole = 'member';
-          break;
-        default:
-          newRole = 'cohort_leader';
-      }
       await updateUserRole(userId, newRole);
     } catch (error) {
       console.error('Role update failed:', error);
@@ -1245,17 +1234,45 @@ const MasterDashboard = () => {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem 
-                                    onClick={() => handleRoleUpdate(user.user_id, user.user_roles?.[0]?.role || 'member')}
-                                    disabled={updatingUser === user.user_id}
-                                  >
-                                    {updatingUser === user.user_id ? (
-                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    ) : (
-                                      <UserPlus className="h-4 w-4 mr-2" />
-                                    )}
-                                    Toggle Admin Role
-                                  </DropdownMenuItem>
+                                  <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger disabled={updatingUser === user.user_id}>
+                                      {updatingUser === user.user_id ? (
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      ) : (
+                                        <UserPlus className="h-4 w-4 mr-2" />
+                                      )}
+                                      Set Role
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent>
+                                      <DropdownMenuItem 
+                                        onClick={() => setUserRole(user.user_id, 'member')}
+                                        className={user.user_roles?.[0]?.role === 'member' ? 'bg-accent' : ''}
+                                      >
+                                        Member
+                                        {user.user_roles?.[0]?.role === 'member' && (
+                                          <Check className="ml-auto h-4 w-4" />
+                                        )}
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem 
+                                        onClick={() => setUserRole(user.user_id, 'cohort_leader')}
+                                        className={user.user_roles?.[0]?.role === 'cohort_leader' ? 'bg-accent' : ''}
+                                      >
+                                        Cohort Leader
+                                        {user.user_roles?.[0]?.role === 'cohort_leader' && (
+                                          <Check className="ml-auto h-4 w-4" />
+                                        )}
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem 
+                                        onClick={() => setUserRole(user.user_id, 'admin')}
+                                        className={user.user_roles?.[0]?.role === 'admin' ? 'bg-accent' : ''}
+                                      >
+                                        Admin
+                                        {user.user_roles?.[0]?.role === 'admin' && (
+                                          <Check className="ml-auto h-4 w-4" />
+                                        )}
+                                      </DropdownMenuItem>
+                                    </DropdownMenuSubContent>
+                                  </DropdownMenuSub>
                                   <DropdownMenuItem onClick={() => handlePasswordReset(user.email)}>
                                     <KeyRound className="h-4 w-4 mr-2" />
                                     Reset Password
