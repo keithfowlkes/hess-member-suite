@@ -453,6 +453,14 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         </CardContent>
       </Card>
 
+      {/* Cohort Memberships */}
+      <MemberCohortSelector 
+        userId={user?.id}
+        disabled={!isEditing}
+        title="Professional Cohort Memberships"
+        description="Join cohort groups to connect with peers using the same software systems"
+      />
+
       {/* Software Systems */}
       <Card>
         <CardHeader>
@@ -597,14 +605,6 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
           </div>
         </CardContent>
       </Card>
-
-      {/* Cohort Memberships */}
-      <MemberCohortSelector 
-        userId={user?.id}
-        disabled={!isEditing}
-        title="Professional Cohort Memberships"
-        description="Join cohort groups to connect with peers using the same software systems"
-      />
     </div>
   );
 };
