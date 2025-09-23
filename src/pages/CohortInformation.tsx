@@ -301,7 +301,7 @@ const handleOrganizationDialogClose = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5" />
-                    Your Cohort Overview
+                    Your {cohortLeaderData?.userCohorts.join(', ')} Cohort Overview
                   </CardTitle>
                   <CardDescription>
                     Statistics for the cohort groups you lead: {cohortLeaderData?.userCohorts.join(', ')}
