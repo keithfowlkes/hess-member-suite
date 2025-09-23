@@ -267,24 +267,27 @@ const CohortInformation = () => {
                                   dataKey="value"
                                   style={{ fontSize: '10px' }}
                                 >
-                                  {cohortStats.map((_, index) => (
-                                    <Cell key={`cell-${index}`} fill={[
-                                      '#FF6B6B', // Red
-                                      '#4ECDC4', // Teal
-                                      '#45B7D1', // Blue
-                                      '#96CEB4', // Green
-                                      '#FFEAA7', // Yellow
-                                      '#DDA0DD', // Plum
-                                      '#98D8C8', // Mint
-                                      '#F7DC6F', // Light Yellow
-                                      '#BB8FCE', // Light Purple
-                                      '#85C1E9', // Light Blue
-                                      '#F8C471', // Orange
-                                      '#82E0AA', // Light Green
-                                      '#F1948A', // Light Red
-                                      '#85CCDA', // Cyan
-                                      '#D2B4DE'  // Lavender
-                                    ][index]} />
+                                  {cohortStats.map((cohort, index) => (
+                                    <Cell key={`cell-${index}`} fill={
+                                      cohort.cohortName === 'Workday' ? '#FF8C00' : // Orange for Workday
+                                      [
+                                        '#FF6B6B', // Red
+                                        '#4ECDC4', // Teal
+                                        '#45B7D1', // Blue
+                                        '#96CEB4', // Green
+                                        '#FFEAA7', // Yellow
+                                        '#DDA0DD', // Plum
+                                        '#98D8C8', // Mint
+                                        '#F7DC6F', // Light Yellow
+                                        '#BB8FCE', // Light Purple
+                                        '#85C1E9', // Light Blue
+                                        '#F8C471', // Orange
+                                        '#82E0AA', // Light Green
+                                        '#F1948A', // Light Red
+                                        '#85CCDA', // Cyan
+                                        '#D2B4DE'  // Lavender
+                                      ][index]
+                                    } />
                                   ))}
                                 </Pie>
                                 <Tooltip 
