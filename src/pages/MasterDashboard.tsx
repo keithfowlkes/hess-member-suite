@@ -1229,10 +1229,10 @@ const MasterDashboard = () => {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem 
-                                    onClick={() => handleRoleUpdate(user.id)}
-                                    disabled={updatingUser === user.id}
+                                    onClick={() => handleRoleUpdate(user.user_id)}
+                                    disabled={updatingUser === user.user_id}
                                   >
-                                    {updatingUser === user.id ? (
+                                    {updatingUser === user.user_id ? (
                                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                     ) : (
                                       <UserPlus className="h-4 w-4 mr-2" />
