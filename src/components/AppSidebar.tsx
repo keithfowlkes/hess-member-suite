@@ -43,17 +43,34 @@ export function AppSidebar() {
       if (!user) return;
       
       try {
-        const { data: roleData } = await supabase
+        const { data: roleData, error } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', user.id)
-          .single();
+          .eq('user_id', user.id);
           
-        if (roleData) {
-          setUserRole(roleData.role);
+        console.log('User roles fetched:', roleData, 'for user:', user.id);
+        
+        if (error) {
+          console.error('Error fetching user roles:', error);
+          return;
+        }
+        
+        if (roleData && roleData.length > 0) {
+          // Check if user has admin role first, then cohort_leader, then default to member
+          const roles = roleData.map(r => r.role);
+          if (roles.includes('admin')) {
+            setUserRole('admin');
+          } else if (roles.includes('cohort_leader')) {
+            setUserRole('cohort_leader');
+          } else {
+            setUserRole('member');
+          }
+        } else {
+          setUserRole('member');
         }
       } catch (error) {
         console.error('Error fetching user role:', error);
+        setUserRole('member');
       }
     };
     
@@ -62,6 +79,8 @@ export function AppSidebar() {
   
   // Check if user can access cohort information
   const canAccessCohortInfo = userRole === 'admin' || userRole === 'cohort_leader';
+  
+  console.log('Sidebar - userRole:', userRole, 'canAccessCohortInfo:', canAccessCohortInfo);
   
   // Fetch pending action counts for admin
   const { pendingOrganizations } = useOrganizationApprovals();
