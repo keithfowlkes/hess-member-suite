@@ -1210,8 +1210,10 @@ const MasterDashboard = () => {
                             </TableCell>
                             <TableCell>{user.organization || 'Not specified'}</TableCell>
                             <TableCell>
-                              <Badge variant="outline">
-                                member
+                              <Badge variant={
+                                user.user_roles?.[0]?.role === 'admin' ? 'default' : 'outline'
+                              }>
+                                {user.user_roles?.[0]?.role || 'member'}
                               </Badge>
                             </TableCell>
                             <TableCell>
