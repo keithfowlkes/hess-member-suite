@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCohortStatistics } from '@/hooks/useCohortStatistics';
 import { useCohortLeaderData } from '@/hooks/useCohortLeaderData';
-import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart, Search, User } from 'lucide-react';
+import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart, Search, User, Download } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -144,6 +144,45 @@ const CohortInformation = () => {
       `${org.city || ''} ${org.state || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
     )
   })).filter(cohort => cohort.organizations.length > 0 || searchTerm === '') || [];
+
+  // CSV download function for cohort members
+  const downloadCohortMembersCSV = () => {
+    if (!cohortLeaderData?.cohortMembers) return;
+
+    const headers = [
+      'First Name',
+      'Last Name', 
+      'Email',
+      'Organization',
+      'Title',
+      'City',
+      'State'
+    ];
+
+    const csvData = cohortLeaderData.cohortMembers.map(member => [
+      member.first_name || '',
+      member.last_name || '',
+      member.email || '',
+      member.organization || '',
+      member.primary_contact_title || '',
+      member.city || '',
+      member.state || ''
+    ]);
+
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `cohort-members-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Redirect if user doesn't have appropriate role (only for non-admin view)
   if (!loading && !isViewingAsAdmin && userRole !== 'admin' && userRole !== 'cohort_leader') {
@@ -308,9 +347,22 @@ const CohortInformation = () => {
               {/* Cohort Members Directory */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Cohort Members Directory
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Cohort Members Directory
+                    </div>
+                    {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={downloadCohortMembersCSV}
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download CSV
+                      </Button>
+                    )}
                   </CardTitle>
                   <CardDescription>
                     All members in your cohort groups
