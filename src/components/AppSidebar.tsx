@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search, Map, MessageSquare } from 'lucide-react';
+import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search, Map, MessageSquare, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
 import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
 import { useReassignmentRequests } from '@/hooks/useReassignmentRequests';
@@ -12,6 +13,7 @@ import { AdminCustomEntriesNotification } from '@/components/AdminCustomEntriesN
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -29,8 +31,37 @@ import {
 
 export function AppSidebar() {
   const { state } = useSidebar();
-  const { isAdmin, isViewingAsAdmin, toggleViewMode, signOut } = useAuth();
+  const { isAdmin, isViewingAsAdmin, toggleViewMode, signOut, user } = useAuth();
   const location = useLocation();
+  
+  // State for user role
+  const [userRole, setUserRole] = useState<string>('member');
+
+  // Fetch user role
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (roleData) {
+          setUserRole(roleData.role);
+        }
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+      }
+    };
+    
+    fetchUserRole();
+  }, [user]);
+  
+  // Check if user can access cohort information
+  const canAccessCohortInfo = userRole === 'admin' || userRole === 'cohort_leader';
   
   // Fetch pending action counts for admin
   const { pendingOrganizations } = useOrganizationApprovals();
@@ -61,6 +92,7 @@ export function AppSidebar() {
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
     { title: 'Organization Profile', url: '/profile', icon: User },
     { title: 'Settings', url: '/settings', icon: Settings },
+    ...(canAccessCohortInfo ? [{ title: 'Your Cohort Information', url: '/cohort-information', icon: GraduationCap }] : []),
   ];
 
   const memberItems = [
@@ -70,6 +102,7 @@ export function AppSidebar() {
     { title: 'Member Map', url: '/public-map', icon: Map },
     { title: 'My Invoices', url: '/invoices', icon: FileText },
     { title: 'Organization Profile', url: '/profile', icon: User },
+    ...(canAccessCohortInfo ? [{ title: 'Your Cohort Information', url: '/cohort-information', icon: GraduationCap }] : []),
   ];
 
   const items = isViewingAsAdmin ? adminItems : memberItems;
