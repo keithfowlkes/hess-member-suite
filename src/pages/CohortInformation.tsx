@@ -52,18 +52,29 @@ const CohortInformation = () => {
         const { data: userRoleData, error: roleError } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', user.id)
-          .single();
+          .eq('user_id', user.id);
 
         if (roleError) {
           console.error('Error fetching user role:', roleError);
           return;
         }
 
-        setUserRole(userRoleData?.role || 'member');
+        // Determine the user's primary role (admin > cohort_leader > member)
+        let primaryRole = 'member';
+        if (userRoleData && userRoleData.length > 0) {
+          const roles = userRoleData.map(r => r.role);
+          if (roles.includes('admin')) {
+            primaryRole = 'admin';
+          } else if (roles.includes('cohort_leader')) {
+            primaryRole = 'cohort_leader';
+          }
+        }
+
+        setUserRole(primaryRole);
+        console.log('CohortInformation - User roles:', userRoleData, 'Primary role:', primaryRole);
 
         // Check if user is admin or cohort leader
-        if (userRoleData?.role === 'admin' || userRoleData?.role === 'cohort_leader') {
+        if (primaryRole === 'admin' || primaryRole === 'cohort_leader') {
           // Fetch all users with their roles
           const { data: usersData, error: usersError } = await supabase
             .from('profiles')
