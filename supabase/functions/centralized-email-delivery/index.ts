@@ -422,7 +422,13 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const emailRequest: EmailRequest = await req.json();
-    console.log('Centralized email request:', { type: emailRequest.type, to: emailRequest.to });
+    console.log('[centralized-email-delivery] Incoming request:', { 
+      type: emailRequest.type, 
+      to: emailRequest.to,
+      hasSubject: !!emailRequest.subject,
+      hasTemplate: !!emailRequest.template,
+      hasData: !!emailRequest.data
+    });
 
     // Validate email request
     const validation = await validateEmailDelivery(emailRequest);
