@@ -352,6 +352,9 @@ const MasterDashboard = () => {
     const searchLower = userSearchTerm.toLowerCase();
     return (
       user.email.toLowerCase().includes(searchLower) ||
+      user.first_name.toLowerCase().includes(searchLower) ||
+      user.last_name.toLowerCase().includes(searchLower) ||
+      (user.organization && user.organization.toLowerCase().includes(searchLower)) ||
       user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower)
     );
   }).sort((a, b) => {
@@ -1249,9 +1252,9 @@ const MasterDashboard = () => {
                           <TableRow key={user.id}>
                             <TableCell>
                               <div>
-                                <p className="font-medium">{user.email}</p>
+                                <p className="font-medium">{user.first_name} {user.last_name}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  {user.organization || 'No organization'}
+                                  {user.email}
                                 </p>
                               </div>
                             </TableCell>
