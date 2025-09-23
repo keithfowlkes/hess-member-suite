@@ -159,7 +159,9 @@ const CohortInformation = () => {
       'State'
     ];
 
-    const csvData = cohortLeaderData.cohortMembers.map(member => [
+    const csvData = [...cohortLeaderData.cohortMembers]
+      .sort((a, b) => (a.last_name || '').localeCompare(b.last_name || ''))
+      .map(member => [
       member.first_name || '',
       member.last_name || '',
       member.email || '',
@@ -342,9 +344,11 @@ const CohortInformation = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
-                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {cohortLeaderData.cohortMembers.map((member) => (
+                     {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
+                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                         {[...cohortLeaderData.cohortMembers]
+                           .sort((a, b) => (a.last_name || '').localeCompare(b.last_name || ''))
+                           .map((member) => (
                           <Card key={member.id} className="border bg-muted/20">
                             <CardContent className="p-4">
                               <div className="space-y-2">
