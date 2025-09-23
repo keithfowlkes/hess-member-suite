@@ -352,12 +352,15 @@ const MasterDashboard = () => {
       user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower)
     );
   }).sort((a, b) => {
-    // Sort by role first (admin before member), then by email
+    // Sort by role first (admin > cohort_leader > member), then by email
     const roleA = a.user_roles?.[0]?.role || 'member';
     const roleB = b.user_roles?.[0]?.role || 'member';
     
     if (roleA !== roleB) {
-      return roleA === 'admin' ? -1 : 1;
+      const roleOrder = { admin: 0, cohort_leader: 1, member: 2 };
+      const orderA = roleOrder[roleA as keyof typeof roleOrder] ?? 2;
+      const orderB = roleOrder[roleB as keyof typeof roleOrder] ?? 2;
+      return orderA - orderB;
     }
     
     // Then sort by email
