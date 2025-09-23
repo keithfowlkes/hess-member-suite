@@ -169,6 +169,7 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
   
   console.log('[wrapInStandardTemplate] Template generation complete, length:', finalTemplate.length);
   return finalTemplate;
+}
 
 // Function to get and replace logo URL in template with proper email embedding
 async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
