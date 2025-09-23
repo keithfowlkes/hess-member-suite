@@ -370,6 +370,9 @@ const CohortInformation = () => {
                       <GraduationCap className="h-5 w-5" />
                       Software System Cohorts
                     </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Cohort numbers are based on financial system reporting.
+                    </p>
                     
                     {(!cohortStats || cohortStats.length === 0) ? (
                       <Card>
