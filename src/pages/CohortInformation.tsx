@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Users, GraduationCap, Building2, MapPin, Calendar, Mail } from 'lucide-react';
+import { useCohortStatistics } from '@/hooks/useCohortStatistics';
+import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp } from 'lucide-react';
 
 interface CohortMember {
   id: string;
@@ -25,11 +26,12 @@ interface CohortMember {
 }
 
 const CohortInformation = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isViewingAsAdmin } = useAuth();
   const { toast } = useToast();
   const [cohortMembers, setCohortMembers] = useState<CohortMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string>('member');
+  const { data: cohortStats, isLoading: statsLoading, error: statsError } = useCohortStatistics();
 
   useEffect(() => {
     const fetchCohortInformation = async () => {
@@ -112,8 +114,8 @@ const CohortInformation = () => {
     fetchCohortInformation();
   }, [user, toast]);
 
-  // Redirect if user doesn't have appropriate role
-  if (!loading && userRole !== 'admin' && userRole !== 'cohort_leader') {
+  // Redirect if user doesn't have appropriate role (only for non-admin view)
+  if (!loading && !isViewingAsAdmin && userRole !== 'admin' && userRole !== 'cohort_leader') {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
@@ -137,6 +139,156 @@ const CohortInformation = () => {
                   </Button>
                 </CardContent>
               </Card>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
+  // Show admin view when viewing as admin
+  if (isViewingAsAdmin) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <main className="flex-1 p-8">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">Cohort Information</h1>
+                  <p className="text-muted-foreground">
+                    View cohort membership statistics and organization participation across all professional cohorts
+                  </p>
+                </div>
+                <Badge variant="default">Admin View</Badge>
+              </div>
+
+              {statsLoading ? (
+                <div className="grid gap-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Card key={i} className="animate-pulse">
+                      <CardContent className="p-6">
+                        <div className="h-6 bg-muted rounded mb-2"></div>
+                        <div className="h-4 bg-muted rounded mb-1"></div>
+                        <div className="h-4 bg-muted rounded w-2/3"></div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : statsError ? (
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <p className="text-destructive">Failed to load cohort statistics</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-6">
+                  {/* Overview Statistics */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5" />
+                        Cohort Overview
+                      </CardTitle>
+                      <CardDescription>
+                        High-level statistics across all professional cohorts
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid gap-4 md:grid-cols-4">
+                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold">
+                            {cohortStats?.reduce((sum, cohort) => sum + cohort.memberCount, 0) || 0}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Total Members</div>
+                        </div>
+                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold">
+                            {cohortStats?.reduce((sum, cohort) => sum + cohort.organizationCount, 0) || 0}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Total Organizations</div>
+                        </div>
+                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold">
+                            {cohortStats?.length || 0}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Active Cohorts</div>
+                        </div>
+                        <div className="text-center p-4 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold">
+                            {cohortStats ? Math.round((cohortStats.reduce((sum, cohort) => sum + cohort.memberCount, 0) / Math.max(cohortStats.reduce((sum, cohort) => sum + cohort.organizationCount, 0), 1)) * 10) / 10 : 0}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Avg Members/Org</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Individual Cohort Statistics */}
+                  <div className="grid gap-4">
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5" />
+                      Professional Cohorts
+                    </h2>
+                    
+                    {cohortStats && cohortStats.length === 0 ? (
+                      <Card>
+                        <CardContent className="p-6 text-center">
+                          <p className="text-muted-foreground">No cohort data available.</p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {cohortStats?.map((cohort) => (
+                          <Card key={cohort.cohortName} className="hover:shadow-md transition-shadow">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg">{cohort.cohortName}</CardTitle>
+                              <CardDescription>
+                                Professional cohort group statistics
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="text-center p-3 bg-primary/5 rounded-lg">
+                                  <div className="text-xl font-bold text-primary">{cohort.memberCount}</div>
+                                  <div className="text-xs text-muted-foreground">Members</div>
+                                </div>
+                                <div className="text-center p-3 bg-secondary/5 rounded-lg">
+                                  <div className="text-xl font-bold text-secondary-foreground">{cohort.organizationCount}</div>
+                                  <div className="text-xs text-muted-foreground">Organizations</div>
+                                </div>
+                              </div>
+                              
+                              {cohort.organizations.length > 0 && (
+                                <div className="space-y-2">
+                                  <div className="text-sm font-medium flex items-center gap-1">
+                                    <Building2 className="h-4 w-4" />
+                                    Top Organizations
+                                  </div>
+                                  <div className="space-y-1">
+                                    {cohort.organizations
+                                      .sort((a, b) => b.memberCount - a.memberCount)
+                                      .slice(0, 3)
+                                      .map((org) => (
+                                        <div key={org.id} className="flex justify-between items-center text-xs">
+                                          <span className="truncate flex-1">{org.name}</span>
+                                          <Badge variant="outline" className="ml-2 text-xs">
+                                            {org.memberCount} {org.memberCount === 1 ? 'member' : 'members'}
+                                          </Badge>
+                                        </div>
+                                      ))}
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </main>
         </div>
