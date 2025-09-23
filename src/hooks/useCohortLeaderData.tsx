@@ -11,6 +11,9 @@ export interface CohortMemberDetails {
   city?: string;
   state?: string;
   primary_contact_title?: string;
+  user_roles: {
+    role: 'admin' | 'member' | 'cohort_leader';
+  }[];
 }
 
 export interface CohortLeaderData {
@@ -111,8 +114,18 @@ export function useCohortLeaderData() {
           `)
           .in('user_id', userIds);
 
+        // Get user roles for all users
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('user_id, role')
+          .in('user_id', userIds);
+
         if (profilesError) {
           throw new Error('Failed to fetch profiles');
+        }
+
+        if (rolesError) {
+          throw new Error('Failed to fetch user roles');
         }
 
         if (!profilesData || profilesData.length === 0) {
@@ -131,6 +144,14 @@ export function useCohortLeaderData() {
 
         // Create a map of user_id to profile for easier lookup
         const profileMap = new Map(profilesData.map(profile => [profile.user_id, profile]));
+        
+        // Create a map of user_id to roles for easier lookup
+        const rolesMap = new Map<string, { role: 'admin' | 'member' | 'cohort_leader' }[]>();
+        rolesData?.forEach(roleRecord => {
+          const existingRoles = rolesMap.get(roleRecord.user_id) || [];
+          existingRoles.push({ role: roleRecord.role as 'admin' | 'member' | 'cohort_leader' });
+          rolesMap.set(roleRecord.user_id, existingRoles);
+        });
 
         // Process the data
         const cohortMembers: CohortMemberDetails[] = [];
@@ -140,6 +161,8 @@ export function useCohortLeaderData() {
 
         cohortMembersData?.forEach(item => {
           const profile = profileMap.get(item.user_id);
+          const userRoles = rolesMap.get(item.user_id) || [{ role: 'member' as const }];
+          
           if (profile) {
             cohortMembers.push({
               id: profile.id,
@@ -149,7 +172,8 @@ export function useCohortLeaderData() {
               organization: profile.organization || '',
               city: profile.city,
               state: profile.state,
-              primary_contact_title: profile.primary_contact_title
+              primary_contact_title: profile.primary_contact_title,
+              user_roles: userRoles
             });
 
             // Track organizations and states

@@ -367,7 +367,23 @@ const handleOrganizationDialogClose = () => {
                     {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {[...cohortLeaderData.cohortMembers]
-                          .sort((a, b) => (a.last_name || '').localeCompare(b.last_name || ''))
+                          .sort((a, b) => {
+                            // Define role priority
+                            const getRolePriority = (roles: {role: 'admin' | 'member' | 'cohort_leader'}[]) => {
+                              if (roles.some(r => r.role === 'admin')) return 1;
+                              if (roles.some(r => r.role === 'cohort_leader')) return 2;
+                              return 3; // member
+                            };
+                            
+                            const aPriority = getRolePriority(a.user_roles || []);
+                            const bPriority = getRolePriority(b.user_roles || []);
+                            
+                            // Sort by role priority first, then by last name
+                            if (aPriority !== bPriority) {
+                              return aPriority - bPriority;
+                            }
+                            return (a.last_name || '').localeCompare(b.last_name || '');
+                          })
                           .map((member) => (
                         <Card 
                           key={member.id} 
@@ -856,7 +872,25 @@ const handleOrganizationDialogClose = () => {
                   </Card>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {cohortMembers.map((member) => (
+                    {[...cohortMembers]
+                      .sort((a, b) => {
+                        // Define role priority
+                        const getRolePriority = (roles: {role: 'admin' | 'member' | 'cohort_leader'}[]) => {
+                          if (roles.some(r => r.role === 'admin')) return 1;
+                          if (roles.some(r => r.role === 'cohort_leader')) return 2;
+                          return 3; // member
+                        };
+                        
+                        const aPriority = getRolePriority(a.user_roles || []);
+                        const bPriority = getRolePriority(b.user_roles || []);
+                        
+                        // Sort by role priority first, then by last name
+                        if (aPriority !== bPriority) {
+                          return aPriority - bPriority;
+                        }
+                        return (a.last_name || '').localeCompare(b.last_name || '');
+                      })
+                      .map((member) => (
                       <Card key={member.id} className="hover:shadow-md transition-shadow">
                         <CardContent className="p-4">
                           <div className="space-y-2">
