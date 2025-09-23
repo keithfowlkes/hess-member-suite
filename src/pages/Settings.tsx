@@ -1056,7 +1056,7 @@ export default function Settings() {
                 </div>
                 
                 <Tabs defaultValue="email-testing" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+                  <TabsList className="grid w-full grid-cols-3 max-w-2xl">
                     <TabsTrigger value="email-testing" className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
                       Email System Testing
@@ -1065,13 +1065,9 @@ export default function Settings() {
                       <Settings2 className="h-4 w-4" />
                       Resend API Config
                     </TabsTrigger>
-                    <TabsTrigger value="message-text" className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Message Text
-                    </TabsTrigger>
-                    <TabsTrigger value="email-design" className="flex items-center gap-2">
+                    <TabsTrigger value="email-text-design" className="flex items-center gap-2">
                       <Palette className="h-4 w-4" />
-                      Email Design
+                      Email Text & Design
                     </TabsTrigger>
                   </TabsList>
 
@@ -1259,12 +1255,27 @@ export default function Settings() {
                       <ResendApiConfig />
                     </TabsContent>
 
-                  <TabsContent value="message-text" className="space-y-6">
-                    <MessageTextContent />
-                  </TabsContent>
-
-                  <TabsContent value="email-design" className="space-y-6">
-                    <EmailDesignManager />
+                  <TabsContent value="email-text-design" className="space-y-6">
+                    <Tabs defaultValue="message-text" className="space-y-6">
+                      <TabsList className="grid w-full grid-cols-2 max-w-md">
+                        <TabsTrigger value="message-text" className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          Message Text
+                        </TabsTrigger>
+                        <TabsTrigger value="design-settings" className="flex items-center gap-2">
+                          <Palette className="h-4 w-4" />
+                          Design Settings
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="message-text" className="space-y-6">
+                        <MessageTextContent />
+                      </TabsContent>
+                      
+                      <TabsContent value="design-settings" className="space-y-6">
+                        <EmailDesignManager />
+                      </TabsContent>
+                    </Tabs>
                   </TabsContent>
                 </Tabs>
                     </div>
