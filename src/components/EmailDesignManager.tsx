@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Loader2, Palette, Upload, Eye, Save, CheckCircle, AlertCircle, Image as ImageIcon, Settings2 } from 'lucide-react';
 import { useSystemSetting, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
@@ -33,6 +34,10 @@ export const EmailDesignManager = () => {
   const [cardBackground, setCardBackground] = useState('rgba(248, 245, 238, 0.95)');
   const [uploadLoading, setUploadLoading] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
+
+  // Preview modal state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewContent, setPreviewContent] = useState('');
 
   // Initialize state from settings
   useEffect(() => {
@@ -149,43 +154,104 @@ export const EmailDesignManager = () => {
     }
   };
 
-  const sendPreviewEmail = async () => {
+  const generatePreview = () => {
     setPreviewLoading(true);
+    
     try {
-      const response = await fetch('https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/centralized-email-delivery-public', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470'
-        },
-        body: JSON.stringify({
-          type: 'test',
-          to: ['admin@test.com'],
-          subject: 'Email Design Preview',
-          data: {
-            test_message: 'This is a preview of your email design settings. The design includes your custom background, colors, and layout preferences.',
-            timestamp: new Date().toISOString(),
-            test_id: 'preview-' + Date.now(),
-            system_info: 'Design Preview Test'
-          },
-          preview: true
-        })
-      });
+      // Generate preview HTML with current design settings
+      const logoSetting = { setting_value: 'https://9f0afb12-d741-415b-9bbb-e40cfcba281a.lovableproject.com/assets/hess-logo.png' };
+      const logoUrl = logoSetting?.setting_value;
+      const emailOptimizedLogo = logoUrl 
+        ? `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto 20px auto;" border="0">`
+        : '';
 
-      const result = await response.json();
+      // Determine background style based on current design settings
+      const backgroundStyle = backgroundImage 
+        ? `background-image: url('${backgroundImage}'); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh; background-color: ${primaryColor};`
+        : `background: linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%); min-height: 100vh;`;
+
+      // Sample email content for preview
+      const sampleContent = `
+        <p style="color: ${textColor}; font-size: 16px; line-height: 1.8; margin: 0 0 20px 0;">Dear John Smith,</p>
+        
+        <p style="color: ${textColor}; font-size: 16px; line-height: 1.8; margin: 0 0 20px 0;">This is a preview of your email design settings. Your emails will use this beautiful design with your selected colors, background, and styling.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="#" style="background: linear-gradient(135deg, ${primaryColor}, ${accentColor}); color: white; padding: 16px 32px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(139, 115, 85, 0.3);">Sample Action Button</a>
+        </div>
+        
+        <p style="color: ${textColor}; font-size: 16px; line-height: 1.8; margin: 0 0 20px 0;">All your email templates including welcome messages, password resets, member updates, and system notifications will use this design.</p>
+        
+        <p style="color: ${textColor}; font-size: 16px; line-height: 1.8; margin: 0 0 30px 0;">Thank you for using the HESS Consortium Member Portal!</p>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid ${accentColor}50;">
+          <p style="color: ${primaryColor}; font-size: 16px; font-weight: bold; margin: 5px 0;">The HESS Consortium</p>
+          <p style="color: ${textColor}; font-size: 14px; margin: 5px 0;">Member Portal System</p>
+        </div>
+      `;
+
+      const previewHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HESS Consortium - Email Design Preview</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Georgia, 'Times New Roman', serif; line-height: 1.6; ${backgroundStyle}">
+    <!-- Email Container -->
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="min-height: 100vh; padding: 60px 20px;">
+        <tr>
+            <td align="center" valign="top">
+                <!-- Main Content Card with Design System Background -->
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background: ${cardBackground}; border-radius: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px);">
+                    <!-- Header with Logo -->
+                    <tr>
+                        <td style="padding: 40px 40px 20px 40px; text-align: center;">
+                            ${emailOptimizedLogo}
+                            <div style="height: 3px; background: linear-gradient(90deg, ${accentColor} 0%, ${primaryColor} 50%, ${accentColor} 100%); border-radius: 2px; margin: 15px auto 0 auto; width: 120px;"></div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content Area -->
+                    <tr>
+                        <td style="padding: 20px 50px 40px 50px;">
+                            <div style="color: ${textColor}; font-size: 16px; line-height: 1.8; text-align: left;">
+                                ${sampleContent}
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer with Accent -->
+                    <tr>
+                        <td style="background: ${accentColor}20; padding: 30px 40px; border-top: 2px solid ${accentColor}50; text-align: center;">
+                            <p style="margin: 0; color: ${primaryColor}; font-size: 14px; font-weight: 500;">
+                                © ${new Date().getFullYear()} HESS Consortium. All rights reserved.
+                            </p>
+                            <p style="margin: 8px 0 0 0; color: ${primaryColor}CC; font-size: 12px;">
+                                This email was sent from the HESS Consortium Member Portal
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+      `;
       
-      if (result.success) {
-        toast({
-          title: 'Preview email sent',
-          description: 'A preview email has been generated with your current design settings.',
-        });
-      } else {
-        throw new Error(result.error || 'Failed to send preview');
-      }
+      setPreviewContent(previewHtml);
+      setPreviewOpen(true);
+      
+      toast({
+        title: 'Preview generated',
+        description: 'Email design preview is ready to view.',
+      });
     } catch (error: any) {
       toast({
         title: 'Preview failed',
-        description: error.message || 'Failed to generate email preview',
+        description: error.message || 'Failed to generate design preview',
         variant: 'destructive'
       });
     } finally {
@@ -502,7 +568,7 @@ export const EmailDesignManager = () => {
 
             <Button 
               variant="outline" 
-              onClick={sendPreviewEmail}
+              onClick={generatePreview}
               disabled={previewLoading}
               className="flex-1"
             >
@@ -521,6 +587,22 @@ export const EmailDesignManager = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Email Design Preview Modal */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Email Design Preview</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[80vh] border rounded-lg">
+            <iframe
+              srcDoc={previewContent}
+              className="w-full h-[600px] border-0"
+              title="Email Design Preview"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
