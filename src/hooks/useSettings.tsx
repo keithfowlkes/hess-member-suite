@@ -291,7 +291,7 @@ export function useSettings() {
             .from('profiles')
             .select('email, id')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
           
           // Clean up the orphaned profile immediately
           if (profile) {
@@ -773,7 +773,7 @@ export function useSettings() {
         .from('profiles')
         .select('user_id, email, first_name, last_name')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       if (profileError || !userProfile) {
         console.log('❌ No user found with email:', email);

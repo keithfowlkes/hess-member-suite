@@ -112,7 +112,7 @@ export function useUnifiedProfile(userId?: string) {
         .from('profiles')
         .select('*')
         .eq('user_id', targetUserId)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
 
@@ -124,7 +124,7 @@ export function useUnifiedProfile(userId?: string) {
         .from('organizations')
         .select('*')
         .eq('contact_person_id', profileData.id)
-        .single();
+        .maybeSingle();
       
       if (primaryOrgData) {
         orgData = primaryOrgData;
@@ -135,7 +135,7 @@ export function useUnifiedProfile(userId?: string) {
             .from('organizations')
             .select('*')
             .eq('name', profileData.organization)
-            .single();
+            .maybeSingle();
           
           if (memberOrgData) {
             orgData = memberOrgData;
@@ -316,7 +316,7 @@ export function useUnifiedProfile(userId?: string) {
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (!profileData) return null;
 
@@ -325,7 +325,7 @@ export function useUnifiedProfile(userId?: string) {
         .from('organizations')
         .select('*')
         .eq('contact_person_id', profileData.id)
-        .single();
+        .maybeSingle();
 
       // If not primary contact, check if user belongs to an organization by profile.organization field
       if (!orgData && profileData.organization) {
@@ -333,7 +333,7 @@ export function useUnifiedProfile(userId?: string) {
           .from('organizations')
           .select('*')
           .eq('name', profileData.organization)
-          .single();
+          .maybeSingle();
         
         orgData = memberOrgData;
       }

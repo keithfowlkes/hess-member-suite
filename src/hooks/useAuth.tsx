@@ -305,14 +305,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .from('profiles')
           .select('organization')
           .eq('user_id', data.user.id)
-          .single();
+          .maybeSingle();
           
         if (profileData?.organization) {
           const { data: orgData } = await supabase
             .from('organizations')
             .select('membership_status')
             .ilike('name', profileData.organization)
-            .single();
+            .maybeSingle();
             
           // Only sign out if org is pending/requires approval
           if (orgData?.membership_status === 'pending') {
