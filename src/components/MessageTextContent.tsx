@@ -155,10 +155,6 @@ export const MessageTextContent = () => {
           
           <p style="color: #4A4A4A; font-size: 16px; line-height: 1.8; margin: 0 0 30px 0;">If you have any questions about these changes, please don't hesitate to contact us.</p>
           
-          <div style="text-align: center; margin: 30px 0;">
-            <img src="https://www.hessconsortium.org/new/wp-content/uploads/2023/04/KeithFowlkesshortsig.png" alt="Keith Fowlkes Signature" style="max-width: 200px; height: auto;">
-          </div>
-          
           <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid rgba(212, 175, 55, 0.3);">
             <p style="color: #8B7355; font-size: 16px; font-weight: bold; margin: 5px 0;">Keith Fowlkes, M.A., M.B.A.</p>
             <p style="color: #4A4A4A; font-size: 14px; margin: 5px 0;">Executive Director and Founder</p>

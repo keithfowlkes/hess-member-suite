@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, Mail, Edit, Eye } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
+import { useSystemSetting } from '@/hooks/useSystemSettings';
 import TinyMCEEditor from '@/components/TinyMCEEditor';
 
 export const OrganizationInvitationTemplateEditor = () => {
@@ -11,6 +13,18 @@ export const OrganizationInvitationTemplateEditor = () => {
   
   const [invitationTemplate, setInvitationTemplate] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
+
+  // Preview modal state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewContent, setPreviewContent] = useState('');
+
+  // Get design settings for preview
+  const { data: backgroundImageSetting } = useSystemSetting('email_background_image');
+  const { data: primaryColorSetting } = useSystemSetting('email_design_primary_color');
+  const { data: accentColorSetting } = useSystemSetting('email_design_accent_color');
+  const { data: textColorSetting } = useSystemSetting('email_design_text_color');
+  const { data: cardBackgroundSetting } = useSystemSetting('email_design_card_background');
+  const { data: logoSetting } = useSystemSetting('public_logo_url');
 
   // Initialize template from settings
   useEffect(() => {
@@ -84,45 +98,158 @@ export const OrganizationInvitationTemplateEditor = () => {
     }
   };
 
+  // Generate email preview with design settings
+  const generateEmailPreview = (content: string, title: string) => {
+    // Get design settings with defaults
+    const settings = {
+      background_image: backgroundImageSetting?.setting_value || '',
+      primary_color: primaryColorSetting?.setting_value || '#8B7355',
+      accent_color: accentColorSetting?.setting_value || '#D4AF37',
+      text_color: textColorSetting?.setting_value || '#4A4A4A',
+      card_background: cardBackgroundSetting?.setting_value || 'rgba(248, 245, 238, 0.95)'
+    };
+
+    const logoUrl = logoSetting?.setting_value;
+    const emailOptimizedLogo = logoUrl 
+      ? `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto 20px auto;" border="0">`
+      : '';
+
+    // Determine background style based on settings
+    const backgroundStyle = settings.background_image 
+      ? `background-image: url('${settings.background_image}'); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh; background-color: ${settings.primary_color};`
+      : `background: linear-gradient(135deg, ${settings.primary_color} 0%, ${settings.accent_color} 100%); min-height: 100vh;`;
+
+    // Replace template variables with sample data
+    let processedContent = content
+      .replace(/{{invitee_email}}/g, 'contact@sampleuniversity.edu')
+      .replace(/{{organization_name}}/g, 'Sample University')
+      .replace(/{{invitation_link}}/g, '#invitation-link');
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HESS Consortium - ${title}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Georgia, 'Times New Roman', serif; line-height: 1.6; ${backgroundStyle}">
+    <!-- Email Container -->
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="min-height: 100vh; padding: 60px 20px;">
+        <tr>
+            <td align="center" valign="top">
+                <!-- Main Content Card with Design System Background -->
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background: ${settings.card_background}; border-radius: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px);">
+                    <!-- Header with Logo -->
+                    <tr>
+                        <td style="padding: 40px 40px 20px 40px; text-align: center;">
+                            ${emailOptimizedLogo}
+                            <div style="height: 3px; background: linear-gradient(90deg, ${settings.accent_color} 0%, ${settings.primary_color} 50%, ${settings.accent_color} 100%); border-radius: 2px; margin: 15px auto 0 auto; width: 120px;"></div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content Area -->
+                    <tr>
+                        <td style="padding: 20px 50px 40px 50px;">
+                            <div style="color: ${settings.text_color}; font-size: 16px; line-height: 1.8; text-align: left;">
+                                ${processedContent}
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer with Accent -->
+                    <tr>
+                        <td style="background: ${settings.accent_color}20; padding: 30px 40px; border-top: 2px solid ${settings.accent_color}50; text-align: center;">
+                            <p style="margin: 0; color: ${settings.primary_color}; font-size: 14px; font-weight: 500;">
+                                © ${new Date().getFullYear()} HESS Consortium. All rights reserved.
+                            </p>
+                            <p style="margin: 8px 0 0 0; color: ${settings.primary_color}CC; font-size: 12px;">
+                                This email was sent from the HESS Consortium Member Portal
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    `;
+  };
+
+  const handlePreview = () => {
+    const previewHtml = generateEmailPreview(invitationTemplate, 'Organization Invitation');
+    setPreviewContent(previewHtml);
+    setPreviewOpen(true);
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Mail className="h-5 w-5" />
-          Organization Invitation Email Template
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="invitation-template">Email Template</Label>
-          <div className="text-sm text-muted-foreground mb-2">
-            Available variables: <code>{'{{invitee_email}}'}</code>, <code>{'{{organization_name}}'}</code>, <code>{'{{invitation_link}}'}</code>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Organization Invitation Email Template
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="invitation-template">Email Template</Label>
+            <div className="text-sm text-muted-foreground mb-2">
+              Available variables: <code>{'{{invitee_email}}'}</code>, <code>{'{{organization_name}}'}</code>, <code>{'{{invitation_link}}'}</code>
+            </div>
+            <TinyMCEEditor
+              value={invitationTemplate}
+              onChange={setInvitationTemplate}
+              placeholder="Enter your organization invitation email template..."
+            />
           </div>
-          <TinyMCEEditor
-            value={invitationTemplate}
-            onChange={setInvitationTemplate}
-            placeholder="Enter your organization invitation email template..."
-          />
-        </div>
-        
-        <Button 
-          onClick={handleSaveTemplate}
-          disabled={savingTemplate || !invitationTemplate.trim()}
-          className="w-full"
-        >
-          {savingTemplate ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Saving Template...
-            </>
-          ) : (
-            <>
-              <Edit className="h-4 w-4 mr-2" />
-              Save Template
-            </>
-          )}
-        </Button>
-      </CardContent>
-    </Card>
+          
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleSaveTemplate}
+              disabled={savingTemplate || !invitationTemplate.trim()}
+              className="flex-1"
+            >
+              {savingTemplate ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving Template...
+                </>
+              ) : (
+                <>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Save Template
+                </>
+              )}
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={handlePreview}
+              className="flex-1"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Email Preview Modal */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Email Preview - Organization Invitation</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[80vh] border rounded-lg">
+            <iframe
+              srcDoc={previewContent}
+              className="w-full h-[600px] border-0"
+              title="Email Preview"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
