@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, Edit, MessageSquare } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, Mail, Edit, MessageSquare, Eye } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { useSystemMessages, useCreateSystemMessage, useUpdateSystemMessage } from '@/hooks/useSystemMessages';
+import { useSystemSetting } from '@/hooks/useSystemSettings';
 import TinyMCEEditor from '@/components/TinyMCEEditor';
 import { OrganizationInvitationTemplateEditor } from '@/components/OrganizationInvitationTemplateEditor';
 
@@ -24,6 +26,19 @@ export const MessageTextContent = () => {
   const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
   const [savingProfileUpdateMessage, setSavingProfileUpdateMessage] = useState(false);
   const [savingMemberInfoUpdateMessage, setSavingMemberInfoUpdateMessage] = useState(false);
+
+  // Preview modal state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewContent, setPreviewContent] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
+
+  // Get design settings for preview
+  const { data: backgroundImageSetting } = useSystemSetting('email_background_image');
+  const { data: primaryColorSetting } = useSystemSetting('email_design_primary_color');
+  const { data: accentColorSetting } = useSystemSetting('email_design_accent_color');
+  const { data: textColorSetting } = useSystemSetting('email_design_text_color');
+  const { data: cardBackgroundSetting } = useSystemSetting('email_design_card_background');
+  const { data: logoSetting } = useSystemSetting('public_logo_url');
 
   // Initialize messages from settings
   useEffect(() => {
@@ -192,6 +207,97 @@ export const MessageTextContent = () => {
     }
   };
 
+  // Generate email preview with design settings
+  const generateEmailPreview = (content: string, title: string) => {
+    // Get design settings with defaults
+    const settings = {
+      background_image: backgroundImageSetting?.setting_value || '',
+      primary_color: primaryColorSetting?.setting_value || '#8B7355',
+      accent_color: accentColorSetting?.setting_value || '#D4AF37',
+      text_color: textColorSetting?.setting_value || '#4A4A4A',
+      card_background: cardBackgroundSetting?.setting_value || 'rgba(248, 245, 238, 0.95)'
+    };
+
+    const logoUrl = logoSetting?.setting_value;
+    const emailOptimizedLogo = logoUrl 
+      ? `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto 20px auto;" border="0">`
+      : '';
+
+    // Determine background style based on settings
+    const backgroundStyle = settings.background_image 
+      ? `background-image: url('${settings.background_image}'); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh; background-color: ${settings.primary_color};`
+      : `background: linear-gradient(135deg, ${settings.primary_color} 0%, ${settings.accent_color} 100%); min-height: 100vh;`;
+
+    // Replace template variables with sample data
+    let processedContent = content
+      .replace(/{{primary_contact_name}}/g, 'John Smith')
+      .replace(/{{organization_name}}/g, 'Sample University')
+      .replace(/{{first_name}}/g, 'John')
+      .replace(/{{last_name}}/g, 'Smith')
+      .replace(/{{user_email}}/g, 'john.smith@example.edu')
+      .replace(/{{reset_link}}/g, '#password-reset-link')
+      .replace(/{{update_details}}/g, 'Organization name, contact information, and system preferences')
+      .replace(/{{login_hint_section}}/g, '<p style="color: #4A4A4A; font-size: 14px; line-height: 1.8; margin: 20px 0; font-style: italic;">If you are having trouble logging in, try using your email address as your username.</p>');
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HESS Consortium - ${title}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Georgia, 'Times New Roman', serif; line-height: 1.6; ${backgroundStyle}">
+    <!-- Email Container -->
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="min-height: 100vh; padding: 60px 20px;">
+        <tr>
+            <td align="center" valign="top">
+                <!-- Main Content Card with Design System Background -->
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background: ${settings.card_background}; border-radius: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px);">
+                    <!-- Header with Logo -->
+                    <tr>
+                        <td style="padding: 40px 40px 20px 40px; text-align: center;">
+                            ${emailOptimizedLogo}
+                            <div style="height: 3px; background: linear-gradient(90deg, ${settings.accent_color} 0%, ${settings.primary_color} 50%, ${settings.accent_color} 100%); border-radius: 2px; margin: 15px auto 0 auto; width: 120px;"></div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content Area -->
+                    <tr>
+                        <td style="padding: 20px 50px 40px 50px;">
+                            <div style="color: ${settings.text_color}; font-size: 16px; line-height: 1.8; text-align: left;">
+                                ${processedContent}
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer with Accent -->
+                    <tr>
+                        <td style="background: ${settings.accent_color}20; padding: 30px 40px; border-top: 2px solid ${settings.accent_color}50; text-align: center;">
+                            <p style="margin: 0; color: ${settings.primary_color}; font-size: 14px; font-weight: 500;">
+                                © ${new Date().getFullYear()} HESS Consortium. All rights reserved.
+                            </p>
+                            <p style="margin: 8px 0 0 0; color: ${settings.primary_color}CC; font-size: 12px;">
+                                This email was sent from the HESS Consortium Member Portal
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    `;
+  };
+
+  const handlePreview = (content: string, title: string) => {
+    const previewHtml = generateEmailPreview(content, title);
+    setPreviewContent(previewHtml);
+    setPreviewTitle(title);
+    setPreviewOpen(true);
+  };
+
   if (messagesLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -230,15 +336,24 @@ export const MessageTextContent = () => {
                 />
             </div>
           </div>
-          <Button 
-            onClick={handleSavePasswordMessage}
-            disabled={savingMessage}
-          >
-            {savingMessage ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : null}
-            Save Password Message
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleSavePasswordMessage}
+              disabled={savingMessage}
+            >
+              {savingMessage ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Save Password Message
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => handlePreview(passwordResetMessage, 'Password Reset')}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -261,15 +376,24 @@ export const MessageTextContent = () => {
                 />
             </div>
           </div>
-          <Button 
-            onClick={handleSaveWelcomeMessage}
-            disabled={savingWelcomeMessage}
-          >
-            {savingWelcomeMessage ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : null}
-            Save Welcome Message
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleSaveWelcomeMessage}
+              disabled={savingWelcomeMessage}
+            >
+              {savingWelcomeMessage ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Save Welcome Message
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => handlePreview(welcomeMessage, 'Welcome Message')}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -292,15 +416,24 @@ export const MessageTextContent = () => {
                 />
             </div>
           </div>
-          <Button 
-            onClick={handleSaveProfileUpdateMessage}
-            disabled={savingProfileUpdateMessage}
-          >
-            {savingProfileUpdateMessage ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : null}
-            Save Profile Update Message
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleSaveProfileUpdateMessage}
+              disabled={savingProfileUpdateMessage}
+            >
+              {savingProfileUpdateMessage ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Save Profile Update Message
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => handlePreview(profileUpdateMessage, 'Profile Update Message')}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+          </div>
         </CardContent>
       </Card>
       {/* Member Information Update Message */}
@@ -325,20 +458,45 @@ export const MessageTextContent = () => {
                 />
             </div>
           </div>
-          <Button 
-            onClick={handleSaveMemberInfoUpdateMessage}
-            disabled={savingMemberInfoUpdateMessage}
-          >
-            {savingMemberInfoUpdateMessage ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : null}
-            Save Member Information Update Message
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleSaveMemberInfoUpdateMessage}
+              disabled={savingMemberInfoUpdateMessage}
+            >
+              {savingMemberInfoUpdateMessage ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Save Member Information Update Message
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => handlePreview(memberInfoUpdateMessage, 'Member Information Update Message')}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+          </div>
         </CardContent>
       </Card>
       
       {/* Organization Invitation Message */}
       <OrganizationInvitationTemplateEditor />
+
+      {/* Email Preview Modal */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Email Preview - {previewTitle}</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[80vh] border rounded-lg">
+            <iframe
+              srcDoc={previewContent}
+              className="w-full h-[600px] border-0"
+              title="Email Preview"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
