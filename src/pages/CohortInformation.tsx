@@ -156,9 +156,9 @@ const CohortInformation = () => {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight">Cohort Information</h1>
+                  <h1 className="text-3xl font-bold tracking-tight">Software System Cohorts</h1>
                   <p className="text-muted-foreground">
-                    View cohort membership statistics and organization participation across all professional cohorts
+                    View organization membership statistics by software systems (Ellucian Banner, Ellucian Colleague, Jenzabar, Oracle Cloud, etc.)
                   </p>
                 </div>
                 <Badge variant="default">Admin View</Badge>
@@ -189,10 +189,10 @@ const CohortInformation = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <BarChart3 className="h-5 w-5" />
-                        Cohort Overview
+                        Software System Cohort Overview
                       </CardTitle>
                       <CardDescription>
-                        High-level statistics across all professional cohorts
+                        Statistics showing organization membership by software systems
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -207,17 +207,20 @@ const CohortInformation = () => {
                           <div className="text-2xl font-bold">
                             {cohortStats?.reduce((sum, cohort) => sum + cohort.organizationCount, 0) || 0}
                           </div>
-                          <div className="text-sm text-muted-foreground">Total Organizations</div>
+                          <div className="text-sm text-muted-foreground">Participating Organizations</div>
                         </div>
                         <div className="text-center p-4 bg-muted/50 rounded-lg">
                           <div className="text-2xl font-bold">
                             {cohortStats?.length || 0}
                           </div>
-                          <div className="text-sm text-muted-foreground">Active Cohorts</div>
+                          <div className="text-sm text-muted-foreground">Software Systems</div>
                         </div>
                         <div className="text-center p-4 bg-muted/50 rounded-lg">
                           <div className="text-2xl font-bold">
-                            {cohortStats ? Math.round((cohortStats.reduce((sum, cohort) => sum + cohort.memberCount, 0) / Math.max(cohortStats.reduce((sum, cohort) => sum + cohort.organizationCount, 0), 1)) * 10) / 10 : 0}
+                            {cohortStats && cohortStats.length > 0 ? 
+                              Math.round((cohortStats.reduce((sum, cohort) => sum + cohort.memberCount, 0) / 
+                                Math.max(cohortStats.reduce((sum, cohort) => sum + cohort.organizationCount, 0), 1)) * 10) / 10 
+                              : 0}
                           </div>
                           <div className="text-sm text-muted-foreground">Avg Members/Org</div>
                         </div>
@@ -229,30 +232,35 @@ const CohortInformation = () => {
                   <div className="grid gap-4">
                     <h2 className="text-xl font-semibold flex items-center gap-2">
                       <GraduationCap className="h-5 w-5" />
-                      Professional Cohorts
+                      Software System Cohorts
                     </h2>
                     
-                    {cohortStats && cohortStats.length === 0 ? (
+                    {(!cohortStats || cohortStats.length === 0) ? (
                       <Card>
                         <CardContent className="p-6 text-center">
-                          <p className="text-muted-foreground">No cohort data available.</p>
+                          <p className="text-muted-foreground">No cohort data available. Members need to join software system cohorts from their profiles.</p>
                         </CardContent>
                       </Card>
                     ) : (
-                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {cohortStats?.map((cohort) => (
+                      <div className="grid gap-6">
+                        {cohortStats.map((cohort) => (
                           <Card key={cohort.cohortName} className="hover:shadow-md transition-shadow">
-                            <CardHeader className="pb-3">
-                              <CardTitle className="text-lg">{cohort.cohortName}</CardTitle>
+                            <CardHeader className="pb-4">
+                              <div className="flex items-center justify-between">
+                                <CardTitle className="text-lg">{cohort.cohortName}</CardTitle>
+                                <Badge variant="secondary" className="text-sm">
+                                  {cohort.memberCount} {cohort.memberCount === 1 ? 'member' : 'members'}
+                                </Badge>
+                              </div>
                               <CardDescription>
-                                Professional cohort group statistics
+                                Organizations and members using {cohort.cohortName}
                               </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                               <div className="grid grid-cols-2 gap-4">
                                 <div className="text-center p-3 bg-primary/5 rounded-lg">
                                   <div className="text-xl font-bold text-primary">{cohort.memberCount}</div>
-                                  <div className="text-xs text-muted-foreground">Members</div>
+                                  <div className="text-xs text-muted-foreground">Total Members</div>
                                 </div>
                                 <div className="text-center p-3 bg-secondary/5 rounded-lg">
                                   <div className="text-xl font-bold text-secondary-foreground">{cohort.organizationCount}</div>
@@ -260,24 +268,30 @@ const CohortInformation = () => {
                                 </div>
                               </div>
                               
+                              {/* Organization Details */}
                               {cohort.organizations.length > 0 && (
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                   <div className="text-sm font-medium flex items-center gap-1">
                                     <Building2 className="h-4 w-4" />
-                                    Top Organizations
+                                    Member Organizations
                                   </div>
-                                  <div className="space-y-1">
-                                    {cohort.organizations
-                                      .sort((a, b) => b.memberCount - a.memberCount)
-                                      .slice(0, 3)
-                                      .map((org) => (
-                                        <div key={org.id} className="flex justify-between items-center text-xs">
-                                          <span className="truncate flex-1">{org.name}</span>
-                                          <Badge variant="outline" className="ml-2 text-xs">
-                                            {org.memberCount} {org.memberCount === 1 ? 'member' : 'members'}
-                                          </Badge>
+                                  <div className="space-y-2">
+                                    {cohort.organizations.map((org) => (
+                                      <div key={org.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                                        <div>
+                                          <div className="font-medium text-sm">{org.name}</div>
+                                          {(org.city || org.state) && (
+                                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                              <MapPin className="h-3 w-3" />
+                                              {org.city}{org.city && org.state && ', '}{org.state}
+                                            </div>
+                                          )}
                                         </div>
-                                      ))}
+                                        <Badge variant="outline" className="text-xs">
+                                          {org.memberCount} {org.memberCount === 1 ? 'member' : 'members'}
+                                        </Badge>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
                               )}

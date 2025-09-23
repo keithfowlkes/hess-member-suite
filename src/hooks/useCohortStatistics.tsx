@@ -8,6 +8,8 @@ export interface CohortStatistics {
   organizations: {
     id: string;
     name: string;
+    city?: string;
+    state?: string;
     memberCount: number;
   }[];
 }
@@ -16,104 +18,119 @@ export const useCohortStatistics = () => {
   return useQuery({
     queryKey: ['cohort-statistics'],
     queryFn: async (): Promise<CohortStatistics[]> => {
-      // Get all unique cohorts from the database
-      const { data: allCohorts, error: cohortListError } = await supabase
-        .from('user_cohorts')
-        .select('cohort')
-        .order('cohort');
-
-      if (cohortListError) {
-        console.error('Error fetching cohort list:', cohortListError);
-        throw cohortListError;
-      }
-
-      // Get unique cohort names
-      const uniqueCohorts = [...new Set(allCohorts?.map(c => c.cohort) || [])];
-      const cohortStats: CohortStatistics[] = [];
-
-      for (const cohortName of uniqueCohorts) {
-        // Get all users in this cohort
-        const { data: userCohorts, error: cohortError } = await supabase
+      try {
+        // Get all unique cohorts from the database
+        const { data: allCohorts, error: cohortListError } = await supabase
           .from('user_cohorts')
-          .select(`
-            user_id,
-            cohort
-          `)
-          .eq('cohort', cohortName);
+          .select('cohort')
+          .order('cohort');
 
-        if (cohortError) {
-          console.error(`Error fetching cohort ${cohortName}:`, cohortError);
-          continue;
+        if (cohortListError) {
+          console.error('Error fetching cohort list:', cohortListError);
+          throw cohortListError;
         }
 
-        if (!userCohorts || userCohorts.length === 0) {
+        // Get unique cohort names
+        const uniqueCohorts = [...new Set(allCohorts?.map(c => c.cohort) || [])];
+        
+        if (uniqueCohorts.length === 0) {
+          return [];
+        }
+
+        const cohortStats: CohortStatistics[] = [];
+
+        for (const cohortName of uniqueCohorts) {
+          // Get all users in this cohort
+          const { data: userCohorts, error: cohortError } = await supabase
+            .from('user_cohorts')
+            .select('user_id, cohort')
+            .eq('cohort', cohortName);
+
+          if (cohortError) {
+            console.error(`Error fetching cohort ${cohortName}:`, cohortError);
+            continue;
+          }
+
+          if (!userCohorts || userCohorts.length === 0) {
+            cohortStats.push({
+              cohortName,
+              organizationCount: 0,
+              memberCount: 0,
+              organizations: []
+            });
+            continue;
+          }
+
+          // Get profiles for these users
+          const userIds = userCohorts.map(uc => uc.user_id);
+          
+          const { data: profiles, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, user_id, organization, first_name, last_name, city, state')
+            .in('user_id', userIds);
+
+          if (profileError) {
+            console.error(`Error fetching profiles for cohort ${cohortName}:`, profileError);
+            continue;
+          }
+
+          if (!profiles || profiles.length === 0) {
+            cohortStats.push({
+              cohortName,
+              organizationCount: 0,
+              memberCount: 0,
+              organizations: []
+            });
+            continue;
+          }
+
+          // Group by organization
+          const organizationMap = new Map<string, {
+            members: typeof profiles,
+            city?: string,
+            state?: string
+          }>();
+
+          profiles.forEach(profile => {
+            if (profile.organization) {
+              if (!organizationMap.has(profile.organization)) {
+                organizationMap.set(profile.organization, {
+                  members: [],
+                  city: profile.city || undefined,
+                  state: profile.state || undefined
+                });
+              }
+              organizationMap.get(profile.organization)!.members.push(profile);
+            }
+          });
+
+          // Convert to organization stats
+          const orgStats = Array.from(organizationMap.entries()).map(([orgName, data]) => ({
+            id: `org-${orgName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+            name: orgName,
+            city: data.city,
+            state: data.state,
+            memberCount: data.members.length
+          }));
+
           cohortStats.push({
             cohortName,
-            organizationCount: 0,
-            memberCount: 0,
-            organizations: []
+            organizationCount: orgStats.length,
+            memberCount: profiles.length,
+            organizations: orgStats.sort((a, b) => b.memberCount - a.memberCount)
           });
-          continue;
         }
 
-        // Get profile and organization data for these users
-        const userIds = userCohorts.map(uc => uc.user_id);
+        return cohortStats.sort((a, b) => a.cohortName.localeCompare(b.cohortName));
         
-        const { data: profiles, error: profileError } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            user_id,
-            organization,
-            first_name,
-            last_name
-          `)
-          .in('user_id', userIds);
-
-        if (profileError) {
-          console.error(`Error fetching profiles for cohort ${cohortName}:`, profileError);
-          continue;
-        }
-
-        // Get organizations for these profiles
-        const organizationNames = [...new Set(profiles?.map(p => p.organization).filter(Boolean) || [])];
-        
-        const { data: organizations, error: orgError } = await supabase
-          .from('organizations')
-          .select(`
-            id,
-            name,
-            contact_person_id
-          `)
-          .in('name', organizationNames)
-          .eq('membership_status', 'active');
-
-        if (orgError) {
-          console.error(`Error fetching organizations for cohort ${cohortName}:`, orgError);
-          continue;
-        }
-
-        // Count members per organization in this cohort
-        const orgStats = organizations?.map(org => {
-          const orgProfiles = profiles?.filter(p => p.organization === org.name) || [];
-          return {
-            id: org.id,
-            name: org.name,
-            memberCount: orgProfiles.length
-          };
-        }) || [];
-
-        cohortStats.push({
-          cohortName,
-          organizationCount: organizations?.length || 0,
-          memberCount: profiles?.length || 0,
-          organizations: orgStats
-        });
+      } catch (error) {
+        console.error('Error in cohort statistics query:', error);
+        throw error;
       }
-
-      return cohortStats.sort((a, b) => a.cohortName.localeCompare(b.cohortName));
     },
     staleTime: 1000 * 60 * 5, // Consider data stale after 5 minutes
     gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+    retry: 2,
+    retryDelay: 1000,
   });
 };
