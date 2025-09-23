@@ -336,51 +336,72 @@ export function useSettings() {
       if (insertError) {
         console.error('❌ Error inserting new role:', insertError);
         
-        // Check for specific foreign key constraint error
+        // Check for unique constraint violation (user already has this role)
+        if (insertError.code === '23505') {
+          console.log('ℹ️ User already has this role, updating anyway...');
+          
+          toast({
+            title: 'Success',
+            description: `User already has ${newRole} role - no changes needed`,
+          });
+          
+          await fetchUsers();
+          return;
+        }
+        
+        // Check for foreign key constraint error (truly orphaned profile)
         if (insertError.code === '23503' && insertError.message?.includes('user_roles_user_id_fkey')) {
           console.log('🧹 Detected orphaned profile during insertion, cleaning up...');
           
-          // Get user email for better error message
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('email, id')
-            .eq('user_id', userId)
-            .single();
+          // Verify this is actually an orphaned profile by checking auth.users
+          const { data: authUser } = await supabase.auth.admin.getUserById(userId);
           
-          // Clean up the orphaned profile immediately
-          if (profile) {
-            console.log(`🧹 Cleaning up orphaned profile: ${profile.email}`);
+          if (!authUser.user) {
+            // Get user email for better error message
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('email, id')
+              .eq('user_id', userId)
+              .single();
             
-            try {
-              // Remove as contact person from organizations
-              await supabase
-                .from('organizations')
-                .update({ contact_person_id: null })
-                .eq('contact_person_id', profile.id);
-
-              // Delete the profile
-              await supabase
-                .from('profiles')
-                .delete()
-                .eq('user_id', userId);
-                
-              toast({
-                title: 'Orphaned Profile Cleaned',
-                description: `Removed orphaned profile for ${profile.email}. Refreshing user list...`,
-              });
+            // Clean up the orphaned profile immediately
+            if (profile) {
+              console.log(`🧹 Cleaning up orphaned profile: ${profile.email}`);
               
-              // Refresh the users list
-              await fetchUsers();
-              return;
-            } catch (cleanupError) {
-              console.error('❌ Error during orphaned profile cleanup:', cleanupError);
-              toast({
-                title: 'Cleanup Failed',
-                description: `Failed to clean up orphaned profile for ${profile.email}. Please try the full cleanup tool.`,
-                variant: 'destructive'
-              });
-              return;
+              try {
+                // Remove as contact person from organizations
+                await supabase
+                  .from('organizations')
+                  .update({ contact_person_id: null })
+                  .eq('contact_person_id', profile.id);
+
+                // Delete the profile
+                await supabase
+                  .from('profiles')
+                  .delete()
+                  .eq('user_id', userId);
+                  
+                toast({
+                  title: 'Orphaned Profile Cleaned',
+                  description: `Removed orphaned profile for ${profile.email}. Refreshing user list...`,
+                });
+                
+                // Refresh the users list
+                await fetchUsers();
+                return;
+              } catch (cleanupError) {
+                console.error('❌ Error during orphaned profile cleanup:', cleanupError);
+                toast({
+                  title: 'Cleanup Failed',
+                  description: `Failed to clean up orphaned profile for ${profile.email}. Please try the full cleanup tool.`,
+                  variant: 'destructive'
+                });
+                return;
+              }
             }
+          } else {
+            // User exists in auth but role insertion failed for another reason
+            console.error('❌ User exists in auth but role insertion failed:', insertError);
           }
         }
         
@@ -404,8 +425,8 @@ export function useSettings() {
         errorMessage = 'This is a protected admin account that cannot have its role changed.';
       } else if (error.message?.includes('Cannot remove admin role')) {
         errorMessage = 'This admin account is protected from role changes for security reasons.';
-      } else if (error.code === '23503') {
-        errorMessage = 'This user profile is orphaned (no corresponding authentication record exists). Please run the cleanup tool first.';
+      } else if (error.code === '23505') {
+        errorMessage = 'User already has this role - no changes needed.';
       }
 
       toast({
