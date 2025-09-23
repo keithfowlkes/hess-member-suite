@@ -241,6 +241,8 @@ async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
 // Function to get email template from system_settings table (primary) or system_messages (fallback)
 async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null> {
   try {
+    console.log(`[getEmailTemplate] Looking for template for type: ${emailType}`);
+    
     // First, try to get template from system_settings (where UI saves templates)
     let settingKey = '';
     switch (emailType) {
@@ -263,6 +265,8 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
         settingKey = `${emailType}_message_template`;
     }
 
+    console.log(`[getEmailTemplate] Using setting key: ${settingKey} for email type: ${emailType}`);
+
     // Try to get from system_settings first
     const { data: settingTemplate, error: settingError } = await supabase
       .from('system_settings')
@@ -270,21 +274,41 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
       .eq('setting_key', settingKey)
       .maybeSingle();
 
+    console.log(`[getEmailTemplate] System settings query result:`, { settingTemplate, settingError });
+
     if (!settingError && settingTemplate?.setting_value) {
-    console.log(`Found template in system_settings for: ${emailType}`);
+      console.log(`Found template in system_settings for: ${emailType}`);
       console.log(`Template content preview: ${settingTemplate.setting_value.substring(0, 200)}...`);
       
       // Replace logo in template content
       const htmlWithLogo = await replaceLogoInTemplate(settingTemplate.setting_value);
       console.log(`Template after logo replacement - length: ${htmlWithLogo.length}`);
+
+      // Create proper subject based on email type
+      let templateSubject = 'HESS Consortium Notification';
+      switch (emailType) {
+        case 'welcome':
+        case 'welcome_approved':
+          templateSubject = 'Welcome to HESS Consortium!';
+          break;
+        case 'password_reset':
+          templateSubject = 'Password Reset Request';
+          break;
+        case 'profile_update':
+        case 'profile_update_approved':
+        case 'member_info_update':
+          templateSubject = 'Profile Update Approved';
+          break;
+        default:
+          templateSubject = 'HESS Consortium Notification';
+      }
+
+      console.log(`[getEmailTemplate] Using subject: ${templateSubject} for type: ${emailType}`);
       
       return {
         id: emailType,
         name: `${emailType.charAt(0).toUpperCase() + emailType.slice(1)} Template`,
-        subject: (emailType === 'welcome' || emailType === 'welcome_approved') ? 'Welcome to HESS Consortium!' : 
-                emailType === 'password_reset' ? 'Password Reset Request' :
-                (emailType === 'profile_update' || emailType === 'profile_update_approved' || emailType === 'member_info_update') ? 'Profile Update Approved' :
-                'HESS Consortium Notification',
+        subject: templateSubject,
         html: htmlWithLogo,
         variables: []
       };
