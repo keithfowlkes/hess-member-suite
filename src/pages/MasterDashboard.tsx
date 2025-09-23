@@ -1217,7 +1217,9 @@ const MasterDashboard = () => {
                                 user.user_roles?.[0]?.role === 'admin' ? 'default' : 
                                 user.user_roles?.[0]?.role === 'cohort_leader' ? 'secondary' : 'outline'
                               }>
-                                {user.user_roles?.[0]?.role || 'member'}
+                                {user.user_roles?.[0]?.role === 'admin' ? 'Admin' :
+                                 user.user_roles?.[0]?.role === 'cohort_leader' ? 'Cohort Leader' :
+                                 'Member'}
                               </Badge>
                             </TableCell>
                             <TableCell>
