@@ -173,6 +173,9 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
 // Function to get and replace logo URL in template with proper email embedding
 async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
   try {
+    console.log('[replaceLogoInTemplate] Starting logo replacement process');
+    console.log('[replaceLogoInTemplate] Input content length:', htmlContent.length);
+    
     // Get the uploaded logo URL from system settings
     const { data: logoSetting } = await supabase
       .from('system_settings')
@@ -181,6 +184,7 @@ async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
       .maybeSingle();
     
     const logoUrl = logoSetting?.setting_value;
+    console.log('[replaceLogoInTemplate] Logo URL from settings:', logoUrl);
     
     // Clean the content first - remove any existing HTML, HEAD, BODY tags since we'll wrap it
     let cleanContent = htmlContent;
@@ -213,12 +217,24 @@ async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
     cleanContent = cleanContent.replace(/^[\s]*<p[^>]*>[\s]*<img[^>]*>[\s]*<\/p>[\s]*/gi, '');
     cleanContent = cleanContent.replace(/^[\s]*<img[^>]*>[\s]*/gi, '');
     
+    console.log('[replaceLogoInTemplate] Content after cleaning:', cleanContent.substring(0, 200) + '...');
+    
     // Wrap the cleaned content in the standard template
-    return await wrapInStandardTemplate(cleanContent.trim(), logoUrl);
+    const wrappedContent = await wrapInStandardTemplate(cleanContent.trim(), logoUrl);
+    console.log('[replaceLogoInTemplate] Final wrapped content length:', wrappedContent.length);
+    
+    return wrappedContent;
     
   } catch (error) {
-    console.error('[centralized-email-delivery] Error replacing logo:', error);
-    return await wrapInStandardTemplate(htmlContent);
+    console.error('[replaceLogoInTemplate] Error in logo replacement process:', error);
+    // Still try to wrap in standard template even if logo replacement fails
+    try {
+      return await wrapInStandardTemplate(htmlContent);
+    } catch (wrapError) {
+      console.error('[replaceLogoInTemplate] Error in fallback template wrapping:', wrapError);
+      // Last resort - return original content
+      return htmlContent;
+    }
   }
 }
 
@@ -432,6 +448,11 @@ const handler = async (req: Request): Promise<Response> => {
     // Replace variables in subject and HTML
     const finalSubject = replaceTemplateVariables(emailRequest.subject || template.subject, templateData);
     const finalHtml = replaceTemplateVariables(template.html, templateData);
+    
+    console.log('[centralized-email-delivery] Final email details:');
+    console.log('[centralized-email-delivery] Subject:', finalSubject);
+    console.log('[centralized-email-delivery] HTML length:', finalHtml.length);
+    console.log('[centralized-email-delivery] HTML preview:', finalHtml.substring(0, 500) + '...');
 
     // Determine sender: prefer DB setting, fallback to env, then sandbox
     let configuredFrom = '';
