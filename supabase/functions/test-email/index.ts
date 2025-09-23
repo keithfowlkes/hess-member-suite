@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +12,12 @@ interface TestEmailRequest {
   subject?: string;
   message?: string;
 }
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+  { auth: { persistSession: false } }
+);
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -46,58 +50,55 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Attempting to send test email to: ${to}`);
 
-    // Validate sender and fallback to Resend sandbox if misconfigured
-    const fromEnv = Deno.env.get('RESEND_FROM') || '';
-    const validFrom = /^(?:[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+|.+\s<[^<>@\s]+@[^<>@\s]+\.[^<>@\s]+>)$/.test(fromEnv)
-      ? fromEnv
-      : 'HESS Consortium <onboarding@resend.dev>';
-
-    const emailResponse = await resend.emails.send({
-      from: validFrom,
-      to: [to],
-      subject: subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #333; text-align: center;">HESS Consortium Email Test</h1>
-          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h2 style="color: #666; margin-top: 0;">Test Message</h2>
-            <p style="color: #333; line-height: 1.6;">${message}</p>
-          </div>
-          <div style="background-color: #e8f4f8; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #333; margin-top: 0;">System Information</h3>
-            <ul style="color: #666; line-height: 1.6;">
-              <li><strong>Sent from:</strong> ${validFrom}</li>
-              <li><strong>Email service:</strong> Resend</li>
-              <li><strong>Timestamp:</strong> ${new Date().toISOString()}</li>
-              <li><strong>Test ID:</strong> ${crypto.randomUUID()}</li>
-            </ul>
-          </div>
-          <p style="color: #666; font-size: 14px; text-align: center; margin-top: 30px;">
-            If you received this email, the HESS Consortium email system is working correctly.
-          </p>
-          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;" />
-          <p style="color: #999; font-size: 12px; text-align: center;">
-            This is an automated test email from the HESS Consortium system.
-          </p>
-        </div>
-      `,
+    // Use centralized email delivery system with watercolor template
+    const { data: emailResult, error: emailError } = await supabase.functions.invoke('centralized-email-delivery', {
+      body: {
+        type: 'test',
+        to: [to],
+        subject: subject,
+        data: {
+          test_message: message,
+          timestamp: new Date().toISOString(),
+          test_id: crypto.randomUUID(),
+          system_info: `Email service: Resend | Sent from: HESS Consortium System`
+        }
+      }
     });
 
-    if (emailResponse?.error) {
-      console.error('❌ Resend rejected test email:', emailResponse.error);
+    if (emailError || emailResult?.error) {
+      console.error("❌ Failed to send test email via centralized delivery:", emailError || emailResult?.error);
+      
+      const errorMessage = emailError?.message || emailResult?.error?.message || "Failed to send test email";
+      let statusCode = 500;
+      
+      if (errorMessage.includes("domain")) {
+        statusCode = 400;
+      } else if (errorMessage.includes("API key")) {
+        statusCode = 401;
+      } else if (errorMessage.includes("rate limit")) {
+        statusCode = 429;
+      }
+      
       return new Response(
-        JSON.stringify({ success: false, error: emailResponse.error.message }),
-        { status: emailResponse.error.statusCode || 502, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        JSON.stringify({ 
+          success: false, 
+          error: errorMessage,
+          details: emailError?.details || emailResult?.error?.details 
+        }),
+        {
+          status: statusCode,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
       );
     }
 
-    console.log('✅ Test email accepted by Resend:', emailResponse.data);
+    console.log('✅ Test email sent via centralized delivery:', emailResult);
 
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Test email sent successfully',
-        emailId: emailResponse.data?.id,
+        emailId: emailResult?.emailId,
         timestamp: new Date().toISOString()
       }),
       {
