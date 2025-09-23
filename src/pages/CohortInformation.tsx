@@ -6,6 +6,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -181,10 +182,32 @@ const CohortInformation = () => {
     link.setAttribute('href', url);
     link.setAttribute('download', `cohort-members-${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// Group members by organization
+const groupMembersByOrganization = (members: typeof cohortLeaderData.cohortMembers) => {
+  if (!members) return [];
+  
+  const grouped = members.reduce((acc, member) => {
+    const orgName = member.organization || 'No Organization';
+    if (!acc[orgName]) {
+      acc[orgName] = [];
+    }
+    acc[orgName].push(member);
+    return acc;
+  }, {} as Record<string, typeof members>);
+
+  return Object.entries(grouped)
+    .map(([orgName, orgMembers]) => ({
+      name: orgName,
+      members: orgMembers.sort((a, b) => (a.last_name || '').localeCompare(b.last_name || '')),
+      memberCount: orgMembers.length
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+};
 
   // Redirect if user doesn't have appropriate role (only for non-admin view)
   if (!loading && !isViewingAsAdmin && userRole !== 'admin' && userRole !== 'cohort_leader') {
@@ -343,54 +366,127 @@ const CohortInformation = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                     {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
-                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                         {[...cohortLeaderData.cohortMembers]
-                           .sort((a, b) => (a.last_name || '').localeCompare(b.last_name || ''))
-                           .map((member) => (
-                          <Card key={member.id} className="border bg-muted/20">
-                            <CardContent className="p-4">
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <User className="h-4 w-4 text-muted-foreground" />
-                                  <span className="font-medium">
-                                    {member.first_name} {member.last_name}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Mail className="h-4 w-4" />
-                                  <span>{member.email}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Building2 className="h-4 w-4" />
-                                  <span>{member.organization || 'No organization'}</span>
-                                </div>
-                                {member.primary_contact_title && (
-                                  <div className="text-sm text-muted-foreground">
-                                    <span className="font-medium">Title:</span> {member.primary_contact_title}
-                                  </div>
-                                )}
-                                {(member.city || member.state) && (
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <MapPin className="h-4 w-4" />
-                                    <span>
-                                      {[member.city, member.state].filter(Boolean).join(', ')}
+                  <Tabs defaultValue="members" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                      <TabsTrigger value="members">All Members</TabsTrigger>
+                      <TabsTrigger value="organizations">By Organization</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="members">
+                      <div className="space-y-4">
+                        {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
+                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {[...cohortLeaderData.cohortMembers]
+                              .sort((a, b) => (a.last_name || '').localeCompare(b.last_name || ''))
+                              .map((member) => (
+                            <Card key={member.id} className="border bg-muted/20">
+                              <CardContent className="p-4">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">
+                                      {member.first_name} {member.last_name}
                                     </span>
                                   </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Mail className="h-4 w-4" />
+                                    <span>{member.email}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Building2 className="h-4 w-4" />
+                                    <span>{member.organization || 'No organization'}</span>
+                                  </div>
+                                  {member.primary_contact_title && (
+                                    <div className="text-sm text-muted-foreground">
+                                      <span className="font-medium">Title:</span> {member.primary_contact_title}
+                                    </div>
+                                  )}
+                                  {(member.city || member.state) && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <MapPin className="h-4 w-4" />
+                                      <span>
+                                        {[member.city, member.state].filter(Boolean).join(', ')}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>No cohort members found</p>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No cohort members found</p>
+                    </TabsContent>
+
+                    <TabsContent value="organizations">
+                      <div className="space-y-4">
+                        {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
+                          <div className="space-y-4">
+                            {groupMembersByOrganization(cohortLeaderData.cohortMembers).map((org) => (
+                              <Card key={org.name} className="border">
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Building2 className="h-5 w-5 text-primary" />
+                                      <span>{org.name}</span>
+                                    </div>
+                                    <Badge variant="secondary">
+                                      {org.memberCount} {org.memberCount === 1 ? 'member' : 'members'}
+                                    </Badge>
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                                    {org.members.map((member) => (
+                                      <Card key={member.id} className="bg-muted/30 border-muted">
+                                        <CardContent className="p-3">
+                                          <div className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                              <User className="h-4 w-4 text-muted-foreground" />
+                                              <span className="font-medium text-sm">
+                                                {member.first_name} {member.last_name}
+                                              </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                              <Mail className="h-3 w-3" />
+                                              <span>{member.email}</span>
+                                            </div>
+                                            {member.primary_contact_title && (
+                                              <div className="text-xs text-muted-foreground">
+                                                <span className="font-medium">Title:</span> {member.primary_contact_title}
+                                              </div>
+                                            )}
+                                            {(member.city || member.state) && (
+                                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                <MapPin className="h-3 w-3" />
+                                                <span>
+                                                  {[member.city, member.state].filter(Boolean).join(', ')}
+                                                </span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </CardContent>
+                                      </Card>
+                                    ))}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>No organizations found</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             </div>
