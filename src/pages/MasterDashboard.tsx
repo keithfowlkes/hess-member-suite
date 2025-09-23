@@ -469,10 +469,25 @@ const MasterDashboard = () => {
     setShowApprovalDialog(true);
   };
 
-  const setUserRole = async (userId: string, newRole: 'admin' | 'member' | 'cohort_leader') => {
+  const setUserRole = async (userId: string, newRole: 'admin' | 'member' | 'cohort_leader', cohort?: string) => {
     setUpdatingUser(userId);
     try {
       await updateUserRole(userId, newRole);
+      
+      // If setting cohort_leader role and cohort is specified, update the profile
+      if (newRole === 'cohort_leader' && cohort) {
+        await supabase
+          .from('profiles')
+          .update({ cohort })
+          .eq('user_id', userId);
+      }
+      // Clear cohort when setting to non-cohort_leader role
+      else if (newRole !== 'cohort_leader') {
+        await supabase
+          .from('profiles')
+          .update({ cohort: null })
+          .eq('user_id', userId);
+      }
     } catch (error) {
       console.error('Role update failed:', error);
     } finally {
@@ -1223,7 +1238,9 @@ const MasterDashboard = () => {
                                 user.user_roles?.[0]?.role === 'cohort_leader' ? 'secondary' : 'outline'
                               }>
                                 {user.user_roles?.[0]?.role === 'admin' ? 'Admin' :
-                                 user.user_roles?.[0]?.role === 'cohort_leader' ? 'Cohort Leader' :
+                                 user.user_roles?.[0]?.role === 'cohort_leader' ? (
+                                   user.cohort ? `Cohort Leader - ${user.cohort}` : 'Cohort Leader'
+                                 ) :
                                  'Member'}
                               </Badge>
                             </TableCell>
@@ -1260,15 +1277,72 @@ const MasterDashboard = () => {
                                           <Check className="ml-auto h-4 w-4" />
                                         )}
                                       </DropdownMenuItem>
-                                      <DropdownMenuItem 
-                                        onClick={() => setUserRole(user.user_id, 'cohort_leader')}
-                                        className={user.user_roles?.[0]?.role === 'cohort_leader' ? 'bg-accent' : ''}
-                                      >
-                                        Cohort Leader
-                                        {user.user_roles?.[0]?.role === 'cohort_leader' && (
-                                          <Check className="ml-auto h-4 w-4" />
-                                        )}
-                                      </DropdownMenuItem>
+                                      <DropdownMenuSub>
+                                        <DropdownMenuSubTrigger 
+                                          className={user.user_roles?.[0]?.role === 'cohort_leader' ? 'bg-accent' : ''}
+                                        >
+                                          Cohort Leader
+                                          {user.user_roles?.[0]?.role === 'cohort_leader' && (
+                                            <Check className="ml-auto h-4 w-4" />
+                                          )}
+                                        </DropdownMenuSubTrigger>
+                                        <DropdownMenuSubContent>
+                                          <DropdownMenuItem 
+                                            onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Anthology')}
+                                            className={user.cohort === 'Anthology' ? 'bg-accent' : ''}
+                                          >
+                                            Anthology
+                                            {user.cohort === 'Anthology' && (
+                                              <Check className="ml-auto h-4 w-4" />
+                                            )}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem 
+                                            onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Ellucian Banner')}
+                                            className={user.cohort === 'Ellucian Banner' ? 'bg-accent' : ''}
+                                          >
+                                            Ellucian Banner
+                                            {user.cohort === 'Ellucian Banner' && (
+                                              <Check className="ml-auto h-4 w-4" />
+                                            )}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem 
+                                            onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Ellucian Colleague')}
+                                            className={user.cohort === 'Ellucian Colleague' ? 'bg-accent' : ''}
+                                          >
+                                            Ellucian Colleague
+                                            {user.cohort === 'Ellucian Colleague' && (
+                                              <Check className="ml-auto h-4 w-4" />
+                                            )}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem 
+                                            onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Jenzabar ONE')}
+                                            className={user.cohort === 'Jenzabar ONE' ? 'bg-accent' : ''}
+                                          >
+                                            Jenzabar ONE
+                                            {user.cohort === 'Jenzabar ONE' && (
+                                              <Check className="ml-auto h-4 w-4" />
+                                            )}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem 
+                                            onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Oracle Cloud')}
+                                            className={user.cohort === 'Oracle Cloud' ? 'bg-accent' : ''}
+                                          >
+                                            Oracle Cloud
+                                            {user.cohort === 'Oracle Cloud' && (
+                                              <Check className="ml-auto h-4 w-4" />
+                                            )}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem 
+                                            onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Workday')}
+                                            className={user.cohort === 'Workday' ? 'bg-accent' : ''}
+                                          >
+                                            Workday
+                                            {user.cohort === 'Workday' && (
+                                              <Check className="ml-auto h-4 w-4" />
+                                            )}
+                                          </DropdownMenuItem>
+                                        </DropdownMenuSubContent>
+                                      </DropdownMenuSub>
                                       <DropdownMenuItem 
                                         onClick={() => setUserRole(user.user_id, 'admin')}
                                         className={user.user_roles?.[0]?.role === 'admin' ? 'bg-accent' : ''}

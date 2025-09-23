@@ -10,6 +10,7 @@ export interface UserProfile {
   email: string;
   phone?: string;
   organization?: string;
+  cohort?: string;
   created_at: string;
   user_roles?: {
     role: 'admin' | 'member' | 'cohort_leader';

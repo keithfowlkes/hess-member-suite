@@ -979,6 +979,7 @@ export type Database = {
           admissions_crm: string | null
           alumni_advancement_crm: string | null
           city: string | null
+          cohort: string | null
           created_at: string
           email: string
           financial_aid: string | null
@@ -1021,6 +1022,7 @@ export type Database = {
           admissions_crm?: string | null
           alumni_advancement_crm?: string | null
           city?: string | null
+          cohort?: string | null
           created_at?: string
           email: string
           financial_aid?: string | null
@@ -1063,6 +1065,7 @@ export type Database = {
           admissions_crm?: string | null
           alumni_advancement_crm?: string | null
           city?: string | null
+          cohort?: string | null
           created_at?: string
           email?: string
           financial_aid?: string | null
