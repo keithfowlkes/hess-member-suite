@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCohortStatistics } from '@/hooks/useCohortStatistics';
 import { useCohortLeaderData } from '@/hooks/useCohortLeaderData';
+import { useOrganizationByName } from '@/hooks/useOrganizationByName';
+import { OrganizationDetailsDialog } from '@/components/OrganizationDetailsDialog';
 import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart, Search, User, Download } from 'lucide-react';
 import {
   DropdownMenu,
@@ -41,8 +43,11 @@ const CohortInformation = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string>('member');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOrganizationName, setSelectedOrganizationName] = useState<string | null>(null);
+  const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] = useState(false);
   const { data: cohortStats, isLoading: statsLoading, error: statsError } = useCohortStatistics();
   const { data: cohortLeaderData, loading: cohortLeaderLoading, error: cohortLeaderError } = useCohortLeaderData();
+  const { data: selectedOrganization, isLoading: organizationLoading } = useOrganizationByName(selectedOrganizationName);
 
   useEffect(() => {
     const fetchCohortInformation = async () => {
@@ -187,26 +192,18 @@ const CohortInformation = () => {
   document.body.removeChild(link);
 };
 
-// Group members by organization
-const groupMembersByOrganization = (members: typeof cohortLeaderData.cohortMembers) => {
-  if (!members) return [];
-  
-  const grouped = members.reduce((acc, member) => {
-    const orgName = member.organization || 'No Organization';
-    if (!acc[orgName]) {
-      acc[orgName] = [];
-    }
-    acc[orgName].push(member);
-    return acc;
-  }, {} as Record<string, typeof members>);
+// Handle member card click to show organization details
+const handleMemberCardClick = (organizationName: string) => {
+  if (organizationName && organizationName !== 'No organization') {
+    setSelectedOrganizationName(organizationName);
+    setIsOrganizationDialogOpen(true);
+  }
+};
 
-  return Object.entries(grouped)
-    .map(([orgName, orgMembers]) => ({
-      name: orgName,
-      members: orgMembers.sort((a, b) => (a.last_name || '').localeCompare(b.last_name || '')),
-      memberCount: orgMembers.length
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+// Handle organization dialog close
+const handleOrganizationDialogClose = () => {
+  setIsOrganizationDialogOpen(false);
+  setSelectedOrganizationName(null);
 };
 
   // Redirect if user doesn't have appropriate role (only for non-admin view)
@@ -366,129 +363,73 @@ const groupMembersByOrganization = (members: typeof cohortLeaderData.cohortMembe
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Tabs defaultValue="members" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 mb-6">
-                      <TabsTrigger value="members">All Members</TabsTrigger>
-                      <TabsTrigger value="organizations">By Organization</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="members">
-                      <div className="space-y-4">
-                        {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
-                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {[...cohortLeaderData.cohortMembers]
-                              .sort((a, b) => (a.last_name || '').localeCompare(b.last_name || ''))
-                              .map((member) => (
-                            <Card key={member.id} className="border bg-muted/20">
-                              <CardContent className="p-4">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <User className="h-4 w-4 text-muted-foreground" />
-                                    <span className="font-medium">
-                                      {member.first_name} {member.last_name}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Mail className="h-4 w-4" />
-                                    <span>{member.email}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Building2 className="h-4 w-4" />
-                                    <span>{member.organization || 'No organization'}</span>
-                                  </div>
-                                  {member.primary_contact_title && (
-                                    <div className="text-sm text-muted-foreground">
-                                      <span className="font-medium">Title:</span> {member.primary_contact_title}
-                                    </div>
-                                  )}
-                                  {(member.city || member.state) && (
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                      <MapPin className="h-4 w-4" />
-                                      <span>
-                                        {[member.city, member.state].filter(Boolean).join(', ')}
-                                      </span>
-                                    </div>
-                                  )}
+                  <div className="space-y-4">
+                    {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {[...cohortLeaderData.cohortMembers]
+                          .sort((a, b) => (a.last_name || '').localeCompare(b.last_name || ''))
+                          .map((member) => (
+                        <Card 
+                          key={member.id} 
+                          className="border bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors"
+                          onClick={() => handleMemberCardClick(member.organization || '')}
+                        >
+                          <CardContent className="p-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">
+                                  {member.first_name} {member.last_name}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Mail className="h-4 w-4" />
+                                <span>{member.email}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Building2 className="h-4 w-4" />
+                                <span>{member.organization || 'No organization'}</span>
+                              </div>
+                              {member.primary_contact_title && (
+                                <div className="text-sm text-muted-foreground">
+                                  <span className="font-medium">Title:</span> {member.primary_contact_title}
                                 </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No cohort members found</p>
-                          </div>
-                        )}
+                              )}
+                              {(member.city || member.state) && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <MapPin className="h-4 w-4" />
+                                  <span>
+                                    {[member.city, member.state].filter(Boolean).join(', ')}
+                                  </span>
+                                </div>
+                              )}
+                              {member.organization && member.organization !== 'No organization' && (
+                                <div className="text-xs text-primary font-medium mt-2">
+                                  Click to view organization details →
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                       </div>
-                    </TabsContent>
-
-                    <TabsContent value="organizations">
-                      <div className="space-y-4">
-                        {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
-                          <div className="space-y-4">
-                            {groupMembersByOrganization(cohortLeaderData.cohortMembers).map((org) => (
-                              <Card key={org.name} className="border">
-                                <CardHeader className="pb-3">
-                                  <CardTitle className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <Building2 className="h-5 w-5 text-primary" />
-                                      <span>{org.name}</span>
-                                    </div>
-                                    <Badge variant="secondary">
-                                      {org.memberCount} {org.memberCount === 1 ? 'member' : 'members'}
-                                    </Badge>
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                                    {org.members.map((member) => (
-                                      <Card key={member.id} className="bg-muted/30 border-muted">
-                                        <CardContent className="p-3">
-                                          <div className="space-y-2">
-                                            <div className="flex items-center gap-2">
-                                              <User className="h-4 w-4 text-muted-foreground" />
-                                              <span className="font-medium text-sm">
-                                                {member.first_name} {member.last_name}
-                                              </span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                              <Mail className="h-3 w-3" />
-                                              <span>{member.email}</span>
-                                            </div>
-                                            {member.primary_contact_title && (
-                                              <div className="text-xs text-muted-foreground">
-                                                <span className="font-medium">Title:</span> {member.primary_contact_title}
-                                              </div>
-                                            )}
-                                            {(member.city || member.state) && (
-                                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                <MapPin className="h-3 w-3" />
-                                                <span>
-                                                  {[member.city, member.state].filter(Boolean).join(', ')}
-                                                </span>
-                                              </div>
-                                            )}
-                                          </div>
-                                        </CardContent>
-                                      </Card>
-                                    ))}
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No organizations found</p>
-                          </div>
-                        )}
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No cohort members found</p>
                       </div>
-                    </TabsContent>
-                  </Tabs>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
+
+              {/* Organization Details Dialog */}
+              <OrganizationDetailsDialog
+                organization={selectedOrganization}
+                isOpen={isOrganizationDialogOpen}
+                onClose={handleOrganizationDialogClose}
+                canEdit={false}
+              />
             </div>
           </main>
         </div>
