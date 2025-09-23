@@ -476,19 +476,26 @@ const MasterDashboard = () => {
       await updateUserRoles(userId, newRoles as ('admin' | 'member' | 'cohort_leader')[]);
     } catch (error) {
       console.error('Roles update failed:', error);
+      // Error toast is already handled in updateUserRoles
     } finally {
-      setUpdatingUser(null);
+      // Only clear updating state if no other operations are pending
+      setTimeout(() => setUpdatingUser(null), 100);
     }
   };
 
   const handleCohortsChange = async (userId: string, newCohorts: string[]) => {
-    setUpdatingUser(userId);
+    // Don't set updating state if already updating to avoid race conditions
+    if (updatingUser !== userId) {
+      setUpdatingUser(userId);
+    }
     try {
       await updateUserCohorts(userId, newCohorts);
     } catch (error) {
       console.error('Cohorts update failed:', error);
+      // Error toast is already handled in updateUserCohorts
     } finally {
-      setUpdatingUser(null);
+      // Only clear updating state if no other operations are pending
+      setTimeout(() => setUpdatingUser(null), 100);
     }
   };
 

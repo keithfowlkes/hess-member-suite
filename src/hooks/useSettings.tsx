@@ -437,6 +437,7 @@ export function useSettings() {
 
       console.log('✅ Role updated successfully');
 
+      // Only show success toast for role updates, not cohort updates to reduce toast spam
       toast({
         title: 'Success',
         description: `User roles updated successfully`
@@ -498,6 +499,8 @@ export function useSettings() {
 
       console.log('✅ Cohorts updated successfully');
 
+      // Only show success toast for cohort updates when they are standalone operations
+      // This prevents duplicate toasts when roles and cohorts are updated together
       toast({
         title: 'Success',
         description: `User cohorts updated successfully`

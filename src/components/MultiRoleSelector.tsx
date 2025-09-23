@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useDebounce } from '@/hooks/useDebounce';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,23 +31,27 @@ export function MultiRoleSelector({
 }: MultiRoleSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Debounce the update functions to prevent rapid successive calls
+  const debouncedRolesChange = useDebounce(onRolesChange, 300);
+  const debouncedCohortsChange = useDebounce(onCohortsChange, 300);
+
   const toggleRole = (role: string) => {
     const newRoles = currentRoles.includes(role) 
       ? currentRoles.filter(r => r !== role)
       : [...currentRoles, role];
-    onRolesChange(userId, newRoles);
+    debouncedRolesChange(userId, newRoles);
   };
 
   const toggleCohort = (cohort: string) => {
     const newCohorts = currentCohorts.includes(cohort)
       ? currentCohorts.filter(c => c !== cohort)
       : [...currentCohorts, cohort];
-    onCohortsChange(userId, newCohorts);
+    debouncedCohortsChange(userId, newCohorts);
   };
 
   const removeCohort = (cohort: string) => {
     const newCohorts = currentCohorts.filter(c => c !== cohort);
-    onCohortsChange(userId, newCohorts);
+    debouncedCohortsChange(userId, newCohorts);
   };
 
   return (
