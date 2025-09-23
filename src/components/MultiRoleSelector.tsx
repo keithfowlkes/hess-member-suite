@@ -22,7 +22,9 @@ interface MultiRoleSelectorProps {
 const availableRoles = ['admin', 'member', 'cohort_leader'];
 const availableCohorts = ['Anthology', 'Ellucian Banner', 'Ellucian Colleague', 'Jenzabar ONE', 'Oracle Cloud', 'Workday'];
 
-export function MultiRoleSelector({ 
+// This component is for ADMIN use only - it allows admins to assign roles and override cohort memberships
+// Members should use MemberCohortSelector to manage their own cohort memberships
+export function MultiRoleSelector({
   userId, 
   currentRoles, 
   currentCohorts, 

@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
 import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
+import { MemberCohortSelector } from '@/components/MemberCohortSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Edit, Save, X, ArrowLeft } from 'lucide-react';
 
@@ -695,6 +696,14 @@ const ProfileEdit = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Cohort Memberships */}
+            <MemberCohortSelector 
+              userId={user?.id}
+              disabled={!isEditing}
+              title="Professional Cohort Memberships"
+              description="Join cohort groups to connect with peers using the same software systems"
+            />
           </div>
         </main>
       </div>

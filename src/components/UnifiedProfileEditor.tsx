@@ -10,6 +10,8 @@ import { Loader2, Edit, Save, X } from 'lucide-react';
 import { UnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
 import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
+import { MemberCohortSelector } from '@/components/MemberCohortSelector';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UnifiedProfileEditorProps {
   data: UnifiedProfile;
@@ -27,6 +29,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
   onSave,
   saving = false
 }) => {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   
   // Initialize editedData with address sync
@@ -594,6 +597,14 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Cohort Memberships */}
+      <MemberCohortSelector 
+        userId={user?.id}
+        disabled={!isEditing}
+        title="Professional Cohort Memberships"
+        description="Join cohort groups to connect with peers using the same software systems"
+      />
     </div>
   );
 };
