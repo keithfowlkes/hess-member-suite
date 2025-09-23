@@ -353,47 +353,66 @@ export function useSettings() {
         if (insertError.code === '23503' && insertError.message?.includes('user_roles_user_id_fkey')) {
           console.log('🧹 Detected orphaned profile during insertion, cleaning up...');
           
-          // Get user email for better error message
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('email, id')
-            .eq('user_id', userId)
-            .single();
-            
+          try {
+            // Get user email for better error message
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('email, id')
+              .eq('user_id', userId)
+              .single();
+              
             // Clean up the orphaned profile immediately
             if (profile) {
               console.log(`🧹 Cleaning up orphaned profile: ${profile.email}`);
               
-              try {
-                // Remove as contact person from organizations
-                await supabase
-                  .from('organizations')
-                  .update({ contact_person_id: null })
-                  .eq('contact_person_id', profile.id);
+              // Remove as contact person from organizations
+              const { error: orgUpdateError } = await supabase
+                .from('organizations')
+                .update({ contact_person_id: null })
+                .eq('contact_person_id', profile.id);
 
-                // Delete the profile
-                await supabase
-                  .from('profiles')
-                  .delete()
-                  .eq('user_id', userId);
-                  
-                toast({
-                  title: 'Orphaned Profile Cleaned',
-                  description: `Removed orphaned profile for ${profile.email}. Refreshing user list...`,
-                });
-                
-                // Refresh the users list
-                await fetchUsers();
-                return;
-              } catch (cleanupError) {
-                console.error('❌ Error during orphaned profile cleanup:', cleanupError);
-                toast({
-                  title: 'Cleanup Failed',
-                  description: `Failed to clean up orphaned profile for ${profile.email}. Please try the full cleanup tool.`,
-                  variant: 'destructive'
-                });
-                return;
+              if (orgUpdateError) {
+                console.error('❌ Error updating organizations:', orgUpdateError);
               }
+
+              // Delete the profile
+              const { error: profileDeleteError } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('user_id', userId);
+                
+              if (profileDeleteError) {
+                console.error('❌ Error deleting profile:', profileDeleteError);
+                throw profileDeleteError;
+              }
+                
+              console.log('✅ Orphaned profile cleaned successfully');
+              
+              toast({
+                title: 'Orphaned Profile Cleaned',
+                description: `Removed orphaned profile for ${profile.email}. Refreshing user list...`,
+              });
+              
+              // Refresh the users list
+              await fetchUsers();
+              return;
+            } else {
+              console.log('❌ No profile found for user_id:', userId);
+              toast({
+                title: 'Error',
+                description: 'User profile not found for cleanup',
+                variant: 'destructive'
+              });
+              return;
+            }
+          } catch (cleanupError: any) {
+            console.error('❌ Error during orphaned profile cleanup:', cleanupError);
+            toast({
+              title: 'Cleanup Failed',
+              description: `Failed to clean up orphaned profile: ${cleanupError.message}`,
+              variant: 'destructive'
+            });
+            return;
           }
         }
         
