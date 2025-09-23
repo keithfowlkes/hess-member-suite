@@ -9,7 +9,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCohortStatistics } from '@/hooks/useCohortStatistics';
-import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp } from 'lucide-react';
+import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface CohortMember {
   id: string;
@@ -242,59 +247,76 @@ const CohortInformation = () => {
                         </CardContent>
                       </Card>
                     ) : (
-                      <div className="grid gap-6">
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {cohortStats.map((cohort) => (
                           <Card key={cohort.cohortName} className="hover:shadow-md transition-shadow">
-                            <CardHeader className="pb-4">
-                              <div className="flex items-center justify-between">
-                                <CardTitle className="text-lg">{cohort.cohortName}</CardTitle>
-                                <Badge variant="secondary" className="text-sm">
-                                  {cohort.memberCount} {cohort.memberCount === 1 ? 'member' : 'members'}
-                                </Badge>
-                              </div>
-                              <CardDescription>
-                                Organizations and members using {cohort.cohortName}
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="text-center p-3 bg-primary/5 rounded-lg">
-                                  <div className="text-xl font-bold text-primary">{cohort.memberCount}</div>
-                                  <div className="text-xs text-muted-foreground">Total Members</div>
+                            <CardContent className="p-4">
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <h3 className="font-semibold text-base">{cohort.cohortName}</h3>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {cohort.memberCount} {cohort.memberCount === 1 ? 'member' : 'members'}
+                                  </Badge>
                                 </div>
-                                <div className="text-center p-3 bg-secondary/5 rounded-lg">
-                                  <div className="text-xl font-bold text-secondary-foreground">{cohort.organizationCount}</div>
-                                  <div className="text-xs text-muted-foreground">Organizations</div>
-                                </div>
-                              </div>
-                              
-                              {/* Organization Details */}
-                              {cohort.organizations.length > 0 && (
-                                <div className="space-y-3">
-                                  <div className="text-sm font-medium flex items-center gap-1">
-                                    <Building2 className="h-4 w-4" />
-                                    Member Organizations
+                                
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="text-center p-2 bg-primary/5 rounded">
+                                    <div className="text-lg font-bold text-primary">{cohort.memberCount}</div>
+                                    <div className="text-xs text-muted-foreground">Members</div>
                                   </div>
-                                  <div className="space-y-2">
-                                    {cohort.organizations.map((org) => (
-                                      <div key={org.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
-                                        <div>
-                                          <div className="font-medium text-sm">{org.name}</div>
-                                          {(org.city || org.state) && (
-                                            <div className="text-xs text-muted-foreground flex items-center gap-1">
-                                              <MapPin className="h-3 w-3" />
-                                              {org.city}{org.city && org.state && ', '}{org.state}
-                                            </div>
-                                          )}
+                                  <div className="text-center p-2 bg-secondary/5 rounded">
+                                    <div className="text-lg font-bold text-secondary-foreground">{cohort.organizationCount}</div>
+                                    <div className="text-xs text-muted-foreground">Organizations</div>
+                                  </div>
+                                </div>
+                                
+                                {/* Organization Dropdown */}
+                                {cohort.organizations.length > 0 && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="w-full justify-between text-xs h-8"
+                                      >
+                                        <span className="flex items-center gap-1">
+                                          <Building2 className="h-3 w-3" />
+                                          View Organizations ({cohort.organizationCount})
+                                        </span>
+                                        <ChevronDown className="h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent 
+                                      align="start" 
+                                      className="w-80 max-h-60 overflow-y-auto bg-background border shadow-lg z-50"
+                                    >
+                                      <div className="p-2 space-y-1">
+                                        <div className="text-sm font-medium text-muted-foreground px-2 py-1">
+                                          Member Organizations
                                         </div>
-                                        <Badge variant="outline" className="text-xs">
-                                          {org.memberCount} {org.memberCount === 1 ? 'member' : 'members'}
-                                        </Badge>
+                                        {cohort.organizations.map((org) => (
+                                          <div key={org.id} className="flex justify-between items-start p-2 hover:bg-muted/50 rounded text-xs">
+                                            <div className="flex-1 min-w-0">
+                                              <div className="font-medium truncate">{org.name}</div>
+                                              {(org.city || org.state) && (
+                                                <div className="text-muted-foreground flex items-center gap-1 mt-1">
+                                                  <MapPin className="h-3 w-3 flex-shrink-0" />
+                                                  <span className="truncate">
+                                                    {org.city}{org.city && org.state && ', '}{org.state}
+                                                  </span>
+                                                </div>
+                                              )}
+                                            </div>
+                                            <Badge variant="outline" className="ml-2 text-xs flex-shrink-0">
+                                              {org.memberCount}
+                                            </Badge>
+                                          </div>
+                                        ))}
                                       </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </div>
                             </CardContent>
                           </Card>
                         ))}
