@@ -69,20 +69,7 @@ export function useCohortLeaderData() {
         // Get all users in the same cohorts
         const { data: cohortMembersData, error: membersError } = await supabase
           .from('user_cohorts')
-          .select(`
-            user_id,
-            cohort,
-            profiles:user_id (
-              id,
-              first_name,
-              last_name,
-              email,
-              organization,
-              city,
-              state,
-              primary_contact_title
-            )
-          `)
+          .select('user_id, cohort')
           .in('cohort', userCohorts);
 
         console.log('CohortLeaderData - Cohort members query result:', cohortMembersData, 'Error:', membersError);
@@ -91,6 +78,60 @@ export function useCohortLeaderData() {
           throw new Error('Failed to fetch cohort members');
         }
 
+        if (!cohortMembersData || cohortMembersData.length === 0) {
+          setData({
+            userCohorts,
+            cohortMembers: [],
+            cohortStats: {
+              totalMembers: 0,
+              totalOrganizations: 0,
+              representedStates: 0,
+              cohortsBySystem: {}
+            }
+          });
+          return;
+        }
+
+        // Get all user IDs for profile lookup
+        const userIds = cohortMembersData.map(item => item.user_id);
+        
+        // Get profiles for all users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            user_id,
+            first_name,
+            last_name,
+            email,
+            organization,
+            city,
+            state,
+            primary_contact_title
+          `)
+          .in('user_id', userIds);
+
+        if (profilesError) {
+          throw new Error('Failed to fetch profiles');
+        }
+
+        if (!profilesData || profilesData.length === 0) {
+          setData({
+            userCohorts,
+            cohortMembers: [],
+            cohortStats: {
+              totalMembers: 0,
+              totalOrganizations: 0,
+              representedStates: 0,
+              cohortsBySystem: {}
+            }
+          });
+          return;
+        }
+
+        // Create a map of user_id to profile for easier lookup
+        const profileMap = new Map(profilesData.map(profile => [profile.user_id, profile]));
+
         // Process the data
         const cohortMembers: CohortMemberDetails[] = [];
         const organizationsSet = new Set<string>();
@@ -98,8 +139,8 @@ export function useCohortLeaderData() {
         const cohortsBySystem: { [key: string]: number } = {};
 
         cohortMembersData?.forEach(item => {
-          if (item.profiles) {
-            const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+          const profile = profileMap.get(item.user_id);
+          if (profile) {
             cohortMembers.push({
               id: profile.id,
               first_name: profile.first_name,
