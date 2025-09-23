@@ -355,13 +355,18 @@ export function useSettings() {
           
           try {
             // Get user email for better error message
-            const { data: profile } = await supabase
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('email, id')
               .eq('user_id', userId)
-              .single();
+              .maybeSingle(); // Use maybeSingle to avoid errors when no profile exists
               
-            // Clean up the orphaned profile immediately
+            if (profileError) {
+              console.error('❌ Error fetching profile for cleanup:', profileError);
+              throw profileError;
+            }
+              
+            // If profile exists, clean it up
             if (profile) {
               console.log(`🧹 Cleaning up orphaned profile: ${profile.email}`);
               
@@ -392,26 +397,28 @@ export function useSettings() {
                 title: 'Orphaned Profile Cleaned',
                 description: `Removed orphaned profile for ${profile.email}. Refreshing user list...`,
               });
-              
-              // Refresh the users list
-              await fetchUsers();
-              return;
             } else {
-              console.log('❌ No profile found for user_id:', userId);
+              // Profile was already cleaned up, just refresh the list
+              console.log('ℹ️ Profile already cleaned up, refreshing user list...');
+              
               toast({
-                title: 'Error',
-                description: 'User profile not found for cleanup',
-                variant: 'destructive'
+                title: 'Profile Already Cleaned',
+                description: 'This user was already removed. Refreshing user list...',
               });
-              return;
             }
+            
+            // Always refresh the users list
+            await fetchUsers();
+            return;
           } catch (cleanupError: any) {
             console.error('❌ Error during orphaned profile cleanup:', cleanupError);
             toast({
-              title: 'Cleanup Failed',
-              description: `Failed to clean up orphaned profile: ${cleanupError.message}`,
+              title: 'Cleanup Error',
+              description: `Error during cleanup: ${cleanupError.message}`,
               variant: 'destructive'
             });
+            // Still refresh the list in case something was partially cleaned
+            await fetchUsers();
             return;
           }
         }
