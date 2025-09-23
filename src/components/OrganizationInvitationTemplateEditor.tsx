@@ -18,13 +18,12 @@ export const OrganizationInvitationTemplateEditor = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState('');
 
-  // Get design settings for preview
-  const { data: backgroundImageSetting } = useSystemSetting('email_background_image');
-  const { data: primaryColorSetting } = useSystemSetting('email_design_primary_color');
-  const { data: accentColorSetting } = useSystemSetting('email_design_accent_color');
-  const { data: textColorSetting } = useSystemSetting('email_design_text_color');
-  const { data: cardBackgroundSetting } = useSystemSetting('email_design_card_background');
-  const { data: logoSetting } = useSystemSetting('public_logo_url');
+   // Get design settings for preview
+   const { data: backgroundImageSetting } = useSystemSetting('email_background_image');
+   const { data: primaryColorSetting } = useSystemSetting('email_design_primary_color');
+   const { data: accentColorSetting } = useSystemSetting('email_design_accent_color');
+   const { data: textColorSetting } = useSystemSetting('email_design_text_color');
+   const { data: cardBackgroundSetting } = useSystemSetting('email_design_card_background');
 
   // Initialize template from settings
   useEffect(() => {
@@ -88,19 +87,14 @@ export const OrganizationInvitationTemplateEditor = () => {
 
   // Generate email preview with design settings
   const generateEmailPreview = (content: string, title: string) => {
-    // Get design settings with defaults
-    const settings = {
-      background_image: backgroundImageSetting?.setting_value || '',
-      primary_color: primaryColorSetting?.setting_value || '#8B7355',
-      accent_color: accentColorSetting?.setting_value || '#D4AF37',
-      text_color: textColorSetting?.setting_value || '#4A4A4A',
-      card_background: cardBackgroundSetting?.setting_value || 'rgba(248, 245, 238, 0.95)'
-    };
-
-    const logoUrl = logoSetting?.setting_value;
-    const emailOptimizedLogo = logoUrl 
-      ? `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto 20px auto;" border="0">`
-      : '';
+     // Get design settings with defaults
+     const settings = {
+       background_image: backgroundImageSetting?.setting_value || '',
+       primary_color: primaryColorSetting?.setting_value || '#8B7355',
+       accent_color: accentColorSetting?.setting_value || '#D4AF37',
+       text_color: textColorSetting?.setting_value || '#4A4A4A',
+       card_background: cardBackgroundSetting?.setting_value || 'rgba(248, 245, 238, 0.95)'
+     };
 
     // Determine background style based on settings
     const backgroundStyle = settings.background_image 
@@ -128,10 +122,9 @@ export const OrganizationInvitationTemplateEditor = () => {
             <td align="center" valign="top">
                 <!-- Main Content Card with Design System Background -->
                 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background: ${settings.card_background}; border-radius: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px);">
-                    <!-- Header with Logo -->
+                     <!-- Header with Logo -->
                     <tr>
                         <td style="padding: 40px 40px 20px 40px; text-align: center;">
-                            ${emailOptimizedLogo}
                             <div style="height: 3px; background: linear-gradient(90deg, ${settings.accent_color} 0%, ${settings.primary_color} 50%, ${settings.accent_color} 100%); border-radius: 2px; margin: 15px auto 0 auto; width: 120px;"></div>
                         </td>
                     </tr>
