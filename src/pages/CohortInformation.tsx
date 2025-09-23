@@ -269,17 +269,22 @@ const CohortInformation = () => {
                                 >
                                   {cohortStats.map((_, index) => (
                                     <Cell key={`cell-${index}`} fill={[
-                                      'hsl(var(--primary))',
-                                      'hsl(var(--secondary))',
-                                      'hsl(var(--accent))',
-                                      'hsl(var(--muted))',
-                                      '#8884d8',
-                                      '#82ca9d',
-                                      '#ffc658',
-                                      '#ff7300',
-                                      '#a4de6c',
-                                      '#8dd1e1'
-                                    ][index % 10]} />
+                                      '#FF6B6B', // Red
+                                      '#4ECDC4', // Teal
+                                      '#45B7D1', // Blue
+                                      '#96CEB4', // Green
+                                      '#FFEAA7', // Yellow
+                                      '#DDA0DD', // Plum
+                                      '#98D8C8', // Mint
+                                      '#F7DC6F', // Light Yellow
+                                      '#BB8FCE', // Light Purple
+                                      '#85C1E9', // Light Blue
+                                      '#F8C471', // Orange
+                                      '#82E0AA', // Light Green
+                                      '#F1948A', // Light Red
+                                      '#85CCDA', // Cyan
+                                      '#D2B4DE'  // Lavender
+                                    ][index]} />
                                   ))}
                                 </Pie>
                                 <Tooltip 
