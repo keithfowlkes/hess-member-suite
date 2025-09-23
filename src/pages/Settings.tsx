@@ -64,7 +64,7 @@ const availableSections = [
 ];
 
 export default function Settings() {
-  const { users, stats, settings, loading, updateUserRole, deleteUser, resetUserPassword, changeUserPassword, updateSetting, cleanupOrphanedProfiles } = useSettings();
+  const { users, stats, settings, loading, updateUserRoles, deleteUser, resetUserPassword, changeUserPassword, updateSetting, cleanupOrphanedProfiles } = useSettings();
   const { data: recaptchaSetting } = useSystemSetting('recaptcha_site_key');
   const updateSystemSetting = useUpdateSystemSetting();
   const { 

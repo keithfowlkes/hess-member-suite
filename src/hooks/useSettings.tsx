@@ -10,10 +10,12 @@ export interface UserProfile {
   email: string;
   phone?: string;
   organization?: string;
-  cohort?: string;
   created_at: string;
   user_roles?: {
     role: 'admin' | 'member' | 'cohort_leader';
+  }[];
+  user_cohorts?: {
+    cohort: string;
   }[];
 }
 
@@ -60,6 +62,13 @@ export function useSettings() {
 
       if (roleError) throw roleError;
 
+      // Get all user cohorts
+      const { data: cohorts, error: cohortError } = await supabase
+        .from('user_cohorts')
+        .select('user_id, cohort');
+
+      if (cohortError) throw cohortError;
+
       // Filter out any profiles that might be stale or problematic
       // In a perfect world we'd validate against auth.users, but we'll rely on cleanup functions for that
       const validProfiles = profiles?.filter(profile => {
@@ -72,7 +81,8 @@ export function useSettings() {
       // Combine the data
       const usersWithRoles = validProfiles.map(profile => ({
         ...profile,
-        user_roles: roles?.filter(role => role.user_id === profile.user_id) || []
+        user_roles: roles?.filter(role => role.user_id === profile.user_id) || [],
+        user_cohorts: cohorts?.filter(cohort => cohort.user_id === profile.user_id) || []
       }));
       
       setUsers(usersWithRoles);
@@ -249,9 +259,9 @@ export function useSettings() {
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: 'admin' | 'member' | 'cohort_leader') => {
+  const updateUserRoles = async (userId: string, newRoles: ('admin' | 'member' | 'cohort_leader')[]) => {
     try {
-      console.log('🔄 Updating role for user:', userId, 'to:', newRole);
+      console.log('🔄 Updating roles for user:', userId, 'to:', newRoles);
       
       // First delete existing role
       console.log('🗑️ Deleting existing roles for user...');
@@ -325,14 +335,12 @@ export function useSettings() {
 
       console.log('✅ Existing roles deleted successfully');
 
-      // Then insert new role
-      console.log('➕ Inserting new role...');
+      // Then insert new roles
+      console.log('➕ Inserting new roles...');
+      const roleInserts = newRoles.map(role => ({ user_id: userId, role }));
       const { error: insertError } = await supabase
         .from('user_roles')
-        .insert({
-          user_id: userId,
-          role: newRole
-        });
+        .insert(roleInserts);
 
       if (insertError) {
         console.error('❌ Error inserting new role:', insertError);
@@ -343,7 +351,7 @@ export function useSettings() {
           
           toast({
             title: 'Success',
-            description: `User already has ${newRole} role - no changes needed`,
+            description: `User roles updated successfully`,
           });
           
           await fetchUsers();
@@ -431,7 +439,7 @@ export function useSettings() {
 
       toast({
         title: 'Success',
-        description: `User role updated to ${newRole} successfully`
+        description: `User roles updated successfully`
       });
 
       await fetchUsers();
@@ -451,6 +459,57 @@ export function useSettings() {
       toast({
         title: 'Error',
         description: errorMessage,
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const updateUserCohorts = async (userId: string, newCohorts: string[]) => {
+    try {
+      console.log('🔄 Updating cohorts for user:', userId, 'to:', newCohorts);
+      
+      // First delete existing cohorts
+      console.log('🗑️ Deleting existing cohorts for user...');
+      const { error: deleteError } = await supabase
+        .from('user_cohorts')
+        .delete()
+        .eq('user_id', userId);
+
+      if (deleteError) {
+        console.error('❌ Error deleting existing cohorts:', deleteError);
+        throw deleteError;
+      }
+
+      console.log('✅ Existing cohorts deleted successfully');
+
+      // Then insert new cohorts
+      if (newCohorts.length > 0) {
+        console.log('➕ Inserting new cohorts...');
+        const cohortInserts = newCohorts.map(cohort => ({ user_id: userId, cohort }));
+        const { error: insertError } = await supabase
+          .from('user_cohorts')
+          .insert(cohortInserts);
+
+        if (insertError) {
+          console.error('❌ Error inserting new cohorts:', insertError);
+          throw insertError;
+        }
+      }
+
+      console.log('✅ Cohorts updated successfully');
+
+      toast({
+        title: 'Success',
+        description: `User cohorts updated successfully`
+      });
+
+      await fetchUsers();
+    } catch (error: any) {
+      console.error('❌ Cohort update error:', error);
+      
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update user cohorts',
         variant: 'destructive'
       });
     }
@@ -770,7 +829,8 @@ export function useSettings() {
     fetchUsers,
     fetchStats,
     fetchSettings,
-    updateUserRole,
+    updateUserRoles,
+    updateUserCohorts,
     deleteUser,
     deleteUserByEmail,
     deleteSpecificUser,

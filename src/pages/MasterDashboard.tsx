@@ -74,6 +74,7 @@ import { PendingRegistrationApprovalDialog } from '@/components/PendingRegistrat
 import { AddExternalUserDialog } from '@/components/AddExternalUserDialog';
 import { DebugRequestsComponent } from '@/components/DebugRequestsComponent';
 import { MemberRegistrationUpdateDialog } from '@/components/MemberRegistrationUpdateDialog';
+import { MultiRoleSelector } from '@/components/MultiRoleSelector';
 import type { PendingRegistration } from '@/hooks/usePendingRegistrations';
 
 // Icons
@@ -112,7 +113,7 @@ import { format } from 'date-fns';
 const MasterDashboard = () => {
   const { user, signOut } = useAuth();
   const { stats: dashboardStats, loading: statsLoading } = useDashboardStats();
-  const { users, stats, settings, loading: settingsLoading, updateUserRole, deleteUser, deleteUserByEmail, resetUserPassword, changeUserPassword, updateSetting, cleanupOrphanedProfiles, cleanupSpecificUser } = useSettings();
+  const { users, stats, settings, loading: settingsLoading, updateUserRoles, updateUserCohorts, deleteUser, deleteUserByEmail, resetUserPassword, changeUserPassword, updateSetting, cleanupOrphanedProfiles, cleanupSpecificUser } = useSettings();
   
   // Organization management hooks
   const { 
@@ -469,24 +470,40 @@ const MasterDashboard = () => {
     setShowApprovalDialog(true);
   };
 
+  const handleRolesChange = async (userId: string, newRoles: string[]) => {
+    setUpdatingUser(userId);
+    try {
+      await updateUserRoles(userId, newRoles as ('admin' | 'member' | 'cohort_leader')[]);
+    } catch (error) {
+      console.error('Roles update failed:', error);
+    } finally {
+      setUpdatingUser(null);
+    }
+  };
+
+  const handleCohortsChange = async (userId: string, newCohorts: string[]) => {
+    setUpdatingUser(userId);
+    try {
+      await updateUserCohorts(userId, newCohorts);
+    } catch (error) {
+      console.error('Cohorts update failed:', error);
+    } finally {
+      setUpdatingUser(null);
+    }
+  };
+
   const setUserRole = async (userId: string, newRole: 'admin' | 'member' | 'cohort_leader', cohort?: string) => {
     setUpdatingUser(userId);
     try {
-      await updateUserRole(userId, newRole);
+      await updateUserRoles(userId, [newRole]);
       
-      // If setting cohort_leader role and cohort is specified, update the profile
+      // If setting cohort_leader role and cohort is specified, update the cohorts
       if (newRole === 'cohort_leader' && cohort) {
-        await supabase
-          .from('profiles')
-          .update({ cohort })
-          .eq('user_id', userId);
+        await updateUserCohorts(userId, [cohort]);
       }
-      // Clear cohort when setting to non-cohort_leader role
+      // Clear cohorts when setting to non-cohort_leader role
       else if (newRole !== 'cohort_leader') {
-        await supabase
-          .from('profiles')
-          .update({ cohort: null })
-          .eq('user_id', userId);
+        await updateUserCohorts(userId, []);
       }
     } catch (error) {
       console.error('Role update failed:', error);
@@ -1233,16 +1250,13 @@ const MasterDashboard = () => {
                             </TableCell>
                             <TableCell>{user.organization || 'Not specified'}</TableCell>
                             <TableCell>
-                              <Badge variant={
-                                user.user_roles?.[0]?.role === 'admin' ? 'default' : 
-                                user.user_roles?.[0]?.role === 'cohort_leader' ? 'secondary' : 'outline'
-                              }>
-                                {user.user_roles?.[0]?.role === 'admin' ? 'Admin' :
-                                 user.user_roles?.[0]?.role === 'cohort_leader' ? (
-                                   user.cohort ? `Cohort Leader - ${user.cohort}` : 'Cohort Leader'
-                                 ) :
-                                 'Member'}
-                              </Badge>
+                              <MultiRoleSelector
+                                userId={user.user_id}
+                                currentRoles={user.user_roles?.map(r => r.role) || []}
+                                currentCohorts={user.user_cohorts?.map(c => c.cohort) || []}
+                                onRolesChange={handleRolesChange}
+                                onCohortsChange={handleCohortsChange}
+                              />
                             </TableCell>
                             <TableCell>
                               {user.created_at 
@@ -1289,55 +1303,55 @@ const MasterDashboard = () => {
                                         <DropdownMenuSubContent>
                                           <DropdownMenuItem 
                                             onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Anthology')}
-                                            className={user.cohort === 'Anthology' ? 'bg-accent' : ''}
-                                          >
-                                            Anthology
-                                            {user.cohort === 'Anthology' && (
+                                             className={user.user_cohorts?.some(c => c.cohort === 'Anthology') ? 'bg-accent' : ''}
+                                           >
+                                             Anthology
+                                             {user.user_cohorts?.some(c => c.cohort === 'Anthology') && (
                                               <Check className="ml-auto h-4 w-4" />
                                             )}
                                           </DropdownMenuItem>
                                           <DropdownMenuItem 
                                             onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Ellucian Banner')}
-                                            className={user.cohort === 'Ellucian Banner' ? 'bg-accent' : ''}
-                                          >
-                                            Ellucian Banner
-                                            {user.cohort === 'Ellucian Banner' && (
+                                             className={user.user_cohorts?.some(c => c.cohort === 'Ellucian Banner') ? 'bg-accent' : ''}
+                                           >
+                                             Ellucian Banner
+                                             {user.user_cohorts?.some(c => c.cohort === 'Ellucian Banner') && (
                                               <Check className="ml-auto h-4 w-4" />
                                             )}
                                           </DropdownMenuItem>
                                           <DropdownMenuItem 
                                             onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Ellucian Colleague')}
-                                            className={user.cohort === 'Ellucian Colleague' ? 'bg-accent' : ''}
-                                          >
-                                            Ellucian Colleague
-                                            {user.cohort === 'Ellucian Colleague' && (
+                                             className={user.user_cohorts?.some(c => c.cohort === 'Ellucian Colleague') ? 'bg-accent' : ''}
+                                           >
+                                             Ellucian Colleague
+                                             {user.user_cohorts?.some(c => c.cohort === 'Ellucian Colleague') && (
                                               <Check className="ml-auto h-4 w-4" />
                                             )}
                                           </DropdownMenuItem>
                                           <DropdownMenuItem 
                                             onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Jenzabar ONE')}
-                                            className={user.cohort === 'Jenzabar ONE' ? 'bg-accent' : ''}
-                                          >
-                                            Jenzabar ONE
-                                            {user.cohort === 'Jenzabar ONE' && (
+                                             className={user.user_cohorts?.some(c => c.cohort === 'Jenzabar ONE') ? 'bg-accent' : ''}
+                                           >
+                                             Jenzabar ONE
+                                             {user.user_cohorts?.some(c => c.cohort === 'Jenzabar ONE') && (
                                               <Check className="ml-auto h-4 w-4" />
                                             )}
                                           </DropdownMenuItem>
                                           <DropdownMenuItem 
                                             onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Oracle Cloud')}
-                                            className={user.cohort === 'Oracle Cloud' ? 'bg-accent' : ''}
-                                          >
-                                            Oracle Cloud
-                                            {user.cohort === 'Oracle Cloud' && (
+                                             className={user.user_cohorts?.some(c => c.cohort === 'Oracle Cloud') ? 'bg-accent' : ''}
+                                           >
+                                             Oracle Cloud
+                                             {user.user_cohorts?.some(c => c.cohort === 'Oracle Cloud') && (
                                               <Check className="ml-auto h-4 w-4" />
                                             )}
                                           </DropdownMenuItem>
                                           <DropdownMenuItem 
                                             onClick={() => setUserRole(user.user_id, 'cohort_leader', 'Workday')}
-                                            className={user.cohort === 'Workday' ? 'bg-accent' : ''}
-                                          >
-                                            Workday
-                                            {user.cohort === 'Workday' && (
+                                             className={user.user_cohorts?.some(c => c.cohort === 'Workday') ? 'bg-accent' : ''}
+                                           >
+                                             Workday
+                                             {user.user_cohorts?.some(c => c.cohort === 'Workday') && (
                                               <Check className="ml-auto h-4 w-4" />
                                             )}
                                           </DropdownMenuItem>

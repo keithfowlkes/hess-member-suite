@@ -979,7 +979,6 @@ export type Database = {
           admissions_crm: string | null
           alumni_advancement_crm: string | null
           city: string | null
-          cohort: string | null
           created_at: string
           email: string
           financial_aid: string | null
@@ -1022,7 +1021,6 @@ export type Database = {
           admissions_crm?: string | null
           alumni_advancement_crm?: string | null
           city?: string | null
-          cohort?: string | null
           created_at?: string
           email: string
           financial_aid?: string | null
@@ -1065,7 +1063,6 @@ export type Database = {
           admissions_crm?: string | null
           alumni_advancement_crm?: string | null
           city?: string | null
-          cohort?: string | null
           created_at?: string
           email?: string
           financial_aid?: string | null
@@ -1282,6 +1279,27 @@ export type Database = {
           setting_key?: string
           setting_value?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_cohorts: {
+        Row: {
+          cohort: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          cohort: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          cohort?: string
+          created_at?: string
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
