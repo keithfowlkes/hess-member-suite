@@ -16,18 +16,22 @@ export const useCohortStatistics = () => {
   return useQuery({
     queryKey: ['cohort-statistics'],
     queryFn: async (): Promise<CohortStatistics[]> => {
-      // Get all available cohorts
-      const availableCohorts = [
-        'Advancement Services',
-        'Business Affairs',
-        'Enrollment Management',
-        'IT Leadership', 
-        'Student Affairs'
-      ];
+      // Get all unique cohorts from the database
+      const { data: allCohorts, error: cohortListError } = await supabase
+        .from('user_cohorts')
+        .select('cohort')
+        .order('cohort');
 
+      if (cohortListError) {
+        console.error('Error fetching cohort list:', cohortListError);
+        throw cohortListError;
+      }
+
+      // Get unique cohort names
+      const uniqueCohorts = [...new Set(allCohorts?.map(c => c.cohort) || [])];
       const cohortStats: CohortStatistics[] = [];
 
-      for (const cohortName of availableCohorts) {
+      for (const cohortName of uniqueCohorts) {
         // Get all users in this cohort
         const { data: userCohorts, error: cohortError } = await supabase
           .from('user_cohorts')
@@ -89,7 +93,7 @@ export const useCohortStatistics = () => {
           continue;
         }
 
-        // Count members per organization
+        // Count members per organization in this cohort
         const orgStats = organizations?.map(org => {
           const orgProfiles = profiles?.filter(p => p.organization === org.name) || [];
           return {
@@ -107,7 +111,7 @@ export const useCohortStatistics = () => {
         });
       }
 
-      return cohortStats;
+      return cohortStats.sort((a, b) => a.cohortName.localeCompare(b.cohortName));
     },
     staleTime: 1000 * 60 * 5, // Consider data stale after 5 minutes
     gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
