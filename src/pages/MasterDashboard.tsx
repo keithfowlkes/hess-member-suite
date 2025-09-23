@@ -463,7 +463,21 @@ const MasterDashboard = () => {
   const handleRoleUpdate = async (userId: string, currentRole: string = 'member') => {
     setUpdatingUser(userId);
     try {
-      const newRole = currentRole === 'admin' ? 'member' : 'admin';
+      // Cycle through roles: member -> cohort_leader -> admin -> member
+      let newRole: 'admin' | 'member' | 'cohort_leader';
+      switch (currentRole) {
+        case 'member':
+          newRole = 'cohort_leader';
+          break;
+        case 'cohort_leader':
+          newRole = 'admin';
+          break;
+        case 'admin':
+          newRole = 'member';
+          break;
+        default:
+          newRole = 'cohort_leader';
+      }
       await updateUserRole(userId, newRole);
     } catch (error) {
       console.error('Role update failed:', error);
@@ -1211,7 +1225,8 @@ const MasterDashboard = () => {
                             <TableCell>{user.organization || 'Not specified'}</TableCell>
                             <TableCell>
                               <Badge variant={
-                                user.user_roles?.[0]?.role === 'admin' ? 'default' : 'outline'
+                                user.user_roles?.[0]?.role === 'admin' ? 'default' : 
+                                user.user_roles?.[0]?.role === 'cohort_leader' ? 'secondary' : 'outline'
                               }>
                                 {user.user_roles?.[0]?.role || 'member'}
                               </Badge>
@@ -1231,7 +1246,7 @@ const MasterDashboard = () => {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem 
-                                    onClick={() => handleRoleUpdate(user.user_id)}
+                                    onClick={() => handleRoleUpdate(user.user_id, user.user_roles?.[0]?.role || 'member')}
                                     disabled={updatingUser === user.user_id}
                                   >
                                     {updatingUser === user.user_id ? (

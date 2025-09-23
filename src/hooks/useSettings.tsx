@@ -12,7 +12,7 @@ export interface UserProfile {
   organization?: string;
   created_at: string;
   user_roles?: {
-    role: 'admin' | 'member';
+    role: 'admin' | 'member' | 'cohort_leader';
   }[];
 }
 
@@ -248,7 +248,7 @@ export function useSettings() {
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: 'admin' | 'member') => {
+  const updateUserRole = async (userId: string, newRole: 'admin' | 'member' | 'cohort_leader') => {
     try {
       console.log('🔄 Updating role for user:', userId, 'to:', newRole);
       
