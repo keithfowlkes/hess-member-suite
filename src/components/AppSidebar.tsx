@@ -92,7 +92,6 @@ export function AppSidebar() {
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
     { title: 'Organization Profile', url: '/profile', icon: User },
     { title: 'Settings', url: '/settings', icon: Settings },
-    ...(canAccessCohortInfo ? [{ title: 'Your Cohort Information', url: '/cohort-information', icon: GraduationCap }] : []),
   ];
 
   const memberItems = [
@@ -102,7 +101,6 @@ export function AppSidebar() {
     { title: 'Member Map', url: '/public-map', icon: Map },
     { title: 'My Invoices', url: '/invoices', icon: FileText },
     { title: 'Organization Profile', url: '/profile', icon: User },
-    ...(canAccessCohortInfo ? [{ title: 'Your Cohort Information', url: '/cohort-information', icon: GraduationCap }] : []),
   ];
 
   const items = isViewingAsAdmin ? adminItems : memberItems;
