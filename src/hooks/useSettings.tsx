@@ -353,16 +353,12 @@ export function useSettings() {
         if (insertError.code === '23503' && insertError.message?.includes('user_roles_user_id_fkey')) {
           console.log('🧹 Detected orphaned profile during insertion, cleaning up...');
           
-          // Verify this is actually an orphaned profile by checking auth.users
-          const { data: authUser } = await supabase.auth.admin.getUserById(userId);
-          
-          if (!authUser.user) {
-            // Get user email for better error message
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('email, id')
-              .eq('user_id', userId)
-              .single();
+          // Get user email for better error message
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, id')
+            .eq('user_id', userId)
+            .single();
             
             // Clean up the orphaned profile immediately
             if (profile) {
@@ -398,10 +394,6 @@ export function useSettings() {
                 });
                 return;
               }
-            }
-          } else {
-            // User exists in auth but role insertion failed for another reason
-            console.error('❌ User exists in auth but role insertion failed:', insertError);
           }
         }
         
