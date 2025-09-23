@@ -9,12 +9,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCohortStatistics } from '@/hooks/useCohortStatistics';
-import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, Pie, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 interface CohortMember {
   id: string;
@@ -232,6 +233,127 @@ const CohortInformation = () => {
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Charts Section */}
+                  {cohortStats && cohortStats.length > 0 && (
+                    <div className="grid gap-6 md:grid-cols-2">
+                      {/* Pie Chart */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <PieChart className="h-5 w-5" />
+                            Member Distribution by Software System
+                          </CardTitle>
+                          <CardDescription>
+                            Percentage breakdown of members across cohorts
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="h-80">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <RechartsPieChart>
+                                <Pie
+                                  data={cohortStats.map(cohort => ({
+                                    name: cohort.cohortName,
+                                    value: cohort.memberCount,
+                                    percentage: ((cohort.memberCount / cohortStats.reduce((sum, c) => sum + c.memberCount, 0)) * 100).toFixed(1)
+                                  }))}
+                                  cx="50%"
+                                  cy="50%"
+                                  labelLine={false}
+                                  label={({ name, percentage }) => `${name}: ${percentage}%`}
+                                  outerRadius={80}
+                                  fill="#8884d8"
+                                  dataKey="value"
+                                >
+                                  {cohortStats.map((_, index) => (
+                                    <Cell key={`cell-${index}`} fill={[
+                                      'hsl(var(--primary))',
+                                      'hsl(var(--secondary))',
+                                      'hsl(var(--accent))',
+                                      'hsl(var(--muted))',
+                                      '#8884d8',
+                                      '#82ca9d',
+                                      '#ffc658',
+                                      '#ff7300',
+                                      '#a4de6c',
+                                      '#8dd1e1'
+                                    ][index % 10]} />
+                                  ))}
+                                </Pie>
+                                <Tooltip 
+                                  formatter={(value: number, name: string) => [
+                                    `${value} members (${((value / cohortStats.reduce((sum, c) => sum + c.memberCount, 0)) * 100).toFixed(1)}%)`,
+                                    name
+                                  ]}
+                                />
+                                <Legend />
+                              </RechartsPieChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Bar Chart */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <BarChart3 className="h-5 w-5" />
+                            Members & Organizations by System
+                          </CardTitle>
+                          <CardDescription>
+                            Comparison of member and organization counts
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="h-80">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart
+                                data={cohortStats.map(cohort => ({
+                                  name: cohort.cohortName.length > 15 ? 
+                                    cohort.cohortName.substring(0, 12) + '...' : 
+                                    cohort.cohortName,
+                                  fullName: cohort.cohortName,
+                                  members: cohort.memberCount,
+                                  organizations: cohort.organizationCount
+                                }))}
+                                margin={{
+                                  top: 5,
+                                  right: 30,
+                                  left: 20,
+                                  bottom: 60
+                                }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis 
+                                  dataKey="name" 
+                                  angle={-45}
+                                  textAnchor="end"
+                                  height={80}
+                                  interval={0}
+                                  fontSize={12}
+                                />
+                                <YAxis />
+                                <Tooltip 
+                                  labelFormatter={(label, payload) => {
+                                    const item = payload?.[0]?.payload;
+                                    return item?.fullName || label;
+                                  }}
+                                  formatter={(value: number, name: string) => [
+                                    value,
+                                    name === 'members' ? 'Members' : 'Organizations'
+                                  ]}
+                                />
+                                <Legend />
+                                <Bar dataKey="members" fill="hsl(var(--primary))" name="Members" />
+                                <Bar dataKey="organizations" fill="hsl(var(--secondary))" name="Organizations" />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
 
                   {/* Individual Cohort Statistics */}
                   <div className="grid gap-4">
