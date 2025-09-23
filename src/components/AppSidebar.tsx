@@ -81,6 +81,7 @@ export function AppSidebar() {
   const canAccessCohortInfo = userRole === 'admin' || userRole === 'cohort_leader';
   
   console.log('Sidebar - userRole:', userRole, 'canAccessCohortInfo:', canAccessCohortInfo);
+  console.log('Sidebar - current user:', user?.email, 'isViewingAsAdmin:', isViewingAsAdmin);
   
   // Fetch pending action counts for admin
   const { pendingOrganizations } = useOrganizationApprovals();
