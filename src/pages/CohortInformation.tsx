@@ -315,34 +315,6 @@ const CohortInformation = () => {
                 </CardContent>
               </Card>
 
-              {/* Cohort System Breakdown */}
-              {cohortLeaderData?.userCohorts && cohortLeaderData.userCohorts.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <PieChart className="h-5 w-5" />
-                      Cohort System Breakdown
-                    </CardTitle>
-                    <CardDescription>
-                      Member distribution across your cohort systems
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {Object.entries(cohortLeaderData.cohortStats.cohortsBySystem).map(([system, count]) => (
-                        <div key={system} className="text-center p-4 bg-muted/50 rounded-lg">
-                          <div className="text-xl font-bold text-primary">
-                            {count}
-                          </div>
-                          <div className="text-sm text-muted-foreground font-medium">
-                            {system}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Cohort Members Directory */}
               <Card>
