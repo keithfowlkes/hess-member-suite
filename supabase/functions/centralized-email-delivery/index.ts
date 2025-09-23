@@ -45,6 +45,10 @@ interface EmailTemplate {
 
 // Function to wrap content in standardized HESS email template with design system
 async function wrapInStandardTemplate(content: string, logoUrl?: string): Promise<string> {
+  console.log('[wrapInStandardTemplate] Starting template wrap process');
+  console.log('[wrapInStandardTemplate] Content length:', content.length);
+  console.log('[wrapInStandardTemplate] Logo URL:', logoUrl);
+  
   // Get design settings from system_settings
   const { data: designSettings } = await supabase
     .from('system_settings')
@@ -56,6 +60,8 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
       'email_design_text_color',
       'email_design_card_background'
     ]);
+
+  console.log('[wrapInStandardTemplate] Retrieved design settings:', designSettings);
 
   // Create settings map with defaults
   const settings = {
@@ -98,7 +104,10 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
     ? `background-image: url('${settings.background_image}'); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh; background-color: ${settings.primary_color};`
     : `background: linear-gradient(135deg, ${settings.primary_color} 0%, ${settings.accent_color} 100%); min-height: 100vh;`;
 
-  return `
+  console.log('[wrapInStandardTemplate] Final settings:', settings);
+  console.log('[wrapInStandardTemplate] Background style:', backgroundStyle);
+
+  const finalTemplate = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -157,7 +166,9 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
 </body>
 </html>
   `;
-}
+  
+  console.log('[wrapInStandardTemplate] Template generation complete, length:', finalTemplate.length);
+  return finalTemplate;
 
 // Function to get and replace logo URL in template with proper email embedding
 async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
@@ -244,10 +255,12 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
       .maybeSingle();
 
     if (!settingError && settingTemplate?.setting_value) {
-      console.log(`Found template in system_settings for: ${emailType}`);
+    console.log(`Found template in system_settings for: ${emailType}`);
+      console.log(`Template content preview: ${settingTemplate.setting_value.substring(0, 200)}...`);
       
       // Replace logo in template content
       const htmlWithLogo = await replaceLogoInTemplate(settingTemplate.setting_value);
+      console.log(`Template after logo replacement - length: ${htmlWithLogo.length}`);
       
       return {
         id: emailType,
