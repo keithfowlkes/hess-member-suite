@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCohortStatistics } from '@/hooks/useCohortStatistics';
+import { useCohortLeaderData } from '@/hooks/useCohortLeaderData';
 import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart, Search, User } from 'lucide-react';
 import {
   DropdownMenu,
@@ -40,6 +41,7 @@ const CohortInformation = () => {
   const [userRole, setUserRole] = useState<string>('member');
   const [searchTerm, setSearchTerm] = useState('');
   const { data: cohortStats, isLoading: statsLoading, error: statsError } = useCohortStatistics();
+  const { data: cohortLeaderData, loading: cohortLeaderLoading, error: cohortLeaderError } = useCohortLeaderData();
 
   useEffect(() => {
     const fetchCohortInformation = async () => {
@@ -155,6 +157,201 @@ const CohortInformation = () => {
                   >
                     Go Back
                   </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
+  // Show cohort leader view for cohort leaders (not viewing as admin)
+  if (!isViewingAsAdmin && userRole === 'cohort_leader') {
+    if (cohortLeaderLoading) {
+      return (
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full">
+            <AppSidebar />
+            <main className="flex-1 p-8">
+              <div className="space-y-6">
+                <div className="animate-pulse">
+                  <div className="h-8 bg-muted rounded mb-4"></div>
+                  <div className="h-4 bg-muted rounded mb-8 w-2/3"></div>
+                  <div className="grid gap-4 md:grid-cols-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="h-24 bg-muted rounded"></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        </SidebarProvider>
+      );
+    }
+
+    if (cohortLeaderError) {
+      return (
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full">
+            <AppSidebar />
+            <main className="flex-1 p-8">
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-destructive">Failed to load cohort information: {cohortLeaderError}</p>
+                </CardContent>
+              </Card>
+            </main>
+          </div>
+        </SidebarProvider>
+      );
+    }
+
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <main className="flex-1 p-8">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">Your Cohort Information</h1>
+                  <p className="text-muted-foreground">
+                    Manage and view information for your cohort group members
+                  </p>
+                </div>
+                <Badge variant="secondary">Cohort Leader</Badge>
+              </div>
+
+              {/* Cohort Leader Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Your Cohort Overview
+                  </CardTitle>
+                  <CardDescription>
+                    Statistics for the cohort groups you lead: {cohortLeaderData?.userCohorts.join(', ')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-4">
+                    <div className="text-center p-4 bg-muted/50 rounded-lg">
+                      <div className="text-2xl font-bold">
+                        {cohortLeaderData?.cohortStats.totalMembers || 0}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Total Members</div>
+                    </div>
+                    <div className="text-center p-4 bg-muted/50 rounded-lg">
+                      <div className="text-2xl font-bold">
+                        {cohortLeaderData?.cohortStats.totalOrganizations || 0}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Organizations</div>
+                    </div>
+                    <div className="text-center p-4 bg-muted/50 rounded-lg">
+                      <div className="text-2xl font-bold">
+                        {cohortLeaderData?.cohortStats.representedStates || 0}
+                      </div>
+                      <div className="text-sm text-muted-foreground">States Represented</div>
+                    </div>
+                    <div className="text-center p-4 bg-muted/50 rounded-lg">
+                      <div className="text-2xl font-bold">
+                        {cohortLeaderData?.userCohorts.length || 0}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Cohort Systems</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Cohort System Breakdown */}
+              {cohortLeaderData?.userCohorts && cohortLeaderData.userCohorts.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <PieChart className="h-5 w-5" />
+                      Cohort System Breakdown
+                    </CardTitle>
+                    <CardDescription>
+                      Member distribution across your cohort systems
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {Object.entries(cohortLeaderData.cohortStats.cohortsBySystem).map(([system, count]) => (
+                        <div key={system} className="text-center p-4 bg-muted/50 rounded-lg">
+                          <div className="text-xl font-bold text-primary">
+                            {count}
+                          </div>
+                          <div className="text-sm text-muted-foreground font-medium">
+                            {system}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Cohort Members Directory */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Cohort Members Directory
+                  </CardTitle>
+                  <CardDescription>
+                    All members in your cohort groups
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {cohortLeaderData.cohortMembers.map((member) => (
+                          <Card key={member.id} className="border bg-muted/20">
+                            <CardContent className="p-4">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <User className="h-4 w-4 text-muted-foreground" />
+                                  <span className="font-medium">
+                                    {member.first_name} {member.last_name}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Mail className="h-4 w-4" />
+                                  <span>{member.email}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Building2 className="h-4 w-4" />
+                                  <span>{member.organization || 'No organization'}</span>
+                                </div>
+                                {member.primary_contact_title && (
+                                  <div className="text-sm text-muted-foreground">
+                                    <span className="font-medium">Title:</span> {member.primary_contact_title}
+                                  </div>
+                                )}
+                                {(member.city || member.state) && (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <MapPin className="h-4 w-4" />
+                                    <span>
+                                      {[member.city, member.state].filter(Boolean).join(', ')}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No cohort members found</p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>
