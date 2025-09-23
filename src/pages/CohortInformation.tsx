@@ -5,7 +5,6 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
-import { Layout } from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -116,47 +115,52 @@ const CohortInformation = () => {
   // Redirect if user doesn't have appropriate role
   if (!loading && userRole !== 'admin' && userRole !== 'cohort_leader') {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle className="text-red-600">Access Denied</CardTitle>
-              <CardDescription>
-                You don't have permission to view cohort information.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={() => window.history.back()}
-                variant="outline"
-                className="w-full"
-              >
-                Go Back
-              </Button>
-            </CardContent>
-          </Card>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <main className="flex-1 p-8">
+            <div className="min-h-screen flex items-center justify-center">
+              <Card className="w-full max-w-md">
+                <CardHeader>
+                  <CardTitle className="text-red-600">Access Denied</CardTitle>
+                  <CardDescription>
+                    You don't have permission to view cohort information.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => window.history.back()}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Go Back
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </main>
         </div>
-      </Layout>
+      </SidebarProvider>
     );
   }
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Your Cohort Information</h1>
-              <p className="text-muted-foreground">
-                View and manage cohort leader information across the HESS Consortium
-              </p>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <main className="flex-1 p-8">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Your Cohort Information</h1>
+                <p className="text-muted-foreground">
+                  View and manage cohort leader information across the HESS Consortium
+                </p>
+              </div>
+              <Badge variant={userRole === 'admin' ? 'default' : 'secondary'}>
+                {userRole === 'admin' ? 'Admin' : 'Cohort Leader'}
+              </Badge>
             </div>
-            <Badge variant={userRole === 'admin' ? 'default' : 'secondary'}>
-              {userRole === 'admin' ? 'Admin' : 'Cohort Leader'}
-            </Badge>
-          </div>
-
-          <Separator />
 
           {loading ? (
             <div className="grid gap-4">
@@ -267,8 +271,9 @@ const CohortInformation = () => {
             </div>
           )}
         </div>
-      </div>
-    </Layout>
+      </main>
+    </div>
+  </SidebarProvider>
   );
 };
 
