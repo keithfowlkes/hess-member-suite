@@ -28,6 +28,7 @@ import { HeaderGraphicManager } from '@/components/HeaderGraphicManager';
 import { USMap } from '@/components/USMap';
 import { MessageTextContent } from '@/components/MessageTextContent';
 import { ResendApiConfig } from '@/components/ResendApiConfig';
+import { EmailDesignManager } from '@/components/EmailDesignManager';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
@@ -51,7 +52,8 @@ import {
   Send,
   AlertCircle,
   CheckCircle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Palette
 } from 'lucide-react';
 
 const availableSections = [
@@ -1054,7 +1056,7 @@ export default function Settings() {
                 </div>
                 
                 <Tabs defaultValue="email-testing" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-3 max-w-lg">
+                  <TabsList className="grid w-full grid-cols-4 max-w-2xl">
                     <TabsTrigger value="email-testing" className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
                       Email System Testing
@@ -1066,6 +1068,10 @@ export default function Settings() {
                     <TabsTrigger value="message-text" className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       Message Text
+                    </TabsTrigger>
+                    <TabsTrigger value="email-design" className="flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      Email Design
                     </TabsTrigger>
                   </TabsList>
 
@@ -1253,10 +1259,14 @@ export default function Settings() {
                       <ResendApiConfig />
                     </TabsContent>
 
-                    <TabsContent value="message-text" className="space-y-6">
-                      <MessageTextContent />
-                    </TabsContent>
-                  </Tabs>
+                  <TabsContent value="message-text" className="space-y-6">
+                    <MessageTextContent />
+                  </TabsContent>
+
+                  <TabsContent value="email-design" className="space-y-6">
+                    <EmailDesignManager />
+                  </TabsContent>
+                </Tabs>
                     </div>
                 )}
               </div>
