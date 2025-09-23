@@ -35,17 +35,22 @@ export function useCohortLeaderData() {
       if (!user) return;
 
       try {
+        console.log('CohortLeaderData - Fetching cohorts for user:', user.id);
+
         // First, get the cohorts this user leads
         const { data: userCohortsData, error: cohortsError } = await supabase
           .from('user_cohorts')
           .select('cohort')
           .eq('user_id', user.id);
 
+        console.log('CohortLeaderData - User cohorts:', userCohortsData, 'Error:', cohortsError);
+
         if (cohortsError) {
           throw new Error('Failed to fetch user cohorts');
         }
 
         const userCohorts = userCohortsData?.map(c => c.cohort) || [];
+        console.log('CohortLeaderData - Extracted cohorts:', userCohorts);
 
         if (userCohorts.length === 0) {
           setData({
@@ -79,6 +84,8 @@ export function useCohortLeaderData() {
             )
           `)
           .in('cohort', userCohorts);
+
+        console.log('CohortLeaderData - Cohort members query result:', cohortMembersData, 'Error:', membersError);
 
         if (membersError) {
           throw new Error('Failed to fetch cohort members');
