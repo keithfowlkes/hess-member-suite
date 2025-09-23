@@ -11,6 +11,7 @@ export interface CohortStatistics {
     city?: string;
     state?: string;
     memberCount: number;
+    primaryContactName?: string;
   }[];
 }
 
@@ -84,11 +85,29 @@ export const useCohortStatistics = () => {
             continue;
           }
 
+          // Get organization data to find primary contacts
+          const { data: orgData, error: orgError } = await supabase
+            .from('organizations')
+            .select('name, contact_person_id, profiles!organizations_contact_person_id_fkey(first_name, last_name)');
+
+          if (orgError) {
+            console.error(`Error fetching organization data for cohort ${cohortName}:`, orgError);
+          }
+
+          // Create a map of organization names to primary contact info
+          const orgContactMap = new Map<string, string>();
+          orgData?.forEach(org => {
+            if (org.profiles && org.profiles.first_name && org.profiles.last_name) {
+              orgContactMap.set(org.name, `${org.profiles.first_name} ${org.profiles.last_name}`);
+            }
+          });
+
           // Group by organization
           const organizationMap = new Map<string, {
             members: typeof profiles,
             city?: string,
-            state?: string
+            state?: string,
+            primaryContactName?: string
           }>();
 
           profiles.forEach(profile => {
@@ -97,7 +116,8 @@ export const useCohortStatistics = () => {
                 organizationMap.set(profile.organization, {
                   members: [],
                   city: profile.city || undefined,
-                  state: profile.state || undefined
+                  state: profile.state || undefined,
+                  primaryContactName: orgContactMap.get(profile.organization) || undefined
                 });
               }
               organizationMap.get(profile.organization)!.members.push(profile);
@@ -110,7 +130,8 @@ export const useCohortStatistics = () => {
             name: orgName,
             city: data.city,
             state: data.state,
-            memberCount: data.members.length
+            memberCount: data.members.length,
+            primaryContactName: data.primaryContactName
           }));
 
           cohortStats.push({

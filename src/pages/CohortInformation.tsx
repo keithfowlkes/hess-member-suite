@@ -5,11 +5,12 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCohortStatistics } from '@/hooks/useCohortStatistics';
-import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart } from 'lucide-react';
+import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart, Search, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +38,7 @@ const CohortInformation = () => {
   const [cohortMembers, setCohortMembers] = useState<CohortMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string>('member');
+  const [searchTerm, setSearchTerm] = useState('');
   const { data: cohortStats, isLoading: statsLoading, error: statsError } = useCohortStatistics();
 
   useEffect(() => {
@@ -119,6 +121,16 @@ const CohortInformation = () => {
 
     fetchCohortInformation();
   }, [user, toast]);
+
+  // Filter cohort stats based on search term
+  const filteredCohortStats = cohortStats?.map(cohort => ({
+    ...cohort,
+    organizations: cohort.organizations.filter(org =>
+      org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      org.primaryContactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${org.city || ''} ${org.state || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })).filter(cohort => cohort.organizations.length > 0 || searchTerm === '') || [];
 
   // Redirect if user doesn't have appropriate role (only for non-admin view)
   if (!loading && !isViewingAsAdmin && userRole !== 'admin' && userRole !== 'cohort_leader') {
@@ -374,6 +386,17 @@ const CohortInformation = () => {
                       Cohort numbers are based on financial system reporting.
                     </p>
                     
+                    {/* Search Field */}
+                    <div className="relative w-80 ml-auto">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Search organizations or contacts..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    
                     {(!cohortStats || cohortStats.length === 0) ? (
                       <Card>
                         <CardContent className="p-6 text-center">
@@ -381,8 +404,16 @@ const CohortInformation = () => {
                         </CardContent>
                       </Card>
                     ) : (
-                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {cohortStats.map((cohort) => (
+                      <div>
+                        {searchTerm && filteredCohortStats.length === 0 ? (
+                          <Card>
+                            <CardContent className="p-6 text-center">
+                              <p className="text-muted-foreground">No organizations found matching "{searchTerm}"</p>
+                            </CardContent>
+                          </Card>
+                        ) : (
+                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {(searchTerm ? filteredCohortStats : cohortStats).map((cohort) => (
                           <Card key={cohort.cohortName} className="hover:shadow-md transition-shadow">
                             <CardContent className="p-4">
                               <div className="space-y-3">
@@ -428,24 +459,30 @@ const CohortInformation = () => {
                                         <div className="text-sm font-medium text-muted-foreground px-2 py-1">
                                           Member Organizations
                                         </div>
-                                        {cohort.organizations.map((org) => (
-                                          <div key={org.id} className="flex justify-between items-start p-2 hover:bg-muted/50 rounded text-xs">
-                                            <div className="flex-1 min-w-0">
-                                              <div className="font-medium truncate">{org.name}</div>
-                                              {(org.city || org.state) && (
-                                                <div className="text-muted-foreground flex items-center gap-1 mt-1">
-                                                  <MapPin className="h-3 w-3 flex-shrink-0" />
-                                                  <span className="truncate">
-                                                    {org.city}{org.city && org.state && ', '}{org.state}
-                                                  </span>
-                                                </div>
-                                              )}
-                                            </div>
-                                            <Badge variant="outline" className="ml-2 text-xs flex-shrink-0">
-                                              {org.memberCount}
-                                            </Badge>
-                                          </div>
-                                        ))}
+                                         {cohort.organizations.map((org) => (
+                                           <div key={org.id} className="flex justify-between items-start p-2 hover:bg-muted/50 rounded text-xs">
+                                             <div className="flex-1 min-w-0">
+                                               <div className="font-medium truncate">{org.name}</div>
+                                               {org.primaryContactName && (
+                                                 <div className="text-muted-foreground flex items-center gap-1 mt-0.5">
+                                                   <User className="h-3 w-3 flex-shrink-0" />
+                                                   <span className="truncate">{org.primaryContactName}</span>
+                                                 </div>
+                                               )}
+                                               {(org.city || org.state) && (
+                                                 <div className="text-muted-foreground flex items-center gap-1 mt-1">
+                                                   <MapPin className="h-3 w-3 flex-shrink-0" />
+                                                   <span className="truncate">
+                                                     {org.city}{org.city && org.state && ', '}{org.state}
+                                                   </span>
+                                                 </div>
+                                               )}
+                                             </div>
+                                             <Badge variant="outline" className="ml-2 text-xs flex-shrink-0">
+                                               {org.memberCount}
+                                             </Badge>
+                                           </div>
+                                         ))}
                                       </div>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
@@ -453,7 +490,9 @@ const CohortInformation = () => {
                               </div>
                             </CardContent>
                           </Card>
-                        ))}
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
