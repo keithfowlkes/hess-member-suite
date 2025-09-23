@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .eq('user_id', session.user.id)
                 .eq('role', 'admin')
                 .abortSignal(controller.signal)
-                .single();
+                .maybeSingle();
               
               clearTimeout(timeoutId);
               
@@ -146,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .select('role')
             .eq('user_id', session.user.id)
             .eq('role', 'admin')
-            .single();
+            .maybeSingle();
           
           if (mounted) {
             setIsAdmin(!!data);
