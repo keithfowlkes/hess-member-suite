@@ -104,8 +104,22 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
     ? `background-image: url('${settings.background_image}'); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh; background-color: ${settings.primary_color};`
     : `background: linear-gradient(135deg, ${settings.primary_color} 0%, ${settings.accent_color} 100%); min-height: 100vh;`;
 
+  // Helper function to convert hex to rgba with alpha
+  function hexToRgba(hex: string, alpha: number): string {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);  
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  
+  // Create email-safe transparency colors
+  const lightBackground = hexToRgba(settings.accent_color, 0.1);
+  const lightBorder = hexToRgba(settings.accent_color, 0.3);
+  const primaryWithAlpha = hexToRgba(settings.primary_color, 0.8);
+
   console.log('[wrapInStandardTemplate] Final settings:', settings);
   console.log('[wrapInStandardTemplate] Background style:', backgroundStyle);
+  console.log('[wrapInStandardTemplate] Email-safe colors:', { lightBackground, lightBorder, primaryWithAlpha });
 
   const finalTemplate = `
 <!DOCTYPE html>
@@ -150,11 +164,11 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
                     
                     <!-- Footer with Accent -->
                     <tr>
-                        <td style="background: ${settings.accent_color}20; padding: 30px 40px; border-top: 2px solid ${settings.accent_color}50; text-align: center;">
+                        <td style="background: ${lightBackground}; padding: 30px 40px; border-top: 2px solid ${lightBorder}; text-align: center;">
                             <p style="margin: 0; color: ${settings.primary_color}; font-size: 14px; font-weight: 500;">
                                 © ${new Date().getFullYear()} HESS Consortium. All rights reserved.
                             </p>
-                            <p style="margin: 8px 0 0 0; color: ${settings.primary_color}CC; font-size: 12px;">
+                            <p style="margin: 8px 0 0 0; color: ${primaryWithAlpha}; font-size: 12px;">
                                 This email was sent from the HESS Consortium Member Portal
                             </p>
                         </td>
@@ -324,9 +338,21 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
 
       console.log(`[getEmailTemplate] Applying colors from design settings to template content`);
       
+      // Helper function to convert hex to rgba
+      function hexToRgba(hex: string, alpha: number): string {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);  
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+      
+      // Create email-safe transparency colors from accent color
+      const lightBackground = hexToRgba(colorVars.accent_color, 0.1);
+      const lightBorder = hexToRgba(colorVars.accent_color, 0.3);
+      
       // IMPORTANT: Replace transparency variations FIRST, before main color placeholders
-      templateContent = templateContent.replace(/\{\{accent_color\}\}20/g, '#f5f3e8'); // Light background
-      templateContent = templateContent.replace(/\{\{accent_color\}\}50/g, '#e8e4cc'); // Light border
+      templateContent = templateContent.replace(/\{\{accent_color\}\}20/g, lightBackground);
+      templateContent = templateContent.replace(/\{\{accent_color\}\}50/g, lightBorder);
       
       // Then replace the main color variables
       templateContent = templateContent.replace(/\{\{primary_color\}\}/g, colorVars.primary_color || '#8B7355');
