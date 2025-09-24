@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
-import { Resend } from "npm:resend@2.0.0";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -298,13 +298,7 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
   }
 }
 
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL") ?? "",
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-  { auth: { persistSession: false } }
-);
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Supabase client and Resend already initialized above
 
 function replaceTemplateVariables(content: string, data: Record<string, string>): string {
   let result = content;
