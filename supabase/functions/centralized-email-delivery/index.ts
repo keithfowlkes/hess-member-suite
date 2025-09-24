@@ -325,13 +325,15 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
       console.log(`[getEmailTemplate] Replacing colors in template:`, colorVars);
 
       // Replace color variables in template content with explicit replacements
-      templateContent = templateContent.replace(/\{\{primary_color\}\}/g, colorVars.primary_color);
-      templateContent = templateContent.replace(/\{\{accent_color\}\}/g, colorVars.accent_color);
-      templateContent = templateContent.replace(/\{\{text_color\}\}/g, colorVars.text_color);
-      templateContent = templateContent.replace(/\{\{card_background\}\}/g, colorVars.card_background);
+      templateContent = templateContent.replace(/\{\{primary_color\}\}/g, colorVars.primary_color || '#8B7355');
+      templateContent = templateContent.replace(/\{\{accent_color\}\}/g, colorVars.accent_color || '#D4AF37');
+      templateContent = templateContent.replace(/\{\{text_color\}\}/g, colorVars.text_color || '#4A4A4A');
+      templateContent = templateContent.replace(/\{\{card_background\}\}/g, colorVars.card_background || 'rgba(248, 245, 238, 0.95)');
 
-      console.log(`Template content after color replacement: ${templateContent.substring(0, 200)}...`);
-      console.log(`Full template with colors replaced:`, templateContent);
+      console.log(`Template content after color replacement: ${templateContent.substring(0, 500)}...`);
+      console.log(`[DEBUG] Button styling check - looking for gradient:`, templateContent.includes('linear-gradient'));
+      console.log(`[DEBUG] Primary color in template:`, templateContent.includes(colorVars.primary_color || '#8B7355'));
+      console.log(`[DEBUG] Accent color in template:`, templateContent.includes(colorVars.accent_color || '#D4AF37'));
       
       // THEN: Replace logo and wrap in standard template
       const htmlWithLogo = await replaceLogoInTemplate(templateContent);
