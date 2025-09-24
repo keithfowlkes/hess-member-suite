@@ -129,8 +129,8 @@ const handler = async (req: Request): Promise<Response> => {
         data: {
           user_name: userProfile.first_name || 'Member',
           reset_link: customResetUrl,
-          expiry_time: '45 seconds',
-          login_hint_section: loginHintSection
+          expiry_time: '1 hour',
+          login_hint_section: loginHintSection || ''
         }
       }
     });
