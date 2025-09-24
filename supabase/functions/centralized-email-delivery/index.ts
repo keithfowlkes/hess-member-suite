@@ -143,7 +143,7 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
                     <tr>
                         <td style="padding: 20px 50px 40px 50px;">
                              <div style="color: ${settings.text_color}; font-size: 16px; line-height: 1.8; text-align: left;">
-                                ${content.replace(/\{\{primary_color\}\}/g, settings.primary_color).replace(/\{\{accent_color\}\}/g, settings.accent_color).replace(/\{\{text_color\}\}/g, settings.text_color).replace(/\{\{card_background\}\}/g, settings.card_background)}
+                                ${content}
                             </div>
                         </td>
                     </tr>
@@ -322,12 +322,21 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
         });
       }
 
-      console.log(`[getEmailTemplate] Colors will be applied by wrapInStandardTemplate, not replacing placeholders in content`);
+      console.log(`[getEmailTemplate] Applying colors from design settings to template content`);
       
-      // Don't replace color placeholders here - let wrapInStandardTemplate handle all styling
-      // This prevents conflicts between content-level and template-level styling
-      console.log(`Template content ready for wrapping: ${templateContent.substring(0, 500)}...`);
-      console.log(`[DEBUG] Color placeholders preserved for wrapInStandardTemplate`);
+      // Replace color variables in template content with the fetched design settings
+      templateContent = templateContent.replace(/\{\{primary_color\}\}/g, colorVars.primary_color || '#8B7355');
+      templateContent = templateContent.replace(/\{\{accent_color\}\}/g, colorVars.accent_color || '#D4AF37');
+      templateContent = templateContent.replace(/\{\{text_color\}\}/g, colorVars.text_color || '#4A4A4A');
+      templateContent = templateContent.replace(/\{\{card_background\}\}/g, colorVars.card_background || 'rgba(248, 245, 238, 0.95)');
+
+      console.log(`Template content after color replacement: ${templateContent.substring(0, 500)}...`);
+      console.log(`[DEBUG] Applied colors:`, {
+        primary: colorVars.primary_color,
+        accent: colorVars.accent_color,
+        text: colorVars.text_color,
+        card: colorVars.card_background
+      });
       
       // THEN: Replace logo and wrap in standard template
       const htmlWithLogo = await replaceLogoInTemplate(templateContent);
