@@ -153,16 +153,16 @@ async function generateInvoiceHTML(template: any, templateData: Record<string, s
         }
         
         .payment-info {
-          background: #f8f9fa;
+          background: {{accent_color}}20;
           padding: 1rem;
-          border-left: 4px solid #6b7280;
+          border-left: 4px solid {{primary_color}};
           margin: 2rem 0;
         }
         
         .payment-info h3 {
           font-size: 1rem;
           font-weight: bold;
-          color: #333;
+          color: {{text_color}};
           margin-bottom: 0.5rem;
         }
         
@@ -176,7 +176,7 @@ async function generateInvoiceHTML(template: any, templateData: Record<string, s
           margin-top: 3rem;
           padding-top: 2rem;
           font-size: 0.9rem;
-          color: #666;
+          color: {{text_color}}CC;
         }
         
         .footer-section p {
@@ -229,7 +229,7 @@ async function generateInvoiceHTML(template: any, templateData: Record<string, s
           <tr>
             <td>
               <strong>Annual Membership Fee</strong>
-              ${invoice.proratedAmount ? '<div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">Prorated from membership start date</div>' : ''}
+              ${invoice.proratedAmount ? '<div style="font-size: 0.8rem; color: {{text_color}}CC; margin-top: 0.25rem;">Prorated from membership start date</div>' : ''}
             </td>
             <td>
               ${periodStart} - ${periodEnd}

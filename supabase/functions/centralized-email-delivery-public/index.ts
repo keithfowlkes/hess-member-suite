@@ -159,7 +159,7 @@ serve(async (req: Request): Promise<Response> => {
         <div style="margin: 20px 0;">
           ${template?.html || ''}
         </div>
-        <div style="margin-top: 30px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+        <div style="margin-top: 30px; border: 1px solid {{primary_color}}50; border-radius: 8px; overflow: hidden;">
           ${templateData.invoice_content}
         </div>
       `;

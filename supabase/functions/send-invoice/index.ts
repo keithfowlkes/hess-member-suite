@@ -162,16 +162,16 @@ async function generateInvoiceHTML(template: any, templateData: Record<string, s
         }
         
         .payment-info {
-          background: #f8f9fa;
+          background: {{accent_color}}20;
           padding: 1rem;
-          border-left: 4px solid #6b7280;
+          border-left: 4px solid {{primary_color}};
           margin: 2rem 0;
         }
         
         .payment-info h3 {
           font-size: 1rem;
           font-weight: bold;
-          color: #333;
+          color: {{text_color}};
           margin-bottom: 0.5rem;
         }
         
@@ -185,7 +185,7 @@ async function generateInvoiceHTML(template: any, templateData: Record<string, s
           margin-top: 3rem;
           padding-top: 2rem;
           font-size: 0.9rem;
-          color: #666;
+          color: {{text_color}}CC;
         }
         
         .footer-section p {
@@ -238,7 +238,7 @@ async function generateInvoiceHTML(template: any, templateData: Record<string, s
           <tr>
             <td>
               <strong>Annual Membership Fee</strong>
-              ${invoice.proratedAmount ? '<div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">Prorated from membership start date</div>' : ''}
+              ${invoice.proratedAmount ? '<div style="font-size: 0.8rem; color: {{text_color}}CC; margin-top: 0.25rem;">Prorated from membership start date</div>' : ''}
             </td>
             <td>
               ${periodStart} - ${periodEnd}
@@ -317,6 +317,9 @@ serve(async (req) => {
     let finalAmount = invoiceAmount;
     let proratedInfo = '';
     
+    // Get design settings for color replacement
+    const designSettings = await getEmailDesignSettings();
+    
     if (membershipStartDate && !proratedAmount) {
       const membershipStart = new Date(membershipStartDate);
       const periodStart = new Date(periodStartDate);
@@ -326,26 +329,28 @@ serve(async (req) => {
         const totalDays = Math.ceil((periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
         const remainingDays = Math.ceil((periodEnd.getTime() - membershipStart.getTime()) / (1000 * 60 * 60 * 24));
         finalAmount = Math.round((invoiceAmount * remainingDays / totalDays) * 100) / 100;
-        proratedInfo = `
-          <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h3 style="color: #0369a1; margin: 0 0 10px 0;">Prorated Membership Fee</h3>
+        let proratedTemplate = `
+          <div style="background: {{accent_color}}20; border: 1px solid {{accent_color}}; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: {{primary_color}}; margin: 0 0 10px 0;">Prorated Membership Fee</h3>
             <p>Since your membership started on ${membershipStart.toLocaleDateString()}, your fee has been prorated:</p>
             <p><strong>Full Annual Fee:</strong> $${invoiceAmount.toLocaleString()}</p>
             <p><strong>Prorated Amount:</strong> $${finalAmount.toLocaleString()} (${remainingDays} of ${totalDays} days)</p>
             <p><strong>Period:</strong> ${membershipStart.toLocaleDateString()} - ${periodEnd.toLocaleDateString()}</p>
           </div>
         `;
+        proratedInfo = replaceColorVariables(proratedTemplate, designSettings);
       }
     } else if (proratedAmount) {
       finalAmount = proratedAmount;
-      proratedInfo = `
-        <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
-          <h3 style="color: #0369a1; margin: 0 0 10px 0;">Prorated Membership Fee</h3>
+      let proratedTemplate = `
+        <div style="background: {{accent_color}}20; border: 1px solid {{accent_color}}; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <h3 style="color: {{primary_color}}; margin: 0 0 10px 0;">Prorated Membership Fee</h3>
           <p><strong>Full Annual Fee:</strong> $${invoiceAmount.toLocaleString()}</p>
           <p><strong>Prorated Amount:</strong> $${finalAmount.toLocaleString()}</p>
           <p><strong>Period:</strong> ${new Date(periodStartDate).toLocaleDateString()} - ${new Date(periodEndDate).toLocaleDateString()}</p>
         </div>
       `;
+      proratedInfo = replaceColorVariables(proratedTemplate, designSettings);
     }
 
     // Verify organization exists
@@ -436,7 +441,7 @@ serve(async (req) => {
       due_date: dueDate.toISOString(),
       period_start_date: periodStartDate,
       period_end_date: periodEndDate,
-      notes
+      notes: notes ? `${notes}${proratedInfo}` : proratedInfo
     }, false); // false - no need for attachment, logo is directly embedded
 
     // Get invoice email template from system_messages

@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { getEmailTemplate, replaceTemplateVariables, EmailTemplate } from '../_shared/email-templates.ts';
+import { getEmailDesignSettings, replaceColorVariables } from '../_shared/email-design.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -193,14 +194,16 @@ const handler = async (req: Request): Promise<Response> => {
         finalSubject = replaceTemplateVariables(emailRequest.subject || template.subject, templateData);
         finalHtml = replaceTemplateVariables(template.html, templateData);
       } else {
-        // Fallback template
-        finalHtml = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2>HESS Consortium</h2>
+        // Fallback template with design system integration
+        const designSettings = await getEmailDesignSettings();
+        let fallbackTemplate = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
+            <h2 style="color: {{primary_color}};">HESS Consortium</h2>
             <p>${templateData.message}</p>
-            <p>Best regards,<br>HESS Consortium Team</p>
+            <p>Best regards,<br><span style="color: {{primary_color}};">HESS Consortium Team</span></p>
           </div>
         `;
+        finalHtml = replaceColorVariables(fallbackTemplate, designSettings);
       }
     }
 

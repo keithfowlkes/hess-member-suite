@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
+import { getEmailDesignSettings, replaceColorVariables, hexToRgba } from '../_shared/email-design.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -112,14 +113,19 @@ const handler = async (req: Request): Promise<Response> => {
       customResetUrl = `${baseResetUrl}/password-reset?token=${token}&token_hash=${tokenHash}&type=${type}`;
     }
 
-    // Create login hint section for template
-    const loginHintSection = userProfile.login_hint ? `
-      <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
-        <h3 style="color: #0369a1; margin: 0 0 10px 0;">Login Hint</h3>
-        <p style="margin: 0; font-weight: bold;">${userProfile.login_hint}</p>
-        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">This is the hint you provided to help remember your account.</p>
-      </div>
-    ` : '';
+    // Create login hint section for template with design system colors
+    let loginHintSection = '';
+    if (userProfile.login_hint) {
+      const designSettings = await getEmailDesignSettings();
+      loginHintSection = `
+        <div style="background: {{accent_color}}20; border: 1px solid {{accent_color}}; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <h3 style="color: {{primary_color}}; margin: 0 0 10px 0;">Login Hint</h3>
+          <p style="margin: 0; font-weight: bold;">${userProfile.login_hint}</p>
+          <p style="margin: 5px 0 0 0; font-size: 12px; color: {{text_color}}CC;">This is the hint you provided to help remember your account.</p>
+        </div>
+      `;
+      loginHintSection = replaceColorVariables(loginHintSection, designSettings);
+    }
 
     // Send email using centralized email delivery system
     const { data: emailResult, error: emailError } = await supabase.functions.invoke('centralized-email-delivery', {
