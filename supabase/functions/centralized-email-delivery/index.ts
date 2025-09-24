@@ -99,44 +99,22 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
     ? `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto 20px auto;" border="0">`
     : '';
 
-  // Determine background style based on settings
+  // Determine background style based on settings - match Preview Design modal exactly
   const backgroundStyle = settings.background_image 
     ? `background-image: url('${settings.background_image}'); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh; background-color: ${settings.primary_color};`
     : `background: linear-gradient(135deg, ${settings.primary_color} 0%, ${settings.accent_color} 100%); min-height: 100vh;`;
 
-  // Helper function to convert hex to rgba with alpha
-  function hexToRgba(hex: string, alpha: number): string {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);  
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  }
-  
-  // Create email-safe transparency colors
-  const lightBackground = hexToRgba(settings.accent_color, 0.1);
-  const lightBorder = hexToRgba(settings.accent_color, 0.3);
-  const primaryWithAlpha = hexToRgba(settings.primary_color, 0.8);
-
   console.log('[wrapInStandardTemplate] Final settings:', settings);
   console.log('[wrapInStandardTemplate] Background style:', backgroundStyle);
-  console.log('[wrapInStandardTemplate] Email-safe colors:', { lightBackground, lightBorder, primaryWithAlpha });
 
+  // Use exact same template structure as Preview Design modal (lines 193-242 in EmailDesignManager)
   const finalTemplate = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HESS Consortium</title>
-    <!--[if mso]>
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
-    <![endif]-->
+    <title>HESS Consortium - Email Design Preview</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: Georgia, 'Times New Roman', serif; line-height: 1.6; ${backgroundStyle}">
     <!-- Email Container -->
@@ -156,7 +134,7 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
                     <!-- Content Area -->
                     <tr>
                         <td style="padding: 20px 50px 40px 50px;">
-                             <div style="color: ${settings.text_color}; font-size: 16px; line-height: 1.8; text-align: left;">
+                            <div style="color: ${settings.text_color}; font-size: 16px; line-height: 1.8; text-align: left;">
                                 ${content}
                             </div>
                         </td>
@@ -164,11 +142,11 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
                     
                     <!-- Footer with Accent -->
                     <tr>
-                        <td style="background: ${lightBackground}; padding: 30px 40px; border-top: 2px solid ${lightBorder}; text-align: center;">
+                        <td style="background: ${settings.accent_color}20; padding: 30px 40px; border-top: 2px solid ${settings.accent_color}50; text-align: center;">
                             <p style="margin: 0; color: ${settings.primary_color}; font-size: 14px; font-weight: 500;">
                                 © ${new Date().getFullYear()} HESS Consortium. All rights reserved.
                             </p>
-                            <p style="margin: 8px 0 0 0; color: ${primaryWithAlpha}; font-size: 12px;">
+                            <p style="margin: 8px 0 0 0; color: ${settings.primary_color}CC; font-size: 12px;">
                                 This email was sent from the HESS Consortium Member Portal
                             </p>
                         </td>
@@ -338,21 +316,11 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
 
       console.log(`[getEmailTemplate] Applying colors from design settings to template content`);
       
-      // Helper function to convert hex to rgba
-      function hexToRgba(hex: string, alpha: number): string {
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);  
-        const b = parseInt(hex.slice(5, 7), 16);
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-      }
-      
-      // Create email-safe transparency colors from accent color
-      const lightBackground = hexToRgba(colorVars.accent_color, 0.1);
-      const lightBorder = hexToRgba(colorVars.accent_color, 0.3);
-      
-      // IMPORTANT: Replace transparency variations FIRST, before main color placeholders
-      templateContent = templateContent.replace(/\{\{accent_color\}\}20/g, lightBackground);
-      templateContent = templateContent.replace(/\{\{accent_color\}\}50/g, lightBorder);
+      // Replace color placeholders directly - match Preview Design modal exactly
+      // Replace transparency variations (these need to be processed by email client)
+      templateContent = templateContent.replace(/\{\{accent_color\}\}20/g, `${colorVars.accent_color}20`);
+      templateContent = templateContent.replace(/\{\{accent_color\}\}50/g, `${colorVars.accent_color}50`);
+      templateContent = templateContent.replace(/\{\{primary_color\}\}CC/g, `${colorVars.primary_color}CC`);
       
       // Then replace the main color variables
       templateContent = templateContent.replace(/\{\{primary_color\}\}/g, colorVars.primary_color || '#8B7355');

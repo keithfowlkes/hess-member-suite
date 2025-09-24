@@ -203,9 +203,9 @@ export const MessageTextContent = () => {
     }
   };
 
-  // Generate email preview with design settings
+  // Generate email preview with exact same structure as Preview Design modal
   const generateEmailPreview = (content: string, title: string) => {
-    // Get design settings with defaults
+    // Get design settings with defaults matching Preview Design modal
     const settings = {
       background_image: backgroundImageSetting?.setting_value || '',
       primary_color: primaryColorSetting?.setting_value || '#8B7355',
@@ -219,7 +219,7 @@ export const MessageTextContent = () => {
       ? `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto 20px auto;" border="0">`
       : '';
 
-    // Determine background style based on settings
+    // Use exact same background style as Preview Design modal
     const backgroundStyle = settings.background_image 
       ? `background-image: url('${settings.background_image}'); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh; background-color: ${settings.primary_color};`
       : `background: linear-gradient(135deg, ${settings.primary_color} 0%, ${settings.accent_color} 100%); min-height: 100vh;`;
@@ -235,6 +235,7 @@ export const MessageTextContent = () => {
       .replace(/{{update_details}}/g, 'Organization name, contact information, and system preferences')
       .replace(/{{login_hint_section}}/g, '<p style="color: #4A4A4A; font-size: 14px; line-height: 1.8; margin: 20px 0; font-style: italic;">If you are having trouble logging in, try using your email address as your username.</p>');
 
+    // Use exact same template structure as Preview Design modal (lines 193-242 in EmailDesignManager)
     return `
 <!DOCTYPE html>
 <html lang="en">
