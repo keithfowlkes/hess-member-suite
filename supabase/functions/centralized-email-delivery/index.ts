@@ -324,13 +324,14 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
 
       console.log(`[getEmailTemplate] Replacing colors in template:`, colorVars);
 
-      // Replace color variables in template content
-      Object.entries(colorVars).forEach(([key, value]) => {
-        const placeholder = `{{${key}}}`;
-        templateContent = templateContent.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value || '');
-      });
+      // Replace color variables in template content with explicit replacements
+      templateContent = templateContent.replace(/\{\{primary_color\}\}/g, colorVars.primary_color);
+      templateContent = templateContent.replace(/\{\{accent_color\}\}/g, colorVars.accent_color);
+      templateContent = templateContent.replace(/\{\{text_color\}\}/g, colorVars.text_color);
+      templateContent = templateContent.replace(/\{\{card_background\}\}/g, colorVars.card_background);
 
       console.log(`Template content after color replacement: ${templateContent.substring(0, 200)}...`);
+      console.log(`Full template with colors replaced:`, templateContent);
       
       // THEN: Replace logo and wrap in standard template
       const htmlWithLogo = await replaceLogoInTemplate(templateContent);
