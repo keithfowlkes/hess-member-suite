@@ -281,8 +281,59 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
       console.log(`Found template in system_settings for: ${emailType}`);
       console.log(`Template content preview: ${settingTemplate.setting_value.substring(0, 200)}...`);
       
-      // Replace logo in template content
-      const htmlWithLogo = await replaceLogoInTemplate(settingTemplate.setting_value);
+      // FIRST: Replace color variables in template content before wrapping
+      let templateContent = settingTemplate.setting_value;
+      
+      // Get design settings for color replacement
+      const { data: designSettings } = await supabase
+        .from('system_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', [
+          'email_design_primary_color', 
+          'email_design_accent_color',
+          'email_design_text_color',
+          'email_design_card_background'
+        ]);
+
+      // Create color variables map with defaults
+      const colorVars = {
+        primary_color: '#8B7355',
+        accent_color: '#D4AF37', 
+        text_color: '#4A4A4A',
+        card_background: 'rgba(248, 245, 238, 0.95)'
+      };
+
+      if (designSettings) {
+        designSettings.forEach(setting => {
+          switch (setting.setting_key) {
+            case 'email_design_primary_color':
+              colorVars.primary_color = setting.setting_value || '#8B7355';
+              break;
+            case 'email_design_accent_color':
+              colorVars.accent_color = setting.setting_value || '#D4AF37';
+              break;
+            case 'email_design_text_color':
+              colorVars.text_color = setting.setting_value || '#4A4A4A';
+              break;
+            case 'email_design_card_background':
+              colorVars.card_background = setting.setting_value || 'rgba(248, 245, 238, 0.95)';
+              break;
+          }
+        });
+      }
+
+      console.log(`[getEmailTemplate] Replacing colors in template:`, colorVars);
+
+      // Replace color variables in template content
+      Object.entries(colorVars).forEach(([key, value]) => {
+        const placeholder = `{{${key}}}`;
+        templateContent = templateContent.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value || '');
+      });
+
+      console.log(`Template content after color replacement: ${templateContent.substring(0, 200)}...`);
+      
+      // THEN: Replace logo and wrap in standard template
+      const htmlWithLogo = await replaceLogoInTemplate(templateContent);
       console.log(`Template after logo replacement - length: ${htmlWithLogo.length}`);
 
       // Create proper subject based on email type
@@ -461,49 +512,6 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`No template found for email type: ${emailRequest.type}`);
     }
 
-    // Get design settings for color variables
-    console.log('[centralized-email-delivery] Starting color variable processing...');
-    const { data: designSettings } = await supabase
-      .from('system_settings')
-      .select('setting_key, setting_value')
-      .in('setting_key', [
-        'email_design_primary_color', 
-        'email_design_accent_color',
-        'email_design_text_color',
-        'email_design_card_background'
-      ]);
-
-    console.log('[centralized-email-delivery] Retrieved design settings:', designSettings);
-
-    // Create color variables map with defaults
-    const colorVars = {
-      primary_color: '#8B7355',
-      accent_color: '#D4AF37', 
-      text_color: '#4A4A4A',
-      card_background: 'rgba(248, 245, 238, 0.95)'
-    };
-
-    if (designSettings) {
-      designSettings.forEach(setting => {
-        switch (setting.setting_key) {
-          case 'email_design_primary_color':
-            colorVars.primary_color = setting.setting_value || '#8B7355';
-            break;
-          case 'email_design_accent_color':
-            colorVars.accent_color = setting.setting_value || '#D4AF37';
-            break;
-          case 'email_design_text_color':
-            colorVars.text_color = setting.setting_value || '#4A4A4A';
-            break;
-          case 'email_design_card_background':
-            colorVars.card_background = setting.setting_value || 'rgba(248, 245, 238, 0.95)';
-            break;
-        }
-      });
-    }
-
-    console.log('[centralized-email-delivery] Color variables:', colorVars);
-
     // Prepare template data with defaults for ALL possible variables
     const templateData = {
       timestamp: new Date().toISOString(),
@@ -516,17 +524,12 @@ const handler = async (req: Request): Promise<Response> => {
       invoice_number: 'INV-TEST-001',
       amount: '299.00',
       due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-      ...colorVars, // Add design system colors
       ...emailRequest.data
     };
-
-    console.log('[centralized-email-delivery] Template data with colors:', templateData);
 
     // Replace variables in subject and HTML
     const finalSubject = replaceTemplateVariables(emailRequest.subject || template.subject, templateData);
     const finalHtml = replaceTemplateVariables(template.html, templateData);
-    
-    console.log('[centralized-email-delivery] Final HTML after color replacement (first 1000 chars):', finalHtml.substring(0, 1000));
     
     console.log('[centralized-email-delivery] Final email details:');
     console.log('[centralized-email-delivery] Subject:', finalSubject);
