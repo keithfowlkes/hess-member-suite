@@ -324,16 +324,15 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
 
       console.log(`[getEmailTemplate] Applying colors from design settings to template content`);
       
-      // Replace color variables in template content with the fetched design settings
-      // Also handle transparency variations that email clients struggle with
+      // IMPORTANT: Replace transparency variations FIRST, before main color placeholders
+      templateContent = templateContent.replace(/\{\{accent_color\}\}20/g, '#f5f3e8'); // Light background
+      templateContent = templateContent.replace(/\{\{accent_color\}\}50/g, '#e8e4cc'); // Light border
+      
+      // Then replace the main color variables
       templateContent = templateContent.replace(/\{\{primary_color\}\}/g, colorVars.primary_color || '#8B7355');
       templateContent = templateContent.replace(/\{\{accent_color\}\}/g, colorVars.accent_color || '#D4AF37');
       templateContent = templateContent.replace(/\{\{text_color\}\}/g, colorVars.text_color || '#4A4A4A');
       templateContent = templateContent.replace(/\{\{card_background\}\}/g, colorVars.card_background || 'rgba(248, 245, 238, 0.95)');
-      
-      // Replace transparency variations with email-client friendly colors
-      templateContent = templateContent.replace(/\{\{accent_color\}\}20/g, '#f5f3e8'); // Light background
-      templateContent = templateContent.replace(/\{\{accent_color\}\}50/g, '#e8e4cc'); // Light border
 
       console.log(`Template content after color replacement: ${templateContent.substring(0, 500)}...`);
       console.log(`[DEBUG] Applied colors:`, {
