@@ -499,6 +499,8 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    console.log('[centralized-email-delivery] Color variables:', colorVars);
+
     // Prepare template data with defaults for ALL possible variables
     const templateData = {
       timestamp: new Date().toISOString(),
@@ -515,9 +517,13 @@ const handler = async (req: Request): Promise<Response> => {
       ...emailRequest.data
     };
 
+    console.log('[centralized-email-delivery] Template data with colors:', templateData);
+
     // Replace variables in subject and HTML
     const finalSubject = replaceTemplateVariables(emailRequest.subject || template.subject, templateData);
     const finalHtml = replaceTemplateVariables(template.html, templateData);
+    
+    console.log('[centralized-email-delivery] Final HTML after color replacement (first 1000 chars):', finalHtml.substring(0, 1000));
     
     console.log('[centralized-email-delivery] Final email details:');
     console.log('[centralized-email-delivery] Subject:', finalSubject);
