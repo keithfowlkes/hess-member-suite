@@ -43,6 +43,24 @@ interface EmailTemplate {
   variables: string[];
 }
 
+// Helper function to convert hex to rgba for email client compatibility
+function hexToRgba(hex: string, opacity: number): string {
+  // Remove # if present
+  hex = hex.replace('#', '');
+  
+  // Handle 3-character hex codes
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('');
+  }
+  
+  // Parse RGB values
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
+
 // Function to wrap content in standardized HESS email template with design system
 async function wrapInStandardTemplate(content: string, logoUrl?: string): Promise<string> {
   console.log('[wrapInStandardTemplate] Starting template wrap process');
@@ -142,11 +160,11 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
                     
                     <!-- Footer with Accent -->
                     <tr>
-                        <td style="background: ${settings.accent_color}20; padding: 30px 40px; border-top: 2px solid ${settings.accent_color}50; text-align: center;">
+                        <td style="background: ${hexToRgba(settings.accent_color, 0.2)}; padding: 30px 40px; border-top: 2px solid ${hexToRgba(settings.accent_color, 0.5)}; text-align: center;">
                             <p style="margin: 0; color: ${settings.primary_color}; font-size: 14px; font-weight: 500;">
                                 © ${new Date().getFullYear()} HESS Consortium. All rights reserved.
                             </p>
-                            <p style="margin: 8px 0 0 0; color: ${settings.primary_color}CC; font-size: 12px;">
+                            <p style="margin: 8px 0 0 0; color: ${hexToRgba(settings.primary_color, 0.8)}; font-size: 12px;">
                                 This email was sent from the HESS Consortium Member Portal
                             </p>
                         </td>
@@ -316,11 +334,33 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
 
       console.log(`[getEmailTemplate] Applying colors from design settings to template content`);
       
-      // Replace color placeholders directly - match Preview Design modal exactly
-      // Replace transparency variations (these need to be processed by email client)
-      templateContent = templateContent.replace(/\{\{accent_color\}\}20/g, `${colorVars.accent_color}20`);
-      templateContent = templateContent.replace(/\{\{accent_color\}\}50/g, `${colorVars.accent_color}50`);
-      templateContent = templateContent.replace(/\{\{primary_color\}\}CC/g, `${colorVars.primary_color}CC`);
+      // Helper function to convert hex to rgba
+      function hexToRgba(hex: string, opacity: number): string {
+        // Remove # if present
+        hex = hex.replace('#', '');
+        
+        // Handle 3-character hex codes
+        if (hex.length === 3) {
+          hex = hex.split('').map(char => char + char).join('');
+        }
+        
+        // Parse RGB values
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+      }
+      
+      // Replace transparency variations with proper rgba values (process variants first)
+      templateContent = templateContent.replace(/\{\{accent_color\}\}20/g, hexToRgba(colorVars.accent_color, 0.2));
+      templateContent = templateContent.replace(/\{\{accent_color\}\}50/g, hexToRgba(colorVars.accent_color, 0.5));
+      templateContent = templateContent.replace(/\{\{primary_color\}\}CC/g, hexToRgba(colorVars.primary_color, 0.8));
+      templateContent = templateContent.replace(/\{\{primary_color\}\}20/g, hexToRgba(colorVars.primary_color, 0.2));
+      templateContent = templateContent.replace(/\{\{primary_color\}\}50/g, hexToRgba(colorVars.primary_color, 0.5));
+      templateContent = templateContent.replace(/\{\{text_color\}\}20/g, hexToRgba(colorVars.text_color, 0.2));
+      templateContent = templateContent.replace(/\{\{text_color\}\}50/g, hexToRgba(colorVars.text_color, 0.5));
+      templateContent = templateContent.replace(/\{\{text_color\}\}CC/g, hexToRgba(colorVars.text_color, 0.8));
       
       // Then replace the main color variables
       templateContent = templateContent.replace(/\{\{primary_color\}\}/g, colorVars.primary_color || '#8B7355');
