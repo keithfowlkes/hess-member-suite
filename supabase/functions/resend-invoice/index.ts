@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getEmailDesignSettings, replaceColorVariables } from '../_shared/email-design.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,7 +21,10 @@ function replaceTemplateVariables(content: string, data: Record<string, string>)
 }
 
 // Generate full invoice HTML matching exact sample invoice design
-function generateInvoiceHTML(template: any, templateData: Record<string, string>, invoice: any, invoiceId: string, embedded: boolean = false) {
+async function generateInvoiceHTML(template: any, templateData: Record<string, string>, invoice: any, invoiceId: string, embedded: boolean = false) {
+  // Get email design settings
+  const designSettings = await getEmailDesignSettings();
+  
   // Format dates exactly like ProfessionalInvoice component
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -36,8 +40,8 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
   const periodStart = formatDate(invoice.period_start_date);
   const periodEnd = formatDate(invoice.period_end_date);
   
-  return `
-    <div style="font-family: Arial, sans-serif; line-height: 1.4; color: #333; font-size: 14px; background: white; padding: 2rem; max-width: 800px; margin: 0 auto;">
+  let invoiceHtml = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.4; color: {{text_color}}; font-size: 14px; background: white; padding: 2rem; max-width: 800px; margin: 0 auto;">
       <style>
         .invoice-header {
           display: flex;
@@ -45,7 +49,7 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
           align-items: flex-start;
           margin-bottom: 2rem;
           padding-bottom: 1rem;
-          border-bottom: 1px solid #666;
+          border-bottom: 1px solid {{primary_color}};
         }
         
         .logo-section img {
@@ -60,14 +64,14 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
         .invoice-title h1 {
           font-size: 2rem;
           font-weight: bold;
-          color: #666;
+          color: {{primary_color}};
           margin: 0;
           letter-spacing: 2px;
         }
         
         .invoice-number {
           font-size: 0.9rem;
-          color: #666;
+          color: {{primary_color}};
           margin: 0.5rem 0 0 0;
         }
         
@@ -85,7 +89,7 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
         .company-info p {
           margin: 0.1rem 0;
           font-size: 0.9rem;
-          color: #555;
+          color: {{text_color}}CC;
         }
         
         .invoice-details {
@@ -98,7 +102,7 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
         .detail-section h3 {
           font-size: 1rem;
           font-weight: bold;
-          color: #333;
+          color: {{text_color}};
           margin-bottom: 0.75rem;
         }
         
@@ -114,7 +118,7 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
         }
         
         .invoice-table th {
-          background: #6b7280;
+          background: {{primary_color}};
           color: white;
           padding: 0.75rem;
           text-align: left;
@@ -266,6 +270,11 @@ function generateInvoiceHTML(template: any, templateData: Record<string, string>
       </div>
     </div>
   `;
+  
+  // Replace color variables with actual design settings
+  invoiceHtml = replaceColorVariables(invoiceHtml, designSettings);
+  
+  return invoiceHtml;
 }
 
 serve(async (req) => {
@@ -374,7 +383,7 @@ serve(async (req) => {
     }
 
     // Generate HTML using template with embedded logo
-    const html = generateInvoiceHTML(template, templateData, {
+    const html = await generateInvoiceHTML(template, templateData, {
       organizationName: organization.name,
       organizationEmail: organization.email,
       invoiceAmount: invoice.amount,
