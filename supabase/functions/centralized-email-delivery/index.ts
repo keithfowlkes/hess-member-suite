@@ -461,6 +461,44 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`No template found for email type: ${emailRequest.type}`);
     }
 
+    // Get design settings for color variables
+    const { data: designSettings } = await supabase
+      .from('system_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', [
+        'email_design_primary_color', 
+        'email_design_accent_color',
+        'email_design_text_color',
+        'email_design_card_background'
+      ]);
+
+    // Create color variables map with defaults
+    const colorVars = {
+      primary_color: '#8B7355',
+      accent_color: '#D4AF37', 
+      text_color: '#4A4A4A',
+      card_background: 'rgba(248, 245, 238, 0.95)'
+    };
+
+    if (designSettings) {
+      designSettings.forEach(setting => {
+        switch (setting.setting_key) {
+          case 'email_design_primary_color':
+            colorVars.primary_color = setting.setting_value || '#8B7355';
+            break;
+          case 'email_design_accent_color':
+            colorVars.accent_color = setting.setting_value || '#D4AF37';
+            break;
+          case 'email_design_text_color':
+            colorVars.text_color = setting.setting_value || '#4A4A4A';
+            break;
+          case 'email_design_card_background':
+            colorVars.card_background = setting.setting_value || 'rgba(248, 245, 238, 0.95)';
+            break;
+        }
+      });
+    }
+
     // Prepare template data with defaults for ALL possible variables
     const templateData = {
       timestamp: new Date().toISOString(),
@@ -473,6 +511,7 @@ const handler = async (req: Request): Promise<Response> => {
       invoice_number: 'INV-TEST-001',
       amount: '299.00',
       due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+      ...colorVars, // Add design system colors
       ...emailRequest.data
     };
 
