@@ -425,7 +425,7 @@ serve(async (req: Request): Promise<Response> => {
       // Enhanced invoice template that includes the full invoice HTML
       const enhancedTemplate = `
         <div style="margin: 20px 0;">
-          ${template.html}
+          ${template?.html || ''}
         </div>
         <div style="margin-top: 30px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
           ${templateData.invoice_content}
@@ -527,7 +527,7 @@ serve(async (req: Request): Promise<Response> => {
           success: false,
           error: emailResponse?.error?.message || (typeof emailResponse?.error === 'string' ? emailResponse.error : 'Forbidden'),
           note: 'Sending failed. If you are on the Resend free plan, you must verify recipient emails at https://resend.com/verified-emails or use a verified domain.',
-          statusCode: emailResponse?.error?.statusCode || 403,
+          statusCode: (emailResponse as any)?.error?.statusCode || 403,
           name: emailResponse?.error?.name,
           correlationId
         }),
@@ -538,7 +538,7 @@ serve(async (req: Request): Promise<Response> => {
     if (emailResponse?.error) {
       return new Response(
         JSON.stringify({ success: false, error: emailResponse.error.message, statusCode: emailResponse.error.statusCode, name: emailResponse.error.name, correlationId }),
-        { status: emailResponse.error.statusCode || 502, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        { status: (emailResponse as any)?.error?.statusCode || 502, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 

@@ -573,7 +573,7 @@ const handler = async (req: Request): Promise<Response> => {
         }
       }
     } catch (e) {
-      console.log('[centralized-email-delivery] Domain verification check failed, using candidate', { error: e?.message });
+      console.log('[centralized-email-delivery] Domain verification check failed, using candidate', { error: (e as Error)?.message || 'Unknown error' });
     }
 
 
@@ -612,10 +612,10 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({ 
           success: false, 
           error: emailResponse.error.message,
-          code: emailResponse.error.statusCode || 502
+          code: (emailResponse as any)?.error?.statusCode || 502
         }),
         { 
-          status: emailResponse.error.statusCode || 502, 
+          status: (emailResponse as any)?.error?.statusCode || 502, 
           headers: { 'Content-Type': 'application/json', ...corsHeaders } 
         }
       );

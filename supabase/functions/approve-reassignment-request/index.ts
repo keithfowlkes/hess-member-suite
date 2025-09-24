@@ -321,7 +321,7 @@ serve(async (req) => {
       console.log('[APPROVE-REASSIGNMENT] Sending notification email to', newContactEmail);
       
       // Prepare update details for email
-      const updateDetails = [];
+      const updateDetails: string[] = [];
       const orgData = newOrgData || {};
       const existingOrgData = existingOrg || {};
       

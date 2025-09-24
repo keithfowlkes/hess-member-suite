@@ -153,8 +153,8 @@ serve(async (req) => {
       console.log('Attempting to parse JSON...');
       dashboardConfig = JSON.parse(jsonString);
       
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError.message);
+        } catch (parseError: unknown) {
+          console.error('JSON parse error:', (parseError as Error)?.message || 'Unknown parse error');
       
       // Fallback: create a simple dashboard
       console.log('Creating fallback dashboard...');
@@ -194,7 +194,7 @@ serve(async (req) => {
 
     // Ensure components have proper IDs and positions
     if (dashboardConfig.components) {
-      dashboardConfig.components = dashboardConfig.components.map((component, index) => ({
+      dashboardConfig.components = dashboardConfig.components.map((component: any, index: number) => ({
         ...component,
         id: component.id || `ai-component-${Date.now()}-${index}`,
         position: {
