@@ -462,6 +462,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Get design settings for color variables
+    console.log('[centralized-email-delivery] Starting color variable processing...');
     const { data: designSettings } = await supabase
       .from('system_settings')
       .select('setting_key, setting_value')
@@ -471,6 +472,8 @@ const handler = async (req: Request): Promise<Response> => {
         'email_design_text_color',
         'email_design_card_background'
       ]);
+
+    console.log('[centralized-email-delivery] Retrieved design settings:', designSettings);
 
     // Create color variables map with defaults
     const colorVars = {
