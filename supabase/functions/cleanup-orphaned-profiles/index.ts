@@ -71,9 +71,9 @@ serve(async (req) => {
                           !userData || 
                           !userData.user ||
                           (getUserError && (
-                            getUserError.message?.includes('User not found') ||
-                            getUserError.message?.includes('not found') ||
-                            getUserError.code === 'user_not_found'
+                            (getUserError as any)?.message?.includes('User not found') ||
+                            (getUserError as any)?.message?.includes('not found') ||
+                            (getUserError as any)?.code === 'user_not_found'
                           ));
         
         if (isOrphaned) {
@@ -121,7 +121,7 @@ serve(async (req) => {
             console.error(`❌ Failed to cleanup profile ${profile.email}:`, cleanupError);
             cleanupErrors.push({
               profile: profile.email,
-              error: `Cleanup failed: ${cleanupError.message}`
+              error: `Cleanup failed: ${(cleanupError as any)?.message || 'Unknown error'}`
             });
           }
         } else {
@@ -155,7 +155,7 @@ serve(async (req) => {
         } catch (cleanupError) {
           cleanupErrors.push({
             profile: profile.email,
-            error: `Processing error: ${error.message}, Cleanup error: ${cleanupError.message}`
+            error: `Processing error: ${(error as any)?.message || 'Unknown'}, Cleanup error: ${(cleanupError as any)?.message || 'Unknown'}`
           });
         }
       }
@@ -186,7 +186,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as any)?.message || 'Unknown error' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

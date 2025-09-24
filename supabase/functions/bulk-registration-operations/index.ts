@@ -65,7 +65,7 @@ serve(async (req) => {
 
         } catch (error) {
           console.error(`Unexpected error processing registration ${registrationId}:`, error);
-          errors.push({ registrationId, error: (error as Error)?.message || 'Unknown error' });
+          errors.push({ registrationId, error: (error as any)?.message || 'Unknown error' });
         }
       }
 

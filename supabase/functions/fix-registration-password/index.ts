@@ -81,12 +81,7 @@ serve(async (req) => {
 
     console.log('✅ Found pending registration with stored password');
 
-    // Get the auth user
-    const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(
-      // We need to get user by email first
-    );
-    
-    // Get user by email instead
+    // Get user by email from the users list since getUserByEmail doesn't exist
     const { data: allUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     if (listError) {
       console.error('❌ Failed to list users:', listError);
@@ -150,7 +145,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as any)?.message || 'Unknown error' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

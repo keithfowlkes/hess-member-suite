@@ -215,16 +215,16 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('=== ERROR in AI dashboard generator ===');
-    console.error('Error type:', error.constructor.name);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
+    console.error('Error type:', error?.constructor?.name || 'Unknown');
+    console.error('Error message:', error?.message || 'Unknown error');
+    console.error('Error stack:', error?.stack || 'No stack trace');
     
     return new Response(JSON.stringify({ 
       error: 'Failed to generate dashboard',
-      details: error.message,
-      type: error.constructor.name
+      details: error?.message || 'Unknown error',
+      type: error?.constructor?.name || 'Unknown'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

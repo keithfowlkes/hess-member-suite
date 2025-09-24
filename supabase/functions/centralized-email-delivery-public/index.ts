@@ -507,11 +507,11 @@ serve(async (req: Request): Promise<Response> => {
     console.log('[centralized-email-delivery-public] Send attempt', { correlationId, from: emailPayload.from, toCount: emailPayload.to?.length, subject: emailPayload.subject });
     let emailResponse = await resend.emails.send(emailPayload);
     if (emailResponse?.error) {
-      console.error('[centralized-email-delivery-public] Send error', { correlationId, statusCode: emailResponse.error.statusCode, name: emailResponse.error.name, message: emailResponse.error.message });
+      console.error('[centralized-email-delivery-public] Send error', { correlationId, statusCode: (emailResponse.error as any)?.statusCode, name: emailResponse.error.name, message: emailResponse.error.message });
     } else {
       console.log('[centralized-email-delivery-public] Send success', { correlationId, id: emailResponse?.data?.id });
     }
-    if (emailResponse?.error && emailResponse.error.statusCode === 403) {
+    if (emailResponse?.error && (emailResponse.error as any)?.statusCode === 403) {
       const sandboxFrom = 'HESS Consortium <onboarding@resend.dev>';
       const retryPayload = { ...emailPayload, from: sandboxFrom };
       const retry = await resend.emails.send(retryPayload);
@@ -537,7 +537,7 @@ serve(async (req: Request): Promise<Response> => {
 
     if (emailResponse?.error) {
       return new Response(
-        JSON.stringify({ success: false, error: emailResponse.error.message, statusCode: emailResponse.error.statusCode, name: emailResponse.error.name, correlationId }),
+        JSON.stringify({ success: false, error: emailResponse.error.message, statusCode: (emailResponse.error as any)?.statusCode, name: emailResponse.error.name, correlationId }),
         { status: (emailResponse as any)?.error?.statusCode || 502, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }

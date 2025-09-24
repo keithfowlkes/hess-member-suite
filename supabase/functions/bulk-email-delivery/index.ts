@@ -126,8 +126,9 @@ serve(async (req: Request): Promise<Response> => {
     };
 
     // Use EdgeRuntime.waitUntil to process emails in background
-    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
-      EdgeRuntime.waitUntil(processEmails());
+    // Use any type for EdgeRuntime to avoid strict checking
+    if (typeof (globalThis as any).EdgeRuntime !== 'undefined' && (globalThis as any).EdgeRuntime.waitUntil) {
+      (globalThis as any).EdgeRuntime.waitUntil(processEmails());
     } else {
       // Fallback for local development
       processEmails().catch(error => {
@@ -158,5 +159,5 @@ serve(async (req: Request): Promise<Response> => {
 
 // Handle function shutdown
 addEventListener('beforeunload', (ev) => {
-  console.log('[bulk-email-delivery] Function shutdown due to:', ev.detail?.reason);
+  console.log('[bulk-email-delivery] Function shutdown due to:', (ev as any).detail?.reason);
 });

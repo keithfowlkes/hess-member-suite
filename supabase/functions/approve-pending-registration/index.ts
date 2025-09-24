@@ -786,10 +786,10 @@ serve(async (req) => {
 
       // Organization creation/validation completed successfully
       console.log(`Organization processing completed: ${newOrganization ? newOrganization.name : 'No organization created'}`);
-    } catch (orgCreationError) {
-      console.error('Error in organization creation/update process:', orgCreationError);
-      return new Response(
-        JSON.stringify({ error: `Failed to process organization: ${orgCreationError.message}` }),
+      } catch (orgCreationError: any) {
+        console.error('Error in organization creation/update process:', orgCreationError);
+        return new Response(
+          JSON.stringify({ error: `Failed to process organization: ${orgCreationError?.message || 'Unknown error'}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -847,7 +847,7 @@ serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Unexpected error during approval process:', error);
     console.error('Error details:', {
       name: error?.name,
