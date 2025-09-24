@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { getEmailTemplate, replaceTemplateVariables, EmailTemplate, replaceLogoInTemplate } from '../_shared/email-templates.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,362 +39,6 @@ interface EmailRequest {
   // Optional flags
   forceSandbox?: boolean;
   debug?: boolean;
-}
-
-interface EmailTemplate {
-  id: string;
-  name: string;
-  subject: string;
-  html: string;
-  variables: string[];
-}
-
-// Helper function to convert hex to rgba for email client compatibility
-function hexToRgba(hex: string, opacity: number): string {
-  // Remove # if present
-  hex = hex.replace('#', '');
-  
-  // Handle 3-character hex codes
-  if (hex.length === 3) {
-    hex = hex.split('').map(char => char + char).join('');
-  }
-  
-  // Parse RGB values
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-  
-  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-}
-
-// Function to wrap content in standardized HESS email template with design system
-async function wrapInStandardTemplate(content: string, logoUrl?: string): Promise<string> {
-  // Get design settings from system_settings
-  const { data: designSettings } = await supabase
-    .from('system_settings')
-    .select('setting_key, setting_value')
-    .in('setting_key', [
-      'email_background_image',
-      'email_design_primary_color', 
-      'email_design_accent_color',
-      'email_design_text_color',
-      'email_design_card_background'
-    ]);
-
-  // Create settings map with defaults
-  const settings = {
-    background_image: '',
-    primary_color: '#8B7355',
-    accent_color: '#D4AF37', 
-    text_color: '#4A4A4A',
-    card_background: 'rgba(248, 245, 238, 0.95)'
-  };
-
-  // Apply retrieved settings
-  if (designSettings) {
-    designSettings.forEach(setting => {
-      switch (setting.setting_key) {
-        case 'email_background_image':
-          settings.background_image = setting.setting_value || '';
-          break;
-        case 'email_design_primary_color':
-          settings.primary_color = setting.setting_value || '#8B7355';
-          break;
-        case 'email_design_accent_color':
-          settings.accent_color = setting.setting_value || '#D4AF37';
-          break;
-        case 'email_design_text_color':
-          settings.text_color = setting.setting_value || '#4A4A4A';
-          break;
-        case 'email_design_card_background':
-          settings.card_background = setting.setting_value || 'rgba(248, 245, 238, 0.95)';
-          break;
-      }
-    });
-  }
-
-  const emailOptimizedLogo = logoUrl 
-    ? `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto 20px auto;" border="0">`
-    : '';
-
-  // Determine background style based on settings
-  const backgroundStyle = settings.background_image 
-    ? `background-image: url('${settings.background_image}'); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh; background-color: ${settings.primary_color};`
-    : `background: linear-gradient(135deg, ${settings.primary_color} 0%, ${settings.accent_color} 100%); min-height: 100vh;`;
-
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HESS Consortium</title>
-    <!--[if mso]>
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
-    <![endif]-->
-</head>
-<body style="margin: 0; padding: 0; font-family: Georgia, 'Times New Roman', serif; line-height: 1.6; ${backgroundStyle}">
-    <!-- Email Container -->
-    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="min-height: 100vh; padding: 60px 20px;">
-        <tr>
-            <td align="center" valign="top">
-                <!-- Main Content Card with Design System Background -->
-                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background: ${settings.card_background}; border-radius: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px);">
-                    <!-- Header with Logo -->
-                    <tr>
-                        <td style="padding: 40px 40px 20px 40px; text-align: center;">
-                            ${emailOptimizedLogo}
-                            <div style="height: 3px; background: linear-gradient(90deg, ${settings.accent_color} 0%, ${settings.primary_color} 50%, ${settings.accent_color} 100%); border-radius: 2px; margin: 15px auto 0 auto; width: 120px;"></div>
-                        </td>
-                    </tr>
-                    
-                    <!-- Content Area -->
-                    <tr>
-                        <td style="padding: 20px 50px 40px 50px;">
-                            <div style="color: ${settings.text_color}; font-size: 16px; line-height: 1.8; text-align: left;">
-                                ${content}
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <!-- Footer with Accent -->
-                    <tr>
-                        <td style="background: ${hexToRgba(settings.accent_color, 0.2)}; padding: 30px 40px; border-top: 2px solid ${hexToRgba(settings.accent_color, 0.5)}; text-align: center;">
-                            <p style="margin: 0; color: ${settings.primary_color}; font-size: 14px; font-weight: 500;">
-                                © ${new Date().getFullYear()} HESS Consortium. All rights reserved.
-                            </p>
-                            <p style="margin: 8px 0 0 0; color: ${hexToRgba(settings.primary_color, 0.8)}; font-size: 12px;">
-                                This email was sent from the HESS Consortium Member Portal
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
-  `;
-}
-
-// Function to get and replace logo URL in template with proper email embedding
-async function replaceLogoInTemplate(htmlContent: string): Promise<string> {
-  try {
-    // Get the uploaded logo URL from system settings
-    const { data: logoSetting } = await supabase
-      .from('system_settings')
-      .select('setting_value')
-      .eq('setting_key', 'public_logo_url')
-      .maybeSingle();
-    
-    const logoUrl = logoSetting?.setting_value;
-    
-    if (logoUrl && logoUrl.trim()) {
-      console.log('[centralized-email-delivery-public] Using uploaded logo:', logoUrl);
-      
-      // Create a properly formatted img tag for email clients
-      const emailOptimizedImg = `<img src="${logoUrl}" alt="HESS Consortium Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto;" border="0">`;
-      
-      // Replace any existing logo image sources with the uploaded logo
-      let updatedContent = htmlContent;
-      
-      // Replace direct image URLs that might be HESS logos
-      updatedContent = updatedContent.replace(
-        /src="https:\/\/9f0afb12-d741-415b-9bbb-e40cfcba281a\.lovableproject\.com\/assets\/hess-logo\.png"/g,
-        `src="${logoUrl}"`
-      );
-      
-      // Replace any other existing logo references with the email-optimized version
-      updatedContent = updatedContent.replace(
-        /<img[^>]*src="[^"]*hess[^"]*logo[^"]*"[^>]*>/gi,
-        emailOptimizedImg
-      );
-      
-      // Replace base64 encoded images with the email-optimized version
-      updatedContent = updatedContent.replace(
-        /<img[^>]*src="data:image\/[^;]*;base64,[^"]*"[^>]*>/g,
-        emailOptimizedImg
-      );
-      
-      // Also replace any generic logo placeholders
-      updatedContent = updatedContent.replace(
-        /\{\{logo\}\}/gi,
-        emailOptimizedImg
-      );
-      
-      return updatedContent;
-    }
-    
-    return htmlContent;
-  } catch (error) {
-    console.error('[centralized-email-delivery-public] Error replacing logo:', error);
-    return htmlContent;
-  }
-}
-
-// Function to get email template from system_settings table (primary) or system_messages (fallback)
-async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null> {
-  try {
-    // First, try to get template from system_settings (where UI saves templates)
-    let settingKey = '';
-    switch (emailType) {
-      case 'welcome':
-        settingKey = 'welcome_message_template';
-        break;
-      case 'password_reset':
-        settingKey = 'password_reset_message';
-        break;
-      case 'profile_update':
-      case 'profile_update_approved':
-        settingKey = 'profile_update_message_template';
-        break;
-      default:
-        settingKey = `${emailType}_message_template`;
-    }
-
-    // Try to get from system_settings first
-    const { data: settingTemplate, error: settingError } = await supabase
-      .from('system_settings')
-      .select('setting_value, setting_key')
-      .eq('setting_key', settingKey)
-      .maybeSingle();
-
-    if (!settingError && settingTemplate?.setting_value) {
-      console.log(`Found template in system_settings for: ${emailType}`);
-      
-      // Get design settings for color replacement
-      const { data: designSettings } = await supabase
-        .from('system_settings')
-        .select('setting_key, setting_value')
-        .in('setting_key', [
-          'email_design_primary_color', 
-          'email_design_accent_color',
-          'email_design_text_color',
-          'email_design_card_background'
-        ]);
-
-      // Create color variables map with defaults
-      const colorVars = {
-        primary_color: '#8B7355',
-        accent_color: '#D4AF37', 
-        text_color: '#4A4A4A',
-        card_background: 'rgba(248, 245, 238, 0.95)'
-      };
-
-      if (designSettings) {
-        designSettings.forEach(setting => {
-          switch (setting.setting_key) {
-            case 'email_design_primary_color':
-              colorVars.primary_color = setting.setting_value || '#8B7355';
-              break;
-            case 'email_design_accent_color':
-              colorVars.accent_color = setting.setting_value || '#D4AF37';
-              break;
-            case 'email_design_text_color':
-              colorVars.text_color = setting.setting_value || '#4A4A4A';
-              break;
-            case 'email_design_card_background':
-              colorVars.card_background = setting.setting_value || 'rgba(248, 245, 238, 0.95)';
-              break;
-          }
-        });
-      }
-
-      // Replace color placeholders in template content before logo replacement
-      let templateContent = settingTemplate.setting_value;
-      
-      // Helper function to convert hex to rgba
-      function hexToRgba(hex: string, opacity: number): string {
-        hex = hex.replace('#', '');
-        if (hex.length === 3) {
-          hex = hex.split('').map(char => char + char).join('');
-        }
-        const r = parseInt(hex.substr(0, 2), 16);
-        const g = parseInt(hex.substr(2, 2), 16);
-        const b = parseInt(hex.substr(4, 2), 16);
-        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-      }
-      
-      // Replace transparency variations with proper rgba values (process variants first)
-      templateContent = templateContent.replace(/\{\{accent_color\}\}20/g, hexToRgba(colorVars.accent_color, 0.2));
-      templateContent = templateContent.replace(/\{\{accent_color\}\}50/g, hexToRgba(colorVars.accent_color, 0.5));
-      templateContent = templateContent.replace(/\{\{primary_color\}\}CC/g, hexToRgba(colorVars.primary_color, 0.8));
-      templateContent = templateContent.replace(/\{\{primary_color\}\}20/g, hexToRgba(colorVars.primary_color, 0.2));
-      templateContent = templateContent.replace(/\{\{primary_color\}\}50/g, hexToRgba(colorVars.primary_color, 0.5));
-      templateContent = templateContent.replace(/\{\{text_color\}\}20/g, hexToRgba(colorVars.text_color, 0.2));
-      templateContent = templateContent.replace(/\{\{text_color\}\}50/g, hexToRgba(colorVars.text_color, 0.5));
-      templateContent = templateContent.replace(/\{\{text_color\}\}CC/g, hexToRgba(colorVars.text_color, 0.8));
-      
-      // Then replace the main color variables
-      templateContent = templateContent.replace(/\{\{primary_color\}\}/g, colorVars.primary_color || '#8B7355');
-      templateContent = templateContent.replace(/\{\{accent_color\}\}/g, colorVars.accent_color || '#D4AF37');
-      templateContent = templateContent.replace(/\{\{text_color\}\}/g, colorVars.text_color || '#4A4A4A');
-      templateContent = templateContent.replace(/\{\{card_background\}\}/g, colorVars.card_background || 'rgba(248, 245, 238, 0.95)');
-      
-      // Replace logo in template content
-      const htmlWithLogo = await replaceLogoInTemplate(templateContent);
-      
-      return {
-        id: emailType,
-        name: `${emailType.charAt(0).toUpperCase() + emailType.slice(1)} Template`,
-        subject: emailType === 'welcome' ? 'Welcome to HESS Consortium!' : 
-                emailType === 'password_reset' ? 'Password Reset Request' :
-                (emailType === 'profile_update' || emailType === 'profile_update_approved') ? 'Profile Update Approved' :
-                'HESS Consortium Notification',
-        html: htmlWithLogo,
-        variables: []
-      };
-    }
-
-    // Fallback to system_messages table
-    console.log(`No template found in system_settings for ${emailType}, trying system_messages`);
-    const { data: messageTemplate, error } = await supabase
-      .from('system_messages')
-      .select('title, content, email_type')
-      .eq('email_type', emailType)
-      .eq('is_active', true)
-      .maybeSingle();
-
-    if (error || !messageTemplate) {
-      console.log(`No template found for email type: ${emailType}`, error);
-      return null;
-    }
-
-    // Replace logo in fallback template content
-    const htmlWithLogo = await replaceLogoInTemplate(messageTemplate.content || `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        {{message}}
-      </div>
-    `);
-
-    return {
-      id: emailType,
-      name: messageTemplate.title,
-      subject: messageTemplate.title,
-      html: htmlWithLogo,
-      variables: []
-    };
-  } catch (error) {
-    console.error(`Error fetching template for ${emailType}:`, error);
-    return null;
-  }
-}
-
-// Supabase client and Resend already initialized above
-
-function replaceTemplateVariables(content: string, data: Record<string, string>): string {
-  let result = content;
-  Object.entries(data).forEach(([key, value]) => {
-    const placeholder = `{{${key}}}`;
-    result = result.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value || '');
-  });
-  return result;
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -542,39 +187,34 @@ serve(async (req: Request): Promise<Response> => {
         const candidateFromVerified = ensureDomain(fromCandidate);
         const candidateEmail = extractEmail(candidateFromVerified);
         const candidateDomain = candidateEmail.split('@')[1]?.toLowerCase();
-        const domainEntry = domains.find((d: any) => (d.name || d.domain || '').toLowerCase() === candidateDomain);
-        domainVerified = (domainEntry?.status || domainEntry?.verification?.status) === 'verified';
-        console.log('[centralized-email-delivery-public] Preflight domains', {
+        domainVerified = domains.some((d: any) => d.name?.toLowerCase() === candidateDomain && d.status === 'verified');
+        console.log('[centralized-email-delivery-public] Domain verification', {
           correlationId,
           candidateDomain,
-          checkingFrom: candidateFromVerified,
-          domainFound: !!domainEntry,
-          status: domainEntry?.status || domainEntry?.verification?.status,
           domainVerified,
-          domainsCount: Array.isArray(domains) ? domains.length : 0,
+          availableDomains: domains.map((d: any) => ({ name: d.name, status: d.status })),
         });
-      } catch (e) {
-        console.warn('[centralized-email-delivery-public] Preflight domain parse failed', { correlationId, error: String(e) });
+      } catch (e: any) {
+        console.warn('[centralized-email-delivery-public] Could not check domain verification', { correlationId, error: e?.message });
       }
     } catch (e: any) {
       console.error('[centralized-email-delivery-public] Failed to verify Resend API key', { correlationId, error: e?.message || e });
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to verify Resend API key', details: e?.message || e, correlationId }),
-        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
     // If this is a test email and the domain is verified (and not forcing sandbox), use the verified domain sender
-    if (isTest && !forceSandbox && domainVerified) {
+    if (isTest && domainVerified && !forceSandbox) {
       const adjustedFrom = ensureDomain(fromCandidate);
       if (adjustedFrom !== finalFrom) {
+        finalFrom = adjustedFrom;
         console.log('[centralized-email-delivery-public] Adjusting sender to verified domain for test', { correlationId, from: adjustedFrom });
       }
-      finalFrom = adjustedFrom;
-      // Keep template data accurate after adjusting sender
-      try { templateData.from_email = finalFrom; } catch(_) {}
     }
 
+    // Validate required environment
     if (!Deno.env.get('RESEND_API_KEY')) {
       console.error('[centralized-email-delivery-public] Missing RESEND_API_KEY', { correlationId });
       return new Response(
@@ -590,15 +230,20 @@ serve(async (req: Request): Promise<Response> => {
       html: finalHtml,
     };
 
+    if (emailRequest.attachments?.length) {
+      emailPayload.attachments = emailRequest.attachments;
+    }
+
     // Try send; on 403 (domain not verified), retry with Resend sandbox sender
     console.log('[centralized-email-delivery-public] Send attempt', { correlationId, from: emailPayload.from, toCount: emailPayload.to?.length, subject: emailPayload.subject });
     let emailResponse = await resend.emails.send(emailPayload);
-    if (emailResponse?.error) {
+    if (emailResponse.error) {
       console.error('[centralized-email-delivery-public] Send error', { correlationId, statusCode: (emailResponse.error as any)?.statusCode, name: emailResponse.error.name, message: emailResponse.error.message });
     } else {
       console.log('[centralized-email-delivery-public] Send success', { correlationId, id: emailResponse?.data?.id });
     }
-    if (emailResponse?.error && (emailResponse.error as any)?.statusCode === 403) {
+
+    if (emailResponse.error && (emailResponse.error as any)?.statusCode === 403) {
       const sandboxFrom = 'HESS Consortium <onboarding@resend.dev>';
       const retryPayload = { ...emailPayload, from: sandboxFrom };
       const retry = await resend.emails.send(retryPayload);
@@ -607,33 +252,33 @@ serve(async (req: Request): Promise<Response> => {
           JSON.stringify({ success: true, message: 'Email sent (fallback sandbox sender)', emailId: retry.data?.id, timestamp: new Date().toISOString(), correlationId }),
           { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
         );
+      } else {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Email sending failed',
+            details: retry.error,
+            note: 'Sending failed. If you are on the Resend free plan, you must verify recipient emails at https://resend.com/verified-emails or use a verified domain.',
+            correlationId,
+          }),
+          { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
       }
-      // If retry also failed, return original 403 error
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: emailResponse?.error?.message || (typeof emailResponse?.error === 'string' ? emailResponse.error : 'Forbidden'),
-          note: 'Sending failed. If you are on the Resend free plan, you must verify recipient emails at https://resend.com/verified-emails or use a verified domain.',
-          statusCode: (emailResponse as any)?.error?.statusCode || 403,
-          name: emailResponse?.error?.name,
-          correlationId
-        }),
-        { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
     }
 
-    if (emailResponse?.error) {
+    if (emailResponse.error) {
       return new Response(
-        JSON.stringify({ success: false, error: emailResponse.error.message, statusCode: (emailResponse.error as any)?.statusCode, name: emailResponse.error.name, correlationId }),
-        { status: (emailResponse as any)?.error?.statusCode || 502, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        JSON.stringify({ success: false, error: 'Email sending failed', details: emailResponse.error, correlationId }),
+        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Email sent', emailId: emailResponse.data?.id, timestamp: new Date().toISOString(), correlationId }),
+      JSON.stringify({ success: true, message: 'Email sent successfully', emailId: emailResponse.data?.id, timestamp: new Date().toISOString(), correlationId }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   } catch (error: any) {
+    console.error('[centralized-email-delivery-public] Unexpected error:', error);
     return new Response(JSON.stringify({ success: false, error: error.message || 'Unknown error' }), { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
   }
 });
