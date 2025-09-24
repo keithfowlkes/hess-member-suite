@@ -36,46 +36,16 @@ const handler = async (req: Request): Promise<Response> => {
     const { organizationName, to, invoiceData }: OverdueReminderRequest = await req.json();
     console.log('Overdue reminder request:', { organizationName, to });
 
-    // Get the overdue reminder template from system_messages
-    const { data: messageTemplate, error: templateError } = await supabase
-      .from('system_messages')
-      .select('title, content')
-      .eq('email_type', 'overdue_reminder')
-      .eq('is_active', true)
-      .maybeSingle();
-
-    if (templateError || !messageTemplate) {
-      console.error('Overdue reminder template not found:', templateError);
-      throw new Error('Overdue reminder email template not found');
-    }
-
-    // Replace template variables
-    const templateData = {
-      organization_name: organizationName,
-      invoice_number: invoiceData?.invoice_number || '',
-      amount: invoiceData?.amount?.toLocaleString() || '',
-      due_date: invoiceData ? new Date(invoiceData.due_date).toLocaleDateString() : ''
-    };
-
-    function replaceTemplateVariables(content: string, data: Record<string, string>): string {
-      let result = content;
-      Object.entries(data).forEach(([key, value]) => {
-        const placeholder = `{{${key}}}`;
-        result = result.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value || '');
-      });
-      return result;
-    }
-
-    const subject = replaceTemplateVariables(messageTemplate.title, templateData);
-    
-    // Migrate send-overdue-reminder to centralized method
+    // Use centralized email delivery system
     const emailData = {
       type: 'overdue_reminder',
       to: [to],
-      subject: subject,
+      subject: 'Overdue Invoice Reminder',
       data: {
         organization_name: organizationName,
-        ...invoiceData
+        invoice_number: invoiceData?.invoice_number || '',
+        amount: invoiceData?.amount?.toLocaleString() || '',
+        due_date: invoiceData ? new Date(invoiceData.due_date).toLocaleDateString() : ''
       }
     };
 

@@ -188,7 +188,7 @@ const handler = async (req: Request): Promise<Response> => {
     } else {
       // Get template from database
       const emailType = emailRequest.type?.replace(/-/g, '_') || 'test';
-      template = await getEmailTemplate(emailType);
+      template = await getEmailTemplate(emailType, true); // Include recipients for welcome emails
       
       if (template) {
         finalSubject = replaceTemplateVariables(emailRequest.subject || template.subject, templateData);
@@ -219,6 +219,15 @@ const handler = async (req: Request): Promise<Response> => {
       subject: finalSubject,
       html: finalHtml,
     };
+
+    // Add CC recipients for welcome emails
+    if ((emailRequest.type === 'welcome' || emailRequest.type === 'welcome_approved') && (template as any)?.ccRecipients) {
+      const ccRecipients = (template as any).ccRecipients as string[];
+      if (ccRecipients.length > 0) {
+        emailPayload.cc = ccRecipients;
+        console.log(`[centralized-email-delivery] Adding CC recipients for ${emailRequest.type}:`, ccRecipients);
+      }
+    }
 
     // Add attachments if provided
     if (emailRequest.attachments && emailRequest.attachments.length > 0) {

@@ -104,7 +104,7 @@ export async function replaceLogoInTemplate(htmlContent: string): Promise<string
 }
 
 // Function to get email template from system_settings table (primary) or system_messages (fallback)
-export async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null> {
+export async function getEmailTemplate(emailType: string, includeRecipients: boolean = false): Promise<EmailTemplate & { ccRecipients?: string[], defaultRecipients?: Record<string, boolean> } | null> {
   try {
     console.log(`[getEmailTemplate] Looking for template for type: ${emailType}`);
     
@@ -125,6 +125,12 @@ export async function getEmailTemplate(emailType: string): Promise<EmailTemplate
         break;
       case 'member_info_update':
         settingKey = 'email_member_info_update_template';
+        break;
+      case 'overdue_reminder':
+        settingKey = 'overdue_reminder_email_template';
+        break;
+      case 'organization_invitation':
+        settingKey = 'organization_invitation_template';
         break;
       default:
         settingKey = `${emailType}_message_template`;
@@ -185,13 +191,54 @@ export async function getEmailTemplate(emailType: string): Promise<EmailTemplate
 
       console.log(`[getEmailTemplate] Using subject: ${templateSubject} for type: ${emailType}`);
       
-      return {
+      let result: any = {
         id: emailType,
         name: `${emailType.charAt(0).toUpperCase() + emailType.slice(1)} Template`,
         subject: templateSubject,
         html: htmlWithLogo,
         variables: []
       };
+
+      // Add recipient configuration for welcome emails
+      if (includeRecipients && (emailType === 'welcome' || emailType === 'welcome_approved')) {
+        try {
+          // Get CC recipients
+          const { data: ccSetting } = await supabase
+            .from('system_settings')
+            .select('setting_value')
+            .eq('setting_key', 'welcome_message_cc_recipients')
+            .maybeSingle();
+          
+          // Get default recipients  
+          const { data: defaultSetting } = await supabase
+            .from('system_settings')
+            .select('setting_value')
+            .eq('setting_key', 'welcome_message_default_recipients')
+            .maybeSingle();
+
+          if (ccSetting?.setting_value) {
+            try {
+              result.ccRecipients = JSON.parse(ccSetting.setting_value);
+            } catch (e) {
+              console.error('[getEmailTemplate] Error parsing CC recipients:', e);
+              result.ccRecipients = [];
+            }
+          }
+
+          if (defaultSetting?.setting_value) {
+            try {
+              result.defaultRecipients = JSON.parse(defaultSetting.setting_value);
+            } catch (e) {
+              console.error('[getEmailTemplate] Error parsing default recipients:', e);
+              result.defaultRecipients = {};
+            }
+          }
+        } catch (error) {
+          console.error('[getEmailTemplate] Error fetching recipient settings:', error);
+        }
+      }
+      
+      return result;
     }
 
     // Special handling for public function template types that may not be wrapped
