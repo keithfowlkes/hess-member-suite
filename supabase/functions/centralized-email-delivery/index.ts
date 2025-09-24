@@ -106,6 +106,7 @@ async function wrapInStandardTemplate(content: string, logoUrl?: string): Promis
 
   // Helper function to convert hex to rgba with alpha
   function hexToRgba(hex: string, alpha: number): string {
+    if (!hex || !hex.startsWith('#')) return `rgba(139, 115, 85, ${alpha})`;
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);  
     const b = parseInt(hex.slice(5, 7), 16);
@@ -340,6 +341,7 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
       
       // Helper function to convert hex to rgba
       function hexToRgba(hex: string, alpha: number): string {
+        if (!hex || !hex.startsWith('#')) return `rgba(139, 115, 85, ${alpha})`;
         const r = parseInt(hex.slice(1, 3), 16);
         const g = parseInt(hex.slice(3, 5), 16);  
         const b = parseInt(hex.slice(5, 7), 16);
@@ -350,7 +352,11 @@ async function getEmailTemplate(emailType: string): Promise<EmailTemplate | null
       const lightBackground = hexToRgba(colorVars.accent_color, 0.1);
       const lightBorder = hexToRgba(colorVars.accent_color, 0.3);
       
-      // IMPORTANT: Replace transparency variations FIRST, before main color placeholders
+      // IMPORTANT: Replace template-specific color variables FIRST
+      templateContent = templateContent.replace(/\{\{accent_color_light\}\}/g, lightBackground);
+      templateContent = templateContent.replace(/\{\{accent_color_border\}\}/g, lightBorder);
+      
+      // Then replace legacy transparency variations
       templateContent = templateContent.replace(/\{\{accent_color\}\}20/g, lightBackground);
       templateContent = templateContent.replace(/\{\{accent_color\}\}50/g, lightBorder);
       

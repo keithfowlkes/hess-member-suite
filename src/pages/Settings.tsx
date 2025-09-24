@@ -26,9 +26,8 @@ import { PublicLogoManager } from '@/components/PublicLogoManager';
 import { HeaderGraphicManager } from '@/components/HeaderGraphicManager';
 
 import { USMap } from '@/components/USMap';
-import { MessageTextContent } from '@/components/MessageTextContent';
 import { ResendApiConfig } from '@/components/ResendApiConfig';
-import { EmailDesignManager } from '@/components/EmailDesignManager';
+import { UnifiedEmailDesignSystem } from '@/components/UnifiedEmailDesignSystem';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
@@ -1256,26 +1255,7 @@ export default function Settings() {
                     </TabsContent>
 
                   <TabsContent value="email-text-design" className="space-y-6">
-                    <Tabs defaultValue="message-text" className="space-y-6">
-                      <TabsList className="grid w-full grid-cols-2 max-w-md">
-                        <TabsTrigger value="message-text" className="flex items-center gap-2">
-                          <FileText className="h-4 w-4" />
-                          Message Text
-                        </TabsTrigger>
-                        <TabsTrigger value="design-settings" className="flex items-center gap-2">
-                          <Palette className="h-4 w-4" />
-                          Design Settings
-                        </TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="message-text" className="space-y-6">
-                        <MessageTextContent />
-                      </TabsContent>
-                      
-                      <TabsContent value="design-settings" className="space-y-6">
-                        <EmailDesignManager />
-                      </TabsContent>
-                    </Tabs>
+                    <UnifiedEmailDesignSystem />
                   </TabsContent>
                 </Tabs>
                     </div>
