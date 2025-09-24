@@ -405,9 +405,9 @@ serve(async (req) => {
       subject: subject,
       data: {
         organization_name: organization.name || 'Unknown Organization',
-        invoice_number: invoiceData.invoice_number || 'Unknown',
-        amount: invoiceData.amount?.toString() || '0',
-        due_date: invoiceData.due_date || 'Unknown',
+        invoice_number: invoice.invoice_number || 'Unknown',
+        amount: invoice.amount?.toString() || '0',
+        due_date: invoice.due_date || 'Unknown',
         invoice_content: html
       }
     };

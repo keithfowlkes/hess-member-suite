@@ -151,9 +151,9 @@ const handler = async (req: Request): Promise<Response> => {
     const isUpdate = registrationUpdate.submission_type === 'member_update' && registrationUpdate.existing_organization_id;
     
     // Declare variables that will be used in audit logging
-    var newOrganization: any;
-    var newUser: any;
-    var existingOrganization: any = null;
+    let newOrganization: any;
+    let newUser: any;
+    let existingOrganization: any = null;
 
     if (isUpdate) {
       console.log('Processing as member update for existing organization:', registrationUpdate.existing_organization_id);
@@ -293,8 +293,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('Organization and profile updated successfully');
 
       // Use existing organization and profile IDs for logging
-      var newOrganization = { id: registrationUpdate.existing_organization_id };
-      var newUser = { user: { id: existingProfile.user_id } };
+      newOrganization = { id: registrationUpdate.existing_organization_id };
+      newUser = { user: { id: existingProfile.user_id } };
 
     } else {
       console.log('Processing as new registration - creating new organization and user');
@@ -331,8 +331,9 @@ const handler = async (req: Request): Promise<Response> => {
           console.log('Organization deleted successfully:', deleteResult);
         } catch (error) {
           console.error('Delete organization function error:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           return new Response(
-            JSON.stringify({ error: `Failed to delete existing organization: ${error.message}` }),
+            JSON.stringify({ error: `Failed to delete existing organization: ${errorMessage}` }),
             { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
           );
         }
@@ -584,10 +585,11 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error) {
     console.error("Error in process-member-registration-update function:", error);
     
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({
         error: "Internal server error",
-        details: error.message
+        details: errorMessage
       }),
       {
         status: 500,

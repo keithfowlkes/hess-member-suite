@@ -47,8 +47,8 @@ const handler = async (req: Request): Promise<Response> => {
       hasFromAddress: !!fromEmail,
       fromAddress: fromEmail,
       domainStatus: null,
-      domains: [],
-      recommendations: []
+      domains: [] as any[],
+      recommendations: [] as string[]
     };
 
     if (!resendApiKey) {
@@ -69,7 +69,7 @@ const handler = async (req: Request): Promise<Response> => {
         console.log("Raw domains response:", JSON.stringify(domainsResponse, null, 2));
         
         // Safely handle the domains response - Resend API might have different response structures
-        let domainsList = [];
+        let domainsList: any[] = [];
         if (domainsResponse) {
           // Handle different possible response structures
           if (Array.isArray(domainsResponse.data)) {
@@ -116,7 +116,8 @@ const handler = async (req: Request): Promise<Response> => {
         
       } catch (resendError) {
         console.error("❌ Resend API error:", resendError);
-        verificationResults.recommendations.push(`Resend API connection failed: ${resendError.message}`);
+        const errorMessage = resendError instanceof Error ? resendError.message : 'Connection failed';
+        verificationResults.recommendations.push(`Resend API connection failed: ${errorMessage}`);
       }
     }
 

@@ -165,8 +165,9 @@ serve(async (req) => {
       console.log('Created pending registration:', pendingReg.id);
     } catch (error) {
       console.error('Exception during pending registration creation:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return new Response(
-        JSON.stringify({ error: `Exception creating pending registration: ${error.message}` }),
+        JSON.stringify({ error: `Exception creating pending registration: ${errorMessage}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -195,8 +196,9 @@ serve(async (req) => {
       console.log(`Deleted ${deletedInvoices?.length || 0} invoices`);
     } catch (error) {
       console.error('Exception deleting invoices:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return new Response(
-        JSON.stringify({ error: `Exception deleting invoices: ${error.message}` }),
+        JSON.stringify({ error: `Exception deleting invoices: ${errorMessage}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -302,16 +304,21 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('=== UNEXPECTED ERROR IN UNAPPROVE FUNCTION ===');
-    console.error('Error name:', error.name);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorName = error instanceof Error ? error.name : 'UnknownError';
+    
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
     
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error', 
-        details: error.message,
-        type: error.name 
+        details: errorMessage,
+        type: errorName 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
