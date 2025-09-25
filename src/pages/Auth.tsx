@@ -1557,11 +1557,166 @@ export default function Auth() {
                         </div>
                       </div>
 
-                      {/* Default basic fields */}
+                      {/* Account Information */}
                       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="mb-6">
-                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Basic Information</h3>
-                          <p className="text-gray-600 text-sm">Please configure the form fields in Settings → Public Views → Authentication Pages.</p>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Account Information</h3>
+                          <p className="text-gray-600 text-sm">Your login credentials and contact information.</p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="lg:col-span-2 space-y-2">
+                              <Label htmlFor="signup-email" className="text-gray-700 font-medium text-sm">
+                                Primary Email Address <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-email"
+                                type="email"
+                                placeholder="your.email@institution.edu"
+                                value={signUpForm.email}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, email: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                              />
+                              <p className="text-xs text-gray-500">This will be your login email address</p>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
+                                Password <span className="text-red-500">*</span>
+                              </Label>
+                              <div className="relative">
+                                <Input
+                                  id="signup-password"
+                                  type={showSignUpPassword ? "text" : "password"}
+                                  placeholder="Create a secure password"
+                                  value={signUpForm.password}
+                                  onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                                  className="h-11 bg-gray-50 border-gray-300 pr-10"
+                                  disabled={!signUpForm.isPrivateNonProfit}
+                                  required
+                                  minLength={6}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                                  disabled={!signUpForm.isPrivateNonProfit}
+                                >
+                                  {showSignUpPassword ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </div>
+                              <p className="text-xs text-gray-500">Minimum 6 characters required</p>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-confirm-password" className="text-gray-700 font-medium text-sm">
+                                Confirm Password <span className="text-red-500">*</span>
+                              </Label>
+                              <div className="relative">
+                                <Input
+                                  id="signup-confirm-password"
+                                  type={showSignUpConfirmPassword ? "text" : "password"}
+                                  placeholder="Confirm password"
+                                  value={signUpForm.confirmPassword}
+                                  onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                  className={`h-11 bg-gray-50 border-gray-300 pr-10 ${
+                                    signUpPasswordsMatch === false ? 'border-red-300 focus:border-red-500' : 
+                                    signUpPasswordsMatch === true ? 'border-green-300 focus:border-green-500' : ''
+                                  }`}
+                                  disabled={!signUpForm.isPrivateNonProfit}
+                                  required
+                                  minLength={6}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  onClick={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
+                                  disabled={!signUpForm.isPrivateNonProfit}
+                                >
+                                  {showSignUpConfirmPassword ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </div>
+                              {signUpPasswordsMatch === false && (
+                                <p className="text-xs text-red-500">Passwords do not match</p>
+                              )}
+                              {signUpPasswordsMatch === true && (
+                                <p className="text-xs text-green-600">Passwords match</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Institution Information */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="mb-6">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Institution Information</h3>
+                          <p className="text-gray-600 text-sm">Details about your college or university.</p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="lg:col-span-2 space-y-2">
+                              <Label htmlFor="signup-organization" className="text-gray-700 font-medium text-sm">
+                                Institution Name <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-organization"
+                                type="text"
+                                placeholder="Your College or University Name"
+                                value={signUpForm.organization}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-first-name" className="text-gray-700 font-medium text-sm">
+                                First Name <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-first-name"
+                                type="text"
+                                placeholder="First name"
+                                value={signUpForm.firstName}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-last-name" className="text-gray-700 font-medium text-sm">
+                                Last Name <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-last-name"
+                                type="text"
+                                placeholder="Last name"
+                                value={signUpForm.lastName}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </>
@@ -1742,11 +1897,80 @@ export default function Auth() {
                         </div>
                       </div>
 
-                      {/* Basic fields when no configuration */}
+                      {/* Account Information */}
                       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="mb-6">
-                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Basic Information</h3>
-                          <p className="text-gray-600 text-sm">Please configure the form fields in Settings → Public Views → Authentication Pages.</p>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Account Information</h3>
+                          <p className="text-gray-600 text-sm">Your login credentials and contact information.</p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <Label htmlFor="member-update-first-name" className="text-gray-700 font-medium text-sm">
+                                First Name <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="member-update-first-name"
+                                type="text"
+                                placeholder="Enter first name"
+                                value={signUpForm.firstName}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!isReassignment}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="member-update-last-name" className="text-gray-700 font-medium text-sm">
+                                Last Name <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="member-update-last-name"
+                                type="text"
+                                placeholder="Enter last name"
+                                value={signUpForm.lastName}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!isReassignment}
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Institution Selection */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="mb-6">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Institution Information</h3>
+                          <p className="text-gray-600 text-sm">Details about your college or university.</p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <Label htmlFor="member-update-existing-organization" className="text-gray-700 font-medium text-sm">
+                            Select Existing Institution <span className="text-red-600">*</span>
+                          </Label>
+                          <Select
+                            value={selectedOrganizationId}
+                            onValueChange={handleOrganizationSelect}
+                            disabled={!isReassignment}
+                            required
+                          >
+                            <SelectTrigger className="h-11 bg-gray-50 border-gray-300 max-w-lg">
+                              <SelectValue placeholder="Choose your institution..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {organizations.map((org) => (
+                                <SelectItem key={org.id} value={org.id}>
+                                  {org.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-sm text-muted-foreground">
+                            Select your institution from the list above. This will update the existing record.
+                          </p>
                         </div>
                       </div>
                     </>
