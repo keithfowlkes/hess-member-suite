@@ -53,71 +53,50 @@ interface AuthPageConfig {
 const defaultAuthConfig: AuthPageConfig = {
   signin: [
     { id: 'email', label: 'Email Address', type: 'email', placeholder: 'Enter your email', required: true, visible: true, order: 1, isCore: true },
-    { id: 'password', label: 'Password', type: 'password', placeholder: 'Enter your password', required: true, visible: true, order: 2, isCore: true }
+    { id: 'password', label: 'Password', type: 'password', placeholder: 'Enter your password', required: true, visible: true, order: 2, isCore: true },
+    { id: 'remember', label: 'Remember me', type: 'checkbox', required: false, visible: true, order: 3, isCore: false }
   ],
   signup: [
-    // Eligibility Section
-    { id: 'isPrivateNonProfit', label: 'My institution is a private, non-profit college or university', type: 'checkbox', required: true, visible: true, order: 1, section: 'Eligibility', isCore: true, description: 'Only private, non-profit institutions of higher education are eligible for HESS Consortium membership.' },
-    { id: 'signupType', label: 'Registration Type', type: 'select', options: ['new-member'], required: true, visible: true, order: 2, section: 'Eligibility', isCore: true },
+    // Account Information
+    { id: 'email', label: 'Email Address', type: 'email', placeholder: 'Enter your email', required: true, visible: true, order: 1, section: 'Account Information', isCore: true },
+    { id: 'password', label: 'Password', type: 'password', placeholder: 'Create a password', required: true, visible: true, order: 2, section: 'Account Information', isCore: true },
+    { id: 'confirmPassword', label: 'Confirm Password', type: 'password', placeholder: 'Confirm your password', required: true, visible: true, order: 3, section: 'Account Information', isCore: true },
+    { id: 'loginHint', label: 'Login Hint', type: 'text', placeholder: 'Helpful text to remember your account', required: false, visible: true, order: 4, section: 'Account Information', isCore: false },
     
-    // Account Information Section
-    { id: 'email', label: 'Primary Email Address', type: 'email', placeholder: 'your.email@institution.edu', required: true, visible: true, order: 3, section: 'Account Information', isCore: true, description: 'This will be your login email address' },
-    { id: 'password', label: 'Password', type: 'password', placeholder: 'Create a secure password', required: true, visible: true, order: 4, section: 'Account Information', isCore: true, description: 'Minimum 6 characters required' },
-    { id: 'confirmPassword', label: 'Confirm Password', type: 'password', placeholder: 'Confirm password', required: true, visible: true, order: 5, section: 'Account Information', isCore: true },
+    // Organization Information
+    { id: 'isPrivateNonProfit', label: 'Private Non-Profit Institution', type: 'checkbox', required: true, visible: true, order: 5, section: 'Organization Information', isCore: true },
+    { id: 'organization', label: 'Organization Name', type: 'text', placeholder: 'Enter organization name', required: true, visible: true, order: 6, section: 'Organization Information', isCore: true },
+    { id: 'studentFte', label: 'Student FTE', type: 'number', placeholder: 'e.g. 2500', required: true, visible: true, order: 7, section: 'Organization Information', isCore: false },
+    { id: 'stateAssociation', label: 'State Association', type: 'text', placeholder: 'State association name (if applicable)', required: false, visible: true, order: 8, section: 'Organization Information', isCore: false },
+    { id: 'address', label: 'Street Address', type: 'text', placeholder: 'Street address', required: true, visible: true, order: 9, section: 'Organization Information', isCore: false },
+    { id: 'city', label: 'City', type: 'text', placeholder: 'City', required: true, visible: true, order: 10, section: 'Organization Information', isCore: false },
+    { id: 'state', label: 'State', type: 'text', placeholder: 'State (e.g. TX)', required: true, visible: true, order: 11, section: 'Organization Information', isCore: false },
+    { id: 'zip', label: 'ZIP Code', type: 'text', placeholder: 'ZIP Code', required: true, visible: true, order: 12, section: 'Organization Information', isCore: false },
     
-    // Contact Details Section
-    { id: 'firstName', label: 'First Name', type: 'text', placeholder: 'First name', required: true, visible: true, order: 6, section: 'Contact Details', isCore: true },
-    { id: 'lastName', label: 'Last Name', type: 'text', placeholder: 'Last name', required: true, visible: true, order: 7, section: 'Contact Details', isCore: true },
-    { id: 'title', label: 'Title/Position', type: 'text', placeholder: 'Your job title', required: true, visible: true, order: 8, section: 'Contact Details', isCore: false },
-    { id: 'phone', label: 'Phone Number', type: 'text', placeholder: '(555) 123-4567', required: true, visible: true, order: 9, section: 'Contact Details', isCore: false },
+    // Primary Contact
+    { id: 'firstName', label: 'First Name', type: 'text', placeholder: 'First name', required: true, visible: true, order: 13, section: 'Primary Contact', isCore: true },
+    { id: 'lastName', label: 'Last Name', type: 'text', placeholder: 'Last name', required: true, visible: true, order: 14, section: 'Primary Contact', isCore: true },
+    { id: 'primaryContactTitle', label: 'Job Title', type: 'text', placeholder: 'e.g. CIO, IT Director, VP of Technology', required: true, visible: true, order: 15, section: 'Primary Contact', isCore: false },
     
-    // Institution Information Section
-    { id: 'organization', label: 'Institution Name', type: 'text', placeholder: 'Your College or University Name', required: true, visible: true, order: 10, section: 'Institution Information', isCore: true },
-    { id: 'address', label: 'Street Address', type: 'text', placeholder: '123 College Ave', required: true, visible: true, order: 11, section: 'Institution Information', isCore: false },
-    { id: 'city', label: 'City', type: 'text', placeholder: 'City', required: true, visible: true, order: 12, section: 'Institution Information', isCore: false },
-    { id: 'state', label: 'State', type: 'text', placeholder: 'State', required: true, visible: true, order: 13, section: 'Institution Information', isCore: false },
-    { id: 'zip', label: 'ZIP Code', type: 'text', placeholder: '12345', required: true, visible: true, order: 14, section: 'Institution Information', isCore: false },
+    // Secondary Contact
+    { id: 'secondaryFirstName', label: 'Secondary First Name', type: 'text', placeholder: 'First name', required: false, visible: true, order: 16, section: 'Secondary Contact', isCore: false },
+    { id: 'secondaryLastName', label: 'Secondary Last Name', type: 'text', placeholder: 'Last name', required: false, visible: true, order: 17, section: 'Secondary Contact', isCore: false },
+    { id: 'secondaryContactTitle', label: 'Secondary Job Title', type: 'text', placeholder: 'Job title', required: false, visible: true, order: 18, section: 'Secondary Contact', isCore: false },
+    { id: 'secondaryContactEmail', label: 'Secondary Email Address', type: 'email', placeholder: 'secondary.contact@institution.edu', required: false, visible: true, order: 19, section: 'Secondary Contact', isCore: false },
     
-    // Secondary Contact Section
-    { id: 'secondaryFirstName', label: 'First Name', type: 'text', placeholder: 'Secondary contact first name', required: false, visible: true, order: 15, section: 'Secondary Contact', isCore: false },
-    { id: 'secondaryLastName', label: 'Last Name', type: 'text', placeholder: 'Secondary contact last name', required: false, visible: true, order: 16, section: 'Secondary Contact', isCore: false },
-    { id: 'secondaryEmail', label: 'Email Address', type: 'email', placeholder: 'secondary@institution.edu', required: false, visible: true, order: 17, section: 'Secondary Contact', isCore: false },
-    { id: 'secondaryPhone', label: 'Phone Number', type: 'text', placeholder: '(555) 123-4567', required: false, visible: true, order: 18, section: 'Secondary Contact', isCore: false },
-    
-    // Academic Systems Section
-    { id: 'sis', label: 'Student Information System', type: 'text', placeholder: 'e.g., Banner, PeopleSoft, PowerSchool', required: false, visible: true, order: 19, section: 'Academic Systems', isCore: false },
-    { id: 'lms', label: 'Learning Management System', type: 'text', placeholder: 'e.g., Canvas, Blackboard, Moodle', required: false, visible: true, order: 20, section: 'Academic Systems', isCore: false },
-    { id: 'library', label: 'Library System', type: 'text', placeholder: 'e.g., Alma, Symphony, Koha', required: false, visible: true, order: 21, section: 'Academic Systems', isCore: false },
-    { id: 'otherSoftware', label: 'Other Software', type: 'text', placeholder: 'Other systems or software', required: false, visible: true, order: 22, section: 'Academic Systems', isCore: false },
-    
-    // Additional Information Section
-    { id: 'desktopOS', label: 'Desktop Operating System', type: 'text', placeholder: 'e.g., Windows 11, macOS, Linux', required: false, visible: true, order: 23, section: 'Additional Information', isCore: false },
-    { id: 'serverOS', label: 'Server Operating System', type: 'text', placeholder: 'e.g., Windows Server, Linux, Unix', required: false, visible: true, order: 24, section: 'Additional Information', isCore: false },
-    { id: 'comments', label: 'Additional Comments', type: 'textarea', placeholder: 'Any additional information you\'d like to share...', required: false, visible: true, order: 25, section: 'Additional Information', isCore: false }
+    // Additional Information
+    { id: 'otherSoftwareComments', label: 'Additional software and operational comments', type: 'textarea', placeholder: 'Please share any additional information about your software, operations, or special requirements...', required: false, visible: true, order: 20, section: 'Additional Information', isCore: false }
   ],
   memberUpdate: [
-    // Update Type Section
-    { id: 'isReassignment', label: 'This is a member information update request', type: 'checkbox', required: true, visible: true, order: 1, section: 'Update Type', isCore: true, description: 'I am an authorized agent from my current HESS member institution and am updating information for my own existing institution.' },
-    
-    // Contact Details Section
-    { id: 'firstName', label: 'First Name', type: 'text', placeholder: 'Enter first name', required: true, visible: true, order: 2, section: 'Contact Details', isCore: true },
-    { id: 'lastName', label: 'Last Name', type: 'text', placeholder: 'Enter last name', required: true, visible: true, order: 3, section: 'Contact Details', isCore: true },
-    { id: 'title', label: 'Title/Position', type: 'text', placeholder: 'Your job title', required: true, visible: true, order: 4, section: 'Contact Details', isCore: false },
-    { id: 'phone', label: 'Phone Number', type: 'text', placeholder: '(555) 123-4567', required: true, visible: true, order: 5, section: 'Contact Details', isCore: false },
-    
-    // Institution Information Section - Note: Organization selector is handled specially in Auth.tsx
-    { id: 'existingOrganization', label: 'Select Existing Institution', type: 'select', required: true, visible: true, order: 6, section: 'Institution Information', isCore: true, description: 'Select your institution from the list above. This will update the existing record.' },
-    
-    // Academic Systems Section
-    { id: 'sis', label: 'Student Information System', type: 'text', placeholder: 'e.g., Banner, PeopleSoft, PowerSchool', required: false, visible: true, order: 7, section: 'Academic Systems', isCore: false },
-    { id: 'lms', label: 'Learning Management System', type: 'text', placeholder: 'e.g., Canvas, Blackboard, Moodle', required: false, visible: true, order: 8, section: 'Academic Systems', isCore: false },
-    { id: 'library', label: 'Library System', type: 'text', placeholder: 'e.g., Alma, Symphony, Koha', required: false, visible: true, order: 9, section: 'Academic Systems', isCore: false },
-    { id: 'otherSoftware', label: 'Other Software', type: 'text', placeholder: 'Other systems or software', required: false, visible: true, order: 10, section: 'Academic Systems', isCore: false },
-    
-    // Additional Information Section
-    { id: 'desktopOS', label: 'Desktop Operating System', type: 'text', placeholder: 'e.g., Windows 11, macOS, Linux', required: false, visible: true, order: 11, section: 'Additional Information', isCore: false },
-    { id: 'serverOS', label: 'Server Operating System', type: 'text', placeholder: 'e.g., Windows Server, Linux, Unix', required: false, visible: true, order: 12, section: 'Additional Information', isCore: false },
-    { id: 'comments', label: 'Additional Comments', type: 'textarea', placeholder: 'Any additional information you\'d like to share...', required: false, visible: true, order: 13, section: 'Additional Information', isCore: false }
+    { id: 'isReassignment', label: 'This is a member information update request', type: 'checkbox', required: true, visible: true, order: 1, section: 'Update Type', isCore: true },
+    { id: 'firstName', label: 'First Name', type: 'text', placeholder: 'Enter first name', required: true, visible: true, order: 2, section: 'Account Information', isCore: true },
+    { id: 'lastName', label: 'Last Name', type: 'text', placeholder: 'Enter last name', required: true, visible: true, order: 3, section: 'Account Information', isCore: true },
+    { id: 'email', label: 'Email Address', type: 'email', placeholder: 'Enter email address', required: true, visible: true, order: 4, section: 'Account Information', isCore: true },
+    { id: 'password', label: 'Password', type: 'password', placeholder: 'Create a secure password', required: true, visible: true, order: 5, section: 'Account Information', isCore: true },
+    { id: 'confirmPassword', label: 'Confirm Password', type: 'password', placeholder: 'Confirm your password', required: true, visible: true, order: 6, section: 'Account Information', isCore: true },
+    { id: 'title', label: 'Job Title', type: 'text', placeholder: 'e.g. CIO, IT Director, VP of Technology', required: true, visible: true, order: 7, section: 'Contact Information', isCore: false },
+    { id: 'existingOrganization', label: 'Select Existing Organization', type: 'select', required: true, visible: true, order: 8, section: 'Organization Selection', isCore: true },
+    { id: 'isPrivateNonProfit', label: 'Private Non-Profit Institution', type: 'checkbox', required: false, visible: true, order: 9, section: 'Organization Information', isCore: false }
   ]
 };
 
@@ -136,56 +115,22 @@ export function AuthPageFieldsManager() {
     required: false,
     visible: true,
     section: '',
-    description: '',
-    options: undefined
+    description: ''
   });
 
   const { data: authConfigSetting } = useSystemSetting('auth_page_config');
   const updateSystemSetting = useUpdateSystemSetting();
   const { toast } = useToast();
 
-  // Function to merge missing fields from default config
-  const mergeWithDefaults = (loadedConfig: AuthPageConfig): AuthPageConfig => {
-    const mergedConfig: AuthPageConfig = { ...loadedConfig };
-    
-    // For each tab in the default config
-    Object.keys(defaultAuthConfig).forEach(tab => {
-      const tabKey = tab as keyof AuthPageConfig;
-      if (!mergedConfig[tabKey]) {
-        mergedConfig[tabKey] = [...defaultAuthConfig[tabKey]];
-      } else {
-        // Check for missing fields in existing config
-        const existingIds = new Set(mergedConfig[tabKey].map(f => f.id));
-        const missingFields = defaultAuthConfig[tabKey].filter(f => !existingIds.has(f.id));
-        
-        if (missingFields.length > 0) {
-          // Add missing fields with appropriate order numbers
-          const maxOrder = Math.max(...mergedConfig[tabKey].map(f => f.order), 0);
-          const fieldsWithOrder = missingFields.map((field, index) => ({
-            ...field,
-            order: maxOrder + index + 1
-          }));
-          mergedConfig[tabKey] = [...mergedConfig[tabKey], ...fieldsWithOrder];
-        }
-      }
-    });
-    
-    return mergedConfig;
-  };
-
   useEffect(() => {
     if (authConfigSetting?.setting_value) {
       try {
         const parsedConfig = JSON.parse(authConfigSetting.setting_value);
-        const mergedConfig = mergeWithDefaults(parsedConfig);
-        setAuthConfig(mergedConfig);
+        setAuthConfig(parsedConfig);
       } catch (error) {
         console.error('Failed to parse auth config:', error);
         setAuthConfig(defaultAuthConfig);
       }
-    } else {
-      // If no saved config, use defaults
-      setAuthConfig(defaultAuthConfig);
     }
   }, [authConfigSetting]);
 
@@ -266,8 +211,7 @@ export function AuthPageFieldsManager() {
       order: maxOrder + 1,
       section: newField.section || 'Custom Fields',
       isCore: false,
-      description: newField.description || '',
-      options: newField.options || undefined
+      description: newField.description || ''
     };
     
     setAuthConfig(prev => ({
@@ -282,8 +226,7 @@ export function AuthPageFieldsManager() {
       required: false,
       visible: true,
       section: '',
-      description: '',
-      options: undefined
+      description: ''
     });
     setIsAddDialogOpen(false);
     
@@ -381,18 +324,6 @@ export function AuthPageFieldsManager() {
         {field.placeholder && (
           <p className="text-sm text-muted-foreground mb-2">
             <strong>Placeholder:</strong> {field.placeholder}
-          </p>
-        )}
-        
-        {field.options && field.options.length > 0 && (
-          <p className="text-sm text-muted-foreground mb-2">
-            <strong>Options:</strong> {field.options.join(', ')}
-          </p>
-        )}
-        
-        {field.description && (
-          <p className="text-sm text-muted-foreground mb-2">
-            <strong>Description:</strong> {field.description}
           </p>
         )}
         
@@ -529,7 +460,7 @@ export function AuthPageFieldsManager() {
               </Button>
             </div>
 
-            {(tabKey === 'signup' || tabKey === 'memberUpdate') ? (
+            {tabKey === 'signup' ? (
               <div className="space-y-6">
                 {Object.entries(groupFieldsBySection(authConfig[tabKey])).map(([section, fields]) => (
                   <div key={section}>
@@ -619,22 +550,6 @@ export function AuthPageFieldsManager() {
                 rows={2}
               />
             </div>
-            {newField.type === 'select' && (
-              <div className="space-y-2">
-                <Label htmlFor="field-options">Options (one per line)</Label>
-                <Textarea
-                  id="field-options"
-                  placeholder="Option 1&#10;Option 2&#10;Option 3"
-                  value={newField.options?.join('\n') || ''}
-                  onChange={(e) => setNewField(prev => ({ 
-                    ...prev, 
-                    options: e.target.value.split('\n').filter(option => option.trim()) 
-                  }))}
-                  rows={4}
-                />
-                <p className="text-xs text-muted-foreground">Enter each option on a new line</p>
-              </div>
-            )}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Switch 
@@ -732,22 +647,6 @@ export function AuthPageFieldsManager() {
                   rows={2}
                 />
               </div>
-              {editingField.type === 'select' && (
-                <div className="space-y-2">
-                  <Label htmlFor="edit-field-options">Options (one per line)</Label>
-                  <Textarea
-                    id="edit-field-options"
-                    placeholder="Option 1&#10;Option 2&#10;Option 3"
-                    value={editingField.options?.join('\n') || ''}
-                    onChange={(e) => setEditingField(prev => prev ? { 
-                      ...prev, 
-                      options: e.target.value.split('\n').filter(option => option.trim()) 
-                    } : null)}
-                    rows={4}
-                  />
-                  <p className="text-xs text-muted-foreground">Enter each option on a new line</p>
-                </div>
-              )}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Switch 
