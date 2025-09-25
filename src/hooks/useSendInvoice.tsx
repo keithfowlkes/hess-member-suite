@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { renderInvoiceEmailHTML } from '@/utils/invoiceEmailRenderer';
 
 export interface SendInvoiceParams {
   organizationId: string;
@@ -21,47 +20,31 @@ export const useSendInvoice = () => {
   return useMutation({
     mutationFn: async (params: SendInvoiceParams) => {
       console.log('Sending new invoice with params:', params);
-      const invoiceEmailData = {
-        organization_name: params.organizationName,
-        invoice_number: `INV-${Date.now()}`, // Generate a temporary invoice number
-        amount: `$${(params.proratedAmount ?? params.invoiceAmount).toLocaleString()}`,
-        prorated_amount: params.proratedAmount ? `$${params.proratedAmount.toLocaleString()}` : undefined,
-        due_date: params.periodEndDate,
-        period_start_date: params.periodStartDate,
-        period_end_date: params.periodEndDate,
-        notes: params.notes || ''
-      };
-
-      console.log('New invoice email data:', invoiceEmailData);
-      const invoiceHTML = renderInvoiceEmailHTML(invoiceEmailData);
-      const subject = `HESS Consortium - Invoice for ${params.organizationName}`;
-
-      const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
+      
+      // Use the detailed send-invoice function to ensure consistent formatting
+      const { data, error } = await supabase.functions.invoke('send-invoice', {
         body: {
-          type: 'invoice',
-          to: params.organizationEmail,
-          subject,
-          data: {
-            organization_name: params.organizationName,
-            invoice_number: `INV-${Date.now()}`,
-            amount: `$${(params.proratedAmount ?? params.invoiceAmount).toLocaleString()}`,
-            due_date: params.periodEndDate,
-            period_start_date: params.periodStartDate,
-            period_end_date: params.periodEndDate,
-            notes: params.notes || '',
-            invoice_content: invoiceHTML
-          }
+          organizationId: params.organizationId,
+          organizationName: params.organizationName,
+          organizationEmail: params.organizationEmail,
+          membershipStartDate: params.membershipStartDate,
+          proratedAmount: params.proratedAmount,
+          invoiceAmount: params.invoiceAmount,
+          periodStartDate: params.periodStartDate,
+          periodEndDate: params.periodEndDate,
+          notes: params.notes
         }
       });
-      console.log('New invoice email function response:', { data, error });
+      
+      console.log('Send invoice function response:', { data, error });
 
       if (error) throw error;
       return data;
     },
     onSuccess: (_data, variables) => {
       toast({
-        title: "Invoice Email Sent",
-        description: `Invoice emailed to ${variables.organizationName} via centralized delivery.`,
+        title: "Invoice Generated & Sent",
+        description: `Professional invoice created and emailed to ${variables.organizationName}.`,
       });
     },
     onError: (error: any) => {
