@@ -144,15 +144,48 @@ export function AuthPageFieldsManager() {
   const updateSystemSetting = useUpdateSystemSetting();
   const { toast } = useToast();
 
+  // Function to merge missing fields from default config
+  const mergeWithDefaults = (loadedConfig: AuthPageConfig): AuthPageConfig => {
+    const mergedConfig: AuthPageConfig = { ...loadedConfig };
+    
+    // For each tab in the default config
+    Object.keys(defaultAuthConfig).forEach(tab => {
+      const tabKey = tab as keyof AuthPageConfig;
+      if (!mergedConfig[tabKey]) {
+        mergedConfig[tabKey] = [...defaultAuthConfig[tabKey]];
+      } else {
+        // Check for missing fields in existing config
+        const existingIds = new Set(mergedConfig[tabKey].map(f => f.id));
+        const missingFields = defaultAuthConfig[tabKey].filter(f => !existingIds.has(f.id));
+        
+        if (missingFields.length > 0) {
+          // Add missing fields with appropriate order numbers
+          const maxOrder = Math.max(...mergedConfig[tabKey].map(f => f.order), 0);
+          const fieldsWithOrder = missingFields.map((field, index) => ({
+            ...field,
+            order: maxOrder + index + 1
+          }));
+          mergedConfig[tabKey] = [...mergedConfig[tabKey], ...fieldsWithOrder];
+        }
+      }
+    });
+    
+    return mergedConfig;
+  };
+
   useEffect(() => {
     if (authConfigSetting?.setting_value) {
       try {
         const parsedConfig = JSON.parse(authConfigSetting.setting_value);
-        setAuthConfig(parsedConfig);
+        const mergedConfig = mergeWithDefaults(parsedConfig);
+        setAuthConfig(mergedConfig);
       } catch (error) {
         console.error('Failed to parse auth config:', error);
         setAuthConfig(defaultAuthConfig);
       }
+    } else {
+      // If no saved config, use defaults
+      setAuthConfig(defaultAuthConfig);
     }
   }, [authConfigSetting]);
 
