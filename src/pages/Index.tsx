@@ -12,7 +12,6 @@ import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { useInvoices } from '@/hooks/useInvoices';
 import MemberSystemMessages from '@/components/MemberSystemMessages';
 import { ProfileEditModal } from '@/components/ProfileEditModal';
-import { TestUnauthorizedWarning } from '@/components/TestUnauthorizedWarning';
 
 import { useState, useEffect } from 'react';
 
@@ -355,12 +354,6 @@ const Index = () => {
                 </CardContent>
               </Card>
             </div>
-            
-            {/* Test Component for Unauthorized Warning */}
-            <div className="grid gap-6 mt-6">
-              <TestUnauthorizedWarning />
-            </div>
-            
             {/* Footer */}
             <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
               <img 
