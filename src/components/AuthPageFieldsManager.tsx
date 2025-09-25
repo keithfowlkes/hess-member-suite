@@ -496,7 +496,7 @@ export function AuthPageFieldsManager() {
               </Button>
             </div>
 
-            {tabKey === 'signup' ? (
+            {(tabKey === 'signup' || tabKey === 'memberUpdate') ? (
               <div className="space-y-6">
                 {Object.entries(groupFieldsBySection(authConfig[tabKey])).map(([section, fields]) => (
                   <div key={section}>
