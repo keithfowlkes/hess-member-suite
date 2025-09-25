@@ -85,9 +85,9 @@ const defaultAuthConfig: AuthPageConfig = {
     { id: 'secondaryPhone', label: 'Phone Number', type: 'text', placeholder: '(555) 123-4567', required: false, visible: true, order: 18, section: 'Secondary Contact', isCore: false },
     
     // Academic Systems Section
-    { id: 'sis', label: 'Student Information System', type: 'text', placeholder: 'e.g., Banner, PeopleSoft, PowerSchool', required: false, visible: true, order: 19, section: 'Academic Systems', isCore: false },
-    { id: 'lms', label: 'Learning Management System', type: 'text', placeholder: 'e.g., Canvas, Blackboard, Moodle', required: false, visible: true, order: 20, section: 'Academic Systems', isCore: false },
-    { id: 'library', label: 'Library System', type: 'text', placeholder: 'e.g., Alma, Symphony, Koha', required: false, visible: true, order: 21, section: 'Academic Systems', isCore: false },
+    { id: 'sis', label: 'Student Information System', type: 'select', options: ['Banner', 'PeopleSoft', 'PowerSchool', 'Colleague', 'Campus Nexus', 'Other'], required: false, visible: true, order: 19, section: 'Academic Systems', isCore: false },
+    { id: 'lms', label: 'Learning Management System', type: 'select', options: ['Canvas', 'Blackboard', 'Moodle', 'D2L Brightspace', 'Schoology', 'Google Classroom', 'Other'], required: false, visible: true, order: 20, section: 'Academic Systems', isCore: false },
+    { id: 'library', label: 'Library System', type: 'select', options: ['Alma', 'Symphony', 'Koha', 'Evergreen', 'Sierra', 'Polaris', 'Other'], required: false, visible: true, order: 21, section: 'Academic Systems', isCore: false },
     { id: 'otherSoftware', label: 'Other Software', type: 'text', placeholder: 'Other systems or software', required: false, visible: true, order: 22, section: 'Academic Systems', isCore: false },
     
     // Additional Information Section
@@ -109,9 +109,9 @@ const defaultAuthConfig: AuthPageConfig = {
     { id: 'existingOrganization', label: 'Select Existing Institution', type: 'select', required: true, visible: true, order: 6, section: 'Institution Information', isCore: true, description: 'Select your institution from the list above. This will update the existing record.' },
     
     // Academic Systems Section
-    { id: 'sis', label: 'Student Information System', type: 'text', placeholder: 'e.g., Banner, PeopleSoft, PowerSchool', required: false, visible: true, order: 7, section: 'Academic Systems', isCore: false },
-    { id: 'lms', label: 'Learning Management System', type: 'text', placeholder: 'e.g., Canvas, Blackboard, Moodle', required: false, visible: true, order: 8, section: 'Academic Systems', isCore: false },
-    { id: 'library', label: 'Library System', type: 'text', placeholder: 'e.g., Alma, Symphony, Koha', required: false, visible: true, order: 9, section: 'Academic Systems', isCore: false },
+    { id: 'sis', label: 'Student Information System', type: 'select', options: ['Banner', 'PeopleSoft', 'PowerSchool', 'Colleague', 'Campus Nexus', 'Other'], required: false, visible: true, order: 7, section: 'Academic Systems', isCore: false },
+    { id: 'lms', label: 'Learning Management System', type: 'select', options: ['Canvas', 'Blackboard', 'Moodle', 'D2L Brightspace', 'Schoology', 'Google Classroom', 'Other'], required: false, visible: true, order: 8, section: 'Academic Systems', isCore: false },
+    { id: 'library', label: 'Library System', type: 'select', options: ['Alma', 'Symphony', 'Koha', 'Evergreen', 'Sierra', 'Polaris', 'Other'], required: false, visible: true, order: 9, section: 'Academic Systems', isCore: false },
     { id: 'otherSoftware', label: 'Other Software', type: 'text', placeholder: 'Other systems or software', required: false, visible: true, order: 10, section: 'Academic Systems', isCore: false },
     
     // Additional Information Section
@@ -136,7 +136,8 @@ export function AuthPageFieldsManager() {
     required: false,
     visible: true,
     section: '',
-    description: ''
+    description: '',
+    options: undefined
   });
 
   const { data: authConfigSetting } = useSystemSetting('auth_page_config');
@@ -232,7 +233,8 @@ export function AuthPageFieldsManager() {
       order: maxOrder + 1,
       section: newField.section || 'Custom Fields',
       isCore: false,
-      description: newField.description || ''
+      description: newField.description || '',
+      options: newField.options || undefined
     };
     
     setAuthConfig(prev => ({
@@ -247,7 +249,8 @@ export function AuthPageFieldsManager() {
       required: false,
       visible: true,
       section: '',
-      description: ''
+      description: '',
+      options: undefined
     });
     setIsAddDialogOpen(false);
     
@@ -345,6 +348,18 @@ export function AuthPageFieldsManager() {
         {field.placeholder && (
           <p className="text-sm text-muted-foreground mb-2">
             <strong>Placeholder:</strong> {field.placeholder}
+          </p>
+        )}
+        
+        {field.options && field.options.length > 0 && (
+          <p className="text-sm text-muted-foreground mb-2">
+            <strong>Options:</strong> {field.options.join(', ')}
+          </p>
+        )}
+        
+        {field.description && (
+          <p className="text-sm text-muted-foreground mb-2">
+            <strong>Description:</strong> {field.description}
           </p>
         )}
         
@@ -571,6 +586,22 @@ export function AuthPageFieldsManager() {
                 rows={2}
               />
             </div>
+            {newField.type === 'select' && (
+              <div className="space-y-2">
+                <Label htmlFor="field-options">Options (one per line)</Label>
+                <Textarea
+                  id="field-options"
+                  placeholder="Option 1&#10;Option 2&#10;Option 3"
+                  value={newField.options?.join('\n') || ''}
+                  onChange={(e) => setNewField(prev => ({ 
+                    ...prev, 
+                    options: e.target.value.split('\n').filter(option => option.trim()) 
+                  }))}
+                  rows={4}
+                />
+                <p className="text-xs text-muted-foreground">Enter each option on a new line</p>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Switch 
@@ -668,6 +699,22 @@ export function AuthPageFieldsManager() {
                   rows={2}
                 />
               </div>
+              {editingField.type === 'select' && (
+                <div className="space-y-2">
+                  <Label htmlFor="edit-field-options">Options (one per line)</Label>
+                  <Textarea
+                    id="edit-field-options"
+                    placeholder="Option 1&#10;Option 2&#10;Option 3"
+                    value={editingField.options?.join('\n') || ''}
+                    onChange={(e) => setEditingField(prev => prev ? { 
+                      ...prev, 
+                      options: e.target.value.split('\n').filter(option => option.trim()) 
+                    } : null)}
+                    rows={4}
+                  />
+                  <p className="text-xs text-muted-foreground">Enter each option on a new line</p>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Switch 
