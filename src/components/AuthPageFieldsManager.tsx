@@ -85,9 +85,9 @@ const defaultAuthConfig: AuthPageConfig = {
     { id: 'secondaryPhone', label: 'Phone Number', type: 'text', placeholder: '(555) 123-4567', required: false, visible: true, order: 18, section: 'Secondary Contact', isCore: false },
     
     // Academic Systems Section
-    { id: 'sis', label: 'Student Information System', type: 'select', options: ['Banner', 'PeopleSoft', 'PowerSchool', 'Colleague', 'Campus Nexus', 'Other'], required: false, visible: true, order: 19, section: 'Academic Systems', isCore: false },
-    { id: 'lms', label: 'Learning Management System', type: 'select', options: ['Canvas', 'Blackboard', 'Moodle', 'D2L Brightspace', 'Schoology', 'Google Classroom', 'Other'], required: false, visible: true, order: 20, section: 'Academic Systems', isCore: false },
-    { id: 'library', label: 'Library System', type: 'select', options: ['Alma', 'Symphony', 'Koha', 'Evergreen', 'Sierra', 'Polaris', 'Other'], required: false, visible: true, order: 21, section: 'Academic Systems', isCore: false },
+    { id: 'sis', label: 'Student Information System', type: 'text', placeholder: 'e.g., Banner, PeopleSoft, PowerSchool', required: false, visible: true, order: 19, section: 'Academic Systems', isCore: false },
+    { id: 'lms', label: 'Learning Management System', type: 'text', placeholder: 'e.g., Canvas, Blackboard, Moodle', required: false, visible: true, order: 20, section: 'Academic Systems', isCore: false },
+    { id: 'library', label: 'Library System', type: 'text', placeholder: 'e.g., Alma, Symphony, Koha', required: false, visible: true, order: 21, section: 'Academic Systems', isCore: false },
     { id: 'otherSoftware', label: 'Other Software', type: 'text', placeholder: 'Other systems or software', required: false, visible: true, order: 22, section: 'Academic Systems', isCore: false },
     
     // Additional Information Section
@@ -109,9 +109,9 @@ const defaultAuthConfig: AuthPageConfig = {
     { id: 'existingOrganization', label: 'Select Existing Institution', type: 'select', required: true, visible: true, order: 6, section: 'Institution Information', isCore: true, description: 'Select your institution from the list above. This will update the existing record.' },
     
     // Academic Systems Section
-    { id: 'sis', label: 'Student Information System', type: 'select', options: ['Banner', 'PeopleSoft', 'PowerSchool', 'Colleague', 'Campus Nexus', 'Other'], required: false, visible: true, order: 7, section: 'Academic Systems', isCore: false },
-    { id: 'lms', label: 'Learning Management System', type: 'select', options: ['Canvas', 'Blackboard', 'Moodle', 'D2L Brightspace', 'Schoology', 'Google Classroom', 'Other'], required: false, visible: true, order: 8, section: 'Academic Systems', isCore: false },
-    { id: 'library', label: 'Library System', type: 'select', options: ['Alma', 'Symphony', 'Koha', 'Evergreen', 'Sierra', 'Polaris', 'Other'], required: false, visible: true, order: 9, section: 'Academic Systems', isCore: false },
+    { id: 'sis', label: 'Student Information System', type: 'text', placeholder: 'e.g., Banner, PeopleSoft, PowerSchool', required: false, visible: true, order: 7, section: 'Academic Systems', isCore: false },
+    { id: 'lms', label: 'Learning Management System', type: 'text', placeholder: 'e.g., Canvas, Blackboard, Moodle', required: false, visible: true, order: 8, section: 'Academic Systems', isCore: false },
+    { id: 'library', label: 'Library System', type: 'text', placeholder: 'e.g., Alma, Symphony, Koha', required: false, visible: true, order: 9, section: 'Academic Systems', isCore: false },
     { id: 'otherSoftware', label: 'Other Software', type: 'text', placeholder: 'Other systems or software', required: false, visible: true, order: 10, section: 'Academic Systems', isCore: false },
     
     // Additional Information Section
