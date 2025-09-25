@@ -17,6 +17,8 @@ import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelec
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useMemberRegistrationUpdates } from '@/hooks/useMemberRegistrationUpdates';
 import { AuthHeader } from '@/components/AuthHeader';
+import { Eye, EyeOff } from 'lucide-react';
+import { useDebounce } from '@/hooks/useDebounce';
 
 // Store the actual password for later use during approval
 const storeActualPassword = (password: string): string => {
@@ -50,6 +52,17 @@ export default function Auth() {
   const [resetEmail, setResetEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // Password visibility states
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showNewConfirmPassword, setShowNewConfirmPassword] = useState(false);
+  
+  // Password validation states
+  const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null);
+  const [signUpPasswordsMatch, setSignUpPasswordsMatch] = useState<boolean | null>(null);
   
   // Login attempt tracking
   const [loginAttempts, setLoginAttempts] = useState(() => {
@@ -200,6 +213,33 @@ export default function Auth() {
 
   const [signUpForm, setSignUpForm] = useState(initialSignUpFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Debounced password validation
+  const debouncedPasswordValidation = useDebounce((newPass: string, confirmPass: string) => {
+    if (newPass && confirmPass) {
+      setPasswordsMatch(newPass === confirmPass);
+    } else {
+      setPasswordsMatch(null);
+    }
+  }, 300);
+
+  const debouncedSignUpPasswordValidation = useDebounce((newPass: string, confirmPass: string) => {
+    if (newPass && confirmPass) {
+      setSignUpPasswordsMatch(newPass === confirmPass);
+    } else {
+      setSignUpPasswordsMatch(null);
+    }
+  }, 300);
+
+  // Effect for password reset validation
+  useEffect(() => {
+    debouncedPasswordValidation(newPassword, confirmPassword);
+  }, [newPassword, confirmPassword, debouncedPasswordValidation]);
+
+  // Effect for sign up password validation
+  useEffect(() => {
+    debouncedSignUpPasswordValidation(signUpForm.password, signUpForm.confirmPassword);
+  }, [signUpForm.password, signUpForm.confirmPassword, debouncedSignUpPasswordValidation]);
 
   if (loading) {
     return (
@@ -836,31 +876,70 @@ export default function Auth() {
                     <Label htmlFor="new-password" className="text-gray-700 font-medium">
                       New Password <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      id="new-password"
-                      type="password"
-                      placeholder="Enter your new password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="bg-gray-50 border-gray-300"
-                      required
-                      minLength={6}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="new-password"
+                        type={showNewPassword ? "text" : "password"}
+                        placeholder="Enter your new password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="bg-gray-50 border-gray-300 pr-10"
+                        required
+                        minLength={6}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password" className="text-gray-700 font-medium">
                       Confirm Password <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      placeholder="Confirm your new password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="bg-gray-50 border-gray-300"
-                      required
-                      minLength={6}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="confirm-password"
+                        type={showNewConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm your new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className={`bg-gray-50 border-gray-300 pr-10 ${
+                          passwordsMatch === false ? 'border-red-300 focus:border-red-500' : 
+                          passwordsMatch === true ? 'border-green-300 focus:border-green-500' : ''
+                        }`}
+                        required
+                        minLength={6}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowNewConfirmPassword(!showNewConfirmPassword)}
+                      >
+                        {showNewConfirmPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                    {passwordsMatch === false && (
+                      <p className="text-xs text-red-500">Passwords do not match</p>
+                    )}
+                    {passwordsMatch === true && (
+                      <p className="text-xs text-green-600">Passwords match</p>
+                    )}
                   </div>
                   <Button 
                     type="submit" 
@@ -925,20 +1004,35 @@ export default function Auth() {
                         required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-password" className="text-gray-700 font-medium">
-                        Password <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="signin-password"
-                        type="password"
-                        placeholder="Enter your password"
-                        value={signInForm.password}
-                        onChange={(e) => setSignInForm(prev => ({ ...prev, password: e.target.value }))}
-                        className="bg-gray-50 border-gray-300"
-                        required
-                      />
-                    </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signin-password" className="text-gray-700 font-medium">
+                          Password <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="signin-password"
+                            type={showSignInPassword ? "text" : "password"}
+                            placeholder="Enter your password"
+                            value={signInForm.password}
+                            onChange={(e) => setSignInForm(prev => ({ ...prev, password: e.target.value }))}
+                            className="bg-gray-50 border-gray-300 pr-10"
+                            required
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowSignInPassword(!showSignInPassword)}
+                          >
+                            {showSignInPassword ? (
+                              <EyeOff className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-gray-700 font-medium">Security Verification</Label>
@@ -1065,33 +1159,71 @@ export default function Auth() {
                                 <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
                                   New Contact Password <span className="text-red-500">*</span>
                                 </Label>
-                                <Input
-                                  id="signup-password"
-                                  type="password"
-                                  placeholder="Password for the new contact"
-                                  value={signUpForm.password}
-                                  onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                                  className="h-11 bg-gray-50 border-gray-300"
-                                  required
-                                  minLength={6}
-                                />
+                                <div className="relative">
+                                  <Input
+                                    id="signup-password"
+                                    type={showSignUpPassword ? "text" : "password"}
+                                    placeholder="Password for the new contact"
+                                    value={signUpForm.password}
+                                    onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                                    className="h-11 bg-gray-50 border-gray-300 pr-10"
+                                    required
+                                    minLength={6}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                                  >
+                                    {showSignUpPassword ? (
+                                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                      <Eye className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                  </Button>
+                                </div>
                                 <p className="text-xs text-gray-500">This password will be set for the new contact after admin approval</p>
                               </div>
                               <div className="space-y-2">
                                 <Label htmlFor="signup-confirm-password" className="text-gray-700 font-medium text-sm">
                                   Confirm Password <span className="text-red-500">*</span>
                                 </Label>
-                                <Input
-                                  id="signup-confirm-password"
-                                  type="password"
-                                  placeholder="Confirm password"
-                                  value={signUpForm.confirmPassword}
-                                  onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                  className="h-11 bg-gray-50 border-gray-300"
-                                  required
-                                  minLength={6}
-                                />
-                                <p className="text-xs text-gray-500">Must match password above</p>
+                                <div className="relative">
+                                  <Input
+                                    id="signup-confirm-password"
+                                    type={showSignUpConfirmPassword ? "text" : "password"}
+                                    placeholder="Confirm password"
+                                    value={signUpForm.confirmPassword}
+                                    onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                    className={`h-11 bg-gray-50 border-gray-300 pr-10 ${
+                                      signUpPasswordsMatch === false ? 'border-red-300 focus:border-red-500' : 
+                                      signUpPasswordsMatch === true ? 'border-green-300 focus:border-green-500' : ''
+                                    }`}
+                                    required
+                                    minLength={6}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    onClick={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
+                                  >
+                                    {showSignUpConfirmPassword ? (
+                                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                      <Eye className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                  </Button>
+                                </div>
+                                {signUpPasswordsMatch === false && (
+                                  <p className="text-xs text-red-500">Passwords do not match</p>
+                                )}
+                                {signUpPasswordsMatch === true && (
+                                  <p className="text-xs text-green-600">Passwords match</p>
+                                )}
                               </div>
                             </div>
                             <div className="lg:col-span-2 space-y-2">
@@ -1116,35 +1248,75 @@ export default function Auth() {
                                 <Label htmlFor="signup-password" className="text-gray-700 font-medium text-sm">
                                   Password <span className="text-red-500">*</span>
                                 </Label>
-                                <Input
-                                  id="signup-password"
-                                  type="password"
-                                  placeholder="Create a secure password"
-                                  value={signUpForm.password}
-                                  onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                                  className="h-11 bg-gray-50 border-gray-300"
-                                  disabled={!signUpForm.isPrivateNonProfit}
-                                  required
-                                  minLength={6}
-                                />
+                                <div className="relative">
+                                  <Input
+                                    id="signup-password"
+                                    type={showSignUpPassword ? "text" : "password"}
+                                    placeholder="Create a secure password"
+                                    value={signUpForm.password}
+                                    onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                                    className="h-11 bg-gray-50 border-gray-300 pr-10"
+                                    disabled={!signUpForm.isPrivateNonProfit}
+                                    required
+                                    minLength={6}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                                    disabled={!signUpForm.isPrivateNonProfit}
+                                  >
+                                    {showSignUpPassword ? (
+                                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                      <Eye className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                  </Button>
+                                </div>
                                 <p className="text-xs text-gray-500">Minimum 6 characters required</p>
                               </div>
                               <div className="space-y-2">
                                 <Label htmlFor="signup-confirm-password" className="text-gray-700 font-medium text-sm">
                                   Confirm Password <span className="text-red-500">*</span>
                                 </Label>
-                                <Input
-                                  id="signup-confirm-password"
-                                  type="password"
-                                  placeholder="Confirm password"
-                                  value={signUpForm.confirmPassword}
-                                  onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                  className="h-11 bg-gray-50 border-gray-300"
-                                  disabled={!signUpForm.isPrivateNonProfit}
-                                  required
-                                  minLength={6}
-                                />
-                                <p className="text-xs text-gray-500">Must match password above</p>
+                                <div className="relative">
+                                  <Input
+                                    id="signup-confirm-password"
+                                    type={showSignUpConfirmPassword ? "text" : "password"}
+                                    placeholder="Confirm password"
+                                    value={signUpForm.confirmPassword}
+                                    onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                    className={`h-11 bg-gray-50 border-gray-300 pr-10 ${
+                                      signUpPasswordsMatch === false ? 'border-red-300 focus:border-red-500' : 
+                                      signUpPasswordsMatch === true ? 'border-green-300 focus:border-green-500' : ''
+                                    }`}
+                                    disabled={!signUpForm.isPrivateNonProfit}
+                                    required
+                                    minLength={6}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    onClick={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
+                                    disabled={!signUpForm.isPrivateNonProfit}
+                                  >
+                                    {showSignUpConfirmPassword ? (
+                                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                      <Eye className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                  </Button>
+                                </div>
+                                {signUpPasswordsMatch === false && (
+                                  <p className="text-xs text-red-500">Passwords do not match</p>
+                                )}
+                                {signUpPasswordsMatch === true && (
+                                  <p className="text-xs text-green-600">Passwords match</p>
+                                )}
                               </div>
                             </div>
                             <div className="lg:col-span-2 space-y-2">
@@ -1778,35 +1950,75 @@ export default function Auth() {
                           <Label htmlFor="member-update-password" className="text-gray-700 font-medium text-sm">
                             Password <span className="text-red-600">*</span>
                           </Label>
-                          <Input
-                            id="member-update-password"
-                            type="password"
-                            placeholder="Create a secure password"
-                            value={signUpForm.password}
-                            onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300"
-                            disabled={!isReassignment}
-                            required
-                            minLength={6}
-                          />
+                          <div className="relative">
+                            <Input
+                              id="member-update-password"
+                              type={showSignUpPassword ? "text" : "password"}
+                              placeholder="Create a secure password"
+                              value={signUpForm.password}
+                              onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                              className="h-11 bg-gray-50 border-gray-300 pr-10"
+                              disabled={!isReassignment}
+                              required
+                              minLength={6}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                              disabled={!isReassignment}
+                            >
+                              {showSignUpPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
                           <p className="text-xs text-gray-500">Minimum 6 characters required</p>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="member-update-confirm-password" className="text-gray-700 font-medium text-sm">
                             Confirm Password <span className="text-red-600">*</span>
                           </Label>
-                          <Input
-                            id="member-update-confirm-password"
-                            type="password"
-                            placeholder="Confirm password"
-                            value={signUpForm.confirmPassword}
-                            onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300"
-                            disabled={!isReassignment}
-                            required
-                            minLength={6}
-                          />
-                          <p className="text-xs text-gray-500">Must match password above</p>
+                          <div className="relative">
+                            <Input
+                              id="member-update-confirm-password"
+                              type={showSignUpConfirmPassword ? "text" : "password"}
+                              placeholder="Confirm password"
+                              value={signUpForm.confirmPassword}
+                              onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                              className={`h-11 bg-gray-50 border-gray-300 pr-10 ${
+                                signUpPasswordsMatch === false ? 'border-red-300 focus:border-red-500' : 
+                                signUpPasswordsMatch === true ? 'border-green-300 focus:border-green-500' : ''
+                              }`}
+                              disabled={!isReassignment}
+                              required
+                              minLength={6}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
+                              disabled={!isReassignment}
+                            >
+                              {showSignUpConfirmPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                          {signUpPasswordsMatch === false && (
+                            <p className="text-xs text-red-500">Passwords do not match</p>
+                          )}
+                          {signUpPasswordsMatch === true && (
+                            <p className="text-xs text-green-600">Passwords match</p>
+                          )}
                         </div>
                       </div>
                       <div className="lg:col-span-2 space-y-2">
