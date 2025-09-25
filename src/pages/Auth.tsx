@@ -392,7 +392,20 @@ export default function Auth() {
     primaryOfficeOther: false,
     primaryOfficeOtherDetails: '',
     otherSoftwareComments: '',
-    loginHint: ''
+    loginHint: '',
+    // Additional fields for comprehensive forms
+    signupType: 'new-member',
+    title: '',
+    phone: '',
+    secondaryEmail: '',
+    secondaryPhone: '',
+    sis: '',
+    lms: '',
+    library: '',
+    otherSoftware: '',
+    desktopOS: '',
+    serverOS: '',
+    comments: ''
   };
 
   const [signUpForm, setSignUpForm] = useState(initialSignUpFormState);
@@ -1554,6 +1567,24 @@ export default function Auth() {
                               </div>
                             </div>
                           </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id="new-member"
+                                name="signup-type"
+                                value="new-member"
+                                checked={signUpForm.signupType === 'new-member'}
+                                onChange={() => setSignUpForm(prev => ({ ...prev, signupType: 'new-member' }))}
+                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                              <label htmlFor="new-member" className="text-sm font-medium text-gray-700">
+                                New Member Registration
+                              </label>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -1661,31 +1692,15 @@ export default function Auth() {
                         </div>
                       </div>
 
-                      {/* Institution Information */}
+                      {/* Contact Details */}
                       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="mb-6">
-                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Institution Information</h3>
-                          <p className="text-gray-600 text-sm">Details about your college or university.</p>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Contact Details</h3>
+                          <p className="text-gray-600 text-sm">Your professional contact information.</p>
                         </div>
                         
                         <div className="space-y-6">
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div className="lg:col-span-2 space-y-2">
-                              <Label htmlFor="signup-organization" className="text-gray-700 font-medium text-sm">
-                                Institution Name <span className="text-red-500">*</span>
-                              </Label>
-                              <Input
-                                id="signup-organization"
-                                type="text"
-                                placeholder="Your College or University Name"
-                                value={signUpForm.organization}
-                                onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
-                                className="h-11 bg-gray-50 border-gray-300"
-                                disabled={!signUpForm.isPrivateNonProfit}
-                                required
-                              />
-                            </div>
-                            
                             <div className="space-y-2">
                               <Label htmlFor="signup-first-name" className="text-gray-700 font-medium text-sm">
                                 First Name <span className="text-red-500">*</span>
@@ -1714,6 +1729,317 @@ export default function Auth() {
                                 className="h-11 bg-gray-50 border-gray-300"
                                 disabled={!signUpForm.isPrivateNonProfit}
                                 required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-title" className="text-gray-700 font-medium text-sm">
+                                Title/Position <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-title"
+                                type="text"
+                                placeholder="Your job title"
+                                value={signUpForm.title}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, title: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-phone" className="text-gray-700 font-medium text-sm">
+                                Phone Number <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-phone"
+                                type="tel"
+                                placeholder="(555) 123-4567"
+                                value={signUpForm.phone}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, phone: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Institution Information */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="mb-6">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Institution Information</h3>
+                          <p className="text-gray-600 text-sm">Details about your college or university.</p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="lg:col-span-2 space-y-2">
+                              <Label htmlFor="signup-organization" className="text-gray-700 font-medium text-sm">
+                                Institution Name <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-organization"
+                                type="text"
+                                placeholder="Your College or University Name"
+                                value={signUpForm.organization}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-address" className="text-gray-700 font-medium text-sm">
+                                Street Address <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-address"
+                                type="text"
+                                placeholder="123 College Ave"
+                                value={signUpForm.address}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-city" className="text-gray-700 font-medium text-sm">
+                                City <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-city"
+                                type="text"
+                                placeholder="City"
+                                value={signUpForm.city}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-state" className="text-gray-700 font-medium text-sm">
+                                State <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-state"
+                                type="text"
+                                placeholder="State"
+                                value={signUpForm.state}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-zip" className="text-gray-700 font-medium text-sm">
+                                ZIP Code <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="signup-zip"
+                                type="text"
+                                placeholder="12345"
+                                value={signUpForm.zip}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Secondary Contact */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="mb-6">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Secondary Contact</h3>
+                          <p className="text-gray-600 text-sm">Optional secondary contact information.</p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-secondary-first-name" className="text-gray-700 font-medium text-sm">
+                                First Name
+                              </Label>
+                              <Input
+                                id="signup-secondary-first-name"
+                                type="text"
+                                placeholder="Secondary contact first name"
+                                value={signUpForm.secondaryFirstName}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryFirstName: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-secondary-last-name" className="text-gray-700 font-medium text-sm">
+                                Last Name
+                              </Label>
+                              <Input
+                                id="signup-secondary-last-name"
+                                type="text"
+                                placeholder="Secondary contact last name"
+                                value={signUpForm.secondaryLastName}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryLastName: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-secondary-email" className="text-gray-700 font-medium text-sm">
+                                Email Address
+                              </Label>
+                              <Input
+                                id="signup-secondary-email"
+                                type="email"
+                                placeholder="secondary@institution.edu"
+                                value={signUpForm.secondaryEmail}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryEmail: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-secondary-phone" className="text-gray-700 font-medium text-sm">
+                                Phone Number
+                              </Label>
+                              <Input
+                                id="signup-secondary-phone"
+                                type="tel"
+                                placeholder="(555) 123-4567"
+                                value={signUpForm.secondaryPhone}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryPhone: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Technology Systems */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="mb-6">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Academic Systems</h3>
+                          <p className="text-gray-600 text-sm">Select the systems your institution currently uses.</p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-sis" className="text-gray-700 font-medium text-sm">
+                                Student Information System
+                              </Label>
+                              <Input
+                                id="signup-sis"
+                                type="text"
+                                placeholder="e.g., Banner, PeopleSoft, PowerSchool"
+                                value={signUpForm.sis}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, sis: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-lms" className="text-gray-700 font-medium text-sm">
+                                Learning Management System
+                              </Label>
+                              <Input
+                                id="signup-lms"
+                                type="text"
+                                placeholder="e.g., Canvas, Blackboard, Moodle"
+                                value={signUpForm.lms}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, lms: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-library" className="text-gray-700 font-medium text-sm">
+                                Library System
+                              </Label>
+                              <Input
+                                id="signup-library"
+                                type="text"
+                                placeholder="e.g., Alma, Symphony, Koha"
+                                value={signUpForm.library}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, library: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-other-software" className="text-gray-700 font-medium text-sm">
+                                Other Software
+                              </Label>
+                              <Input
+                                id="signup-other-software"
+                                type="text"
+                                placeholder="Other systems or software"
+                                value={signUpForm.otherSoftware}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, otherSoftware: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Hardware Information */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="mb-6">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Additional Information</h3>
+                          <p className="text-gray-600 text-sm">Information about your computer hardware and any additional details.</p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-desktop-os" className="text-gray-700 font-medium text-sm">
+                                Desktop Operating System
+                              </Label>
+                              <Input
+                                id="signup-desktop-os"
+                                type="text"
+                                placeholder="e.g., Windows 11, macOS, Linux"
+                                value={signUpForm.desktopOS}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, desktopOS: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="signup-server-os" className="text-gray-700 font-medium text-sm">
+                                Server Operating System
+                              </Label>
+                              <Input
+                                id="signup-server-os"
+                                type="text"
+                                placeholder="e.g., Windows Server, Linux, Unix"
+                                value={signUpForm.serverOS}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, serverOS: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                            </div>
+                            <div className="lg:col-span-2 space-y-2">
+                              <Label htmlFor="signup-comments" className="text-gray-700 font-medium text-sm">
+                                Additional Comments
+                              </Label>
+                              <Textarea
+                                id="signup-comments"
+                                placeholder="Any additional information you'd like to share..."
+                                value={signUpForm.comments}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, comments: e.target.value }))}
+                                className="bg-gray-50 border-gray-300 min-h-[100px]"
+                                disabled={!signUpForm.isPrivateNonProfit}
                               />
                             </div>
                           </div>
@@ -1868,7 +2194,7 @@ export default function Auth() {
                   ) : (
                     /* Fallback to default form if no configuration is available */
                     <>
-                      {/* Eligibility Section */}
+                      {/* Update Type Section */}
                       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="mb-6">
                           <h3 className="text-lg font-semibold text-gray-800 mb-2">Update Type</h3>
@@ -1897,11 +2223,11 @@ export default function Auth() {
                         </div>
                       </div>
 
-                      {/* Account Information */}
+                      {/* Contact Details */}
                       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="mb-6">
-                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Account Information</h3>
-                          <p className="text-gray-600 text-sm">Your login credentials and contact information.</p>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Contact Details</h3>
+                          <p className="text-gray-600 text-sm">Your professional contact information.</p>
                         </div>
                         
                         <div className="space-y-6">
@@ -1931,6 +2257,36 @@ export default function Auth() {
                                 placeholder="Enter last name"
                                 value={signUpForm.lastName}
                                 onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!isReassignment}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="member-update-title" className="text-gray-700 font-medium text-sm">
+                                Title/Position <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="member-update-title"
+                                type="text"
+                                placeholder="Your job title"
+                                value={signUpForm.title}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, title: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!isReassignment}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="member-update-phone" className="text-gray-700 font-medium text-sm">
+                                Phone Number <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="member-update-phone"
+                                type="tel"
+                                placeholder="(555) 123-4567"
+                                value={signUpForm.phone}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, phone: e.target.value }))}
                                 className="h-11 bg-gray-50 border-gray-300"
                                 disabled={!isReassignment}
                                 required
@@ -1971,6 +2327,129 @@ export default function Auth() {
                           <p className="text-sm text-muted-foreground">
                             Select your institution from the list above. This will update the existing record.
                           </p>
+                        </div>
+                      </div>
+
+                      {/* Technology Systems */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="mb-6">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Academic Systems</h3>
+                          <p className="text-gray-600 text-sm">Select the systems your institution currently uses.</p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <Label htmlFor="member-update-sis" className="text-gray-700 font-medium text-sm">
+                                Student Information System
+                              </Label>
+                              <Input
+                                id="member-update-sis"
+                                type="text"
+                                placeholder="e.g., Banner, PeopleSoft, PowerSchool"
+                                value={signUpForm.sis}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, sis: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!isReassignment}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="member-update-lms" className="text-gray-700 font-medium text-sm">
+                                Learning Management System
+                              </Label>
+                              <Input
+                                id="member-update-lms"
+                                type="text"
+                                placeholder="e.g., Canvas, Blackboard, Moodle"
+                                value={signUpForm.lms}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, lms: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!isReassignment}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="member-update-library" className="text-gray-700 font-medium text-sm">
+                                Library System
+                              </Label>
+                              <Input
+                                id="member-update-library"
+                                type="text"
+                                placeholder="e.g., Alma, Symphony, Koha"
+                                value={signUpForm.library}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, library: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!isReassignment}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="member-update-other-software" className="text-gray-700 font-medium text-sm">
+                                Other Software
+                              </Label>
+                              <Input
+                                id="member-update-other-software"
+                                type="text"
+                                placeholder="Other systems or software"
+                                value={signUpForm.otherSoftware}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, otherSoftware: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!isReassignment}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Hardware Information */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="mb-6">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Additional Information</h3>
+                          <p className="text-gray-600 text-sm">Information about your computer hardware and any additional details.</p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <Label htmlFor="member-update-desktop-os" className="text-gray-700 font-medium text-sm">
+                                Desktop Operating System
+                              </Label>
+                              <Input
+                                id="member-update-desktop-os"
+                                type="text"
+                                placeholder="e.g., Windows 11, macOS, Linux"
+                                value={signUpForm.desktopOS}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, desktopOS: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!isReassignment}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="member-update-server-os" className="text-gray-700 font-medium text-sm">
+                                Server Operating System
+                              </Label>
+                              <Input
+                                id="member-update-server-os"
+                                type="text"
+                                placeholder="e.g., Windows Server, Linux, Unix"
+                                value={signUpForm.serverOS}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, serverOS: e.target.value }))}
+                                className="h-11 bg-gray-50 border-gray-300"
+                                disabled={!isReassignment}
+                              />
+                            </div>
+                            <div className="lg:col-span-2 space-y-2">
+                              <Label htmlFor="member-update-comments" className="text-gray-700 font-medium text-sm">
+                                Additional Comments
+                              </Label>
+                              <Textarea
+                                id="member-update-comments"
+                                placeholder="Any additional information you'd like to share..."
+                                value={signUpForm.comments}
+                                onChange={(e) => setSignUpForm(prev => ({ ...prev, comments: e.target.value }))}
+                                className="bg-gray-50 border-gray-300 min-h-[100px]"
+                                disabled={!isReassignment}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </>
