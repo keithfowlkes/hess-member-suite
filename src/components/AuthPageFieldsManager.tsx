@@ -25,7 +25,8 @@ import {
   Hash,
   Type,
   CheckSquare,
-  FileText
+  FileText,
+  Eye
 } from 'lucide-react';
 
 interface AuthFieldConfig {
@@ -105,6 +106,7 @@ export function AuthPageFieldsManager() {
   const [editingField, setEditingField] = useState<AuthFieldConfig | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [newField, setNewField] = useState<Partial<AuthFieldConfig>>({
     label: '',
@@ -392,19 +394,28 @@ export function AuthPageFieldsManager() {
             Configure form fields for the sign-in, sign-up, and member update pages
           </p>
         </div>
-        <Button onClick={handleSaveConfig} disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4 mr-2" />
-              Save Configuration
-            </>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setIsPreviewOpen(true)}
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Preview Forms
+          </Button>
+          <Button onClick={handleSaveConfig} disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Configuration
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as keyof AuthPageConfig)}>
@@ -677,6 +688,143 @@ export function AuthPageFieldsManager() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Preview Modal */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Form Preview</DialogTitle>
+          </DialogHeader>
+          
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="signin" className="flex items-center gap-2">
+                <LogIn className="h-4 w-4" />
+                Sign In Preview
+              </TabsTrigger>
+              <TabsTrigger value="signup" className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                Sign Up Preview
+              </TabsTrigger>
+              <TabsTrigger value="memberUpdate" className="flex items-center gap-2">
+                <Edit className="h-4 w-4" />
+                Member Update Preview
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="signin" className="space-y-4 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sign In Form Preview</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {authConfig.signin
+                    .filter(field => field.visible)
+                    .sort((a, b) => a.order - b.order)
+                    .map((field) => (
+                      <PreviewField key={field.id} field={field} />
+                    ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="signup" className="space-y-4 mt-6">
+              {Object.entries(groupFieldsBySection(authConfig.signup.filter(f => f.visible)))
+                .map(([section, fields]) => (
+                  <Card key={section}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">{section}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {fields.map((field) => (
+                        <PreviewField key={field.id} field={field} />
+                      ))}
+                    </CardContent>
+                  </Card>
+                ))}
+            </TabsContent>
+
+            <TabsContent value="memberUpdate" className="space-y-4 mt-6">
+              {Object.entries(groupFieldsBySection(authConfig.memberUpdate.filter(f => f.visible)))
+                .map(([section, fields]) => (
+                  <Card key={section}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">{section}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {fields.map((field) => (
+                        <PreviewField key={field.id} field={field} />
+                      ))}
+                    </CardContent>
+                  </Card>
+                ))}
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+// Preview Field Component
+const PreviewField = ({ field }: { field: AuthFieldConfig }) => {
+  const renderField = () => {
+    switch (field.type) {
+      case 'textarea':
+        return (
+          <Textarea 
+            placeholder={field.placeholder}
+            className="min-h-[80px]"
+            disabled
+          />
+        );
+      case 'select':
+        return (
+          <Select disabled>
+            <SelectTrigger>
+              <SelectValue placeholder={field.placeholder || "Select an option"} />
+            </SelectTrigger>
+          </Select>
+        );
+      case 'checkbox':
+        return (
+          <div className="flex items-center space-x-2">
+            <input type="checkbox" disabled className="rounded border-input" />
+            <span className="text-sm">{field.label}</span>
+          </div>
+        );
+      default:
+        return (
+          <Input 
+            type={field.type}
+            placeholder={field.placeholder}
+            disabled
+          />
+        );
+    }
+  };
+
+  if (field.type === 'checkbox') {
+    return (
+      <div className="space-y-2">
+        {renderField()}
+        {field.description && (
+          <p className="text-xs text-muted-foreground">{field.description}</p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label className="flex items-center gap-1">
+        {field.label}
+        {field.required && <span className="text-destructive">*</span>}
+      </Label>
+      {renderField()}
+      {field.description && (
+        <p className="text-xs text-muted-foreground">{field.description}</p>
+      )}
+    </div>
+  );
+};
