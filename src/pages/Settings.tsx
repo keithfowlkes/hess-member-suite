@@ -24,6 +24,7 @@ import { SystemFieldNormalizer } from '@/components/SystemFieldNormalizer';
 import { SimplifiedMemberRegistrationManagement } from '@/components/SimplifiedMemberRegistrationManagement';
 import { PublicLogoManager } from '@/components/PublicLogoManager';
 import { HeaderGraphicManager } from '@/components/HeaderGraphicManager';
+import { AuthPageFieldsManager } from '@/components/AuthPageFieldsManager';
 
 import { USMap } from '@/components/USMap';
 import { MessageTextContent } from '@/components/MessageTextContent';
@@ -775,7 +776,7 @@ export default function Settings() {
                 </div>
                 
                 <Tabs defaultValue="directory" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-3 max-w-lg">
+                  <TabsList className="grid w-full grid-cols-4 max-w-2xl">
                     <TabsTrigger value="directory" className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
                       Organization Directory
@@ -787,6 +788,10 @@ export default function Settings() {
                     <TabsTrigger value="logo" className="flex items-center gap-2">
                       <ImageIcon className="h-4 w-4" />
                       Logo Upload
+                    </TabsTrigger>
+                    <TabsTrigger value="auth" className="flex items-center gap-2">
+                      <FormInput className="h-4 w-4" />
+                      Auth Pages
                     </TabsTrigger>
                   </TabsList>
 
@@ -814,6 +819,16 @@ export default function Settings() {
                         Upload and display your organization logo on a public page
                       </p>
                       <PublicLogoManager />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="auth" className="space-y-6">
+                    <div>
+                      <h3 className="text-xl font-semibold text-foreground mb-4">Authentication Pages</h3>
+                      <p className="text-muted-foreground mb-6">
+                        Configure form fields and validation for sign-in, sign-up, and member update pages
+                      </p>
+                      <AuthPageFieldsManager />
                     </div>
                   </TabsContent>
                 </Tabs>
