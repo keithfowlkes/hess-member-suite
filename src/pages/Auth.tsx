@@ -565,6 +565,35 @@ export default function Auth() {
           });
           
           console.log('✅ DEBUG: createRegistrationUpdate call completed successfully:', result);
+          
+          // Send notification email to current primary contact
+          try {
+            if (currentOrg?.email) {
+              console.log('📧 MEMBER UPDATE DEBUG: Sending notification email to current contact:', currentOrg.email);
+              
+              const { error: emailError } = await supabase.functions.invoke('centralized-email-delivery', {
+                body: {
+                  type: 'unauthorized_update_warning',
+                  to: currentOrg.email,
+                  subject: 'URGENT: Unauthorized Organization Update Alert - Action Required',
+                  data: {
+                    organization_name: currentOrg.name,
+                    submitted_email: signUpForm.email,
+                    primary_contact_name: `${signUpForm.firstName} ${signUpForm.lastName}`,
+                    contact_email: 'info@hessconsortium.org'
+                  }
+                }
+              });
+              
+              if (emailError) {
+                console.error('❌ MEMBER UPDATE DEBUG: Failed to send notification email:', emailError);
+              } else {
+                console.log('✅ MEMBER UPDATE DEBUG: Notification email sent successfully');
+              }
+            }
+          } catch (emailError) {
+            console.error('❌ MEMBER UPDATE DEBUG: Error sending notification email:', emailError);
+          }
         } catch (error) {
           console.error('❌ ERROR in createRegistrationUpdate:', error);
           throw error; // Re-throw to be caught by the outer try-catch

@@ -17,15 +17,17 @@ export const MessageTextContent = () => {
   const createSystemMessage = useCreateSystemMessage();
   const updateSystemMessage = useUpdateSystemMessage();
 
-  // Message states
-  const [passwordResetMessage, setPasswordResetMessage] = useState('');
-  const [welcomeMessage, setWelcomeMessage] = useState('');
-  const [profileUpdateMessage, setProfileUpdateMessage] = useState('');
-  const [memberInfoUpdateMessage, setMemberInfoUpdateMessage] = useState('');
-  const [savingMessage, setSavingMessage] = useState(false);
-  const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
-  const [savingProfileUpdateMessage, setSavingProfileUpdateMessage] = useState(false);
-  const [savingMemberInfoUpdateMessage, setSavingMemberInfoUpdateMessage] = useState(false);
+      // Message states
+      const [passwordResetMessage, setPasswordResetMessage] = useState('');
+      const [welcomeMessage, setWelcomeMessage] = useState('');
+      const [profileUpdateMessage, setProfileUpdateMessage] = useState('');
+      const [memberInfoUpdateMessage, setMemberInfoUpdateMessage] = useState('');
+      const [unauthorizedUpdateWarningMessage, setUnauthorizedUpdateWarningMessage] = useState('');
+      const [savingMessage, setSavingMessage] = useState(false);
+      const [savingWelcomeMessage, setSavingWelcomeMessage] = useState(false);
+      const [savingProfileUpdateMessage, setSavingProfileUpdateMessage] = useState(false);
+      const [savingMemberInfoUpdateMessage, setSavingMemberInfoUpdateMessage] = useState(false);
+      const [savingUnauthorizedUpdateWarningMessage, setSavingUnauthorizedUpdateWarningMessage] = useState(false);
 
   // Preview modal state
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -164,6 +166,39 @@ export const MessageTextContent = () => {
         `;
         setMemberInfoUpdateMessage(defaultMemberInfoUpdateTemplate);
       }
+
+      const unauthorizedUpdateWarningSetting = settings.find(s => s.setting_key === 'unauthorized_update_warning_template');
+      if (unauthorizedUpdateWarningSetting?.setting_value) {
+        setUnauthorizedUpdateWarningMessage(unauthorizedUpdateWarningSetting.setting_value);
+      } else {
+        // Set default unauthorized update warning message template
+        const defaultUnauthorizedUpdateWarningTemplate = `
+          <p style="color: #4A4A4A; font-size: 16px; line-height: 1.8; margin: 0 0 20px 0;">Dear {{primary_contact_name}},</p>
+          
+          <div style="background: rgba(220, 53, 69, 0.1); border: 2px solid rgba(220, 53, 69, 0.3); border-radius: 12px; padding: 25px; margin: 25px 0;">
+            <p style="color: #DC3545; font-size: 18px; font-weight: bold; margin: 0 0 15px 0; text-align: center;">⚠️ URGENT SECURITY ALERT ⚠️</p>
+            <p style="color: #4A4A4A; font-size: 16px; line-height: 1.8; margin: 0 0 15px 0;">An organization member update request has been submitted for <strong>{{organization_name}}</strong> from the email address <strong>{{submitted_email}}</strong>.</p>
+            <p style="color: #4A4A4A; font-size: 16px; line-height: 1.8; margin: 0;">If you did NOT authorize this request, this may be an unauthorized attempt to modify your organization's information.</p>
+          </div>
+          
+          <div style="background: rgba(255, 193, 7, 0.1); border: 2px solid rgba(255, 193, 7, 0.3); border-radius: 12px; padding: 20px; margin: 25px 0;">
+            <p style="color: #856404; font-size: 16px; font-weight: bold; margin: 0 0 10px 0;">IMMEDIATE ACTION REQUIRED:</p>
+            <p style="color: #4A4A4A; font-size: 16px; line-height: 1.8; margin: 0;">If this request is UNAUTHORIZED, please contact us immediately at <a href="mailto:{{contact_email}}" style="color: #8B7355; font-weight: bold; text-decoration: none;">{{contact_email}}</a> within the next <strong>24 hours</strong> to report this security incident.</p>
+          </div>
+          
+          <p style="color: #4A4A4A; font-size: 16px; line-height: 1.8; margin: 0 0 20px 0;">If you authorized this request, no further action is needed. Our administration team will review and process the update accordingly.</p>
+          
+          <p style="color: #4A4A4A; font-size: 16px; line-height: 1.8; margin: 0 0 30px 0;">We take the security of your organization's information very seriously and appreciate your prompt attention to this matter.</p>
+          
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid rgba(212, 175, 55, 0.3);">
+            <p style="color: #8B7355; font-size: 16px; font-weight: bold; margin: 5px 0;">Keith Fowlkes, M.A., M.B.A.</p>
+            <p style="color: #4A4A4A; font-size: 14px; margin: 5px 0;">Executive Director and Founder</p>
+            <p style="color: #8B7355; font-size: 16px; font-weight: bold; margin: 5px 0;">The HESS Consortium</p>
+            <p style="color: #4A4A4A; font-size: 14px; margin: 5px 0;">keith.fowlkes@hessconsortium.org | 859.516.3571</p>
+          </div>
+        `;
+        setUnauthorizedUpdateWarningMessage(defaultUnauthorizedUpdateWarningTemplate);
+      }
     }
   }, [settings]);
 
@@ -203,6 +238,15 @@ export const MessageTextContent = () => {
     }
   };
 
+  const handleSaveUnauthorizedUpdateWarningMessage = async () => {
+    setSavingUnauthorizedUpdateWarningMessage(true);
+    try {
+      await updateSetting('unauthorized_update_warning_template', unauthorizedUpdateWarningMessage);
+    } finally {
+      setSavingUnauthorizedUpdateWarningMessage(false);
+    }
+  };
+
   // Generate email preview with exact same structure as Preview Design modal
   const generateEmailPreview = (content: string, title: string) => {
     // Get design settings with defaults matching Preview Design modal
@@ -233,6 +277,8 @@ export const MessageTextContent = () => {
       .replace(/{{user_email}}/g, 'john.smith@example.edu')
       .replace(/{{reset_link}}/g, '#password-reset-link')
       .replace(/{{update_details}}/g, 'Organization name, contact information, and system preferences')
+      .replace(/{{submitted_email}}/g, 'update.request@example.edu')
+      .replace(/{{contact_email}}/g, 'info@hessconsortium.org')
       .replace(/{{login_hint_section}}/g, '<p style="color: #4A4A4A; font-size: 14px; line-height: 1.8; margin: 20px 0; font-style: italic;">If you are having trouble logging in, try using your email address as your username.</p>');
 
     // Use exact same template structure as Preview Design modal (lines 193-242 in EmailDesignManager)
@@ -468,6 +514,50 @@ export const MessageTextContent = () => {
             <Button 
               variant="outline"
               onClick={() => handlePreview(memberInfoUpdateMessage, 'Member Information Update Message')}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Unauthorized Update Warning Message */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            Unauthorized Update Warning Message
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Template Content</Label>
+            <p className="text-sm text-muted-foreground mb-2">
+              Message sent to current primary contact when organization update is submitted. Available placeholders: 
+              {`{{primary_contact_name}}, {{organization_name}}, {{submitted_email}}, {{contact_email}}`}
+            </p>
+            <div className="min-h-[200px]">
+                <TinyMCEEditor
+                  value={unauthorizedUpdateWarningMessage}
+                  onChange={setUnauthorizedUpdateWarningMessage}
+                  placeholder="Enter unauthorized update warning message template..."
+                />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleSaveUnauthorizedUpdateWarningMessage}
+              disabled={savingUnauthorizedUpdateWarningMessage}
+            >
+              {savingUnauthorizedUpdateWarningMessage ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Save Unauthorized Update Warning Message
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => handlePreview(unauthorizedUpdateWarningMessage, 'Unauthorized Update Warning Message')}
             >
               <Eye className="h-4 w-4 mr-2" />
               Preview
