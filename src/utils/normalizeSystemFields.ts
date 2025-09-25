@@ -28,8 +28,8 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "Jenzabar SONIS": "Jenzabar ONE",
     
     // Anthology/Campus Management variations
-    "Anthology/Campus Management": "Anthology/Campus Management",
-    "Campus Management": "Anthology/Campus Management",
+    "Anthology/Campus Management": "Anthology",
+    "Campus Management": "Anthology",
     
     // Oracle variations
     "Oracle Peoplesoft": "Oracle PeopleSoft",
