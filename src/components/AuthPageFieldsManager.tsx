@@ -99,25 +99,41 @@ const defaultAuthConfig: AuthPageConfig = {
     // Update Type Section
     { id: 'isReassignment', label: 'This is a member information update request', type: 'checkbox', required: true, visible: true, order: 1, section: 'Update Type', isCore: true, description: 'I am an authorized agent from my current HESS member institution and am updating information for my own existing institution.' },
     
+    // Account Information Section  
+    { id: 'email', label: 'Email Address', type: 'email', placeholder: 'your.email@institution.edu', required: false, visible: true, order: 2, section: 'Account Information', isCore: false },
+    { id: 'password', label: 'Password', type: 'password', placeholder: 'Create a secure password', required: false, visible: true, order: 3, section: 'Account Information', isCore: false },
+    { id: 'confirmPassword', label: 'Confirm Password', type: 'password', placeholder: 'Confirm your password', required: false, visible: true, order: 4, section: 'Account Information', isCore: false },
+    
     // Contact Details Section
-    { id: 'firstName', label: 'First Name', type: 'text', placeholder: 'Enter first name', required: true, visible: true, order: 2, section: 'Contact Details', isCore: true },
-    { id: 'lastName', label: 'Last Name', type: 'text', placeholder: 'Enter last name', required: true, visible: true, order: 3, section: 'Contact Details', isCore: true },
-    { id: 'title', label: 'Title/Position', type: 'text', placeholder: 'Your job title', required: true, visible: true, order: 4, section: 'Contact Details', isCore: false },
-    { id: 'phone', label: 'Phone Number', type: 'text', placeholder: '(555) 123-4567', required: true, visible: true, order: 5, section: 'Contact Details', isCore: false },
+    { id: 'firstName', label: 'First Name', type: 'text', placeholder: 'Enter first name', required: true, visible: true, order: 5, section: 'Contact Details', isCore: true },
+    { id: 'lastName', label: 'Last Name', type: 'text', placeholder: 'Enter last name', required: true, visible: true, order: 6, section: 'Contact Details', isCore: true },
+    { id: 'title', label: 'Title/Position', type: 'text', placeholder: 'Your job title', required: true, visible: true, order: 7, section: 'Contact Details', isCore: false },
+    { id: 'phone', label: 'Phone Number', type: 'text', placeholder: '(555) 123-4567', required: true, visible: true, order: 8, section: 'Contact Details', isCore: false },
     
     // Institution Information Section
-    { id: 'existingOrganization', label: 'Select Existing Institution', type: 'select', required: true, visible: true, order: 6, section: 'Institution Information', isCore: true, description: 'Select your institution from the list above. This will update the existing record.' },
+    { id: 'existingOrganization', label: 'Select Existing Institution', type: 'select', required: true, visible: true, order: 9, section: 'Institution Information', isCore: true, description: 'Select your institution from the list above. This will update the existing record.' },
+    { id: 'organization', label: 'Institution Name', type: 'text', placeholder: 'Your College or University Name', required: false, visible: true, order: 10, section: 'Institution Information', isCore: false },
+    { id: 'address', label: 'Street Address', type: 'text', placeholder: '123 College Ave', required: false, visible: true, order: 11, section: 'Institution Information', isCore: false },
+    { id: 'city', label: 'City', type: 'text', placeholder: 'City', required: false, visible: true, order: 12, section: 'Institution Information', isCore: false },
+    { id: 'state', label: 'State', type: 'text', placeholder: 'State', required: false, visible: true, order: 13, section: 'Institution Information', isCore: false },
+    { id: 'zip', label: 'ZIP Code', type: 'text', placeholder: '12345', required: false, visible: true, order: 14, section: 'Institution Information', isCore: false },
+    
+    // Secondary Contact Section
+    { id: 'secondaryFirstName', label: 'Secondary First Name', type: 'text', placeholder: 'Secondary contact first name', required: false, visible: true, order: 15, section: 'Secondary Contact', isCore: false },
+    { id: 'secondaryLastName', label: 'Secondary Last Name', type: 'text', placeholder: 'Secondary contact last name', required: false, visible: true, order: 16, section: 'Secondary Contact', isCore: false },
+    { id: 'secondaryEmail', label: 'Secondary Email Address', type: 'email', placeholder: 'secondary@institution.edu', required: false, visible: true, order: 17, section: 'Secondary Contact', isCore: false },
+    { id: 'secondaryPhone', label: 'Secondary Phone Number', type: 'text', placeholder: '(555) 123-4567', required: false, visible: true, order: 18, section: 'Secondary Contact', isCore: false },
     
     // Academic Systems Section
-    { id: 'sis', label: 'Student Information System', type: 'text', placeholder: 'e.g., Banner, PeopleSoft, PowerSchool', required: false, visible: true, order: 7, section: 'Academic Systems', isCore: false },
-    { id: 'lms', label: 'Learning Management System', type: 'text', placeholder: 'e.g., Canvas, Blackboard, Moodle', required: false, visible: true, order: 8, section: 'Academic Systems', isCore: false },
-    { id: 'library', label: 'Library System', type: 'text', placeholder: 'e.g., Alma, Symphony, Koha', required: false, visible: true, order: 9, section: 'Academic Systems', isCore: false },
-    { id: 'otherSoftware', label: 'Other Software', type: 'text', placeholder: 'Other systems or software', required: false, visible: true, order: 10, section: 'Academic Systems', isCore: false },
+    { id: 'sis', label: 'Student Information System', type: 'text', placeholder: 'e.g., Banner, PeopleSoft, PowerSchool', required: false, visible: true, order: 19, section: 'Academic Systems', isCore: false },
+    { id: 'lms', label: 'Learning Management System', type: 'text', placeholder: 'e.g., Canvas, Blackboard, Moodle', required: false, visible: true, order: 20, section: 'Academic Systems', isCore: false },
+    { id: 'library', label: 'Library System', type: 'text', placeholder: 'e.g., Alma, Symphony, Koha', required: false, visible: true, order: 21, section: 'Academic Systems', isCore: false },
+    { id: 'otherSoftware', label: 'Other Software', type: 'text', placeholder: 'Other systems or software', required: false, visible: true, order: 22, section: 'Academic Systems', isCore: false },
     
     // Additional Information Section
-    { id: 'desktopOS', label: 'Desktop Operating System', type: 'text', placeholder: 'e.g., Windows 11, macOS, Linux', required: false, visible: true, order: 11, section: 'Additional Information', isCore: false },
-    { id: 'serverOS', label: 'Server Operating System', type: 'text', placeholder: 'e.g., Windows Server, Linux, Unix', required: false, visible: true, order: 12, section: 'Additional Information', isCore: false },
-    { id: 'comments', label: 'Additional Comments', type: 'textarea', placeholder: 'Any additional information you\'d like to share...', required: false, visible: true, order: 13, section: 'Additional Information', isCore: false }
+    { id: 'desktopOS', label: 'Desktop Operating System', type: 'text', placeholder: 'e.g., Windows 11, macOS, Linux', required: false, visible: true, order: 23, section: 'Additional Information', isCore: false },
+    { id: 'serverOS', label: 'Server Operating System', type: 'text', placeholder: 'e.g., Windows Server, Linux, Unix', required: false, visible: true, order: 24, section: 'Additional Information', isCore: false },
+    { id: 'comments', label: 'Additional Comments', type: 'textarea', placeholder: 'Any additional information you\'d like to share...', required: false, visible: true, order: 25, section: 'Additional Information', isCore: false }
   ]
 };
 
