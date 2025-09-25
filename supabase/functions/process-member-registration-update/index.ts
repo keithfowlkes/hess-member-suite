@@ -514,18 +514,92 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Failed to mark registration update as approved:', updateError);
     }
 
-    // Step 8: Send profile update approval email using centralized email delivery
+    // Step 8: Build update details for the email notification
+    const updateDetails = [];
+    
+    if (isUpdate && existingOrganization) {
+      // Compare existing vs new data and build a list of changes
+      const fieldsToCheck = [
+        { key: 'name', label: 'Organization Name' },
+        { key: 'student_fte', label: 'Student FTE' },
+        { key: 'address_line_1', label: 'Address' },
+        { key: 'city', label: 'City' },
+        { key: 'state', label: 'State' },
+        { key: 'zip_code', label: 'ZIP Code' },
+        { key: 'phone', label: 'Phone' },
+        { key: 'email', label: 'Email' },
+        { key: 'primary_contact_title', label: 'Primary Contact Title' },
+        { key: 'secondary_first_name', label: 'Secondary Contact First Name' },
+        { key: 'secondary_last_name', label: 'Secondary Contact Last Name' },
+        { key: 'secondary_contact_title', label: 'Secondary Contact Title' },
+        { key: 'secondary_contact_email', label: 'Secondary Contact Email' },
+        { key: 'student_information_system', label: 'Student Information System' },
+        { key: 'financial_system', label: 'Financial System' },
+        { key: 'financial_aid', label: 'Financial Aid System' },
+        { key: 'hcm_hr', label: 'HCM/HR System' },
+        { key: 'payroll_system', label: 'Payroll System' },
+        { key: 'purchasing_system', label: 'Purchasing System' },
+        { key: 'housing_management', label: 'Housing Management System' },
+        { key: 'learning_management', label: 'Learning Management System' },
+        { key: 'admissions_crm', label: 'Admissions CRM' },
+        { key: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM' }
+      ];
+
+      fieldsToCheck.forEach(field => {
+        const newValue = organizationData[field.key] || registrationData[field.key];
+        const oldValue = existingOrganization[field.key];
+        
+        if (newValue && newValue !== oldValue) {
+          updateDetails.push(`- ${field.label}: ${newValue}`);
+        }
+      });
+
+      // Check boolean fields
+      const booleanFields = [
+        { key: 'primary_office_apple', label: 'Apple Office Software' },
+        { key: 'primary_office_asus', label: 'ASUS Office Software' },
+        { key: 'primary_office_dell', label: 'Dell Office Software' },
+        { key: 'primary_office_hp', label: 'HP Office Software' },
+        { key: 'primary_office_microsoft', label: 'Microsoft Office Software' },
+        { key: 'primary_office_other', label: 'Other Office Software' }
+      ];
+
+      booleanFields.forEach(field => {
+        const newValue = registrationData[field.key] || false;
+        const oldValue = existingOrganization[field.key] || false;
+        
+        if (newValue !== oldValue) {
+          updateDetails.push(`- ${field.label}: ${newValue ? 'Yes' : 'No'}`);
+        }
+      });
+
+      if (registrationData.primary_office_other_details && 
+          registrationData.primary_office_other_details !== existingOrganization.primary_office_other_details) {
+        updateDetails.push(`- Other Office Software Details: ${registrationData.primary_office_other_details}`);
+      }
+
+      if (registrationData.other_software_comments && 
+          registrationData.other_software_comments !== existingOrganization.other_software_comments) {
+        updateDetails.push(`- Additional Software Comments: ${registrationData.other_software_comments}`);
+      }
+    } else {
+      updateDetails.push('- New organization registration approved');
+      updateDetails.push(`- Organization Name: ${organizationName}`);
+      updateDetails.push(`- Primary Contact: ${registrationData.first_name} ${registrationData.last_name}`);
+      updateDetails.push(`- Email: ${registrationData.email}`);
+    }
+
+    // Step 9: Send profile update approval email using centralized email delivery
     try {
       const { data: emailResult, error: emailError } = await supabase.functions.invoke('centralized-email-delivery', {
         body: {
-          type: 'profile_update_approved',
+          type: 'member_info_update',
           to: registrationData.email,
           data: {
+            first_name: registrationData.first_name,
+            last_name: registrationData.last_name,
             organization_name: organizationName,
-            primary_contact_name: `${registrationData.first_name} ${registrationData.last_name}`,
-            custom_message: isUpdate ? 'Your profile update request has been approved and your organization information has been updated in our system.' : 'Your registration has been approved and your organization has been created in our system.',
-            updated_organization: organizationName,
-            contact_email: registrationData.email
+            update_details: updateDetails.length > 0 ? updateDetails.join('\n') : 'Profile information updated'
           }
         }
       });
