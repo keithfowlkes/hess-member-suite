@@ -204,7 +204,7 @@ export default function Members() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  navigate(`/organization/${organization.contact_person_id}`);
+                                  navigate(`/profile/${organization.contact_person_id}`);
                                 }}
                                 className="text-sm text-primary hover:text-primary/80 hover:underline font-medium block truncate w-full text-left"
                                 title={`${organization.profiles.first_name} ${organization.profiles.last_name}`}
@@ -301,7 +301,7 @@ export default function Members() {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      navigate(`/organization/${organization.contact_person_id}`);
+                                      navigate(`/profile/${organization.contact_person_id}`);
                                     }}
                                     className="font-medium text-primary hover:text-primary/80 hover:underline truncate block"
                                     title={`${organization.profiles.first_name} ${organization.profiles.last_name}`}
