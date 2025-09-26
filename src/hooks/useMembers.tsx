@@ -42,6 +42,7 @@ export interface Organization {
     secondary_last_name?: string;
     secondary_contact_title?: string;
     secondary_contact_email?: string;
+    secondary_contact_phone?: string;
     student_information_system?: string;
     financial_system?: string;
     financial_aid?: string;
@@ -97,7 +98,7 @@ export function useMembers() {
             id, user_id, first_name, last_name, email, phone, organization, state_association,
             address, city, state, zip, primary_contact_title,
             secondary_first_name, secondary_last_name, secondary_contact_title,
-            secondary_contact_email, student_information_system, financial_system,
+            secondary_contact_email, secondary_contact_phone, student_information_system, financial_system,
             financial_aid, hcm_hr, payroll_system, purchasing_system,
             housing_management, learning_management, admissions_crm,
             alumni_advancement_crm, primary_office_apple, primary_office_asus,
