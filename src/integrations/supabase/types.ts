@@ -845,6 +845,8 @@ export type Database = {
           approximate_date_joined_hess: string | null
           city: string | null
           created_at: string
+          document_management: string | null
+          door_access: string | null
           duplicate_check_status: string | null
           email: string
           financial_aid: string | null
@@ -854,14 +856,17 @@ export type Database = {
           hcm_hr: string | null
           housing_management: string | null
           id: string
+          identity_management: string | null
           is_private_nonprofit: boolean | null
           last_name: string
           learning_management: string | null
           login_hint: string | null
+          meal_plan_management: string | null
           organization_name: string
           original_submission_id: string | null
           other_software_comments: string | null
           password_hash: string
+          payment_platform: string | null
           payroll_system: string | null
           primary_contact_title: string | null
           primary_office_apple: boolean | null
@@ -899,6 +904,8 @@ export type Database = {
           approximate_date_joined_hess?: string | null
           city?: string | null
           created_at?: string
+          document_management?: string | null
+          door_access?: string | null
           duplicate_check_status?: string | null
           email: string
           financial_aid?: string | null
@@ -908,14 +915,17 @@ export type Database = {
           hcm_hr?: string | null
           housing_management?: string | null
           id?: string
+          identity_management?: string | null
           is_private_nonprofit?: boolean | null
           last_name: string
           learning_management?: string | null
           login_hint?: string | null
+          meal_plan_management?: string | null
           organization_name: string
           original_submission_id?: string | null
           other_software_comments?: string | null
           password_hash: string
+          payment_platform?: string | null
           payroll_system?: string | null
           primary_contact_title?: string | null
           primary_office_apple?: boolean | null
@@ -953,6 +963,8 @@ export type Database = {
           approximate_date_joined_hess?: string | null
           city?: string | null
           created_at?: string
+          document_management?: string | null
+          door_access?: string | null
           duplicate_check_status?: string | null
           email?: string
           financial_aid?: string | null
@@ -962,14 +974,17 @@ export type Database = {
           hcm_hr?: string | null
           housing_management?: string | null
           id?: string
+          identity_management?: string | null
           is_private_nonprofit?: boolean | null
           last_name?: string
           learning_management?: string | null
           login_hint?: string | null
+          meal_plan_management?: string | null
           organization_name?: string
           original_submission_id?: string | null
           other_software_comments?: string | null
           password_hash?: string
+          payment_platform?: string | null
           payroll_system?: string | null
           primary_contact_title?: string | null
           primary_office_apple?: boolean | null
