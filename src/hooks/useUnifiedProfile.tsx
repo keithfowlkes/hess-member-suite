@@ -64,6 +64,7 @@ export interface UnifiedProfile {
     annual_fee_amount: number;
     student_fte?: number;
     notes?: string;
+    approximate_date_joined_hess?: string;
     // System fields
     student_information_system?: string;
     financial_system?: string;
