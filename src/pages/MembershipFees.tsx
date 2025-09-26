@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useResendInvoice } from '@/hooks/useResendInvoice';
 import { useSystemSettings, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
+import { Switch } from '@/components/ui/switch';
 import { renderInvoiceEmailHTML } from '@/utils/invoiceEmailRenderer';
 import { setupDefaultInvoiceTemplate } from '@/utils/setupDefaultInvoiceTemplate';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
@@ -45,7 +46,10 @@ import {
   Mail,
   Printer,
   X,
-  Trash2
+  Trash2,
+  Clock,
+  CreditCard,
+  AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -127,6 +131,9 @@ export default function MembershipFees() {
   const [deleteTierConfirmOpen, setDeleteTierConfirmOpen] = useState(false);
   const [tierToDelete, setTierToDelete] = useState<string | null>(null);
   const [organizationSearchTerm, setOrganizationSearchTerm] = useState('');
+  
+  // Member view dashboard toggle
+  const [showMemberViewItems, setShowMemberViewItems] = useState(false);
 
   // Setup default invoice template with HESS logo on component mount
   React.useEffect(() => {
@@ -1344,10 +1351,20 @@ export default function MembershipFees() {
                 {/* Membership Term Settings */}
                 <Card className="mb-6">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CalendarIcon className="h-5 w-5" />
-                      Membership Term Settings
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <CalendarIcon className="h-5 w-5" />
+                        Membership Term Settings
+                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="member-view-toggle" className="text-sm">Show Member View Items</Label>
+                        <Switch
+                          id="member-view-toggle"
+                          checked={showMemberViewItems}
+                          onCheckedChange={setShowMemberViewItems}
+                        />
+                      </div>
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       Set the default membership term end date for billing calculations. This affects prorated fee calculations for new members.
                     </p>
@@ -1394,6 +1411,74 @@ export default function MembershipFees() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Member View Dashboard Items */}
+                {showMemberViewItems && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    {/* Next Renewal Card */}
+                    <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50 border-blue-100/50 hover:shadow-md hover:shadow-blue-100/20 transition-all duration-300 hover:scale-105 group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/10"></div>
+                      <CardContent className="relative p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg shadow-md">
+                            <Clock className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="text-xs font-medium text-blue-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            Upcoming
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xl font-bold text-blue-700 mb-1">
+                            {format(standardRenewalDate, "MMM dd, yyyy")}
+                          </div>
+                          <div className="text-xs font-medium text-blue-600">Next Renewal</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Annual Member Fee Card */}
+                    <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 via-white to-emerald-50 border-green-100/50 hover:shadow-md hover:shadow-green-100/20 transition-all duration-300 hover:scale-105 group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/10"></div>
+                      <CardContent className="relative p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-md">
+                            <CreditCard className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="text-xs font-medium text-green-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            Standard Rate
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xl font-bold text-green-700 mb-1">
+                            ${parseFloat(fullMemberFee).toLocaleString()}
+                          </div>
+                          <div className="text-xs font-medium text-green-600">Annual Member Fee</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Outstanding Balance Card */}
+                    <Card className="relative overflow-hidden bg-gradient-to-br from-orange-50 via-white to-amber-50 border-orange-100/50 hover:shadow-md hover:shadow-orange-100/20 transition-all duration-300 hover:scale-105 group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-amber-500/10"></div>
+                      <CardContent className="relative p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="p-2 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg shadow-md">
+                            <AlertCircle className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="text-xs font-medium text-orange-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            Pending
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xl font-bold text-orange-700 mb-1">
+                            ${stats.pendingFees.toLocaleString()}
+                          </div>
+                          <div className="text-xs font-medium text-orange-600">Outstanding Balance</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
 
                 {/* Annual Fee Tier Pricing Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
