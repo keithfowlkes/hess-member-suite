@@ -20,6 +20,7 @@ export interface UnifiedProfile {
     secondary_last_name?: string;
     secondary_contact_title?: string;
     secondary_contact_email?: string;
+    secondary_contact_phone?: string;
     state_association?: string;
     is_private_nonprofit?: boolean;
     // System fields - available for all users

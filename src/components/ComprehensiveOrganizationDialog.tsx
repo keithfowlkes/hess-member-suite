@@ -90,6 +90,7 @@ const profileSchema = z.object({
   secondary_last_name: z.string().optional(),
   secondary_contact_title: z.string().optional(),
   secondary_contact_email: z.string().email('Invalid email').optional().or(z.literal('')),
+  secondary_contact_phone: z.string().optional(),
   student_information_system: z.string().optional(),
   financial_system: z.string().optional(),
   financial_aid: z.string().optional(),
@@ -261,6 +262,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
       secondary_last_name: '',
       secondary_contact_title: '',
       secondary_contact_email: '',
+      secondary_contact_phone: '',
       student_information_system: '',
       financial_system: '',
       financial_aid: '',
@@ -322,6 +324,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           secondary_last_name: profile.secondary_last_name || '',
           secondary_contact_title: profile.secondary_contact_title || '',
           secondary_contact_email: profile.secondary_contact_email || '',
+          secondary_contact_phone: profile.secondary_contact_phone || '',
           student_information_system: profile.student_information_system || '',
           financial_system: profile.financial_system || '',
           financial_aid: profile.financial_aid || '',
@@ -418,6 +421,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
             secondary_last_name: profileData.secondary_last_name || null,
             secondary_contact_title: profileData.secondary_contact_title || null,
             secondary_contact_email: profileData.secondary_contact_email || null,
+            secondary_contact_phone: profileData.secondary_contact_phone || null,
             student_information_system: profileData.student_information_system || null,
             financial_system: profileData.financial_system || null,
             financial_aid: profileData.financial_aid || null,
@@ -980,6 +984,22 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
                       )}
                     />
 
+                    <FormField
+                      control={profileForm.control}
+                      name="secondary_contact_phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="(555) 123-4567" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
                     <FormField
                       control={profileForm.control}
                       name="secondary_contact_title"

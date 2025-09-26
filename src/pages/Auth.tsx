@@ -180,6 +180,7 @@ export default function Auth() {
     secondaryLastName: '',
     secondaryContactTitle: '',
     secondaryContactEmail: '',
+    secondaryContactPhone: '',
     studentInformationSystem: '',
     studentInformationSystemOther: '',
     financialSystem: '',
@@ -555,6 +556,7 @@ export default function Auth() {
               secondary_last_name: signUpForm.secondaryLastName,
               secondary_contact_title: signUpForm.secondaryContactTitle,
               secondary_contact_email: signUpForm.secondaryContactEmail,
+              secondary_contact_phone: signUpForm.secondaryContactPhone,
               is_private_nonprofit: signUpForm.isPrivateNonProfit,
               ...newOrgData
             },
@@ -696,6 +698,7 @@ export default function Auth() {
           secondary_last_name: formDataWithCustomValues.secondaryLastName,
           secondary_contact_title: formDataWithCustomValues.secondaryContactTitle,
           secondary_contact_email: formDataWithCustomValues.secondaryContactEmail,
+          secondary_contact_phone: formDataWithCustomValues.secondaryContactPhone,
           student_information_system: formDataWithCustomValues.studentInformationSystem,
           financial_system: formDataWithCustomValues.financialSystem,
           financial_aid: formDataWithCustomValues.financialAid,
@@ -757,6 +760,7 @@ export default function Auth() {
                 secondary_last_name: formDataWithCustomValues.secondaryLastName,
                 secondary_contact_title: formDataWithCustomValues.secondaryContactTitle,
                 secondary_contact_email: formDataWithCustomValues.secondaryContactEmail,
+                secondary_contact_phone: formDataWithCustomValues.secondaryContactPhone,
                 student_information_system: formDataWithCustomValues.studentInformationSystem,
                 financial_system: formDataWithCustomValues.financialSystem,
                 financial_aid: formDataWithCustomValues.financialAid,
@@ -1592,6 +1596,20 @@ export default function Auth() {
                           placeholder="secondary.contact@institution.edu"
                           value={signUpForm.secondaryContactEmail}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactEmail: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!signUpForm.isPrivateNonProfit}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="secondary-contact-phone" className="text-gray-700 font-medium text-sm">
+                          Phone Number
+                        </Label>
+                        <Input
+                          id="secondary-contact-phone"
+                          type="tel"
+                          placeholder="(555) 123-4567"
+                          value={signUpForm.secondaryContactPhone}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactPhone: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                         />

@@ -449,6 +449,15 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                 disabled={!isEditing}
               />
             </div>
+            <div>
+              <Label htmlFor="secondary_contact_phone">Phone</Label>
+              <Input
+                id="secondary_contact_phone"
+                value={editedData.profile.secondary_contact_phone || ''}
+                onChange={(e) => updateProfileField('secondary_contact_phone', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

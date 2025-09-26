@@ -388,6 +388,7 @@ export type Database = {
           registration_data: Json
           reviewed_at: string | null
           reviewed_by: string | null
+          secondary_contact_phone: string | null
           status: string
           submission_type: string
           submitted_at: string
@@ -404,6 +405,7 @@ export type Database = {
           registration_data?: Json
           reviewed_at?: string | null
           reviewed_by?: string | null
+          secondary_contact_phone?: string | null
           status?: string
           submission_type?: string
           submitted_at?: string
@@ -420,6 +422,7 @@ export type Database = {
           registration_data?: Json
           reviewed_at?: string | null
           reviewed_by?: string | null
+          secondary_contact_phone?: string | null
           status?: string
           submission_type?: string
           submitted_at?: string
@@ -690,6 +693,7 @@ export type Database = {
           primary_office_other_details: string | null
           purchasing_system: string | null
           secondary_contact_email: string | null
+          secondary_contact_phone: string | null
           secondary_contact_title: string | null
           secondary_first_name: string | null
           secondary_last_name: string | null
@@ -738,6 +742,7 @@ export type Database = {
           primary_office_other_details?: string | null
           purchasing_system?: string | null
           secondary_contact_email?: string | null
+          secondary_contact_phone?: string | null
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
           secondary_last_name?: string | null
@@ -786,6 +791,7 @@ export type Database = {
           primary_office_other_details?: string | null
           purchasing_system?: string | null
           secondary_contact_email?: string | null
+          secondary_contact_phone?: string | null
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
           secondary_last_name?: string | null
@@ -849,6 +855,7 @@ export type Database = {
           rejection_requires_resubmission: boolean | null
           resubmission_count: number | null
           secondary_contact_email: string | null
+          secondary_contact_phone: string | null
           secondary_contact_title: string | null
           secondary_first_name: string | null
           secondary_last_name: string | null
@@ -901,6 +908,7 @@ export type Database = {
           rejection_requires_resubmission?: boolean | null
           resubmission_count?: number | null
           secondary_contact_email?: string | null
+          secondary_contact_phone?: string | null
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
           secondary_last_name?: string | null
@@ -953,6 +961,7 @@ export type Database = {
           rejection_requires_resubmission?: boolean | null
           resubmission_count?: number | null
           secondary_contact_email?: string | null
+          secondary_contact_phone?: string | null
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
           secondary_last_name?: string | null
@@ -1005,6 +1014,7 @@ export type Database = {
           primary_office_other_details: string | null
           purchasing_system: string | null
           secondary_contact_email: string | null
+          secondary_contact_phone: string | null
           secondary_contact_title: string | null
           secondary_first_name: string | null
           secondary_last_name: string | null
@@ -1047,6 +1057,7 @@ export type Database = {
           primary_office_other_details?: string | null
           purchasing_system?: string | null
           secondary_contact_email?: string | null
+          secondary_contact_phone?: string | null
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
           secondary_last_name?: string | null
@@ -1089,6 +1100,7 @@ export type Database = {
           primary_office_other_details?: string | null
           purchasing_system?: string | null
           secondary_contact_email?: string | null
+          secondary_contact_phone?: string | null
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
           secondary_last_name?: string | null
