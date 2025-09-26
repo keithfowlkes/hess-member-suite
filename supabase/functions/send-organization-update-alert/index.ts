@@ -63,7 +63,7 @@ const handler = async (req: Request): Promise<Response> => {
         id,
         name,
         contact_person_id,
-        profiles:contact_person_id (
+        profiles!contact_person_id (
           email,
           first_name,
           last_name
@@ -83,8 +83,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const currentOwnerEmail = organization.profiles?.email;
-    const currentOwnerName = organization.profiles?.first_name + ' ' + organization.profiles?.last_name;
+    const profile = Array.isArray(organization.profiles) ? organization.profiles[0] : organization.profiles;
+    const currentOwnerEmail = profile?.email;
+    const currentOwnerName = profile?.first_name && profile?.last_name 
+      ? `${profile.first_name} ${profile.last_name}` 
+      : 'Organization Contact';
 
     if (!currentOwnerEmail) {
       console.error('[send-organization-update-alert] No contact person email found for organization');

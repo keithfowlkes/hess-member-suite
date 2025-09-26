@@ -57,6 +57,9 @@ verify_jwt = true
 [functions.send-analytics-feedback]
 verify_jwt = true
 
+[functions.send-organization-update-alert]
+verify_jwt = true
+
 [functions.send-password-reset]
 verify_jwt = true
 
