@@ -1958,7 +1958,7 @@ export default function Auth() {
                   {/* Account Information */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Account Information</h3>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Account & Primary Contact Information</h3>
                       <p className="text-gray-600 text-sm">Your login credentials and contact information.</p>
                     </div>
                     
