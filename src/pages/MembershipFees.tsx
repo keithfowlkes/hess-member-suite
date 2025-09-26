@@ -133,7 +133,43 @@ export default function MembershipFees() {
   const [organizationSearchTerm, setOrganizationSearchTerm] = useState('');
   
   // Member view dashboard toggle
-  const [showMemberViewItems, setShowMemberViewItems] = useState(true);
+  const [showMemberViewItems, setShowMemberViewItems] = useState(false);
+
+  // Load member view toggle setting
+  React.useEffect(() => {
+    if (systemSettings) {
+      const memberViewSetting = systemSettings.find(s => s.setting_key === 'show_member_view_items')?.setting_value;
+      if (memberViewSetting) {
+        setShowMemberViewItems(memberViewSetting === 'true');
+      }
+    }
+  }, [systemSettings]);
+
+  // Save member view toggle setting
+  const handleToggleMemberViewItems = async (checked: boolean) => {
+    setShowMemberViewItems(checked);
+    try {
+      await updateSystemSetting.mutateAsync({
+        settingKey: 'show_member_view_items',
+        settingValue: checked.toString(),
+        description: 'Controls visibility of member dashboard fee information blocks'
+      });
+      
+      toast({
+        title: "Setting Updated",
+        description: `Member fee information blocks are now ${checked ? 'visible' : 'hidden'} on member dashboards.`
+      });
+    } catch (error) {
+      console.error('Error saving member view setting:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save setting.",
+        variant: "destructive"
+      });
+      // Revert on error
+      setShowMemberViewItems(!checked);
+    }
+  };
 
   // Setup default invoice template with HESS logo on component mount
   React.useEffect(() => {
@@ -1360,10 +1396,7 @@ export default function MembershipFees() {
                         <Label htmlFor="member-view-toggle" className="text-sm">Show Member Fees Information</Label>
                         <div 
                           className="cursor-pointer"
-                          onClick={() => {
-                            console.log('Toggle clicked, current state:', showMemberViewItems);
-                            setShowMemberViewItems(!showMemberViewItems);
-                          }}
+                          onClick={() => handleToggleMemberViewItems(!showMemberViewItems)}
                         >
                           <Switch
                             id="member-view-toggle"
@@ -1419,82 +1452,10 @@ export default function MembershipFees() {
                   </CardContent>
                 </Card>
 
-                {/* Member View Dashboard Items */}
+                {/* Member View Dashboard Items - Remove debug blocks */}
                 {(() => {
                   console.log('showMemberViewItems state:', showMemberViewItems);
-                  return showMemberViewItems ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      <div className="col-span-full bg-blue-100 p-2 text-center text-sm font-medium text-blue-800 rounded">
-                        🔍 DEBUG: These blocks should only show when toggle is ON (Current state: {showMemberViewItems.toString()})
-                      </div>
-                    {/* Next Renewal Card */}
-                    <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50 border-blue-100/50 hover:shadow-md hover:shadow-blue-100/20 transition-all duration-300 hover:scale-105 group">
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/10"></div>
-                      <CardContent className="relative p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg shadow-md">
-                            <Clock className="h-4 w-4 text-white" />
-                          </div>
-                          <div className="text-xs font-medium text-blue-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            Upcoming
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xl font-bold text-blue-700 mb-1">
-                            {format(standardRenewalDate, "MMM dd, yyyy")}
-                          </div>
-                          <div className="text-xs font-medium text-blue-600">Next Renewal</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Annual Member Fee Card */}
-                    <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 via-white to-emerald-50 border-green-100/50 hover:shadow-md hover:shadow-green-100/20 transition-all duration-300 hover:scale-105 group">
-                      <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/10"></div>
-                      <CardContent className="relative p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-md">
-                            <CreditCard className="h-4 w-4 text-white" />
-                          </div>
-                          <div className="text-xs font-medium text-green-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            Standard Rate
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xl font-bold text-green-700 mb-1">
-                            ${parseFloat(fullMemberFee).toLocaleString()}
-                          </div>
-                          <div className="text-xs font-medium text-green-600">Annual Member Fee</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Outstanding Balance Card */}
-                    <Card className="relative overflow-hidden bg-gradient-to-br from-orange-50 via-white to-amber-50 border-orange-100/50 hover:shadow-md hover:shadow-orange-100/20 transition-all duration-300 hover:scale-105 group">
-                      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-amber-500/10"></div>
-                      <CardContent className="relative p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="p-2 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg shadow-md">
-                            <AlertCircle className="h-4 w-4 text-white" />
-                          </div>
-                          <div className="text-xs font-medium text-orange-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            Pending
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xl font-bold text-orange-700 mb-1">
-                            ${stats.pendingFees.toLocaleString()}
-                          </div>
-                          <div className="text-xs font-medium text-orange-600">Outstanding Balance</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    </div>
-                  ) : (
-                    <div className="bg-red-100 p-4 text-center text-sm font-medium text-red-800 rounded mb-6">
-                      🔍 DEBUG: Toggle is OFF - These blocks should be hidden
-                    </div>
-                  );
+                  return null; // Don't render anything here anymore since we moved to Index.tsx
                 })()}
 
                 {/* Annual Fee Tier Pricing Section */}

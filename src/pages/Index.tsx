@@ -2,6 +2,7 @@ import { Layout } from '@/components/Layout';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ import { useState, useEffect } from 'react';
 
 const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
+  const { data: systemSettings } = useSystemSettings();
   const navigate = useNavigate();
   const [userOrganization, setUserOrganization] = useState<any>(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -48,14 +50,17 @@ const Index = () => {
 
   const hasOutstandingBalance = outstandingBalance > 0;
 
-  // Define member stats for first row
+  // Check if member view items should be shown (only for non-admin view)
+  const showMemberViewItems = !isViewingAsAdmin && systemSettings?.find(s => s.setting_key === 'show_member_view_items')?.setting_value === 'true';
+
+  // Define member stats for first row - conditionally include Next Renewal
   const firstRowStats = [
     { title: 'Membership Status', value: 'Active', icon: Building2, color: 'text-green-600', isClickable: false, hasAlert: false, onClick: undefined },
-    { title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600', isClickable: false, hasAlert: false, onClick: undefined },
+    ...(showMemberViewItems ? [{ title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600', isClickable: false, hasAlert: false, onClick: undefined }] : [])
   ];
 
-  // Define member stats for second row  
-  const secondRowStats = [
+  // Define member stats for second row - conditionally include fee information
+  const secondRowStats = showMemberViewItems ? [
     {
       title: 'Annual Member Fee',
       value: userOrganization?.annual_fee_amount ? `$${userOrganization.annual_fee_amount.toFixed(2)}` : '$0.00',
@@ -74,7 +79,7 @@ const Index = () => {
       hasAlert: hasOutstandingBalance,
       onClick: () => navigate('/invoices')
     },
-  ];
+  ] : [];
 
   return (
     <SidebarProvider>
