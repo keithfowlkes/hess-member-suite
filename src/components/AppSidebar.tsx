@@ -82,8 +82,8 @@ export function AppSidebar() {
   // Check if user can access cohort information
   const canAccessCohortInfo = userRole === 'admin' || userRole === 'cohort_leader';
   
-  // Check if invoices menu should be shown in member view
-  const showInvoicesMenu = systemSettings?.find(s => s.setting_key === 'show_invoices_menu')?.setting_value === 'true';
+  // Check if member fee information should be shown in member view (controls both blocks and menu)
+  const showMemberFeeInfo = systemSettings?.find(s => s.setting_key === 'show_member_view_items')?.setting_value === 'true';
   
   console.log('Sidebar - userRole:', userRole, 'canAccessCohortInfo:', canAccessCohortInfo);
   console.log('Sidebar - current user:', user?.email, 'isViewingAsAdmin:', isViewingAsAdmin);
@@ -125,7 +125,7 @@ export function AppSidebar() {
     { title: 'HESS Member Information', url: '/research-dashboard', icon: Search },
     { title: 'Member Analytics', url: '/member-analytics', icon: BarChart3 },
     { title: 'Member Map', url: '/public-map', icon: Map },
-    ...(showInvoicesMenu ? [{ title: 'My Invoices', url: '/invoices', icon: FileText }] : []),
+    ...(showMemberFeeInfo ? [{ title: 'My Invoices', url: '/invoices', icon: FileText }] : []),
     { title: 'Organization Profile', url: '/profile', icon: User },
     ...(canAccessCohortInfo ? [{ title: 'Your Cohort Information', url: '/cohort-information', icon: GraduationCap }] : []),
   ];
