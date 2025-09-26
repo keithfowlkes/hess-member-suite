@@ -380,6 +380,7 @@ export type Database = {
       member_registration_updates: {
         Row: {
           admin_notes: string | null
+          approximate_date_joined_hess: string | null
           created_at: string
           existing_organization_id: string | null
           existing_organization_name: string | null
@@ -397,6 +398,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          approximate_date_joined_hess?: string | null
           created_at?: string
           existing_organization_id?: string | null
           existing_organization_name?: string | null
@@ -414,6 +416,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          approximate_date_joined_hess?: string | null
           created_at?: string
           existing_organization_id?: string | null
           existing_organization_name?: string | null
@@ -661,6 +664,7 @@ export type Database = {
           admissions_crm: string | null
           alumni_advancement_crm: string | null
           annual_fee_amount: number | null
+          approximate_date_joined_hess: string | null
           city: string | null
           contact_person_id: string | null
           country: string | null
@@ -710,6 +714,7 @@ export type Database = {
           admissions_crm?: string | null
           alumni_advancement_crm?: string | null
           annual_fee_amount?: number | null
+          approximate_date_joined_hess?: string | null
           city?: string | null
           contact_person_id?: string | null
           country?: string | null
@@ -759,6 +764,7 @@ export type Database = {
           admissions_crm?: string | null
           alumni_advancement_crm?: string | null
           annual_fee_amount?: number | null
+          approximate_date_joined_hess?: string | null
           city?: string | null
           contact_person_id?: string | null
           country?: string | null
@@ -821,6 +827,7 @@ export type Database = {
           approval_status: string | null
           approved_at: string | null
           approved_by: string | null
+          approximate_date_joined_hess: string | null
           city: string | null
           created_at: string
           duplicate_check_status: string | null
@@ -874,6 +881,7 @@ export type Database = {
           approval_status?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          approximate_date_joined_hess?: string | null
           city?: string | null
           created_at?: string
           duplicate_check_status?: string | null
@@ -927,6 +935,7 @@ export type Database = {
           approval_status?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          approximate_date_joined_hess?: string | null
           city?: string | null
           created_at?: string
           duplicate_check_status?: string | null

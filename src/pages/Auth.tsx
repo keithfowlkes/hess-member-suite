@@ -210,7 +210,8 @@ export default function Auth() {
     primaryOfficeOther: false,
     primaryOfficeOtherDetails: '',
     otherSoftwareComments: '',
-    loginHint: ''
+    loginHint: '',
+    approximateDateJoinedHess: ''
   };
 
   const [signUpForm, setSignUpForm] = useState(initialSignUpFormState);
@@ -531,7 +532,8 @@ export default function Auth() {
           primary_office_microsoft: signUpForm.primaryOfficeMicrosoft,
           primary_office_other: signUpForm.primaryOfficeOther,
           primary_office_other_details: signUpForm.primaryOfficeOtherDetails,
-          other_software_comments: signUpForm.otherSoftwareComments
+          other_software_comments: signUpForm.otherSoftwareComments,
+          approximate_date_joined_hess: signUpForm.approximateDateJoinedHess
         };
 
         console.log('🔍 DEBUG: About to call createRegistrationUpdate with data:', {
@@ -2123,31 +2125,51 @@ export default function Auth() {
                       <p className="text-gray-600 text-sm">Details about your college or university.</p>
                     </div>
                     
-                    <div className="space-y-6">
-                      <Label htmlFor="member-update-existing-organization" className="text-gray-700 font-medium text-sm">
-                        Select Existing Institution <span className="text-red-600">*</span>
-                      </Label>
-                      <Select
-                        value={selectedOrganizationId}
-                        onValueChange={handleOrganizationSelect}
-                        disabled={!isReassignment}
-                        required
-                      >
-                        <SelectTrigger className="h-11 bg-gray-50 border-gray-300 max-w-lg">
-                          <SelectValue placeholder="Choose your institution..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {organizations.map((org) => (
-                            <SelectItem key={org.id} value={org.id}>
-                              {org.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <p className="text-sm text-muted-foreground">
-                        Select your institution from the list above. This will update the existing record.
-                      </p>
-                    </div>
+                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                       <div className="space-y-2">
+                         <Label htmlFor="member-update-existing-organization" className="text-gray-700 font-medium text-sm">
+                           Select Existing Institution <span className="text-red-600">*</span>
+                         </Label>
+                         <Select
+                           value={selectedOrganizationId}
+                           onValueChange={handleOrganizationSelect}
+                           disabled={!isReassignment}
+                           required
+                         >
+                           <SelectTrigger className="h-11 bg-gray-50 border-gray-300">
+                             <SelectValue placeholder="Choose your institution..." />
+                           </SelectTrigger>
+                           <SelectContent>
+                             {organizations.map((org) => (
+                               <SelectItem key={org.id} value={org.id}>
+                                 {org.name}
+                               </SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
+                         <p className="text-sm text-muted-foreground">
+                           Select your institution from the list above. This will update the existing record.
+                         </p>
+                       </div>
+                       
+                       <div className="space-y-2">
+                         <Label htmlFor="member-update-date-joined" className="text-gray-700 font-medium text-sm">
+                           Approximate Date your institution joined HESS <span className="text-red-600">*</span>
+                         </Label>
+                         <Input
+                           id="member-update-date-joined"
+                           type="date"
+                           value={signUpForm.approximateDateJoinedHess}
+                           onChange={(e) => setSignUpForm(prev => ({ ...prev, approximateDateJoinedHess: e.target.value }))}
+                           className="h-11 bg-gray-50 border-gray-300"
+                           disabled={!isReassignment}
+                           required
+                         />
+                         <p className="text-sm text-muted-foreground">
+                           Please provide the approximate date when your institution became a HESS member.
+                         </p>
+                       </div>
+                     </div>
                     
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div className="lg:col-span-2 flex items-center space-x-2">

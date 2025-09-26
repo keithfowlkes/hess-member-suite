@@ -259,36 +259,46 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               <CardTitle>Organization Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="org_name">Organization Name</Label>
-                  <Input
-                    id="org_name"
-                    value={editedData.organization.name || ''}
-                    onChange={(e) => updateOrganizationField('name', e.target.value)}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="student_fte">Student FTE</Label>
-                  <Input
-                    id="student_fte"
-                    type="number"
-                    value={editedData.organization.student_fte || ''}
-                    onChange={(e) => updateOrganizationField('student_fte', parseInt(e.target.value) || null)}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="org_website">Website</Label>
-                  <Input
-                    id="org_website"
-                    value={editedData.organization.website || ''}
-                    onChange={(e) => updateOrganizationField('website', e.target.value)}
-                    disabled={!isEditing}
-                  />
-                </div>
-              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div>
+                   <Label htmlFor="org_name">Organization Name</Label>
+                   <Input
+                     id="org_name"
+                     value={editedData.organization.name || ''}
+                     onChange={(e) => updateOrganizationField('name', e.target.value)}
+                     disabled={!isEditing}
+                   />
+                 </div>
+                 <div>
+                   <Label htmlFor="student_fte">Student FTE</Label>
+                   <Input
+                     id="student_fte"
+                     type="number"
+                     value={editedData.organization.student_fte || ''}
+                     onChange={(e) => updateOrganizationField('student_fte', parseInt(e.target.value) || null)}
+                     disabled={!isEditing}
+                   />
+                 </div>
+                 <div>
+                   <Label htmlFor="org_website">Website</Label>
+                   <Input
+                     id="org_website"
+                     value={editedData.organization.website || ''}
+                     onChange={(e) => updateOrganizationField('website', e.target.value)}
+                     disabled={!isEditing}
+                   />
+                 </div>
+                 <div>
+                   <Label htmlFor="org_date_joined">Approximate Date Joined HESS</Label>
+                   <Input
+                     id="org_date_joined"
+                     type="date"
+                     value={editedData.organization.approximate_date_joined_hess || ''}
+                     onChange={(e) => updateOrganizationField('approximate_date_joined_hess', e.target.value)}
+                     disabled={!isEditing}
+                   />
+                 </div>
+               </div>
             </CardContent>
           </Card>
         </>
