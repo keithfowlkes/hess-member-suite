@@ -95,9 +95,11 @@ const handler = async (req: Request): Promise<Response> => {
         emailType = 'admin_new_registration';
         templateData = {
           user_name: 'Administrator',
+          notification_title: 'New Member Registration Pending Review',
+          notification_message: 'A new member registration has been submitted and is waiting for your review.',
+          notification_type: 'New Member Registration',
           organization_name: requestData.registrationData?.organization_name || 'Unknown Organization',
-          submitted_email: requestData.registrationData?.email || 'Unknown Email',
-          registration_type: 'New Member Registration'
+          submitted_email: requestData.registrationData?.email || 'Unknown Email'
         };
         break;
 
@@ -106,9 +108,11 @@ const handler = async (req: Request): Promise<Response> => {
         emailType = 'admin_member_update';
         templateData = {
           user_name: 'Administrator',
+          notification_title: 'Member Profile Update Pending Review',
+          notification_message: 'A member profile update request has been submitted and is waiting for your review.',
+          notification_type: 'Member Profile Update',
           organization_name: requestData.updateData?.organization_name || 'Unknown Organization',
-          submitted_email: requestData.updateData?.submitted_email || 'Unknown Email',
-          update_type: 'Member Profile Update'
+          submitted_email: requestData.updateData?.submitted_email || 'Unknown Email'
         };
         break;
 
@@ -117,9 +121,11 @@ const handler = async (req: Request): Promise<Response> => {
         emailType = 'admin_contact_transfer';
         templateData = {
           user_name: 'Administrator',
+          notification_title: 'Contact Transfer Request Pending Review',
+          notification_message: 'An organization contact transfer request has been submitted and is waiting for your review.',
+          notification_type: 'Contact Transfer Request',
           organization_name: requestData.updateData?.organization_name || 'Unknown Organization',
-          submitted_email: requestData.updateData?.new_contact_email || 'Unknown Email',
-          transfer_type: 'Contact Transfer Request'
+          submitted_email: requestData.updateData?.new_contact_email || 'Unknown Email'
         };
         break;
 
@@ -128,7 +134,11 @@ const handler = async (req: Request): Promise<Response> => {
         emailType = 'admin_test_notification';
         templateData = {
           user_name: 'Administrator',
-          test_message: requestData.message || 'This is a test notification from the HESS Consortium notification system.'
+          notification_title: 'System Test Notification',
+          notification_message: requestData.message || 'This is a test notification from the HESS Consortium notification system.',
+          notification_type: 'System Test',
+          organization_name: 'System Test',
+          submitted_email: 'system@hessconsortium.org'
         };
         break;
 
