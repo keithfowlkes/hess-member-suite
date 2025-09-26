@@ -202,6 +202,16 @@ export default function Auth() {
     admissionsCrmOther: '',
     alumniAdvancementCrm: '',
     alumniAdvancementCrmOther: '',
+    paymentPlatform: '',
+    paymentPlatformOther: '',
+    mealPlanManagement: '',
+    mealPlanManagementOther: '',
+    identityManagement: '',
+    identityManagementOther: '',
+    doorAccess: '',
+    doorAccessOther: '',
+    documentManagement: '',
+    documentManagementOther: '',
     primaryOfficeApple: false,
     primaryOfficeLenovo: false,
     primaryOfficeDell: false,
@@ -668,6 +678,21 @@ export default function Auth() {
         alumniAdvancementCrm: signUpForm.alumniAdvancementCrm === 'Other' 
           ? signUpForm.alumniAdvancementCrmOther 
           : signUpForm.alumniAdvancementCrm,
+        paymentPlatform: signUpForm.paymentPlatform === 'Other' 
+          ? signUpForm.paymentPlatformOther 
+          : signUpForm.paymentPlatform,
+        mealPlanManagement: signUpForm.mealPlanManagement === 'Other' 
+          ? signUpForm.mealPlanManagementOther 
+          : signUpForm.mealPlanManagement,
+        identityManagement: signUpForm.identityManagement === 'Other' 
+          ? signUpForm.identityManagementOther 
+          : signUpForm.identityManagement,
+        doorAccess: signUpForm.doorAccess === 'Other' 
+          ? signUpForm.doorAccessOther 
+          : signUpForm.doorAccess,
+        documentManagement: signUpForm.documentManagement === 'Other' 
+          ? signUpForm.documentManagementOther 
+          : signUpForm.documentManagement,
       };
 
       // Store registration data for admin approval instead of creating user immediately
@@ -712,6 +737,11 @@ export default function Auth() {
           learning_management: formDataWithCustomValues.learningManagement,
           admissions_crm: formDataWithCustomValues.admissionsCrm,
           alumni_advancement_crm: formDataWithCustomValues.alumniAdvancementCrm,
+          payment_platform: formDataWithCustomValues.paymentPlatform,
+          meal_plan_management: formDataWithCustomValues.mealPlanManagement,
+          identity_management: formDataWithCustomValues.identityManagement,
+          door_access: formDataWithCustomValues.doorAccess,
+          document_management: formDataWithCustomValues.documentManagement,
           primary_office_apple: formDataWithCustomValues.primaryOfficeApple,
           primary_office_asus: formDataWithCustomValues.primaryOfficeLenovo,
           primary_office_dell: formDataWithCustomValues.primaryOfficeDell,
@@ -774,6 +804,11 @@ export default function Auth() {
                 learning_management: formDataWithCustomValues.learningManagement,
                 admissions_crm: formDataWithCustomValues.admissionsCrm,
                 alumni_advancement_crm: formDataWithCustomValues.alumniAdvancementCrm,
+                payment_platform: formDataWithCustomValues.paymentPlatform,
+                meal_plan_management: formDataWithCustomValues.mealPlanManagement,
+                identity_management: formDataWithCustomValues.identityManagement,
+                door_access: formDataWithCustomValues.doorAccess,
+                document_management: formDataWithCustomValues.documentManagement,
                 primary_office_apple: formDataWithCustomValues.primaryOfficeApple,
                 primary_office_asus: formDataWithCustomValues.primaryOfficeLenovo,
                 primary_office_dell: formDataWithCustomValues.primaryOfficeDell,
@@ -1751,6 +1786,53 @@ export default function Auth() {
                         />
                       </div>
                     </div>
+
+                    {/* Additional System Management */}
+                    <div>
+                      <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Additional System Management</h4>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <EnhancedSystemFieldSelect
+                          fieldName="payment_platform"
+                          label="Payment Platform"
+                          value={signUpForm.paymentPlatform}
+                          onChange={(value) => setSignUpForm(prev => ({ ...prev, paymentPlatform: value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
+                        />
+                        <EnhancedSystemFieldSelect
+                          fieldName="meal_plan_management"
+                          label="Meal Plan Management"
+                          value={signUpForm.mealPlanManagement}
+                          onChange={(value) => setSignUpForm(prev => ({ ...prev, mealPlanManagement: value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
+                        />
+                        <EnhancedSystemFieldSelect
+                          fieldName="identity_management"
+                          label="Identity Management"
+                          value={signUpForm.identityManagement}
+                          onChange={(value) => setSignUpForm(prev => ({ ...prev, identityManagement: value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
+                        />
+                        <EnhancedSystemFieldSelect
+                          fieldName="door_access"
+                          label="Door Access"
+                          value={signUpForm.doorAccess}
+                          onChange={(value) => setSignUpForm(prev => ({ ...prev, doorAccess: value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
+                        />
+                        <EnhancedSystemFieldSelect
+                          fieldName="document_management"
+                          label="Document Management"
+                          value={signUpForm.documentManagement}
+                          onChange={(value) => setSignUpForm(prev => ({ ...prev, documentManagement: value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -2481,6 +2563,58 @@ export default function Auth() {
                             label="Alumni & Advancement CRM"
                             value={signUpForm.alumniAdvancementCrm}
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, alumniAdvancementCrm: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                            required={true}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Additional System Management */}
+                      <div>
+                        <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Additional System Management</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <EnhancedSystemFieldSelect
+                            fieldName="payment_platform"
+                            label="Payment Platform"
+                            value={signUpForm.paymentPlatform}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, paymentPlatform: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                            required={true}
+                          />
+                          <EnhancedSystemFieldSelect
+                            fieldName="meal_plan_management"
+                            label="Meal Plan Management"
+                            value={signUpForm.mealPlanManagement}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, mealPlanManagement: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                            required={true}
+                          />
+                          <EnhancedSystemFieldSelect
+                            fieldName="identity_management"
+                            label="Identity Management"
+                            value={signUpForm.identityManagement}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, identityManagement: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                            required={true}
+                          />
+                          <EnhancedSystemFieldSelect
+                            fieldName="door_access"
+                            label="Door Access"
+                            value={signUpForm.doorAccess}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, doorAccess: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                            required={true}
+                          />
+                          <EnhancedSystemFieldSelect
+                            fieldName="document_management"
+                            label="Document Management"
+                            value={signUpForm.documentManagement}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, documentManagement: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
                             required={true}
