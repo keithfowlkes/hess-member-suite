@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PublicOrganizationDirectory } from '@/components/PublicOrganizationDirectory';
 import { SimpleSystemFieldManager } from '@/components/SimpleSystemFieldManager';
 import { SystemFieldNormalizer } from '@/components/SystemFieldNormalizer';
-import { SimplifiedMemberRegistrationManagement } from '@/components/SimplifiedMemberRegistrationManagement';
+import { RegistrationNotificationsManager } from '@/components/RegistrationNotificationsManager';
 import { PublicLogoManager } from '@/components/PublicLogoManager';
 import { HeaderGraphicManager } from '@/components/HeaderGraphicManager';
 import { AuthPageFieldsManager } from '@/components/AuthPageFieldsManager';
@@ -592,7 +592,7 @@ export default function Settings() {
                   <nav className="space-y-1">
                     {[
                       { id: 'overview', label: 'Overview', icon: BarChart3, description: 'System statistics and analytics' },
-                      { id: 'forms', label: 'Member Management', icon: Users, description: 'Registration and user management' },
+                      { id: 'notifications', label: 'Registration Notifications', icon: Users, description: 'Email alerts for pending reviews' },
                       { id: 'fields', label: 'Field Options', icon: FormInput, description: 'Configure dropdown options' },
                       { id: 'public', label: 'Public Views', icon: Eye, description: 'Public-facing content' },
                       { id: 'security', label: 'Security Settings', icon: Shield, description: 'Authentication and security' },
@@ -727,22 +727,16 @@ export default function Settings() {
                   </div>
                 )}
 
-                {/* Member Management Section */}
-                {activeSection === 'forms' && (
+                {/* Registration Notifications Section */}
+                {activeSection === 'notifications' && (
                   <div className="space-y-6">
-                {/* New Simplified Registration Management */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold">Member Registration Updates</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Review and approve member registration updates and primary contact changes
+                      <h2 className="text-2xl font-semibold">Registration Notifications</h2>
+                      <p className="text-muted-foreground">
+                        Configure email notifications for pending registrations and member updates
                       </p>
                     </div>
-                  </div>
-                  
-                  <SimplifiedMemberRegistrationManagement />
-                </div>
+                    <RegistrationNotificationsManager />
                   </div>
                 )}
 
