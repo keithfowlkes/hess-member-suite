@@ -669,13 +669,17 @@ export type Database = {
           contact_person_id: string | null
           country: string | null
           created_at: string
+          document_management: string | null
+          door_access: string | null
           email: string | null
           financial_aid: string | null
           financial_system: string | null
           hcm_hr: string | null
           housing_management: string | null
           id: string
+          identity_management: string | null
           learning_management: string | null
+          meal_plan_management: string | null
           membership_end_date: string | null
           membership_start_date: string | null
           membership_status:
@@ -685,6 +689,7 @@ export type Database = {
           notes: string | null
           organization_type: string | null
           other_software_comments: string | null
+          payment_platform: string | null
           payroll_system: string | null
           phone: string | null
           primary_contact_title: string | null
@@ -719,13 +724,17 @@ export type Database = {
           contact_person_id?: string | null
           country?: string | null
           created_at?: string
+          document_management?: string | null
+          door_access?: string | null
           email?: string | null
           financial_aid?: string | null
           financial_system?: string | null
           hcm_hr?: string | null
           housing_management?: string | null
           id?: string
+          identity_management?: string | null
           learning_management?: string | null
+          meal_plan_management?: string | null
           membership_end_date?: string | null
           membership_start_date?: string | null
           membership_status?:
@@ -735,6 +744,7 @@ export type Database = {
           notes?: string | null
           organization_type?: string | null
           other_software_comments?: string | null
+          payment_platform?: string | null
           payroll_system?: string | null
           phone?: string | null
           primary_contact_title?: string | null
@@ -769,13 +779,17 @@ export type Database = {
           contact_person_id?: string | null
           country?: string | null
           created_at?: string
+          document_management?: string | null
+          door_access?: string | null
           email?: string | null
           financial_aid?: string | null
           financial_system?: string | null
           hcm_hr?: string | null
           housing_management?: string | null
           id?: string
+          identity_management?: string | null
           learning_management?: string | null
+          meal_plan_management?: string | null
           membership_end_date?: string | null
           membership_start_date?: string | null
           membership_status?:
@@ -785,6 +799,7 @@ export type Database = {
           notes?: string | null
           organization_type?: string | null
           other_software_comments?: string | null
+          payment_platform?: string | null
           payroll_system?: string | null
           phone?: string | null
           primary_contact_title?: string | null

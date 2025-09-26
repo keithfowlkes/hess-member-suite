@@ -101,6 +101,11 @@ const profileSchema = z.object({
   learning_management: z.string().optional(),
   admissions_crm: z.string().optional(),
   alumni_advancement_crm: z.string().optional(),
+  payment_platform: z.string().optional(),
+  meal_plan_management: z.string().optional(),
+  identity_management: z.string().optional(),
+  door_access: z.string().optional(),
+  document_management: z.string().optional(),
   primary_office_apple: z.boolean().optional(),
   primary_office_asus: z.boolean().optional(),
   primary_office_dell: z.boolean().optional(),
@@ -136,6 +141,11 @@ function SystemFieldsSection({ profileForm }: SystemFieldsSectionProps) {
     { key: 'learning_management', label: 'Learning Management System' },
     { key: 'admissions_crm', label: 'Admissions CRM' },
     { key: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM' },
+    { key: 'payment_platform', label: 'Payment Platform' },
+    { key: 'meal_plan_management', label: 'Meal Plan Management' },
+    { key: 'identity_management', label: 'Identity Management' },
+    { key: 'door_access', label: 'Door Access' },
+    { key: 'document_management', label: 'Document Management' },
   ];
 
   return (

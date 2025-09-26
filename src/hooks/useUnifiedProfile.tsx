@@ -34,6 +34,11 @@ export interface UnifiedProfile {
     learning_management?: string;
     admissions_crm?: string;
     alumni_advancement_crm?: string;
+    payment_platform?: string;
+    meal_plan_management?: string;
+    identity_management?: string;
+    door_access?: string;
+    document_management?: string;
     // Hardware fields - available for all users
     primary_office_apple?: boolean;
     primary_office_asus?: boolean;
@@ -76,6 +81,11 @@ export interface UnifiedProfile {
     learning_management?: string;
     admissions_crm?: string;
     alumni_advancement_crm?: string;
+    payment_platform?: string;
+    meal_plan_management?: string;
+    identity_management?: string;
+    door_access?: string;
+    document_management?: string;
     // Hardware fields
     primary_office_apple?: boolean;
     primary_office_asus?: boolean;

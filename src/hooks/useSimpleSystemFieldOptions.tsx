@@ -20,7 +20,12 @@ export const SYSTEM_FIELDS = [
   'housing_management',
   'learning_management',
   'admissions_crm',
-  'alumni_advancement_crm'
+  'alumni_advancement_crm',
+  'payment_platform',
+  'meal_plan_management',
+  'identity_management',
+  'door_access',
+  'document_management'
 ] as const;
 
 export type SystemField = typeof SYSTEM_FIELDS[number];
@@ -35,7 +40,12 @@ export const FIELD_LABELS: Record<SystemField, string> = {
   housing_management: 'Housing Management',
   learning_management: 'Learning Management (LMS)',
   admissions_crm: 'Admissions CRM',
-  alumni_advancement_crm: 'Alumni / Advancement CRM'
+  alumni_advancement_crm: 'Alumni / Advancement CRM',
+  payment_platform: 'Payment Platform',
+  meal_plan_management: 'Meal Plan Management',
+  identity_management: 'Identity Management',
+  door_access: 'Door Access',
+  document_management: 'Document Management'
 };
 
 // Get all system field options

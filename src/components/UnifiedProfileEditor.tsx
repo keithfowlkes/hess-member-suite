@@ -557,6 +557,41 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               onChange={(value) => updateProfileField('alumni_advancement_crm', value)}
               disabled={!isEditing}
             />
+            <EnhancedSystemFieldSelect
+              fieldName="payment_platform"
+              label="Payment Platform"
+              value={editedData.profile.payment_platform || ''}
+              onChange={(value) => updateProfileField('payment_platform', value)}
+              disabled={!isEditing}
+            />
+            <EnhancedSystemFieldSelect
+              fieldName="meal_plan_management"
+              label="Meal Plan Management"
+              value={editedData.profile.meal_plan_management || ''}
+              onChange={(value) => updateProfileField('meal_plan_management', value)}
+              disabled={!isEditing}
+            />
+            <EnhancedSystemFieldSelect
+              fieldName="identity_management"
+              label="Identity Management"
+              value={editedData.profile.identity_management || ''}
+              onChange={(value) => updateProfileField('identity_management', value)}
+              disabled={!isEditing}
+            />
+            <EnhancedSystemFieldSelect
+              fieldName="door_access"
+              label="Door Access"
+              value={editedData.profile.door_access || ''}
+              onChange={(value) => updateProfileField('door_access', value)}
+              disabled={!isEditing}
+            />
+            <EnhancedSystemFieldSelect
+              fieldName="document_management"
+              label="Document Management"
+              value={editedData.profile.document_management || ''}
+              onChange={(value) => updateProfileField('document_management', value)}
+              disabled={!isEditing}
+            />
           </div>
         </CardContent>
       </Card>
