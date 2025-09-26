@@ -460,7 +460,7 @@ const MasterDashboard = () => {
       clickable: false
     },
     {
-      title: 'Total Student FTE',
+      title: 'Total Student FTE Represented by HESS Member Institutions',
       value: statsLoading ? '...' : dashboardStats.totalStudentFte.toLocaleString(),
       icon: BarChart3,
       color: 'text-indigo-600'

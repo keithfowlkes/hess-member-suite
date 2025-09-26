@@ -311,7 +311,7 @@ const Index = () => {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Student FTE</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Student FTE Represented by HESS Member Institutions</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">
