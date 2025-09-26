@@ -2256,6 +2256,89 @@ export default function Auth() {
                     </div>
                   </div>
 
+                  {/* Secondary Contact */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Secondary Contact</h3>
+                      <p className="text-gray-600 text-sm">Optional backup contact information.</p>
+                    </div>
+                    
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="member-update-secondary-firstname" className="text-gray-700 font-medium text-sm">
+                            First Name
+                          </Label>
+                          <Input
+                            id="member-update-secondary-firstname"
+                            placeholder="First name"
+                            value={signUpForm.secondaryFirstName}
+                            onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryFirstName: e.target.value }))}
+                            className="h-11 bg-gray-50 border-gray-300"
+                            disabled={!isReassignment}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="member-update-secondary-lastname" className="text-gray-700 font-medium text-sm">
+                            Last Name
+                          </Label>
+                          <Input
+                            id="member-update-secondary-lastname"
+                            placeholder="Last name"
+                            value={signUpForm.secondaryLastName}
+                            onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryLastName: e.target.value }))}
+                            className="h-11 bg-gray-50 border-gray-300"
+                            disabled={!isReassignment}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="member-update-secondary-contact-title" className="text-gray-700 font-medium text-sm">
+                            Job Title
+                          </Label>
+                          <Input
+                            id="member-update-secondary-contact-title"
+                            placeholder="Job title"
+                            value={signUpForm.secondaryContactTitle}
+                            onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactTitle: e.target.value }))}
+                            className="h-11 bg-gray-50 border-gray-300"
+                            disabled={!isReassignment}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="member-update-secondary-contact-email" className="text-gray-700 font-medium text-sm">
+                            Email Address
+                          </Label>
+                          <Input
+                            id="member-update-secondary-contact-email"
+                            type="email"
+                            placeholder="secondary.contact@institution.edu"
+                            value={signUpForm.secondaryContactEmail}
+                            onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactEmail: e.target.value }))}
+                            className="h-11 bg-gray-50 border-gray-300"
+                            disabled={!isReassignment}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="member-update-secondary-contact-phone" className="text-gray-700 font-medium text-sm">
+                            Phone Number
+                          </Label>
+                          <Input
+                            id="member-update-secondary-contact-phone"
+                            type="tel"
+                            placeholder="(555) 123-4567"
+                            value={signUpForm.secondaryContactPhone}
+                            onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactPhone: e.target.value }))}
+                            className="h-11 bg-gray-50 border-gray-300"
+                            disabled={!isReassignment}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Technology Systems */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="mb-6">
