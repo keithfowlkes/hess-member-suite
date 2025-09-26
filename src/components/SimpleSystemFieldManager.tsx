@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Edit2, Trash2, X, Check } from 'lucide-react';
 import { 
   useSimpleSystemFieldOptions,
@@ -22,16 +22,17 @@ export function SimpleSystemFieldManager() {
   const updateOption = useUpdateSimpleSystemFieldOption();
   const deleteOption = useDeleteSimpleSystemFieldOption();
 
+  const [selectedField, setSelectedField] = useState<SystemField>(SYSTEM_FIELDS[0]);
   const [newValues, setNewValues] = useState<Record<SystemField, string>>({} as any);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
 
-  const handleAddOption = async (fieldName: SystemField) => {
-    const value = newValues[fieldName]?.trim();
+  const handleAddOption = async () => {
+    const value = newValues[selectedField]?.trim();
     if (!value) return;
 
-    await addOption.mutateAsync({ fieldName, optionValue: value });
-    setNewValues(prev => ({ ...prev, [fieldName]: '' }));
+    await addOption.mutateAsync({ fieldName: selectedField, optionValue: value });
+    setNewValues(prev => ({ ...prev, [selectedField]: '' }));
   };
 
   const handleStartEdit = (id: string, currentValue: string) => {
@@ -62,6 +63,8 @@ export function SimpleSystemFieldManager() {
     return options.filter(opt => opt.field_name === fieldName);
   };
 
+  const selectedFieldOptions = getOptionsForField(selectedField);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -79,128 +82,123 @@ export function SimpleSystemFieldManager() {
         </p>
       </div>
 
-      <Tabs defaultValue={SYSTEM_FIELDS[0]} className="w-full">
-        <div className="grid grid-cols-2 gap-2">
-          <TabsList className="grid w-full grid-cols-5 gap-1">
-            {SYSTEM_FIELDS.slice(0, 5).map((field) => (
-              <TabsTrigger key={field} value={field} className="text-xs p-2">
-                {FIELD_LABELS[field].split(' ')[0]}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          <TabsList className="grid w-full grid-cols-5 gap-1">
-            {SYSTEM_FIELDS.slice(5).map((field) => (
-              <TabsTrigger key={field} value={field} className="text-xs p-2">
-                {FIELD_LABELS[field].split(' ')[0]}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+      <div className="space-y-4">
+        {/* Field Selector */}
+        <div className="flex items-center gap-4">
+          <Label htmlFor="field-selector" className="font-medium">
+            Select Field Type:
+          </Label>
+          <Select value={selectedField} onValueChange={(value: SystemField) => setSelectedField(value)}>
+            <SelectTrigger id="field-selector" className="w-80">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border-border z-50">
+              {SYSTEM_FIELDS.map((field) => (
+                <SelectItem key={field} value={field}>
+                  {FIELD_LABELS[field]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        {SYSTEM_FIELDS.map((field) => {
-          const fieldOptions = getOptionsForField(field);
-          
-          return (
-            <TabsContent key={field} value={field}>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    <span>{FIELD_LABELS[field]}</span>
-                    <Badge variant="secondary">{fieldOptions.length} options</Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    Manage dropdown options for {FIELD_LABELS[field].toLowerCase()}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Add new option */}
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Label htmlFor={`new-${field}`}>Add New Option</Label>
-                      <Input
-                        id={`new-${field}`}
-                        placeholder="Enter new option..."
-                        value={newValues[field] || ''}
-                        onChange={(e) => setNewValues(prev => ({ ...prev, [field]: e.target.value }))}
-                        onKeyPress={(e) => e.key === 'Enter' && handleAddOption(field)}
-                      />
-                    </div>
-                    <Button 
-                      onClick={() => handleAddOption(field)}
-                      disabled={!newValues[field]?.trim() || addOption.isPending}
-                      className="mt-6"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add
-                    </Button>
-                  </div>
+        {/* Selected Field Management */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex justify-between items-center">
+              <span>{FIELD_LABELS[selectedField]}</span>
+              <Badge variant="secondary">{selectedFieldOptions.length} options</Badge>
+            </CardTitle>
+            <CardDescription>
+              Manage dropdown options for {FIELD_LABELS[selectedField].toLowerCase()}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Add new option */}
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Label htmlFor="new-option">Add New Option</Label>
+                <Input
+                  id="new-option"
+                  placeholder="Enter new option..."
+                  value={newValues[selectedField] || ''}
+                  onChange={(e) => setNewValues(prev => ({ ...prev, [selectedField]: e.target.value }))}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddOption()}
+                />
+              </div>
+              <Button 
+                onClick={handleAddOption}
+                disabled={!newValues[selectedField]?.trim() || addOption.isPending}
+                className="mt-6"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add
+              </Button>
+            </div>
 
-                  {/* Existing options */}
-                  <div className="space-y-2">
-                    <Label>Current Options</Label>
-                    {fieldOptions.length === 0 ? (
-                      <p className="text-muted-foreground text-sm p-4 text-center border rounded-lg">
-                        No options configured yet. Add options above to populate dropdown menus.
-                      </p>
-                    ) : (
-                      <div className="grid gap-2 max-h-64 overflow-y-auto">
-                        {fieldOptions.map((option) => (
-                          <div key={option.id} className="flex items-center gap-2 p-3 border rounded-lg bg-muted/30">
-                            {editingId === option.id ? (
-                              <>
-                                <Input
-                                  value={editValue}
-                                  onChange={(e) => setEditValue(e.target.value)}
-                                  className="flex-1"
-                                  onKeyPress={(e) => e.key === 'Enter' && handleSaveEdit()}
-                                />
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={handleSaveEdit}
-                                  disabled={updateOption.isPending}
-                                >
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={handleCancelEdit}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <span className="flex-1 font-medium">{option.option_value}</span>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleStartEdit(option.id, option.option_value)}
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleDeleteOption(option.id)}
-                                  disabled={deleteOption.isPending}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          );
-        })}
-      </Tabs>
+            {/* Existing options */}
+            <div className="space-y-2">
+              <Label>Current Options</Label>
+              {selectedFieldOptions.length === 0 ? (
+                <p className="text-muted-foreground text-sm p-4 text-center border rounded-lg">
+                  No options configured yet. Add options above to populate dropdown menus.
+                </p>
+              ) : (
+                <div className="grid gap-2 max-h-64 overflow-y-auto">
+                  {selectedFieldOptions.map((option) => (
+                    <div key={option.id} className="flex items-center gap-2 p-3 border rounded-lg bg-muted/30">
+                      {editingId === option.id ? (
+                        <>
+                          <Input
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="flex-1"
+                            onKeyPress={(e) => e.key === 'Enter' && handleSaveEdit()}
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleSaveEdit}
+                            disabled={updateOption.isPending}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleCancelEdit}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="flex-1 font-medium">{option.option_value}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleStartEdit(option.id, option.option_value)}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteOption(option.id)}
+                            disabled={deleteOption.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
