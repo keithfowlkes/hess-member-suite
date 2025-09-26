@@ -133,7 +133,7 @@ export default function MembershipFees() {
   const [organizationSearchTerm, setOrganizationSearchTerm] = useState('');
   
   // Member view dashboard toggle
-  const [showMemberViewItems, setShowMemberViewItems] = useState(false);
+  const [showMemberViewItems, setShowMemberViewItems] = useState(true);
 
   // Setup default invoice template with HESS logo on component mount
   React.useEffect(() => {
@@ -1420,8 +1420,13 @@ export default function MembershipFees() {
                 </Card>
 
                 {/* Member View Dashboard Items */}
-                {showMemberViewItems ? (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {(() => {
+                  console.log('showMemberViewItems state:', showMemberViewItems);
+                  return showMemberViewItems ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="col-span-full bg-blue-100 p-2 text-center text-sm font-medium text-blue-800 rounded">
+                        🔍 DEBUG: These blocks should only show when toggle is ON (Current state: {showMemberViewItems.toString()})
+                      </div>
                     {/* Next Renewal Card */}
                     <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50 border-blue-100/50 hover:shadow-md hover:shadow-blue-100/20 transition-all duration-300 hover:scale-105 group">
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/10"></div>
@@ -1484,8 +1489,13 @@ export default function MembershipFees() {
                         </div>
                       </CardContent>
                     </Card>
-                  </div>
-                ) : null}
+                    </div>
+                  ) : (
+                    <div className="bg-red-100 p-4 text-center text-sm font-medium text-red-800 rounded mb-6">
+                      🔍 DEBUG: Toggle is OFF - These blocks should be hidden
+                    </div>
+                  );
+                })()}
 
                 {/* Annual Fee Tier Pricing Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
