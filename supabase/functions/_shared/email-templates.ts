@@ -135,6 +135,12 @@ export async function getEmailTemplate(emailType: string, includeRecipients: boo
       case 'organization_update_alert':
         settingKey = 'organization_update_alert_template';
         break;
+      case 'admin_new_registration':
+      case 'admin_member_update':
+      case 'admin_contact_transfer':
+      case 'admin_test_notification':
+        settingKey = 'admin_notification_template';
+        break;
       default:
         settingKey = `${emailType}_message_template`;
     }
@@ -188,105 +194,21 @@ export async function getEmailTemplate(emailType: string, includeRecipients: boo
         case 'member_info_update':
           templateSubject = 'Profile Update Approved';
           break;
-    // Add email templates for admin notifications
-    case 'admin_new_registration':
-      subject = 'New Member Registration Pending Review';
-      template = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
-          <h2 style="color: {{primary_color}}; margin-bottom: 20px;">New Registration Pending Review</h2>
-          
-          <p>Dear {{user_name}},</p>
-          
-          <p>A new member registration has been submitted and is waiting for your review in the HESS Consortium admin panel.</p>
-          
-          <div style="background-color: {{card_background}}; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid {{primary_color}};">
-            <p><strong>Organization:</strong> {{organization_name}}</p>
-            <p><strong>Contact Email:</strong> {{submitted_email}}</p>
-            <p><strong>Type:</strong> {{registration_type}}</p>
-            <p><strong>Status:</strong> Pending Review</p>
-          </div>
-          
-          <p>Please log in to the admin panel to review and approve this registration.</p>
-          
-          <p>Best regards,<br>
-          <span style="color: {{primary_color}};">HESS Consortium System</span></p>
-        </div>
-      `;
-      break;
-
-    case 'admin_member_update':
-      subject = 'Member Profile Update Pending Review';
-      template = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
-          <h2 style="color: {{primary_color}}; margin-bottom: 20px;">Member Update Pending Review</h2>
-          
-          <p>Dear {{user_name}},</p>
-          
-          <p>A member profile update has been submitted and is waiting for your review in the HESS Consortium admin panel.</p>
-          
-          <div style="background-color: {{card_background}}; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid {{primary_color}};">
-            <p><strong>Organization:</strong> {{organization_name}}</p>
-            <p><strong>Submitted by:</strong> {{submitted_email}}</p>
-            <p><strong>Type:</strong> {{update_type}}</p>
-            <p><strong>Status:</strong> Pending Review</p>
-          </div>
-          
-          <p>Please log in to the admin panel to review and approve this update.</p>
-          
-          <p>Best regards,<br>
-          <span style="color: {{primary_color}};">HESS Consortium System</span></p>
-        </div>
-      `;
-      break;
-
-    case 'admin_contact_transfer':
-      subject = 'Contact Transfer Request Pending Review';
-      template = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
-          <h2 style="color: {{primary_color}}; margin-bottom: 20px;">Contact Transfer Pending Review</h2>
-          
-          <p>Dear {{user_name}},</p>
-          
-          <p>An organization contact transfer request has been submitted and is waiting for your review in the HESS Consortium admin panel.</p>
-          
-          <div style="background-color: {{card_background}}; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid {{primary_color}};">
-            <p><strong>Organization:</strong> {{organization_name}}</p>
-            <p><strong>New Contact:</strong> {{submitted_email}}</p>
-            <p><strong>Type:</strong> {{transfer_type}}</p>
-            <p><strong>Status:</strong> Pending Review</p>
-          </div>
-          
-          <p>Please log in to the admin panel to review and approve this transfer request.</p>
-          
-          <p>Best regards,<br>
-          <span style="color: {{primary_color}};">HESS Consortium System</span></p>
-        </div>
-      `;
-      break;
-
-    case 'admin_test_notification':
-      subject = 'HESS Consortium - Notification System Test';
-      template = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
-          <h2 style="color: {{primary_color}}; margin-bottom: 20px;">Notification System Test</h2>
-          
-          <p>Dear {{user_name}},</p>
-          
-          <p>{{test_message}}</p>
-          
-          <div style="background-color: {{card_background}}; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid {{primary_color}};">
-            <p><strong>Test Status:</strong> ✅ Successfully delivered</p>
-            <p><strong>System:</strong> HESS Consortium Registration Notifications</p>
-            <p><strong>Time:</strong> {{current_timestamp}}</p>
-          </div>
-          
-          <p>If you received this message, the notification system is working correctly.</p>
-          
-          <p>Best regards,<br>
-          <span style="color: {{primary_color}};">HESS Consortium System</span></p>
-        </div>
-      `;
-      break;
+        case 'organization_update_alert':
+          templateSubject = 'Organization Update Alert';
+          break;
+        case 'admin_new_registration':
+          templateSubject = 'New Member Registration Pending Review';
+          break;
+        case 'admin_member_update':
+          templateSubject = 'Member Profile Update Pending Review';
+          break;
+        case 'admin_contact_transfer':
+          templateSubject = 'Contact Transfer Request Pending Review';
+          break;
+        case 'admin_test_notification':
+          templateSubject = 'HESS Consortium - Notification System Test';
+          break;
           templateSubject = 'Organization Update Alert - Action Required';
           break;
         default:

@@ -54,6 +54,9 @@ verify_jwt = true
 [functions.refresh-analytics-datacube]
 verify_jwt = true
 
+[functions.send-admin-notification]
+verify_jwt = true
+
 [functions.send-analytics-feedback]
 verify_jwt = true
 

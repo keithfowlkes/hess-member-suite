@@ -152,6 +152,22 @@ export function useMemberRegistrationUpdates() {
         throw error;
       }
 
+      // Send admin notification for new registration update
+      try {
+        await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'member_update',
+            updateData: {
+              organization_name: data.existing_organization_name || 'Unknown Organization',
+              submitted_email: data.submitted_email
+            }
+          }
+        });
+      } catch (adminNotificationError) {
+        console.warn('[useMemberRegistrationUpdates] Failed to send admin notification:', adminNotificationError);
+        // Don't fail the whole operation for notification errors
+      }
+
       return data;
     },
     onSuccess: (data, variables) => {
