@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search, Map, MessageSquare, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrganizationApprovals } from '@/hooks/useOrganizationApprovals';
 import { useOrganizationInvitations } from '@/hooks/useOrganizationInvitations';
@@ -32,6 +33,7 @@ import {
 export function AppSidebar() {
   const { state } = useSidebar();
   const { isAdmin, isViewingAsAdmin, toggleViewMode, signOut, user } = useAuth();
+  const { data: systemSettings } = useSystemSettings();
   const location = useLocation();
   
   // State for user role
@@ -80,6 +82,9 @@ export function AppSidebar() {
   // Check if user can access cohort information
   const canAccessCohortInfo = userRole === 'admin' || userRole === 'cohort_leader';
   
+  // Check if invoices menu should be shown in member view
+  const showInvoicesMenu = systemSettings?.find(s => s.setting_key === 'show_invoices_menu')?.setting_value === 'true';
+  
   console.log('Sidebar - userRole:', userRole, 'canAccessCohortInfo:', canAccessCohortInfo);
   console.log('Sidebar - current user:', user?.email, 'isViewingAsAdmin:', isViewingAsAdmin);
   
@@ -120,7 +125,7 @@ export function AppSidebar() {
     { title: 'HESS Member Information', url: '/research-dashboard', icon: Search },
     { title: 'Member Analytics', url: '/member-analytics', icon: BarChart3 },
     { title: 'Member Map', url: '/public-map', icon: Map },
-    { title: 'My Invoices', url: '/invoices', icon: FileText },
+    ...(showInvoicesMenu ? [{ title: 'My Invoices', url: '/invoices', icon: FileText }] : []),
     { title: 'Organization Profile', url: '/profile', icon: User },
     ...(canAccessCohortInfo ? [{ title: 'Your Cohort Information', url: '/cohort-information', icon: GraduationCap }] : []),
   ];

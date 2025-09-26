@@ -135,12 +135,20 @@ export default function MembershipFees() {
   // Member view dashboard toggle
   const [showMemberViewItems, setShowMemberViewItems] = useState(false);
 
-  // Load member view toggle setting
+  // Member invoices menu toggle
+  const [showInvoicesMenu, setShowInvoicesMenu] = useState(false);
+
+  // Load member view toggle settings
   React.useEffect(() => {
     if (systemSettings) {
       const memberViewSetting = systemSettings.find(s => s.setting_key === 'show_member_view_items')?.setting_value;
       if (memberViewSetting) {
         setShowMemberViewItems(memberViewSetting === 'true');
+      }
+      
+      const invoicesMenuSetting = systemSettings.find(s => s.setting_key === 'show_invoices_menu')?.setting_value;
+      if (invoicesMenuSetting) {
+        setShowInvoicesMenu(invoicesMenuSetting === 'true');
       }
     }
   }, [systemSettings]);
@@ -168,6 +176,32 @@ export default function MembershipFees() {
       });
       // Revert on error
       setShowMemberViewItems(!checked);
+    }
+  };
+
+  // Save invoices menu toggle setting
+  const handleToggleInvoicesMenu = async (checked: boolean) => {
+    setShowInvoicesMenu(checked);
+    try {
+      await updateSystemSetting.mutateAsync({
+        settingKey: 'show_invoices_menu',
+        settingValue: checked.toString(),
+        description: 'Controls visibility of My Invoices menu item in member view'
+      });
+      
+      toast({
+        title: "Setting Updated",
+        description: `My Invoices menu item is now ${checked ? 'visible' : 'hidden'} in member view.`
+      });
+    } catch (error) {
+      console.error('Error saving invoices menu setting:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save setting.",
+        variant: "destructive"
+      });
+      // Revert on error
+      setShowInvoicesMenu(!checked);
     }
   };
 
@@ -1401,6 +1435,18 @@ export default function MembershipFees() {
                           <Switch
                             id="member-view-toggle"
                             checked={showMemberViewItems}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="invoices-menu-toggle" className="text-sm">Show My Invoices Menu</Label>
+                        <div 
+                          className="cursor-pointer"
+                          onClick={() => handleToggleInvoicesMenu(!showInvoicesMenu)}
+                        >
+                          <Switch
+                            id="invoices-menu-toggle"
+                            checked={showInvoicesMenu}
                           />
                         </div>
                       </div>
