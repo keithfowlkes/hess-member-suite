@@ -176,6 +176,7 @@ export default function Auth() {
     state: '',
     zip: '',
     primaryContactTitle: '',
+    primaryContactPhone: '',
     secondaryFirstName: '',
     secondaryLastName: '',
     secondaryContactTitle: '',
@@ -1532,6 +1533,21 @@ export default function Auth() {
                         required
                       />
                     </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="primary-contact-phone" className="text-gray-700 font-medium text-sm">
+                        Phone Number
+                      </Label>
+                      <Input
+                        id="primary-contact-phone"
+                        type="tel"
+                        placeholder="(555) 123-4567"
+                        value={signUpForm.primaryContactPhone}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactPhone: e.target.value }))}
+                        className="h-11 bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -2081,6 +2097,20 @@ export default function Auth() {
                           className="h-11 bg-gray-50 border-gray-300 max-w-md"
                           disabled={!isReassignment}
                           required
+                        />
+                      </div>
+                      <div className="lg:col-span-2 space-y-2">
+                        <Label htmlFor="member-update-phone" className="text-gray-700 font-medium text-sm">
+                          Phone Number
+                        </Label>
+                        <Input
+                          id="member-update-phone"
+                          type="tel"
+                          placeholder="(555) 123-4567"
+                          value={signUpForm.primaryContactPhone}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactPhone: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300 max-w-md"
+                          disabled={!isReassignment}
                         />
                       </div>
                     </div>
