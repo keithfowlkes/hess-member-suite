@@ -203,7 +203,7 @@ export default function Auth() {
     alumniAdvancementCrm: '',
     alumniAdvancementCrmOther: '',
     primaryOfficeApple: false,
-    primaryOfficeAsus: false,
+    primaryOfficeLenovo: false,
     primaryOfficeDell: false,
     primaryOfficeHp: false,
     primaryOfficeMicrosoft: false,
@@ -526,7 +526,7 @@ export default function Auth() {
             ? signUpForm.alumniAdvancementCrmOther 
             : signUpForm.alumniAdvancementCrm,
           primary_office_apple: signUpForm.primaryOfficeApple,
-          primary_office_asus: signUpForm.primaryOfficeAsus,
+          primary_office_lenovo: signUpForm.primaryOfficeLenovo,
           primary_office_dell: signUpForm.primaryOfficeDell,
           primary_office_hp: signUpForm.primaryOfficeHp,
           primary_office_microsoft: signUpForm.primaryOfficeMicrosoft,
@@ -713,7 +713,7 @@ export default function Auth() {
           admissions_crm: formDataWithCustomValues.admissionsCrm,
           alumni_advancement_crm: formDataWithCustomValues.alumniAdvancementCrm,
           primary_office_apple: formDataWithCustomValues.primaryOfficeApple,
-          primary_office_asus: formDataWithCustomValues.primaryOfficeAsus,
+          primary_office_lenovo: formDataWithCustomValues.primaryOfficeLenovo,
           primary_office_dell: formDataWithCustomValues.primaryOfficeDell,
           primary_office_hp: formDataWithCustomValues.primaryOfficeHp,
           primary_office_microsoft: formDataWithCustomValues.primaryOfficeMicrosoft,
@@ -775,7 +775,7 @@ export default function Auth() {
                 admissions_crm: formDataWithCustomValues.admissionsCrm,
                 alumni_advancement_crm: formDataWithCustomValues.alumniAdvancementCrm,
                 primary_office_apple: formDataWithCustomValues.primaryOfficeApple,
-                primary_office_asus: formDataWithCustomValues.primaryOfficeAsus,
+                primary_office_lenovo: formDataWithCustomValues.primaryOfficeLenovo,
                 primary_office_dell: formDataWithCustomValues.primaryOfficeDell,
                 primary_office_hp: formDataWithCustomValues.primaryOfficeHp,
                 primary_office_microsoft: formDataWithCustomValues.primaryOfficeMicrosoft,
@@ -1777,12 +1777,12 @@ export default function Auth() {
                         </div>
                         <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                           <Checkbox
-                            id="asus"
-                            checked={signUpForm.primaryOfficeAsus}
-                            onCheckedChange={(checked) => setSignUpForm(prev => ({ ...prev, primaryOfficeAsus: !!checked }))}
+                            id="lenovo"
+                            checked={signUpForm.primaryOfficeLenovo}
+                            onCheckedChange={(checked) => setSignUpForm(prev => ({ ...prev, primaryOfficeLenovo: !!checked }))}
                             disabled={!signUpForm.isPrivateNonProfit}
                           />
-                          <Label htmlFor="asus" className="text-sm font-medium cursor-pointer">ASUS</Label>
+                          <Label htmlFor="lenovo" className="text-sm font-medium cursor-pointer">Lenovo</Label>
                         </div>
                         <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                           <Checkbox
@@ -2501,7 +2501,7 @@ export default function Auth() {
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {[
                           { key: 'primaryOfficeApple', label: 'Apple' },
-                          { key: 'primaryOfficeAsus', label: 'ASUS' },
+                          { key: 'primaryOfficeLenovo', label: 'Lenovo' },
                           { key: 'primaryOfficeDell', label: 'Dell' },
                           { key: 'primaryOfficeHp', label: 'HP' },
                           { key: 'primaryOfficeMicrosoft', label: 'Microsoft' },
