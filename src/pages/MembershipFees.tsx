@@ -1357,15 +1357,19 @@ export default function MembershipFees() {
                         Membership Term Settings
                       </CardTitle>
                       <div className="flex items-center gap-2">
-                        <Label htmlFor="member-view-toggle" className="text-sm">Show Member View Items</Label>
-                        <Switch
-                          id="member-view-toggle"
-                          checked={showMemberViewItems}
-                          onCheckedChange={(checked) => {
-                            console.log('Toggle changed to:', checked);
-                            setShowMemberViewItems(checked);
+                        <Label htmlFor="member-view-toggle" className="text-sm">Show Member Fees Information</Label>
+                        <div 
+                          className="cursor-pointer"
+                          onClick={() => {
+                            console.log('Toggle clicked, current state:', showMemberViewItems);
+                            setShowMemberViewItems(!showMemberViewItems);
                           }}
-                        />
+                        >
+                          <Switch
+                            id="member-view-toggle"
+                            checked={showMemberViewItems}
+                          />
+                        </div>
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -1416,10 +1420,8 @@ export default function MembershipFees() {
                 </Card>
 
                 {/* Member View Dashboard Items */}
-                {(() => {
-                  console.log('Rendering member view items, showMemberViewItems:', showMemberViewItems);
-                  return showMemberViewItems && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {showMemberViewItems ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     {/* Next Renewal Card */}
                     <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50 border-blue-100/50 hover:shadow-md hover:shadow-blue-100/20 transition-all duration-300 hover:scale-105 group">
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/10"></div>
@@ -1482,9 +1484,8 @@ export default function MembershipFees() {
                         </div>
                       </CardContent>
                     </Card>
-                    </div>
-                  );
-                })()}
+                  </div>
+                ) : null}
 
                 {/* Annual Fee Tier Pricing Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
