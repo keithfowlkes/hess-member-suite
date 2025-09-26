@@ -399,7 +399,7 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {[
                       { key: 'primary_office_apple', label: 'Apple' },
-                      { key: 'primary_office_asus', label: 'ASUS' },
+                      { key: 'primary_office_asus', label: 'Lenovo' },
                       { key: 'primary_office_dell', label: 'Dell' },
                       { key: 'primary_office_hp', label: 'HP' },
                       { key: 'primary_office_microsoft', label: 'Microsoft' },

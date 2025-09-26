@@ -217,7 +217,7 @@ export function SideBySideComparisonModal({
   // Hardware fields
   const hardwareFields = [
     { key: 'primary_office_apple', label: 'Apple Products', type: 'boolean' },
-    { key: 'primary_office_asus', label: 'ASUS Products', type: 'boolean' },
+    { key: 'primary_office_asus', label: 'Lenovo Products', type: 'boolean' },
     { key: 'primary_office_dell', label: 'Dell Products', type: 'boolean' },
     { key: 'primary_office_hp', label: 'HP Products', type: 'boolean' },
     { key: 'primary_office_microsoft', label: 'Microsoft Products', type: 'boolean' },

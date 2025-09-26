@@ -642,7 +642,7 @@ const ProfileEdit = () => {
                       onCheckedChange={(checked) => updateField('primary_office_asus', checked)}
                       disabled={!isEditing}
                     />
-                    <Label htmlFor="primary_office_asus">ASUS</Label>
+                    <Label htmlFor="primary_office_asus">Lenovo</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox

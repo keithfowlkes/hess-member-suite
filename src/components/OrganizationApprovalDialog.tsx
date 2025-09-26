@@ -397,7 +397,7 @@ export const OrganizationApprovalDialog = ({
                 <div className="font-medium">Primary Office Software:</div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {organization.primary_office_apple && <Badge variant="outline" className="text-xs px-1 py-0">Apple</Badge>}
-                  {organization.primary_office_asus && <Badge variant="outline" className="text-xs px-1 py-0">ASUS</Badge>}
+                  {organization.primary_office_asus && <Badge variant="outline" className="text-xs px-1 py-0">Lenovo</Badge>}
                   {organization.primary_office_dell && <Badge variant="outline" className="text-xs px-1 py-0">Dell</Badge>}
                   {organization.primary_office_hp && <Badge variant="outline" className="text-xs px-1 py-0">HP</Badge>}
                   {organization.primary_office_microsoft && <Badge variant="outline" className="text-xs px-1 py-0">Microsoft</Badge>}

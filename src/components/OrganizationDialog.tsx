@@ -731,7 +731,7 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
                                     onCheckedChange={field.onChange}
                                   />
                                 </FormControl>
-                                <FormLabel className="text-sm">ASUS</FormLabel>
+                                <FormLabel className="text-sm">Lenovo</FormLabel>
                               </FormItem>
                             )}
                           />
