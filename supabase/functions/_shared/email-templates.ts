@@ -132,6 +132,9 @@ export async function getEmailTemplate(emailType: string, includeRecipients: boo
       case 'organization_invitation':
         settingKey = 'organization_invitation_template';
         break;
+      case 'organization_update_alert':
+        settingKey = 'organization_update_alert_template';
+        break;
       default:
         settingKey = `${emailType}_message_template`;
     }
@@ -184,6 +187,9 @@ export async function getEmailTemplate(emailType: string, includeRecipients: boo
         case 'profile_update_approved':
         case 'member_info_update':
           templateSubject = 'Profile Update Approved';
+          break;
+        case 'organization_update_alert':
+          templateSubject = 'Organization Update Alert - Action Required';
           break;
         default:
           templateSubject = 'HESS Consortium Notification';

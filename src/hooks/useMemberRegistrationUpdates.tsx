@@ -80,6 +80,38 @@ export function useMemberRegistrationUpdates() {
         .single();
 
       if (error) {
+        console.error('Failed to create registration update:', error);
+        throw error;
+      }
+
+      console.log('✅ Registration update created successfully:', data);
+
+      // Send organization update alert email if this is an existing organization update
+      if (updateData.existing_organization_id && updateData.submission_type === 'member_update') {
+        console.log('🔔 Sending organization update alert for existing organization:', updateData.existing_organization_id);
+        
+        try {
+          const alertResponse = await supabase.functions.invoke('send-organization-update-alert', {
+            body: {
+              organization_id: updateData.existing_organization_id,
+              submitted_email: updateData.submitted_email,
+              organization_name: updateData.existing_organization_name || updateData.organization_data.organization
+            }
+          });
+
+          if (alertResponse.error) {
+            console.error('⚠️ Failed to send organization update alert:', alertResponse.error);
+            // Don't fail the entire operation if email fails
+          } else {
+            console.log('✅ Organization update alert sent successfully:', alertResponse.data);
+          }
+        } catch (alertError) {
+          console.error('⚠️ Error sending organization update alert:', alertError);
+          // Don't fail the entire operation if email fails
+        }
+      }
+
+      if (error) {
         console.error('❌ DEBUG: Error creating registration update:', error);
         throw error;
       }

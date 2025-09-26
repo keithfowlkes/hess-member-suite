@@ -25,6 +25,7 @@ interface EmailRequest {
     | 'password-reset'
     | 'overdue_reminder'
     | 'overdue-reminder'
+    | 'organization_update_alert'
     | 'custom';
   to: string | string[];
   subject?: string;
