@@ -22,6 +22,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import {
   Table,
   TableBody,
   TableCell,
@@ -105,7 +111,9 @@ import {
   ChevronDown,
   Activity,
   Check,
-  Map
+  Map,
+  CalendarIcon,
+  Filter
 } from 'lucide-react';
 import { SystemHealthStatus } from '@/components/SystemHealthStatus';
 import { format } from 'date-fns';
@@ -166,6 +174,13 @@ const MasterDashboard = () => {
   const [showOutdatedOrganizationsModal, setShowOutdatedOrganizationsModal] = useState(false);
   const [loadingOrgUpdates, setLoadingOrgUpdates] = useState(false);
   
+  // Date range filtering state
+  const [dateRange, setDateRange] = useState({
+    from: new Date(new Date().setMonth(new Date().getMonth() - 12)),
+    to: new Date()
+  });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  
   // Search functionality
   const [organizationSearchTerm, setOrganizationSearchTerm] = useState('');
   const [userSearchTerm, setUserSearchTerm] = useState('');
@@ -213,9 +228,6 @@ const MasterDashboard = () => {
     const fetchOrganizationUpdateStats = async () => {
       setLoadingOrgUpdates(true);
       try {
-        const twelveMonthsAgo = new Date();
-        twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
-
         const { data: organizations, error } = await supabase
           .from('organizations')
           .select(`
@@ -237,10 +249,10 @@ const MasterDashboard = () => {
 
         const activeOrgs = organizations || [];
         const recentUpdates = activeOrgs.filter(org => 
-          new Date(org.updated_at) > twelveMonthsAgo
+          new Date(org.updated_at) >= dateRange.from
         );
         const outdatedOrganizations = activeOrgs.filter(org => 
-          new Date(org.updated_at) <= twelveMonthsAgo
+          new Date(org.updated_at) < dateRange.from
         );
 
         setOrganizationUpdateStats({
@@ -258,7 +270,7 @@ const MasterDashboard = () => {
     };
 
     fetchOrganizationUpdateStats();
-  }, []);
+  }, [dateRange]);
 
   // CSV export functionality
   const downloadCSV = (data: any[], filename: string) => {
@@ -896,9 +908,58 @@ const MasterDashboard = () => {
               {/* Organization Updates */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <RefreshCw className="h-5 w-5" />
-                    Organization Updates
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <RefreshCw className="h-5 w-5" />
+                      Organization Updates
+                    </div>
+                    <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <Filter className="h-3 w-3 mr-2" />
+                          {dateRange.from ? format(dateRange.from, 'PP') : 'Filter by date'}
+                          {dateRange.to && ` - ${format(dateRange.to, 'PP')}`}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <div className="p-4 space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">Filter organizations updated since:</Label>
+                            <Calendar
+                              mode="single"
+                              selected={dateRange.from}
+                              onSelect={(date) => {
+                                if (date) {
+                                  setDateRange(prev => ({ ...prev, from: date }));
+                                }
+                              }}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </div>
+                          <div className="flex justify-between pt-2 border-t">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                const twelveMonthsAgo = new Date();
+                                twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+                                setDateRange({ from: twelveMonthsAgo, to: new Date() });
+                              }}
+                            >
+                              Last 12 months
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setShowDatePicker(false)}
+                            >
+                              Apply
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -914,7 +975,9 @@ const MasterDashboard = () => {
                             <CheckCircle className="h-5 w-5" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs font-medium text-muted-foreground">Updated in Last 12 Months</p>
+                            <p className="text-xs font-medium text-muted-foreground">
+                              Updated Since {format(dateRange.from, 'MMM d, yyyy')}
+                            </p>
                             <p className="text-xl font-bold">
                               {loadingOrgUpdates ? '...' : organizationUpdateStats.recentUpdateCount}
                             </p>
@@ -941,7 +1004,9 @@ const MasterDashboard = () => {
                             <AlertCircle className="h-5 w-5" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs font-medium text-muted-foreground">Not Updated in 12+ Months</p>
+                            <p className="text-xs font-medium text-muted-foreground">
+                              Not Updated Since {format(dateRange.from, 'MMM d, yyyy')}
+                            </p>
                             <p className="text-xl font-bold">
                               {loadingOrgUpdates ? '...' : organizationUpdateStats.outdatedCount}
                             </p>
@@ -1987,7 +2052,7 @@ const MasterDashboard = () => {
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-green-600" />
-                Organizations Updated in Last 12 Months
+                Organizations Updated Since {format(dateRange.from, 'MMM d, yyyy')}
               </div>
               <Button
                 variant="outline"
@@ -1999,7 +2064,7 @@ const MasterDashboard = () => {
               </Button>
             </DialogTitle>
             <DialogDescription>
-              {organizationUpdateStats.recentUpdateCount} organizations have updated their profiles in the last 12 months
+              {organizationUpdateStats.recentUpdateCount} organizations have updated their profiles since {format(dateRange.from, 'MMM d, yyyy')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -2027,9 +2092,9 @@ const MasterDashboard = () => {
                 </TableBody>
               </Table>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No organizations have updated their profiles in the last 12 months
-              </div>
+                <div className="text-center py-8 text-muted-foreground">
+                  No organizations have updated their profiles since {format(dateRange.from, 'MMM d, yyyy')}
+                </div>
             )}
           </div>
         </DialogContent>
@@ -2042,7 +2107,7 @@ const MasterDashboard = () => {
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-orange-600" />
-                Organizations Not Updated in 12+ Months
+                Organizations Not Updated Since {format(dateRange.from, 'MMM d, yyyy')}
               </div>
               <Button
                 variant="outline"
@@ -2054,7 +2119,7 @@ const MasterDashboard = () => {
               </Button>
             </DialogTitle>
             <DialogDescription>
-              {organizationUpdateStats.outdatedCount} organizations have not updated their profiles in over 12 months
+              {organizationUpdateStats.outdatedCount} organizations have not updated their profiles since {format(dateRange.from, 'MMM d, yyyy')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -2082,9 +2147,9 @@ const MasterDashboard = () => {
                 </TableBody>
               </Table>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                All organizations have been updated within the last 12 months
-              </div>
+                <div className="text-center py-8 text-muted-foreground">
+                  All organizations have been updated since {format(dateRange.from, 'MMM d, yyyy')}
+                </div>
             )}
           </div>
         </DialogContent>
