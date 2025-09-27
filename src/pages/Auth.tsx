@@ -2135,6 +2135,9 @@ export default function Auth() {
                           required
                         />
                       </div>
+                      <p className="text-xs text-gray-500 mb-4">
+                        This is a password reset. Please record this password for use when your information update request is approved.
+                      </p>
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <Label htmlFor="member-update-password" className="text-gray-700 font-medium text-sm">
