@@ -28,9 +28,15 @@ const handler = async (req: Request): Promise<Response> => {
       'financial_aid',
       'hcm_hr',
       'payroll_system',
+      'purchasing_system',
       'housing_management',
       'admissions_crm',
-      'alumni_advancement_crm'
+      'alumni_advancement_crm',
+      'payment_platform',
+      'meal_plan_management',
+      'identity_management',
+      'door_access',
+      'document_management'
     ];
 
     // Define the hardware fields to analyze (boolean fields)
@@ -67,9 +73,15 @@ const handler = async (req: Request): Promise<Response> => {
         financial_aid,
         hcm_hr,
         payroll_system,
+        purchasing_system,
         housing_management,
         admissions_crm,
         alumni_advancement_crm,
+        payment_platform,
+        meal_plan_management,
+        identity_management,
+        door_access,
+        document_management,
         primary_office_apple,
         primary_office_asus,
         primary_office_dell,
