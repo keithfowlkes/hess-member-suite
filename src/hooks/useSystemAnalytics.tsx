@@ -13,9 +13,15 @@ export interface SystemAnalytics {
   financialAidSystems: SystemUsage[];
   hcmSystems: SystemUsage[];
   payrollSystems: SystemUsage[];
+  purchasingSystems: SystemUsage[];
   housingManagementSystems: SystemUsage[];
   admissionsCrms: SystemUsage[];
   alumniAdvancementCrms: SystemUsage[];
+  paymentPlatforms: SystemUsage[];
+  mealPlanManagement: SystemUsage[];
+  identityManagement: SystemUsage[];
+  doorAccess: SystemUsage[];
+  documentManagement: SystemUsage[];
   primaryOfficeHardware: SystemUsage[];
 }
 
@@ -69,9 +75,15 @@ export const useSystemAnalytics = () => {
         financialAidSystems: processDatacubeData(data || [], 'financial_aid'),
         hcmSystems: processDatacubeData(data || [], 'hcm_hr'),
         payrollSystems: processDatacubeData(data || [], 'payroll_system'),
+        purchasingSystems: processDatacubeData(data || [], 'purchasing_system'),
         housingManagementSystems: processDatacubeData(data || [], 'housing_management'),
         admissionsCrms: processDatacubeData(data || [], 'admissions_crm'),
         alumniAdvancementCrms: processDatacubeData(data || [], 'alumni_advancement_crm'),
+        paymentPlatforms: processDatacubeData(data || [], 'payment_platform'),
+        mealPlanManagement: processDatacubeData(data || [], 'meal_plan_management'),
+        identityManagement: processDatacubeData(data || [], 'identity_management'),
+        doorAccess: processDatacubeData(data || [], 'door_access'),
+        documentManagement: processDatacubeData(data || [], 'document_management'),
         primaryOfficeHardware: processDatacubeData(data || [], 'primary_office_hardware'),
       };
 

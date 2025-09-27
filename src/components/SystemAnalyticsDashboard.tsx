@@ -18,9 +18,15 @@ const SYSTEM_OPTIONS = [
   { key: 'financial_aid', label: 'Financial Aid Systems', icon: PieChartIcon },
   { key: 'hcm_hr', label: 'Human Capital Management', icon: PieChartIcon },
   { key: 'payroll_system', label: 'Payroll Systems', icon: PieChartIcon },
+  { key: 'purchasing_system', label: 'Purchasing Systems', icon: PieChartIcon },
   { key: 'housing_management', label: 'Housing Management', icon: PieChartIcon },
   { key: 'admissions_crm', label: 'Admissions CRM', icon: PieChartIcon },
   { key: 'alumni_advancement_crm', label: 'Alumni & Advancement CRM', icon: PieChartIcon },
+  { key: 'payment_platform', label: 'Payment Platforms', icon: PieChartIcon },
+  { key: 'meal_plan_management', label: 'Meal Plan Management', icon: PieChartIcon },
+  { key: 'identity_management', label: 'Identity Management', icon: PieChartIcon },
+  { key: 'door_access', label: 'Door Access Systems', icon: PieChartIcon },
+  { key: 'document_management', label: 'Document Management', icon: PieChartIcon },
   { key: 'primary_office_hardware', label: 'Primary Office Hardware', icon: Monitor },
 ];
 
@@ -31,9 +37,15 @@ const SYSTEM_DATA_MAP = [
   { key: 'financial_aid', title: 'Financial Aid Systems' },
   { key: 'hcm_hr', title: 'Human Capital Management' },
   { key: 'payroll_system', title: 'Payroll Systems' },
+  { key: 'purchasing_system', title: 'Purchasing Systems' },
   { key: 'housing_management', title: 'Housing Management' },
   { key: 'admissions_crm', title: 'Admissions CRM' },
   { key: 'alumni_advancement_crm', title: 'Alumni & Advancement CRM' },
+  { key: 'payment_platform', title: 'Payment Platforms' },
+  { key: 'meal_plan_management', title: 'Meal Plan Management' },
+  { key: 'identity_management', title: 'Identity Management' },
+  { key: 'door_access', title: 'Door Access Systems' },
+  { key: 'document_management', title: 'Document Management' },
   { key: 'primary_office_hardware', title: 'Primary Office Hardware' },
 ];
 
@@ -64,9 +76,15 @@ export function SystemAnalyticsDashboard() {
       'financial_aid': analytics.financialAidSystems,
       'hcm_hr': analytics.hcmSystems,
       'payroll_system': analytics.payrollSystems,
+      'purchasing_system': analytics.purchasingSystems,
       'housing_management': analytics.housingManagementSystems,
       'admissions_crm': analytics.admissionsCrms,
       'alumni_advancement_crm': analytics.alumniAdvancementCrms,
+      'payment_platform': analytics.paymentPlatforms,
+      'meal_plan_management': analytics.mealPlanManagement,
+      'identity_management': analytics.identityManagement,
+      'door_access': analytics.doorAccess,
+      'document_management': analytics.documentManagement,
       'primary_office_hardware': analytics.primaryOfficeHardware,
     };
     
