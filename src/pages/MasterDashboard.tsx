@@ -911,7 +911,7 @@ const MasterDashboard = () => {
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <RefreshCw className="h-5 w-5" />
-                      Organization Updates
+                      Organization Profile Updates
                     </div>
                     <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
                       <PopoverTrigger asChild>
