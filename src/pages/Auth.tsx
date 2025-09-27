@@ -227,17 +227,6 @@ export default function Auth() {
   const [signUpForm, setSignUpForm] = useState(initialSignUpFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Auto-populate date joined HESS for new member registrations
-  useEffect(() => {
-    if (activeTab === 'signup' && !isReassignment) {
-      const currentDate = new Date().toISOString().split('T')[0];
-      setSignUpForm(prev => ({ 
-        ...prev, 
-        approximateDateJoinedHess: currentDate 
-      }));
-    }
-  }, [activeTab, isReassignment]);
-
   // Debounced password validation
   const debouncedPasswordValidation = useDebounce((newPass: string, confirmPass: string) => {
     if (newPass && confirmPass) {
@@ -763,6 +752,7 @@ export default function Auth() {
           other_software_comments: formDataWithCustomValues.otherSoftwareComments,
           is_private_nonprofit: formDataWithCustomValues.isPrivateNonProfit,
           login_hint: signUpForm.loginHint,
+          approximate_date_joined_hess: new Date().toISOString().split('T')[0]
         });
       
       if (error) {
@@ -830,6 +820,7 @@ export default function Auth() {
                 other_software_comments: formDataWithCustomValues.otherSoftwareComments,
                 is_private_nonprofit: formDataWithCustomValues.isPrivateNonProfit,
                 login_hint: signUpForm.loginHint,
+                approximate_date_joined_hess: new Date().toISOString().split('T')[0]
               });
             
             if (!retryError) {
@@ -1703,24 +1694,6 @@ export default function Auth() {
                           className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                         />
-                      </div>
-                        
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-date-joined" className="text-gray-700 font-medium text-sm">
-                          Approximate Date your institution joined HESS <span className="text-red-600">*</span>
-                        </Label>
-                        <Input
-                          id="signup-date-joined"
-                          type="date"
-                          value={signUpForm.approximateDateJoinedHess}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, approximateDateJoinedHess: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                        <p className="text-sm text-muted-foreground">
-                          Please provide the approximate date when your institution became a HESS member.
-                        </p>
                       </div>
                     </div>
                   </div>
