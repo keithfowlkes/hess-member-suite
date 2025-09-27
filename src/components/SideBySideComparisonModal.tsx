@@ -212,6 +212,11 @@ export function SideBySideComparisonModal({
     { key: 'learning_management', label: 'Learning Management System', type: 'text' },
     { key: 'admissions_crm', label: 'Admissions CRM', type: 'text' },
     { key: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM', type: 'text' },
+    { key: 'payment_platform', label: 'Payment Platform', type: 'text' },
+    { key: 'meal_plan_management', label: 'Meal Plan Management', type: 'text' },
+    { key: 'identity_management', label: 'Identity Management', type: 'text' },
+    { key: 'door_access', label: 'Door Access System', type: 'text' },
+    { key: 'document_management', label: 'Document Management', type: 'text' },
   ];
 
   // Hardware fields

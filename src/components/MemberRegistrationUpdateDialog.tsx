@@ -115,6 +115,11 @@ export function MemberRegistrationUpdateDialog({
       learning_management: existingOrganization.learning_management ?? '',
       admissions_crm: existingOrganization.admissions_crm ?? '',
       alumni_advancement_crm: existingOrganization.alumni_advancement_crm ?? '',
+      payment_platform: existingOrganization.payment_platform ?? '',
+      meal_plan_management: existingOrganization.meal_plan_management ?? '',
+      identity_management: existingOrganization.identity_management ?? '',
+      door_access: existingOrganization.door_access ?? '',
+      document_management: existingOrganization.document_management ?? '',
       // Hardware preferences
       primary_office_apple: existingOrganization.primary_office_apple ?? false,
       primary_office_asus: existingOrganization.primary_office_asus ?? false,
@@ -157,6 +162,11 @@ export function MemberRegistrationUpdateDialog({
       learning_management: orgData.learning_management || regData.learning_management || '',
       admissions_crm: orgData.admissions_crm || regData.admissions_crm || '',
       alumni_advancement_crm: orgData.alumni_advancement_crm || regData.alumni_advancement_crm || '',
+      payment_platform: orgData.payment_platform || regData.payment_platform || '',
+      meal_plan_management: orgData.meal_plan_management || regData.meal_plan_management || '',
+      identity_management: orgData.identity_management || regData.identity_management || '',
+      door_access: orgData.door_access || regData.door_access || '',
+      document_management: orgData.document_management || regData.document_management || '',
       // Hardware preferences
       primary_office_apple: regData.primary_office_apple !== undefined ? regData.primary_office_apple : false,
       primary_office_asus: regData.primary_office_asus !== undefined ? regData.primary_office_asus : false,
