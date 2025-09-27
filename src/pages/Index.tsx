@@ -164,7 +164,7 @@ const Index = () => {
               <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
                 <Info className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 <AlertDescription className="text-amber-800 dark:text-amber-200">
-                  Your organization profile is missing some information: {missingInfo.join(', ')}. 
+                  Your organization profile is missing some information. 
                   <Button 
                     variant="link" 
                     className="p-0 h-auto font-medium text-amber-800 dark:text-amber-200 underline hover:no-underline"
