@@ -153,6 +153,18 @@ const MasterDashboard = () => {
   const [selectedProfileEditRequest, setSelectedProfileEditRequest] = useState(null);
   const [showProfileEditComparisonDialog, setShowProfileEditComparisonDialog] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
+
+  // Organization updates state
+  const [organizationUpdateStats, setOrganizationUpdateStats] = useState({
+    recentUpdates: [],
+    outdatedOrganizations: [],
+    recentUpdateCount: 0,
+    outdatedCount: 0,
+    totalActiveOrganizations: 0
+  });
+  const [showRecentUpdatesModal, setShowRecentUpdatesModal] = useState(false);
+  const [showOutdatedOrganizationsModal, setShowOutdatedOrganizationsModal] = useState(false);
+  const [loadingOrgUpdates, setLoadingOrgUpdates] = useState(false);
   
   // Search functionality
   const [organizationSearchTerm, setOrganizationSearchTerm] = useState('');
@@ -195,6 +207,84 @@ const MasterDashboard = () => {
   const [showRevenueModal, setShowRevenueModal] = useState(false);
   const [showPendingApprovalsModal, setShowPendingApprovalsModal] = useState(false);
   const [showActiveInvitationsModal, setShowActiveInvitationsModal] = useState(false);
+
+  // Fetch organization update statistics
+  useEffect(() => {
+    const fetchOrganizationUpdateStats = async () => {
+      setLoadingOrgUpdates(true);
+      try {
+        const twelveMonthsAgo = new Date();
+        twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+
+        const { data: organizations, error } = await supabase
+          .from('organizations')
+          .select(`
+            id,
+            name,
+            updated_at,
+            created_at,
+            membership_status,
+            contact_person_id,
+            profiles!organizations_contact_person_id_fkey (
+              first_name,
+              last_name,
+              email
+            )
+          `)
+          .eq('membership_status', 'active');
+
+        if (error) throw error;
+
+        const activeOrgs = organizations || [];
+        const recentUpdates = activeOrgs.filter(org => 
+          new Date(org.updated_at) > twelveMonthsAgo
+        );
+        const outdatedOrganizations = activeOrgs.filter(org => 
+          new Date(org.updated_at) <= twelveMonthsAgo
+        );
+
+        setOrganizationUpdateStats({
+          recentUpdates,
+          outdatedOrganizations,
+          recentUpdateCount: recentUpdates.length,
+          outdatedCount: outdatedOrganizations.length,
+          totalActiveOrganizations: activeOrgs.length
+        });
+      } catch (error) {
+        console.error('Error fetching organization update stats:', error);
+      } finally {
+        setLoadingOrgUpdates(false);
+      }
+    };
+
+    fetchOrganizationUpdateStats();
+  }, []);
+
+  // CSV export functionality
+  const downloadCSV = (data: any[], filename: string) => {
+    if (!data.length) return;
+
+    const headers = ['Organization Name', 'Primary Contact', 'Email', 'Last Updated'];
+    const csvContent = [
+      headers.join(','),
+      ...data.map(org => [
+        `"${org.name || ''}"`,
+        `"${org.profiles?.first_name || ''} ${org.profiles?.last_name || ''}"`.trim(),
+        `"${org.profiles?.email || ''}"`,
+        `"${new Date(org.updated_at).toLocaleDateString()}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   console.log('Profile edit requests loaded:', profileEditRequests.length);
   
@@ -802,6 +892,73 @@ const MasterDashboard = () => {
                   </Card>
                 ))}
               </div>
+
+              {/* Organization Updates */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <RefreshCw className="h-5 w-5" />
+                    Organization Updates
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {/* Recent Updates */}
+                    <Card 
+                      className="transition-shadow hover:shadow-lg cursor-pointer hover:bg-muted/50"
+                      onClick={() => setShowRecentUpdatesModal(true)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 rounded-lg bg-gray-100 text-green-600">
+                            <CheckCircle className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-muted-foreground">Updated in Last 12 Months</p>
+                            <p className="text-xl font-bold">
+                              {loadingOrgUpdates ? '...' : organizationUpdateStats.recentUpdateCount}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {loadingOrgUpdates ? '...' : organizationUpdateStats.totalActiveOrganizations > 0 
+                                ? `${Math.round((organizationUpdateStats.recentUpdateCount / organizationUpdateStats.totalActiveOrganizations) * 100)}%`
+                                : '0%'
+                              } of active organizations
+                            </p>
+                            <p className="text-xs text-primary mt-1">Click for details</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Outdated Organizations */}
+                    <Card 
+                      className="transition-shadow hover:shadow-lg cursor-pointer hover:bg-muted/50"
+                      onClick={() => setShowOutdatedOrganizationsModal(true)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 rounded-lg bg-gray-100 text-orange-600">
+                            <AlertCircle className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-muted-foreground">Not Updated in 12+ Months</p>
+                            <p className="text-xl font-bold">
+                              {loadingOrgUpdates ? '...' : organizationUpdateStats.outdatedCount}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {loadingOrgUpdates ? '...' : organizationUpdateStats.totalActiveOrganizations > 0 
+                                ? `${Math.round((organizationUpdateStats.outdatedCount / organizationUpdateStats.totalActiveOrganizations) * 100)}%`
+                                : '0%'
+                              } of active organizations
+                            </p>
+                            <p className="text-xs text-primary mt-1">Click for details</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* System Health Status */}
               <Card>
@@ -1822,6 +1979,116 @@ const MasterDashboard = () => {
         adminUserId={user?.id}
         isProcessing={isProcessingRegistrationUpdate}
       />
+
+      {/* Recent Updates Modal */}
+      <Dialog open={showRecentUpdatesModal} onOpenChange={setShowRecentUpdatesModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Organizations Updated in Last 12 Months
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadCSV(organizationUpdateStats.recentUpdates, 'recent-updates.csv')}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Download CSV
+              </Button>
+            </DialogTitle>
+            <DialogDescription>
+              {organizationUpdateStats.recentUpdateCount} organizations have updated their profiles in the last 12 months
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {organizationUpdateStats.recentUpdates.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Organization Name</TableHead>
+                    <TableHead>Primary Contact</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {organizationUpdateStats.recentUpdates.map((org) => (
+                    <TableRow key={org.id}>
+                      <TableCell className="font-medium">{org.name}</TableCell>
+                      <TableCell>
+                        {org.profiles?.first_name} {org.profiles?.last_name}
+                      </TableCell>
+                      <TableCell>{org.profiles?.email}</TableCell>
+                      <TableCell>{format(new Date(org.updated_at), 'PP')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No organizations have updated their profiles in the last 12 months
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Outdated Organizations Modal */}
+      <Dialog open={showOutdatedOrganizationsModal} onOpenChange={setShowOutdatedOrganizationsModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+                Organizations Not Updated in 12+ Months
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadCSV(organizationUpdateStats.outdatedOrganizations, 'outdated-organizations.csv')}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Download CSV
+              </Button>
+            </DialogTitle>
+            <DialogDescription>
+              {organizationUpdateStats.outdatedCount} organizations have not updated their profiles in over 12 months
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {organizationUpdateStats.outdatedOrganizations.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Organization Name</TableHead>
+                    <TableHead>Primary Contact</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {organizationUpdateStats.outdatedOrganizations.map((org) => (
+                    <TableRow key={org.id}>
+                      <TableCell className="font-medium">{org.name}</TableCell>
+                      <TableCell>
+                        {org.profiles?.first_name} {org.profiles?.last_name}
+                      </TableCell>
+                      <TableCell>{org.profiles?.email}</TableCell>
+                      <TableCell>{format(new Date(org.updated_at), 'PP')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                All organizations have been updated within the last 12 months
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
