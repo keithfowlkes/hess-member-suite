@@ -7,12 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle, Edit3 } from 'lucide-react';
+import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle, Edit3, Info } from 'lucide-react';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { useInvoices } from '@/hooks/useInvoices';
 import MemberSystemMessages from '@/components/MemberSystemMessages';
 import { ProfileEditModal } from '@/components/ProfileEditModal';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { useState, useEffect } from 'react';
 
@@ -52,6 +53,34 @@ const Index = () => {
 
   // Check if member view items should be shown (only for non-admin view)
   const showMemberViewItems = !isViewingAsAdmin && systemSettings?.find(s => s.setting_key === 'show_member_view_items')?.setting_value === 'true';
+
+  // Check for missing organization information
+  const checkMissingInfo = (org: any) => {
+    if (!org) return [];
+    
+    const missingFields = [];
+    
+    if (!org.address_line_1 || !org.city || !org.state || !org.zip_code) {
+      missingFields.push('Address information');
+    }
+    if (!org.phone) {
+      missingFields.push('Phone number');
+    }
+    if (!org.student_fte) {
+      missingFields.push('Student FTE');
+    }
+    if (!org.student_information_system) {
+      missingFields.push('Student Information System');
+    }
+    if (!org.financial_system) {
+      missingFields.push('Financial System');
+    }
+    
+    return missingFields;
+  };
+
+  const missingInfo = userOrganization ? checkMissingInfo(userOrganization) : [];
+  const hasIncompleteProfile = missingInfo.length > 0;
 
   // Define member stats for first row - conditionally include Next Renewal
   const firstRowStats = [
@@ -129,6 +158,23 @@ const Index = () => {
             <div className="p-8 space-y-6">
 
             <MemberSystemMessages />
+
+            {/* Profile Completion Reminder */}
+            {hasIncompleteProfile && (
+              <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+                <Info className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <AlertDescription className="text-amber-800 dark:text-amber-200">
+                  Your organization profile is missing some information: {missingInfo.join(', ')}. 
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto font-medium text-amber-800 dark:text-amber-200 underline hover:no-underline"
+                    onClick={() => setProfileModalOpen(true)}
+                  >
+                    Update Your Profile
+                  </Button> to complete your information.
+                </AlertDescription>
+              </Alert>
+            )}
 
             {/* Institution Information - Moved to top */}
             <Card>
@@ -326,39 +372,6 @@ const Index = () => {
               </Card>
             </div>
 
-            {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Membership renewed</p>
-                        <p className="text-xs text-muted-foreground">2 hours ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Invoice generated</p>
-                        <p className="text-xs text-muted-foreground">1 day ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Profile updated</p>
-                        <p className="text-xs text-muted-foreground">3 days ago</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
             {/* Footer */}
             <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
               <img 
