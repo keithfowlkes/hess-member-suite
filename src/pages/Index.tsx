@@ -63,9 +63,7 @@ const Index = () => {
     if (!org.address_line_1 || !org.city || !org.state || !org.zip_code) {
       missingFields.push('Address information');
     }
-    if (!org.phone) {
-      missingFields.push('Phone number');
-    }
+    // Note: Phone is stored in the profile, not organization, so we don't check it here
     if (!org.student_fte) {
       missingFields.push('Student FTE');
     }
