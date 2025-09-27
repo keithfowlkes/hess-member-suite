@@ -240,7 +240,7 @@ const Index = () => {
                         {userOrganization.updated_at && (
                           <div className="pt-2 border-t">
                             <div className="text-sm text-muted-foreground">
-                              <span className="font-medium">Last Updated:</span> {new Date(userOrganization.updated_at).toLocaleDateString('en-US', {
+                              <span className="font-medium">Profile Last Updated:</span> {new Date(userOrganization.updated_at).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric'
