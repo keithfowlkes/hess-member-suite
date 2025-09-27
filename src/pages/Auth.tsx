@@ -535,6 +535,21 @@ export default function Auth() {
           alumni_advancement_crm: signUpForm.alumniAdvancementCrm === 'Other' 
             ? signUpForm.alumniAdvancementCrmOther 
             : signUpForm.alumniAdvancementCrm,
+          payment_platform: signUpForm.paymentPlatform === 'Other' 
+            ? signUpForm.paymentPlatformOther 
+            : signUpForm.paymentPlatform,
+          meal_plan_management: signUpForm.mealPlanManagement === 'Other' 
+            ? signUpForm.mealPlanManagementOther 
+            : signUpForm.mealPlanManagement,
+          identity_management: signUpForm.identityManagement === 'Other' 
+            ? signUpForm.identityManagementOther 
+            : signUpForm.identityManagement,
+          door_access: signUpForm.doorAccess === 'Other' 
+            ? signUpForm.doorAccessOther 
+            : signUpForm.doorAccess,
+          document_management: signUpForm.documentManagement === 'Other' 
+            ? signUpForm.documentManagementOther 
+            : signUpForm.documentManagement,
           primary_office_apple: signUpForm.primaryOfficeApple,
           primary_office_asus: signUpForm.primaryOfficeLenovo,
           primary_office_dell: signUpForm.primaryOfficeDell,
