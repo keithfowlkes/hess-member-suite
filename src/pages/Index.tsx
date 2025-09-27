@@ -58,45 +58,29 @@ const Index = () => {
   const checkMissingInfo = (org: any) => {
     if (!org) return [];
     
-    console.log('Checking missing info for organization:', org);
-    
     const missingFields = [];
     
     if (!org.address_line_1 || !org.city || !org.state || !org.zip_code) {
-      console.log('Missing address info:', {
-        address_line_1: org.address_line_1,
-        city: org.city,
-        state: org.state,
-        zip_code: org.zip_code
-      });
       missingFields.push('Address information');
     }
     if (!org.phone) {
-      console.log('Missing phone:', org.phone);
       missingFields.push('Phone number');
     }
     if (!org.student_fte) {
-      console.log('Missing student_fte:', org.student_fte);
       missingFields.push('Student FTE');
     }
     if (!org.student_information_system) {
-      console.log('Missing student_information_system:', org.student_information_system);
       missingFields.push('Student Information System');
     }
     if (!org.financial_system) {
-      console.log('Missing financial_system:', org.financial_system);
       missingFields.push('Financial System');
     }
     
-    console.log('Missing fields detected:', missingFields);
     return missingFields;
   };
 
   const missingInfo = userOrganization ? checkMissingInfo(userOrganization) : [];
   const hasIncompleteProfile = missingInfo.length > 0;
-  
-  console.log('User organization data:', userOrganization);
-  console.log('Has incomplete profile:', hasIncompleteProfile);
 
   // Define member stats for first row - conditionally include Next Renewal
   const firstRowStats = [
