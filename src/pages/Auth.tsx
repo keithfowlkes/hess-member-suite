@@ -1411,6 +1411,77 @@ export default function Auth() {
                   </div>
                 </div>
 
+                {/* Primary Contact */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Primary Contact</h3>
+                    <p className="text-gray-600 text-sm">Information for the main institutional contact person.</p>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-firstname" className="text-gray-700 font-medium text-sm">
+                          First Name <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="signup-firstname"
+                          placeholder="First name"
+                          value={signUpForm.firstName}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-lastname" className="text-gray-700 font-medium text-sm">
+                          Last Name <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="signup-lastname"
+                          placeholder="Last name"
+                          value={signUpForm.lastName}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="primary-contact-title" className="text-gray-700 font-medium text-sm">
+                        Job Title <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="primary-contact-title"
+                        placeholder="e.g. CIO, IT Director, VP of Technology"
+                        value={signUpForm.primaryContactTitle}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactTitle: e.target.value }))}
+                        className="h-11 bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="primary-contact-phone" className="text-gray-700 font-medium text-sm">
+                        Phone Number
+                      </Label>
+                      <Input
+                        id="primary-contact-phone"
+                        type="tel"
+                        placeholder="(555) 123-4567"
+                        value={signUpForm.primaryContactPhone}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactPhone: e.target.value }))}
+                        className="h-11 bg-gray-50 border-gray-300"
+                        disabled={!signUpForm.isPrivateNonProfit}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Secondary Contact */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
@@ -1490,183 +1561,6 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                         />
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Institution Information */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Institution Information</h3>
-                    <p className="text-gray-600 text-sm">Details about your college or university.</p>
-                  </div>
-                  
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="organization" className="text-gray-700 font-medium text-sm">
-                          Institution Name <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="organization"
-                          type="text"
-                          placeholder="Enter your institution's full name"
-                          value={signUpForm.organization}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="student-fte" className="text-gray-700 font-medium text-sm">
-                          Student FTE <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="student-fte"
-                          type="number"
-                          placeholder="e.g. 2500"
-                          value={signUpForm.studentFte}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, studentFte: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                        <p className="text-xs text-gray-500">IPEDS headcount enrollment</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="state-association" className="text-gray-700 font-medium text-sm">
-                        State Association
-                      </Label>
-                      <Input
-                        id="state-association"
-                        placeholder="State association name (if applicable)"
-                        value={signUpForm.stateAssociation}
-                        onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
-                        className="h-11 bg-gray-50 border-gray-300"
-                        disabled={!signUpForm.isPrivateNonProfit}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label className="text-gray-700 font-medium text-sm mb-3 block">
-                        Mailing Address <span className="text-red-500">*</span>
-                      </Label>
-                      <div className="space-y-4">
-                        <Input
-                          id="address"
-                          placeholder="Street address"
-                          value={signUpForm.address}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <Input
-                            id="city"
-                            placeholder="City"
-                            value={signUpForm.city}
-                            onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300"
-                            disabled={!signUpForm.isPrivateNonProfit}
-                            required
-                          />
-                          <Input
-                            id="state"
-                            placeholder="State (e.g. TX)"
-                            value={signUpForm.state}
-                            onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300"
-                            disabled={!signUpForm.isPrivateNonProfit}
-                            maxLength={2}
-                            required
-                          />
-                          <Input
-                            id="zip"
-                            placeholder="ZIP Code"
-                            value={signUpForm.zip}
-                            onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
-                            className="h-11 bg-gray-50 border-gray-300"
-                            disabled={!signUpForm.isPrivateNonProfit}
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Primary Contact */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Primary Contact</h3>
-                    <p className="text-gray-600 text-sm">Information for the main institutional contact person.</p>
-                  </div>
-                  
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-firstname" className="text-gray-700 font-medium text-sm">
-                          First Name <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="signup-firstname"
-                          placeholder="First name"
-                          value={signUpForm.firstName}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, firstName: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-lastname" className="text-gray-700 font-medium text-sm">
-                          Last Name <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="signup-lastname"
-                          placeholder="Last name"
-                          value={signUpForm.lastName}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, lastName: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="primary-contact-title" className="text-gray-700 font-medium text-sm">
-                        Job Title <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="primary-contact-title"
-                        placeholder="e.g. CIO, IT Director, VP of Technology"
-                        value={signUpForm.primaryContactTitle}
-                        onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactTitle: e.target.value }))}
-                        className="h-11 bg-gray-50 border-gray-300"
-                        disabled={!signUpForm.isPrivateNonProfit}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="primary-contact-phone" className="text-gray-700 font-medium text-sm">
-                        Phone Number
-                      </Label>
-                      <Input
-                        id="primary-contact-phone"
-                        type="tel"
-                        placeholder="(555) 123-4567"
-                        value={signUpForm.primaryContactPhone}
-                        onChange={(e) => setSignUpForm(prev => ({ ...prev, primaryContactPhone: e.target.value }))}
-                        className="h-11 bg-gray-50 border-gray-300"
-                        disabled={!signUpForm.isPrivateNonProfit}
-                      />
                     </div>
                   </div>
                 </div>
