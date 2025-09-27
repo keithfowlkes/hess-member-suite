@@ -227,6 +227,17 @@ export default function Auth() {
   const [signUpForm, setSignUpForm] = useState(initialSignUpFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Auto-populate date joined HESS for new member registrations
+  useEffect(() => {
+    if (activeTab === 'signup' && !isReassignment) {
+      const currentDate = new Date().toISOString().split('T')[0];
+      setSignUpForm(prev => ({ 
+        ...prev, 
+        approximateDateJoinedHess: currentDate 
+      }));
+    }
+  }, [activeTab, isReassignment]);
+
   // Debounced password validation
   const debouncedPasswordValidation = useDebounce((newPass: string, confirmPass: string) => {
     if (newPass && confirmPass) {
