@@ -32,7 +32,8 @@ import {
   UserPlus,
   Award,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  MessageSquare
 } from 'lucide-react';
 import { useMembers, Organization } from '@/hooks/useMembers';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,6 +49,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { OrganizationCRMTab } from '@/components/OrganizationCRMTab';
 
 // System field dropdown component for organization editing
 const SystemFieldSelect = ({ 
@@ -246,11 +248,12 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="systems">Systems</TabsTrigger>
             <TabsTrigger value="hardware">Hardware</TabsTrigger>
+            <TabsTrigger value="crm">CRM</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -746,6 +749,13 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="crm" className="space-y-4">
+            <OrganizationCRMTab 
+              organizationId={currentData.id} 
+              organizationName={currentData.name}
+            />
           </TabsContent>
         </Tabs>
       </DialogContent>
