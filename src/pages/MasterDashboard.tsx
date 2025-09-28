@@ -837,7 +837,7 @@ const MasterDashboard = () => {
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="organizations" className="relative">
-                Organizations
+                Approvals
                 {totalOrganizationActions > 0 && (
                   <Badge 
                     variant="destructive" 
