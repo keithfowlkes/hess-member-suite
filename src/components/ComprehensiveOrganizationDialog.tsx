@@ -43,7 +43,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useMembers, Organization, CreateOrganizationData } from '@/hooks/useMembers';
 import { useSimpleFieldOptions } from '@/hooks/useSimpleSystemFieldOptions';
-import { CalendarIcon, User, Building2, Mail, Phone, MapPin, Database, Monitor, Trash2, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, User, Building2, Mail, Phone, MapPin, Database, Monitor, Trash2, AlertTriangle, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -55,6 +55,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { OrganizationCRMTab } from '@/components/OrganizationCRMTab';
 
 const organizationSchema = z.object({
   name: z.string().min(2, 'Organization name must be at least 2 characters'),
@@ -533,12 +534,13 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
 
         <div className="flex-1 overflow-y-auto pr-2">
           <Tabs defaultValue="organization" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="organization">Organization</TabsTrigger>
             <TabsTrigger value="contact" disabled={!organization?.profiles}>Primary Contact</TabsTrigger>
             <TabsTrigger value="secondary" disabled={!organization?.profiles}>Secondary Contact</TabsTrigger>
             <TabsTrigger value="systems" disabled={!organization?.profiles}>Systems</TabsTrigger>
             <TabsTrigger value="hardware" disabled={!organization?.profiles}>Hardware</TabsTrigger>
+            <TabsTrigger value="crm" disabled={!organization}>CRM</TabsTrigger>
           </TabsList>
 
           <TabsContent value="organization" className="space-y-4">
@@ -1078,6 +1080,15 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
                     </CardContent>
                   </Card>
                 </Form>
+              </TabsContent>
+
+              <TabsContent value="crm" className="space-y-4">
+                {organization && (
+                  <OrganizationCRMTab 
+                    organizationId={organization.id} 
+                    organizationName={organization.name}
+                  />
+                )}
               </TabsContent>
             </>
           )}
