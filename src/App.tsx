@@ -26,7 +26,6 @@ import ResearchDashboard from "./pages/ResearchDashboard";
 import MemberAnalytics from "./pages/MemberAnalytics";
 import UserMessages from "./pages/UserMessages";
 import CohortInformation from "./pages/CohortInformation";
-import CRM from "./pages/CRM";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,7 +69,6 @@ const App = () => (
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/profile/:profileId" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
             <Route path="/cohort-information" element={<ProtectedRoute><CohortInformation /></ProtectedRoute>} />
-            <Route path="/crm" element={<ProtectedRoute><CRM /></ProtectedRoute>} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

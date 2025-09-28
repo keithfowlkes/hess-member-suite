@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search, Map, MessageSquare, GraduationCap, UserCheck } from 'lucide-react';
+import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search, Map, MessageSquare, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { supabase } from '@/integrations/supabase/client';
@@ -112,7 +112,6 @@ export function AppSidebar() {
   const adminItems = [
     { title: 'Master Dashboard', url: '/dashboard', icon: Home },
     { title: 'Member Organizations', url: '/members', icon: Users },
-    { title: 'CRM', url: '/crm', icon: UserCheck },
     { title: 'User Messages', url: '/user-messages', icon: MessageSquare, badge: unreadMessageCount },
     { title: 'Cohort Information', url: '/cohort-information', icon: GraduationCap },
     { title: 'Dashboards', url: '/dashboards', icon: BarChart3 },
