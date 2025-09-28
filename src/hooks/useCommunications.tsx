@@ -116,17 +116,12 @@ export function useCommunications(organizationId?: string) {
   // Delete communication mutation
   const deleteCommunication = useMutation({
     mutationFn: async (id: string) => {
-      console.log('Attempting to delete communication with ID:', id);
       const { error } = await supabase
         .from('communications')
         .delete()
         .eq('id', id);
 
-      if (error) {
-        console.error('Delete error:', error);
-        throw error;
-      }
-      console.log('Delete successful for ID:', id);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communications', organizationId] });
