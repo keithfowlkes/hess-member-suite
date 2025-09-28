@@ -116,6 +116,7 @@ import {
   Filter
 } from 'lucide-react';
 import { SystemHealthStatus } from '@/components/SystemHealthStatus';
+import { FollowUpReminders } from '@/components/FollowUpReminders';
 import { format } from 'date-fns';
 
 const MasterDashboard = () => {
@@ -851,6 +852,9 @@ const MasterDashboard = () => {
 
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-8">
+              {/* Follow-up Reminders Section */}
+              <FollowUpReminders />
+              
               {/* Main Statistics */}
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {mainStats.map((stat, index) => (

@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
@@ -144,6 +144,12 @@ export function OrganizationCRMTab({ organizationId, organizationName }: Organiz
               <DialogTitle>
                 {editingCommunication ? 'Edit Communication' : 'Add New Communication'}
               </DialogTitle>
+              <DialogDescription>
+                {editingCommunication 
+                  ? `Update the communication record for ${organizationName}.`
+                  : `Record a new communication with ${organizationName}. The organization is automatically selected.`
+                }
+              </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4">
