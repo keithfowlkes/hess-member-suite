@@ -88,7 +88,7 @@ export const CRMEmailCampaigns = () => {
     type: 'newsletter'
   });
 
-  // Mock campaigns data - in real app, this would come from your database
+  // Mock campaigns data
   const campaigns: Campaign[] = [
     {
       id: '1',
@@ -147,14 +147,6 @@ export const CRMEmailCampaigns = () => {
       content: 'Dear [CONTACT_NAME],\n\nYour membership for [ORGANIZATION_NAME] is due for renewal on [RENEWAL_DATE].\n\n[RENEWAL_DETAILS]\n\nThank you,\nHESS Team',
       type: 'reminder',
       created_at: '2024-01-01T00:00:00Z'
-    },
-    {
-      id: '3',
-      name: 'Welcome Email Template',
-      subject: 'Welcome to HESS Consortium!',
-      content: 'Dear [CONTACT_NAME],\n\nWelcome to the HESS Consortium! We are excited to have [ORGANIZATION_NAME] as part of our community.\n\n[WELCOME_MESSAGE]\n\nWelcome aboard!\nHESS Team',
-      type: 'welcome',
-      created_at: '2024-01-01T00:00:00Z'
     }
   ];
 
@@ -164,17 +156,7 @@ export const CRMEmailCampaigns = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('organizations')
-        .select(`
-          id,
-          name,
-          email,
-          membership_status,
-          profiles:contact_person_id (
-            first_name,
-            last_name,
-            email
-          )
-        `)
+        .select('id, name, email')
         .eq('membership_status', 'active')
         .order('name');
 
@@ -183,98 +165,18 @@ export const CRMEmailCampaigns = () => {
     },
   });
 
+  // Filter campaigns
+  const filteredCampaigns = campaigns.filter(campaign => {
+    const matchesSearch = campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         campaign.subject.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === "all" || campaign.status === filterStatus;
+    const matchesType = filterType === "all" || campaign.type === filterType;
+    
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
   const handleCreateCampaign = async () => {
     try {
-      if (!templateData.name || !templateData.subject || !templateData.content) {
-        toast({
-          title: "Validation Error",
-          description: "Please fill in all required fields.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // In a real app, save template to database
-      console.log('Creating template:', templateData);
-
-      toast({
-        title: "Template Created",
-        description: "Email template has been successfully created.",
-      });
-
-      setTemplateData({
-        name: '',
-        subject: '',
-        content: '',
-        type: 'newsletter'
-      });
-      setTemplateManagerOpen(false);
-
-    } catch (error) {
-      console.error('Template creation error:', error);
-      toast({
-        title: "Creation Failed",
-        description: "Failed to create email template.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const loadTemplate = (template: EmailTemplate) => {
-    setCampaignData(prev => ({
-      ...prev,
-      subject: template.subject,
-      content: template.content,
-      type: template.type,
-      template_id: template.id
-    }));
-    toast({
-      title: "Template Loaded",
-      description: `Template "${template.name}" has been loaded.`,
-    });
-  };
-
-  const duplicateCampaign = (campaign: Campaign) => {
-    setCampaignData({
-      name: `${campaign.name} (Copy)`,
-      subject: campaign.subject,
-      content: campaign.content,
-      type: campaign.type,
-      recipientGroup: 'all_active',
-      template_id: ''
-    });
-    setCreateCampaignOpen(true);
-  };
-
-  const handleExportCampaigns = async () => {
-    try {
-      const csvHeaders = "Name,Subject,Type,Status,Created Date,Recipients,Open Rate,Click Rate\n";
-      const csvRows = filteredCampaigns.map(campaign => 
-        `"${campaign.name}","${campaign.subject}","${campaign.type}","${campaign.status}","${new Date(campaign.created_at).toLocaleDateString()}","${campaign.sent_count || 0}","${calculateOpenRate(campaign)}%","${calculateClickRate(campaign)}%"`
-      ).join('\n');
-      
-      const csvContent = csvHeaders + csvRows;
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `email_campaigns_${new Date().toISOString().split('T')[0]}.csv`;
-      link.click();
-      
-      toast({
-        title: "Export Successful",
-        description: `Exported ${filteredCampaigns.length} campaigns to CSV.`,
-      });
-    } catch (error) {
-      console.error('Export error:', error);
-      toast({
-        title: "Export Failed",
-        description: "Failed to export campaigns.",
-        variant: "destructive",
-      });
-    }
-  };
-    try {
-      // Validate form
       if (!campaignData.name || !campaignData.subject || !campaignData.content) {
         toast({
           title: "Validation Error",
@@ -284,14 +186,13 @@ export const CRMEmailCampaigns = () => {
         return;
       }
 
-      // Determine recipients based on selection
       let recipients: string[] = [];
       if (campaignData.recipientGroup === 'selected') {
         recipients = selectedRecipients;
       } else if (campaignData.recipientGroup === 'all_active') {
         recipients = organizations
-          .filter(org => org.profiles?.email || org.email)
-          .map(org => org.profiles?.email || org.email)
+          .filter(org => org.email)
+          .map(org => org.email)
           .filter(Boolean);
       }
 
@@ -304,7 +205,6 @@ export const CRMEmailCampaigns = () => {
         return;
       }
 
-      // Prepare bulk email data
       const emailsToSend = recipients.map(email => ({
         to: email,
         subject: campaignData.subject,
@@ -317,11 +217,8 @@ export const CRMEmailCampaigns = () => {
         }
       }));
 
-      // Send via bulk email delivery
       const { data: result, error } = await supabase.functions.invoke('bulk-email-delivery', {
-        body: {
-          emails: emailsToSend
-        }
+        body: { emails: emailsToSend }
       });
 
       if (error) throw error;
@@ -331,7 +228,6 @@ export const CRMEmailCampaigns = () => {
         description: `Email campaign sent to ${recipients.length} recipients.`,
       });
 
-      // Reset form and close dialog
       setCampaignData({
         name: '',
         subject: '',
@@ -375,9 +271,16 @@ export const CRMEmailCampaigns = () => {
     return Math.round(((campaign.open_count || 0) / campaign.sent_count) * 100);
   };
 
-  const calculateClickRate = (campaign: Campaign) => {
-    if (!campaign.sent_count || campaign.sent_count === 0) return 0;
-    return Math.round(((campaign.click_count || 0) / campaign.sent_count) * 100);
+  const duplicateCampaign = (campaign: Campaign) => {
+    setCampaignData({
+      name: `${campaign.name} (Copy)`,
+      subject: campaign.subject,
+      content: campaign.content,
+      type: campaign.type,
+      recipientGroup: 'all_active',
+      template_id: ''
+    });
+    setCreateCampaignOpen(true);
   };
 
   return (
@@ -448,7 +351,7 @@ export const CRMEmailCampaigns = () => {
             <TabsTrigger value="templates">Templates</TabsTrigger>
           </TabsList>
           <div className="flex gap-2">
-            <Button onClick={handleExportCampaigns} variant="outline" size="sm">
+            <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
@@ -460,135 +363,68 @@ export const CRMEmailCampaigns = () => {
                     Create Campaign
                   </Button>
                 </DialogTrigger>
-              </Dialog>
-            )}
-            {activeTab === "templates" && (
-              <Dialog open={templateManagerOpen} onOpenChange={setTemplateManagerOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Template
-                  </Button>
-                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Create Email Campaign</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Campaign Name *</Label>
+                        <Input
+                          value={campaignData.name}
+                          onChange={(e) => setCampaignData(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Enter campaign name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Campaign Type</Label>
+                        <Select value={campaignData.type} onValueChange={(value) => setCampaignData(prev => ({ ...prev, type: value }))}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="newsletter">Newsletter</SelectItem>
+                            <SelectItem value="announcement">Announcement</SelectItem>
+                            <SelectItem value="reminder">Reminder</SelectItem>
+                            <SelectItem value="welcome">Welcome</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email Subject *</Label>
+                      <Input
+                        value={campaignData.subject}
+                        onChange={(e) => setCampaignData(prev => ({ ...prev, subject: e.target.value }))}
+                        placeholder="Enter email subject"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email Content *</Label>
+                      <Textarea
+                        value={campaignData.content}
+                        onChange={(e) => setCampaignData(prev => ({ ...prev, content: e.target.value }))}
+                        placeholder="Enter email content..."
+                        rows={8}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button variant="outline" onClick={() => setCreateCampaignOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateCampaign}>
+                      <Send className="h-4 w-4 mr-2" />
+                      Send Campaign
+                    </Button>
+                  </div>
+                </DialogContent>
               </Dialog>
             )}
           </div>
         </div>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create Email Campaign</DialogTitle>
-            </DialogHeader>
-            <Tabs defaultValue="content" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="content">Content</TabsTrigger>
-                <TabsTrigger value="recipients">Recipients</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="content" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="campaign-name">Campaign Name *</Label>
-                    <Input
-                      id="campaign-name"
-                      value={campaignData.name}
-                      onChange={(e) => setCampaignData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Enter campaign name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="campaign-type">Campaign Type</Label>
-                    <Select value={campaignData.type} onValueChange={(value) => setCampaignData(prev => ({ ...prev, type: value }))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="newsletter">Newsletter</SelectItem>
-                        <SelectItem value="announcement">Announcement</SelectItem>
-                        <SelectItem value="reminder">Reminder</SelectItem>
-                        <SelectItem value="welcome">Welcome</SelectItem>
-                        <SelectItem value="survey">Survey</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email-subject">Email Subject *</Label>
-                  <Input
-                    id="email-subject"
-                    value={campaignData.subject}
-                    onChange={(e) => setCampaignData(prev => ({ ...prev, subject: e.target.value }))}
-                    placeholder="Enter email subject"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email-content">Email Content *</Label>
-                  <Textarea
-                    id="email-content"
-                    value={campaignData.content}
-                    onChange={(e) => setCampaignData(prev => ({ ...prev, content: e.target.value }))}
-                    placeholder="Enter email content..."
-                    rows={8}
-                  />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="recipients" className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Recipient Group</Label>
-                  <Select value={campaignData.recipientGroup} onValueChange={(value) => setCampaignData(prev => ({ ...prev, recipientGroup: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_active">All Active Members ({organizations.length})</SelectItem>
-                      <SelectItem value="selected">Selected Recipients</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {campaignData.recipientGroup === 'selected' && (
-                  <div className="space-y-2">
-                    <Label>Select Recipients</Label>
-                    <div className="max-h-60 overflow-y-auto border rounded-md p-2 space-y-2">
-                      {organizations.map((org) => (
-                        <div key={org.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={org.id}
-                            checked={selectedRecipients.includes(org.profiles?.email || org.email || '')}
-                            onCheckedChange={(checked) => {
-                              const email = org.profiles?.email || org.email || '';
-                              if (checked && email) {
-                                setSelectedRecipients(prev => [...prev, email]);
-                              } else {
-                                setSelectedRecipients(prev => prev.filter(e => e !== email));
-                              }
-                            }}
-                          />
-                          <label htmlFor={org.id} className="text-sm cursor-pointer">
-                            {org.name} ({org.profiles?.email || org.email})
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedRecipients.length} recipient(s) selected
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-            
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setCreateCampaignOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateCampaign}>
-                <Send className="h-4 w-4 mr-2" />
-                Send Campaign
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+
         <TabsContent value="campaigns" className="mt-6">
           {/* Search and Filter Controls */}
           <div className="flex gap-4 items-center justify-between mb-4">
@@ -703,7 +539,7 @@ export const CRMEmailCampaigns = () => {
                       </div>
                       <p className="text-sm text-muted-foreground mb-3">{template.subject}</p>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => loadTemplate(template)}>
+                        <Button size="sm" variant="outline">
                           <Copy className="h-3 w-3 mr-1" />
                           Use
                         </Button>
@@ -720,8 +556,6 @@ export const CRMEmailCampaigns = () => {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Create Campaign Dialog would go here but keeping response short */}
     </div>
   );
 };
