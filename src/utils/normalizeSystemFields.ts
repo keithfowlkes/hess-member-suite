@@ -180,6 +180,78 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "Anthology/Campus Management": "Anthology/Campus Management",
     "Campus Management": "Anthology/Campus Management",
     "In-house Developed": "In-House Developed"
+  },
+  
+  voip: {
+    // Microsoft Teams variations
+    "Microsoft Teams": "Microsoft Teams",
+    "Teams": "Microsoft Teams",
+    "MS Teams": "Microsoft Teams",
+    
+    // Cisco variations
+    "Cisco": "Cisco",
+    "Cisco WebEx": "Cisco WebEx",
+    "WebEx": "Cisco WebEx",
+    "Cisco Unified Communications": "Cisco Unified Communications",
+    
+    // Zoom variations
+    "Zoom": "Zoom Phone",
+    "Zoom Phone": "Zoom Phone",
+    
+    // RingCentral variations
+    "RingCentral": "RingCentral",
+    "Ring Central": "RingCentral",
+    
+    // 8x8 variations
+    "8x8": "8x8",
+    
+    // Avaya variations
+    "Avaya": "Avaya",
+    
+    // Mitel variations
+    "Mitel": "Mitel",
+    
+    // Other systems
+    "Vonage": "Vonage",
+    "Nextiva": "Nextiva",
+    "In-house Developed": "In-House Developed"
+  },
+  
+  network_infrastructure: {
+    // Cisco variations
+    "Cisco": "Cisco",
+    "Cisco Meraki": "Cisco Meraki",
+    "Meraki": "Cisco Meraki",
+    
+    // Aruba variations
+    "Aruba": "Aruba",
+    "HPE Aruba": "Aruba",
+    
+    // Juniper variations
+    "Juniper": "Juniper Networks",
+    "Juniper Networks": "Juniper Networks",
+    
+    // Ubiquiti variations
+    "Ubiquiti": "Ubiquiti",
+    "UniFi": "Ubiquiti UniFi",
+    "Ubiquiti UniFi": "Ubiquiti UniFi",
+    
+    // Extreme Networks variations
+    "Extreme Networks": "Extreme Networks",
+    "Extreme": "Extreme Networks",
+    
+    // Fortinet variations
+    "Fortinet": "Fortinet",
+    "FortiGate": "Fortinet FortiGate",
+    
+    // Palo Alto variations
+    "Palo Alto": "Palo Alto Networks",
+    "Palo Alto Networks": "Palo Alto Networks",
+    
+    // Other systems
+    "Ruckus": "Ruckus Wireless",
+    "Dell": "Dell Networking",
+    "In-house Developed": "In-House Developed"
   }
 };
 
