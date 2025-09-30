@@ -447,6 +447,7 @@ export type Database = {
           existing_organization_id: string | null
           existing_organization_name: string | null
           id: string
+          network_infrastructure: string | null
           organization_data: Json
           registration_data: Json
           reviewed_at: string | null
@@ -457,6 +458,7 @@ export type Database = {
           submitted_at: string
           submitted_email: string
           updated_at: string
+          voip: string | null
         }
         Insert: {
           admin_notes?: string | null
@@ -465,6 +467,7 @@ export type Database = {
           existing_organization_id?: string | null
           existing_organization_name?: string | null
           id?: string
+          network_infrastructure?: string | null
           organization_data?: Json
           registration_data?: Json
           reviewed_at?: string | null
@@ -475,6 +478,7 @@ export type Database = {
           submitted_at?: string
           submitted_email: string
           updated_at?: string
+          voip?: string | null
         }
         Update: {
           admin_notes?: string | null
@@ -483,6 +487,7 @@ export type Database = {
           existing_organization_id?: string | null
           existing_organization_name?: string | null
           id?: string
+          network_infrastructure?: string | null
           organization_data?: Json
           registration_data?: Json
           reviewed_at?: string | null
@@ -493,6 +498,7 @@ export type Database = {
           submitted_at?: string
           submitted_email?: string
           updated_at?: string
+          voip?: string | null
         }
         Relationships: []
       }
@@ -748,6 +754,7 @@ export type Database = {
             | Database["public"]["Enums"]["membership_status"]
             | null
           name: string
+          network_infrastructure: string | null
           notes: string | null
           organization_type: string | null
           other_software_comments: string | null
@@ -772,6 +779,7 @@ export type Database = {
           student_fte: number | null
           student_information_system: string | null
           updated_at: string
+          voip: string | null
           website: string | null
           zip_code: string | null
         }
@@ -803,6 +811,7 @@ export type Database = {
             | Database["public"]["Enums"]["membership_status"]
             | null
           name: string
+          network_infrastructure?: string | null
           notes?: string | null
           organization_type?: string | null
           other_software_comments?: string | null
@@ -827,6 +836,7 @@ export type Database = {
           student_fte?: number | null
           student_information_system?: string | null
           updated_at?: string
+          voip?: string | null
           website?: string | null
           zip_code?: string | null
         }
@@ -858,6 +868,7 @@ export type Database = {
             | Database["public"]["Enums"]["membership_status"]
             | null
           name?: string
+          network_infrastructure?: string | null
           notes?: string | null
           organization_type?: string | null
           other_software_comments?: string | null
@@ -882,6 +893,7 @@ export type Database = {
           student_fte?: number | null
           student_information_system?: string | null
           updated_at?: string
+          voip?: string | null
           website?: string | null
           zip_code?: string | null
         }
@@ -924,6 +936,7 @@ export type Database = {
           learning_management: string | null
           login_hint: string | null
           meal_plan_management: string | null
+          network_infrastructure: string | null
           organization_name: string
           original_submission_id: string | null
           other_software_comments: string | null
@@ -953,6 +966,7 @@ export type Database = {
           student_fte: number | null
           student_information_system: string | null
           updated_at: string
+          voip: string | null
           zip: string | null
         }
         Insert: {
@@ -983,6 +997,7 @@ export type Database = {
           learning_management?: string | null
           login_hint?: string | null
           meal_plan_management?: string | null
+          network_infrastructure?: string | null
           organization_name: string
           original_submission_id?: string | null
           other_software_comments?: string | null
@@ -1012,6 +1027,7 @@ export type Database = {
           student_fte?: number | null
           student_information_system?: string | null
           updated_at?: string
+          voip?: string | null
           zip?: string | null
         }
         Update: {
@@ -1042,6 +1058,7 @@ export type Database = {
           learning_management?: string | null
           login_hint?: string | null
           meal_plan_management?: string | null
+          network_infrastructure?: string | null
           organization_name?: string
           original_submission_id?: string | null
           other_software_comments?: string | null
@@ -1071,6 +1088,7 @@ export type Database = {
           student_fte?: number | null
           student_information_system?: string | null
           updated_at?: string
+          voip?: string | null
           zip?: string | null
         }
         Relationships: [
@@ -1105,6 +1123,7 @@ export type Database = {
           learning_management: string | null
           login_hint: string | null
           meal_plan_management: string | null
+          network_infrastructure: string | null
           organization: string | null
           other_software_comments: string | null
           payment_platform: string | null
@@ -1130,6 +1149,7 @@ export type Database = {
           student_information_system: string | null
           updated_at: string
           user_id: string
+          voip: string | null
           zip: string | null
         }
         Insert: {
@@ -1153,6 +1173,7 @@ export type Database = {
           learning_management?: string | null
           login_hint?: string | null
           meal_plan_management?: string | null
+          network_infrastructure?: string | null
           organization?: string | null
           other_software_comments?: string | null
           payment_platform?: string | null
@@ -1178,6 +1199,7 @@ export type Database = {
           student_information_system?: string | null
           updated_at?: string
           user_id: string
+          voip?: string | null
           zip?: string | null
         }
         Update: {
@@ -1201,6 +1223,7 @@ export type Database = {
           learning_management?: string | null
           login_hint?: string | null
           meal_plan_management?: string | null
+          network_infrastructure?: string | null
           organization?: string | null
           other_software_comments?: string | null
           payment_platform?: string | null
@@ -1226,6 +1249,7 @@ export type Database = {
           student_information_system?: string | null
           updated_at?: string
           user_id?: string
+          voip?: string | null
           zip?: string | null
         }
         Relationships: []

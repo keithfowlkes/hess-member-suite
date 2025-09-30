@@ -21,7 +21,9 @@ export const SYSTEM_FIELDS = [
   'housing_management',
   'learning_management',
   'admissions_crm',
-  'alumni_advancement_crm'
+  'alumni_advancement_crm',
+  'voip',
+  'network_infrastructure'
 ] as const;
 
 export type SystemField = typeof SYSTEM_FIELDS[number];
