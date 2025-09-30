@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useFollowUpCommunications } from '@/hooks/useFollowUpCommunications';
 import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
 export function FollowUpReminders() {
@@ -33,10 +34,30 @@ export function FollowUpReminders() {
   const [isExpanded, setIsExpanded] = useState(totalCount > 0);
   const [selectedOrganization, setSelectedOrganization] = useState<any>(null);
   const [showOrgDialog, setShowOrgDialog] = useState(false);
+  const [loadingOrganization, setLoadingOrganization] = useState(false);
 
-  const handleOrganizationClick = (org: { id: string; name: string; email?: string; phone?: string }) => {
-    setSelectedOrganization(org);
-    setShowOrgDialog(true);
+  const handleOrganizationClick = async (org: { id: string; name: string; email?: string; phone?: string }) => {
+    setLoadingOrganization(true);
+    try {
+      // Fetch the full organization data including profiles
+      const { data, error } = await supabase
+        .from('organizations')
+        .select(`
+          *,
+          profiles:contact_person_id (*)
+        `)
+        .eq('id', org.id)
+        .single();
+
+      if (error) throw error;
+      
+      setSelectedOrganization(data);
+      setShowOrgDialog(true);
+    } catch (error) {
+      console.error('Error fetching organization:', error);
+    } finally {
+      setLoadingOrganization(false);
+    }
   };
 
   const getCommunicationTypeIcon = (type: string) => {
@@ -286,6 +307,7 @@ export function FollowUpReminders() {
         open={showOrgDialog} 
         onOpenChange={setShowOrgDialog}
         organization={selectedOrganization}
+        defaultTab="crm"
       />
     </Card>
   );

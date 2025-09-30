@@ -124,6 +124,7 @@ interface OrganizationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organization?: Organization | null;
+  defaultTab?: string;
 }
 
 interface SystemFieldsSectionProps {
@@ -190,13 +191,21 @@ function SystemFieldsSection({ profileForm }: SystemFieldsSectionProps) {
   );
 }
 
-export function ComprehensiveOrganizationDialog({ open, onOpenChange, organization }: OrganizationDialogProps) {
+export function ComprehensiveOrganizationDialog({ open, onOpenChange, organization, defaultTab = "organization" }: OrganizationDialogProps) {
   const { createOrganization, updateOrganization, refresh, deleteOrganization, unapproveOrganization } = useMembers();
   const { isAdmin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const { toast } = useToast();
 
   console.log('ComprehensiveOrganizationDialog - isAdmin:', isAdmin, 'organization:', !!organization);
+
+  // Update active tab when defaultTab changes and dialog opens
+  useEffect(() => {
+    if (open) {
+      setActiveTab(defaultTab);
+    }
+  }, [open, defaultTab]);
 
   const handleDelete = async () => {
     if (!organization) return;
@@ -533,7 +542,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto pr-2">
-          <Tabs defaultValue="organization" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="organization">Organization</TabsTrigger>
             <TabsTrigger value="contact" disabled={!organization?.profiles}>Primary Contact</TabsTrigger>
