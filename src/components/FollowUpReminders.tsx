@@ -15,6 +15,7 @@ import {
   Building2
 } from 'lucide-react';
 import { useFollowUpCommunications } from '@/hooks/useFollowUpCommunications';
+import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
 import { format } from 'date-fns';
 
 export function FollowUpReminders() {
@@ -30,6 +31,13 @@ export function FollowUpReminders() {
   } = useFollowUpCommunications();
   
   const [isExpanded, setIsExpanded] = useState(totalCount > 0);
+  const [selectedOrganization, setSelectedOrganization] = useState<any>(null);
+  const [showOrgDialog, setShowOrgDialog] = useState(false);
+
+  const handleOrganizationClick = (org: { id: string; name: string; email?: string; phone?: string }) => {
+    setSelectedOrganization(org);
+    setShowOrgDialog(true);
+  };
 
   const getCommunicationTypeIcon = (type: string) => {
     switch (type) {
@@ -132,7 +140,12 @@ export function FollowUpReminders() {
                             
                             <div className="flex items-center space-x-2 mb-1">
                               <Building2 className="h-3 w-3 text-gray-500" />
-                              <span className="font-medium text-sm">{comm.organizations.name}</span>
+                              <button
+                                onClick={() => handleOrganizationClick(comm.organizations)}
+                                className="font-medium text-sm text-primary hover:underline cursor-pointer"
+                              >
+                                {comm.organizations.name}
+                              </button>
                             </div>
                             
                             {comm.subject && (
@@ -178,7 +191,12 @@ export function FollowUpReminders() {
                             
                             <div className="flex items-center space-x-2 mb-1">
                               <Building2 className="h-3 w-3 text-gray-500" />
-                              <span className="font-medium text-sm">{comm.organizations.name}</span>
+                              <button
+                                onClick={() => handleOrganizationClick(comm.organizations)}
+                                className="font-medium text-sm text-primary hover:underline cursor-pointer"
+                              >
+                                {comm.organizations.name}
+                              </button>
                             </div>
                             
                             {comm.subject && (
@@ -228,7 +246,12 @@ export function FollowUpReminders() {
                             
                             <div className="flex items-center space-x-2 mb-1">
                               <Building2 className="h-3 w-3 text-gray-500" />
-                              <span className="font-medium text-sm">{comm.organizations.name}</span>
+                              <button
+                                onClick={() => handleOrganizationClick(comm.organizations)}
+                                className="font-medium text-sm text-primary hover:underline cursor-pointer"
+                              >
+                                {comm.organizations.name}
+                              </button>
                             </div>
                             
                             {comm.subject && (
@@ -258,6 +281,12 @@ export function FollowUpReminders() {
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
+
+      <ComprehensiveOrganizationDialog 
+        open={showOrgDialog} 
+        onOpenChange={setShowOrgDialog}
+        organization={selectedOrganization}
+      />
     </Card>
   );
 }
