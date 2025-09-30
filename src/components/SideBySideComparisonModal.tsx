@@ -221,6 +221,8 @@ export function SideBySideComparisonModal({
 
   // Hardware fields
   const hardwareFields = [
+    { key: 'voip', label: 'VoIP', type: 'text' },
+    { key: 'network_infrastructure', label: 'Network Infrastructure', type: 'text' },
     { key: 'primary_office_apple', label: 'Apple Products', type: 'boolean' },
     { key: 'primary_office_asus', label: 'Lenovo Products', type: 'boolean' },
     { key: 'primary_office_dell', label: 'Dell Products', type: 'boolean' },

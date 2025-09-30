@@ -39,6 +39,8 @@ export interface UnifiedProfile {
     identity_management?: string;
     door_access?: string;
     document_management?: string;
+    voip?: string;
+    network_infrastructure?: string;
     // Hardware fields - available for all users
     primary_office_apple?: boolean;
     primary_office_asus?: boolean;
@@ -86,6 +88,8 @@ export interface UnifiedProfile {
     identity_management?: string;
     door_access?: string;
     document_management?: string;
+    voip?: string;
+    network_infrastructure?: string;
     // Hardware fields
     primary_office_apple?: boolean;
     primary_office_asus?: boolean;

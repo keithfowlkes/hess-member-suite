@@ -603,6 +603,23 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <EnhancedSystemFieldSelect
+              fieldName="voip"
+              label="VoIP"
+              value={editedData.profile.voip || ''}
+              onChange={(value) => updateProfileField('voip', value)}
+              disabled={!isEditing}
+            />
+            <EnhancedSystemFieldSelect
+              fieldName="network_infrastructure"
+              label="Network Infrastructure"
+              value={editedData.profile.network_infrastructure || ''}
+              onChange={(value) => updateProfileField('network_infrastructure', value)}
+              disabled={!isEditing}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-4">
               <Label>Primary Office Hardware</Label>
               <div className="space-y-2">
