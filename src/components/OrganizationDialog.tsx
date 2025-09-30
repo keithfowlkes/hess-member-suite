@@ -77,6 +77,8 @@ const organizationSchema = z.object({
   primary_office_other: z.boolean().optional(),
   primary_office_other_details: z.string().optional(),
   other_software_comments: z.string().optional(),
+  voip: z.string().optional(),
+  network_infrastructure: z.string().optional(),
 });
 
 type OrganizationFormData = z.infer<typeof organizationSchema>;
@@ -127,6 +129,8 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
       primary_office_other: false,
       primary_office_other_details: '',
       other_software_comments: '',
+      voip: '',
+      network_infrastructure: '',
     },
   });
 
@@ -168,6 +172,8 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
         primary_office_other: profile?.primary_office_other || false,
         primary_office_other_details: profile?.primary_office_other_details || '',
         other_software_comments: profile?.other_software_comments || '',
+        voip: profile?.voip || '',
+        network_infrastructure: profile?.network_infrastructure || '',
       });
     } else {
       form.reset({
@@ -203,6 +209,8 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
         primary_office_other: false,
         primary_office_other_details: '',
         other_software_comments: '',
+        voip: '',
+        network_infrastructure: '',
       });
     }
   }, [organization, form]);
@@ -252,6 +260,8 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
             primary_office_other: data.primary_office_other || false,
             primary_office_other_details: data.primary_office_other_details || null,
             other_software_comments: data.other_software_comments || null,
+            voip: data.voip || null,
+            network_infrastructure: data.network_infrastructure || null,
           };
           
           await supabase
@@ -695,6 +705,32 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
                               <FormLabel>Alumni/Advancement CRM</FormLabel>
                               <FormControl>
                                 <Input placeholder="e.g., Raiser's Edge, Ellucian CRM" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="voip"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>VoIP</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Cisco, RingCentral" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="network_infrastructure"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Network Infrastructure</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Cisco, Aruba" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
