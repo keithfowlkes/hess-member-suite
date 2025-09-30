@@ -61,6 +61,8 @@ export interface Organization {
     primary_office_other?: boolean;
     primary_office_other_details?: string;
     other_software_comments?: string;
+    voip?: string;
+    network_infrastructure?: string;
   };
 }
 
@@ -101,7 +103,7 @@ export function useMembers() {
             secondary_contact_email, secondary_contact_phone, student_information_system, financial_system,
             financial_aid, hcm_hr, payroll_system, purchasing_system,
             housing_management, learning_management, admissions_crm,
-            alumni_advancement_crm, primary_office_apple, primary_office_asus,
+            alumni_advancement_crm, voip, network_infrastructure, primary_office_apple, primary_office_asus,
             primary_office_dell, primary_office_hp, primary_office_microsoft,
             primary_office_other, primary_office_other_details, other_software_comments
           )

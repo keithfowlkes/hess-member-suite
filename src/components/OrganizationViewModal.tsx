@@ -144,6 +144,8 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
         learning_management: editData.profiles?.learning_management,
         admissions_crm: editData.profiles?.admissions_crm,
         alumni_advancement_crm: editData.profiles?.alumni_advancement_crm,
+        voip: editData.profiles?.voip,
+        network_infrastructure: editData.profiles?.network_infrastructure,
         primary_office_apple: editData.profiles?.primary_office_apple,
         primary_office_asus: editData.profiles?.primary_office_asus,
         primary_office_dell: editData.profiles?.primary_office_dell,
@@ -691,6 +693,55 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
           </TabsContent>
 
           <TabsContent value="hardware" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Monitor className="h-4 w-4" />
+                  Network & Communications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>VoIP</Label>
+                  {isEditing ? (
+                    <SystemFieldSelect
+                      fieldName="voip"
+                      label="VoIP"
+                      value={profile?.voip || ''}
+                      onChange={(newValue) => setEditData({
+                        ...editData!,
+                        profiles: { 
+                          ...editData!.profiles!, 
+                          voip: newValue
+                        }
+                      })}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{profile?.voip || 'Not specified'}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>Network Infrastructure</Label>
+                  {isEditing ? (
+                    <SystemFieldSelect
+                      fieldName="network_infrastructure"
+                      label="Network Infrastructure"
+                      value={profile?.network_infrastructure || ''}
+                      onChange={(newValue) => setEditData({
+                        ...editData!,
+                        profiles: { 
+                          ...editData!.profiles!, 
+                          network_infrastructure: newValue
+                        }
+                      })}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{profile?.network_infrastructure || 'Not specified'}</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
