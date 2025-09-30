@@ -115,6 +115,8 @@ const profileSchema = z.object({
   primary_office_other: z.boolean().optional(),
   primary_office_other_details: z.string().optional(),
   other_software_comments: z.string().optional(),
+  voip: z.string().optional(),
+  network_infrastructure: z.string().optional(),
 });
 
 type OrganizationFormData = z.infer<typeof organizationSchema>;
@@ -148,6 +150,8 @@ function SystemFieldsSection({ profileForm }: SystemFieldsSectionProps) {
     { key: 'identity_management', label: 'Identity Management' },
     { key: 'door_access', label: 'Door Access' },
     { key: 'document_management', label: 'Document Management' },
+    { key: 'voip', label: 'VoIP' },
+    { key: 'network_infrastructure', label: 'Network Infrastructure' },
   ];
 
   return (
@@ -301,6 +305,8 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
       primary_office_other: false,
       primary_office_other_details: '',
       other_software_comments: '',
+      voip: '',
+      network_infrastructure: '',
     },
   });
 
@@ -363,6 +369,8 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           primary_office_other: profile.primary_office_other || false,
           primary_office_other_details: profile.primary_office_other_details || '',
           other_software_comments: profile.other_software_comments || '',
+          voip: profile.voip || '',
+          network_infrastructure: profile.network_infrastructure || '',
         });
       }
     } else {
@@ -460,6 +468,8 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
             primary_office_other: profileData.primary_office_other || false,
             primary_office_other_details: profileData.primary_office_other_details || null,
             other_software_comments: profileData.other_software_comments || null,
+            voip: profileData.voip || null,
+            network_infrastructure: profileData.network_infrastructure || null,
           };
           
           console.log('Profile update data:', profileUpdateData);
