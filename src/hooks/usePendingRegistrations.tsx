@@ -38,6 +38,8 @@ export interface PendingRegistration {
   primary_office_other_details: string | null;
   other_software_comments: string | null;
   is_private_nonprofit: boolean;
+  voip: string | null;
+  network_infrastructure: string | null;
   approval_status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   rejection_reason?: string | null;

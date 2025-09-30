@@ -299,6 +299,8 @@ export function StreamlinedApprovalDialog({
           <TabsContent value="systems" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
+                { label: 'VoIP', value: registration.voip },
+                { label: 'Network Infrastructure', value: registration.network_infrastructure },
                 { label: 'Student Information System', value: registration.student_information_system },
                 { label: 'Financial System', value: registration.financial_system },
                 { label: 'Financial Aid', value: registration.financial_aid },

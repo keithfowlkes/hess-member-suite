@@ -69,6 +69,8 @@ interface PublicOrganization {
     secondary_last_name?: string;
     secondary_contact_title?: string;
     secondary_contact_email?: string;
+    voip?: string;
+    network_infrastructure?: string;
     student_information_system?: string;
     financial_system?: string;
     financial_aid?: string;
@@ -388,6 +390,29 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
             </TabsContent>
 
             <TabsContent value="hardware" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Monitor className="h-4 w-4" />
+                    Network & Communications
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {profile?.voip && (
+                    <div>
+                      <Label>VoIP</Label>
+                      <p className="text-sm text-muted-foreground mt-1">{profile.voip}</p>
+                    </div>
+                  )}
+                  {profile?.network_infrastructure && (
+                    <div>
+                      <Label>Network Infrastructure</Label>
+                      <p className="text-sm text-muted-foreground mt-1">{profile.network_infrastructure}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
