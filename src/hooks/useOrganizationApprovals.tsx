@@ -42,6 +42,8 @@ export interface PendingOrganization {
   primary_office_other?: boolean;
   primary_office_other_details?: string;
   other_software_comments?: string;
+  voip?: string;
+  network_infrastructure?: string;
   profiles?: {
     first_name: string;
     last_name: string;

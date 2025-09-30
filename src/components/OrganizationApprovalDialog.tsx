@@ -76,6 +76,7 @@ export const OrganizationApprovalDialog = ({
       'student_information_system', 'financial_system', 'financial_aid',
       'hcm_hr', 'payroll_system', 'purchasing_system', 'housing_management',
       'learning_management', 'admissions_crm', 'alumni_advancement_crm',
+      'voip', 'network_infrastructure',
       'primary_office_apple', 'primary_office_asus', 'primary_office_dell',
       'primary_office_hp', 'primary_office_microsoft', 'primary_office_other',
       'primary_office_other_details', 'other_software_comments', 'notes'
@@ -360,6 +361,12 @@ export const OrganizationApprovalDialog = ({
             Software Systems
           </h4>
           <div className="space-y-1 text-xs">
+            {organization?.voip && (
+              <div><span className="font-medium">VoIP:</span> {organization.voip}</div>
+            )}
+            {organization?.network_infrastructure && (
+              <div><span className="font-medium">Network Infrastructure:</span> {organization.network_infrastructure}</div>
+            )}
             {organization?.student_information_system && (
               <div><span className="font-medium">SIS:</span> {organization.student_information_system}</div>
             )}
