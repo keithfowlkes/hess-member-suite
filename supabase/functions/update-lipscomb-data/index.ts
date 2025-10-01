@@ -13,19 +13,47 @@ Deno.serve(async (req) => {
       }
     )
 
-    // Update Fowlkes University with the correct data
+    // First, get the organization and profile IDs
+    const { data: org } = await supabaseClient
+      .from('organizations')
+      .select('id, contact_person_id')
+      .eq('name', 'Fowlkes University')
+      .single()
+
+    if (!org) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Organization not found' }),
+        { headers: { 'Content-Type': 'application/json' }, status: 404 }
+      )
+    }
+
+    // Update the profiles table
+    const { error: profileError } = await supabaseClient
+      .from('profiles')
+      .update({
+        payment_platform: 'Flywire',
+        meal_plan_management: 'CBORD',
+        identity_management: 'Fischer Identity',
+        door_access: 'None',
+        document_management: 'DocuWare',
+        secondary_contact_phone: '3433433434',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', org.contact_person_id)
+
+    if (profileError) throw profileError
+
+    // Update the organizations table
     const { data, error } = await supabaseClient
       .from('organizations')
       .update({
-        identity_management: 'Fischer Identity',
-        door_access: 'CBORD',
-        document_management: 'Adobe Document Cloud',
-        voip: 'Microsoft Teams Voice',
-        network_infrastructure: 'Extreme Networks',
         payment_platform: 'Flywire',
         meal_plan_management: 'CBORD',
-        approximate_date_joined_hess: '2025-10-01',
-        secondary_contact_phone: '8595163571',
+        identity_management: 'Fischer Identity',
+        door_access: 'None',
+        document_management: 'DocuWare',
+        secondary_contact_phone: '3433433434',
+        approximate_date_joined_hess: '2014-01-01',
         updated_at: new Date().toISOString()
       })
       .eq('name', 'Fowlkes University')
