@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Invoke Edge Function</title>
+</head>
+<body>
+  <h1>Invoking update-lipscomb-data function...</h1>
+  <pre id="result">Loading...</pre>
+
+  <script>
+    (async () => {
+      try {
+        const response = await fetch('https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/update-lipscomb-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470'
+          }
+        });
+        
+        const data = await response.json();
+        document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        document.getElementById('result').textContent = 'Error: ' + error.message;
+      }
+    })();
+  </script>
+</body>
+</html>
