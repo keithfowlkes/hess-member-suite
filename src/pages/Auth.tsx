@@ -212,6 +212,10 @@ export default function Auth() {
     doorAccessOther: '',
     documentManagement: '',
     documentManagementOther: '',
+    voip: '',
+    voipOther: '',
+    networkInfrastructure: '',
+    networkInfrastructureOther: '',
     primaryOfficeApple: false,
     primaryOfficeLenovo: false,
     primaryOfficeDell: false,
@@ -550,6 +554,12 @@ export default function Auth() {
           document_management: signUpForm.documentManagement === 'Other' 
             ? signUpForm.documentManagementOther 
             : signUpForm.documentManagement,
+          voip: signUpForm.voip === 'Other' 
+            ? signUpForm.voipOther 
+            : signUpForm.voip,
+          network_infrastructure: signUpForm.networkInfrastructure === 'Other' 
+            ? signUpForm.networkInfrastructureOther 
+            : signUpForm.networkInfrastructure,
           primary_office_apple: signUpForm.primaryOfficeApple,
           primary_office_asus: signUpForm.primaryOfficeLenovo,
           primary_office_dell: signUpForm.primaryOfficeDell,
@@ -708,6 +718,12 @@ export default function Auth() {
         documentManagement: signUpForm.documentManagement === 'Other' 
           ? signUpForm.documentManagementOther 
           : signUpForm.documentManagement,
+        voip: signUpForm.voip === 'Other' 
+          ? signUpForm.voipOther 
+          : signUpForm.voip,
+        networkInfrastructure: signUpForm.networkInfrastructure === 'Other' 
+          ? signUpForm.networkInfrastructureOther 
+          : signUpForm.networkInfrastructure,
       };
 
       // Store registration data for admin approval instead of creating user immediately
@@ -757,6 +773,8 @@ export default function Auth() {
           identity_management: formDataWithCustomValues.identityManagement,
           door_access: formDataWithCustomValues.doorAccess,
           document_management: formDataWithCustomValues.documentManagement,
+          voip: formDataWithCustomValues.voip,
+          network_infrastructure: formDataWithCustomValues.networkInfrastructure,
           primary_office_apple: formDataWithCustomValues.primaryOfficeApple,
           primary_office_asus: formDataWithCustomValues.primaryOfficeLenovo,
           primary_office_dell: formDataWithCustomValues.primaryOfficeDell,
@@ -825,6 +843,8 @@ export default function Auth() {
                 identity_management: formDataWithCustomValues.identityManagement,
                 door_access: formDataWithCustomValues.doorAccess,
                 document_management: formDataWithCustomValues.documentManagement,
+                voip: formDataWithCustomValues.voip,
+                network_infrastructure: formDataWithCustomValues.networkInfrastructure,
                 primary_office_apple: formDataWithCustomValues.primaryOfficeApple,
                 primary_office_asus: formDataWithCustomValues.primaryOfficeLenovo,
                 primary_office_dell: formDataWithCustomValues.primaryOfficeDell,
@@ -1876,6 +1896,29 @@ export default function Auth() {
                         />
                       </div>
                     </div>
+
+                    {/* Network & Communication */}
+                    <div>
+                      <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Network & Communication</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <EnhancedSystemFieldSelect
+                          fieldName="voip"
+                          label="VoIP"
+                          value={signUpForm.voip}
+                          onChange={(value) => setSignUpForm(prev => ({ ...prev, voip: value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
+                        />
+                        <EnhancedSystemFieldSelect
+                          fieldName="network_infrastructure"
+                          label="Network Infrastructure"
+                          value={signUpForm.networkInfrastructure}
+                          onChange={(value) => setSignUpForm(prev => ({ ...prev, networkInfrastructure: value }))}
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required={true}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -2661,6 +2704,31 @@ export default function Auth() {
                             label="Document Management"
                             value={signUpForm.documentManagement}
                             onChange={(value) => setSignUpForm(prev => ({ ...prev, documentManagement: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                            required={true}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Network & Communication */}
+                      <div>
+                        <h4 className="text-md font-medium text-gray-800 mb-4 pb-2 border-b border-gray-200">Network & Communication</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <EnhancedSystemFieldSelect
+                            fieldName="voip"
+                            label="VoIP"
+                            value={signUpForm.voip}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, voip: value }))}
+                            disabled={!isReassignment}
+                            organizationId={selectedOrganizationId || undefined}
+                            required={true}
+                          />
+                          <EnhancedSystemFieldSelect
+                            fieldName="network_infrastructure"
+                            label="Network Infrastructure"
+                            value={signUpForm.networkInfrastructure}
+                            onChange={(value) => setSignUpForm(prev => ({ ...prev, networkInfrastructure: value }))}
                             disabled={!isReassignment}
                             organizationId={selectedOrganizationId || undefined}
                             required={true}
