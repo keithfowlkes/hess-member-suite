@@ -868,9 +868,20 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Email *</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="john.doe@example.com" {...field} />
-                          </FormControl>
+                          <div className="flex gap-2 items-center">
+                            <FormControl>
+                              <Input type="email" placeholder="john.doe@example.com" {...field} />
+                            </FormControl>
+                            {field.value && (
+                              <a 
+                                href={`mailto:${field.value}`}
+                                className="hover:opacity-70 transition-opacity flex-shrink-0"
+                                title="Send email"
+                              >
+                                <Mail className="h-4 w-4 text-muted-foreground" />
+                              </a>
+                            )}
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
