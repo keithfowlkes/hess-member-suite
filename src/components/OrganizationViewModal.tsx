@@ -134,6 +134,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
         secondary_last_name: editData.profiles?.secondary_last_name,
         secondary_contact_title: editData.profiles?.secondary_contact_title,
         secondary_contact_email: editData.profiles?.secondary_contact_email,
+        secondary_contact_phone: editData.profiles?.secondary_contact_phone,
         student_information_system: editData.profiles?.student_information_system,
         financial_system: editData.profiles?.financial_system,
         financial_aid: editData.profiles?.financial_aid,
@@ -144,6 +145,11 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
         learning_management: editData.profiles?.learning_management,
         admissions_crm: editData.profiles?.admissions_crm,
         alumni_advancement_crm: editData.profiles?.alumni_advancement_crm,
+        payment_platform: editData.profiles?.payment_platform,
+        meal_plan_management: editData.profiles?.meal_plan_management,
+        identity_management: editData.profiles?.identity_management,
+        door_access: editData.profiles?.door_access,
+        document_management: editData.profiles?.document_management,
         voip: editData.profiles?.voip,
         network_infrastructure: editData.profiles?.network_infrastructure,
         primary_office_apple: editData.profiles?.primary_office_apple,
@@ -636,6 +642,11 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                 { key: 'learning_management', label: 'Learning Management', icon: GraduationCap },
                 { key: 'admissions_crm', label: 'Admissions CRM', icon: UserPlus },
                 { key: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM', icon: Award },
+                { key: 'payment_platform', label: 'Payment Platform', icon: CreditCard },
+                { key: 'meal_plan_management', label: 'Meal Plan Management', icon: Database },
+                { key: 'identity_management', label: 'Identity Management', icon: UserCheck },
+                { key: 'door_access', label: 'Door Access', icon: Home },
+                { key: 'document_management', label: 'Document Management', icon: Database },
               ].map(({ key, label, icon: Icon }) => {
                 const value = profile?.[key as keyof typeof profile] as string;
                 
