@@ -69,6 +69,7 @@ interface PublicOrganization {
     secondary_last_name?: string;
     secondary_contact_title?: string;
     secondary_contact_email?: string;
+    secondary_contact_phone?: string;
     voip?: string;
     network_infrastructure?: string;
     student_information_system?: string;
@@ -81,6 +82,11 @@ interface PublicOrganization {
     learning_management?: string;
     admissions_crm?: string;
     alumni_advancement_crm?: string;
+    payment_platform?: string;
+    meal_plan_management?: string;
+    identity_management?: string;
+    door_access?: string;
+    document_management?: string;
     primary_office_apple?: boolean;
     primary_office_asus?: boolean;
     primary_office_dell?: boolean;
@@ -357,6 +363,11 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                   { key: 'learning_management', label: 'Learning Management', icon: GraduationCap },
                   { key: 'admissions_crm', label: 'Admissions CRM', icon: UserPlus },
                   { key: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM', icon: Award },
+                  { key: 'payment_platform', label: 'Payment Platform', icon: CreditCard },
+                  { key: 'meal_plan_management', label: 'Meal Plan Management', icon: ShoppingCart },
+                  { key: 'identity_management', label: 'Identity Management', icon: UserCheck },
+                  { key: 'door_access', label: 'Door Access', icon: Building2 },
+                  { key: 'document_management', label: 'Document Management', icon: Database },
                 ].map(({ key, label, icon: Icon }) => {
                   const value = profile?.[key as keyof typeof profile] as string;
                   if (!value) return null;

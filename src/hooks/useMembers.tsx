@@ -53,6 +53,11 @@ export interface Organization {
     learning_management?: string;
     admissions_crm?: string;
     alumni_advancement_crm?: string;
+    payment_platform?: string;
+    meal_plan_management?: string;
+    identity_management?: string;
+    door_access?: string;
+    document_management?: string;
     primary_office_apple?: boolean;
     primary_office_asus?: boolean;
     primary_office_dell?: boolean;
