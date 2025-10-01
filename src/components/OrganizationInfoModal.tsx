@@ -73,7 +73,12 @@ export function OrganizationInfoModal({ organization, isOpen, onClose }: Organiz
             {contactEmail && (
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{contactEmail}</span>
+                <a 
+                  href={`mailto:${contactEmail}`}
+                  className="hover:underline flex items-center gap-1"
+                >
+                  {contactEmail}
+                </a>
               </div>
             )}
             
