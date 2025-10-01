@@ -33,7 +33,7 @@ export const useInstitutionsBySystem = (systemField: string | null, systemName: 
         // Get organizations with optimized query - select only needed fields
         const { data: allOrgs, error: orgsError } = await supabase
           .from('organizations')
-          .select('id, name, city, state, email, website, student_information_system, financial_system, learning_management, financial_aid, hcm_hr, payroll_system, housing_management, admissions_crm, alumni_advancement_crm')
+          .select('id, name, city, state, email, website, student_information_system, financial_system, learning_management, financial_aid, hcm_hr, payroll_system, purchasing_system, housing_management, admissions_crm, alumni_advancement_crm, payment_platform, meal_plan_management, identity_management, door_access, document_management, voip, network_infrastructure')
           .eq('membership_status', 'active');
 
         if (orgsError) throw orgsError;
@@ -60,7 +60,7 @@ export const useInstitutionsBySystem = (systemField: string | null, systemName: 
       // Regular case - optimized query for specific system
       const { data: allOrgs, error } = await supabase
         .from('organizations')
-        .select('id, name, city, state, email, website, student_information_system, financial_system, learning_management, financial_aid, hcm_hr, payroll_system, housing_management, admissions_crm, alumni_advancement_crm')
+        .select('id, name, city, state, email, website, student_information_system, financial_system, learning_management, financial_aid, hcm_hr, payroll_system, purchasing_system, housing_management, admissions_crm, alumni_advancement_crm, payment_platform, meal_plan_management, identity_management, door_access, document_management, voip, network_infrastructure')
         .eq('membership_status', 'active');
 
       if (error) throw error;

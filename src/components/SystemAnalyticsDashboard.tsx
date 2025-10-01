@@ -28,6 +28,8 @@ const SYSTEM_OPTIONS = [
   { key: 'identity_management', label: 'Identity Management', icon: PieChartIcon },
   { key: 'door_access', label: 'Door Access Systems', icon: PieChartIcon },
   { key: 'document_management', label: 'Document Management', icon: PieChartIcon },
+  { key: 'voip', label: 'VoIP Systems', icon: PieChartIcon },
+  { key: 'network_infrastructure', label: 'Network Infrastructure', icon: PieChartIcon },
   { key: 'primary_office_hardware', label: 'Primary Office Hardware', icon: Monitor },
 ];
 
@@ -47,6 +49,8 @@ const SYSTEM_DATA_MAP = [
   { key: 'identity_management', title: 'Identity Management' },
   { key: 'door_access', title: 'Door Access Systems' },
   { key: 'document_management', title: 'Document Management' },
+  { key: 'voip', title: 'VoIP Systems' },
+  { key: 'network_infrastructure', title: 'Network Infrastructure' },
   { key: 'primary_office_hardware', title: 'Primary Office Hardware' },
 ];
 
@@ -86,6 +90,8 @@ export function SystemAnalyticsDashboard() {
       'identity_management': analytics.identityManagement,
       'door_access': analytics.doorAccess,
       'document_management': analytics.documentManagement,
+      'voip': analytics.voipSystems,
+      'network_infrastructure': analytics.networkInfrastructure,
       'primary_office_hardware': analytics.primaryOfficeHardware,
     };
     

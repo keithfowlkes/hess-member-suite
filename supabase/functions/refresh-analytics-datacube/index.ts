@@ -36,7 +36,9 @@ const handler = async (req: Request): Promise<Response> => {
       'meal_plan_management',
       'identity_management',
       'door_access',
-      'document_management'
+      'document_management',
+      'voip',
+      'network_infrastructure'
     ];
 
     // Define the hardware fields to analyze (boolean fields)
@@ -82,6 +84,8 @@ const handler = async (req: Request): Promise<Response> => {
         identity_management,
         door_access,
         document_management,
+        voip,
+        network_infrastructure,
         primary_office_apple,
         primary_office_asus,
         primary_office_dell,

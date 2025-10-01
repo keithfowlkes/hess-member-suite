@@ -22,6 +22,8 @@ export interface SystemAnalytics {
   identityManagement: SystemUsage[];
   doorAccess: SystemUsage[];
   documentManagement: SystemUsage[];
+  voipSystems: SystemUsage[];
+  networkInfrastructure: SystemUsage[];
   primaryOfficeHardware: SystemUsage[];
 }
 
@@ -84,6 +86,8 @@ export const useSystemAnalytics = () => {
         identityManagement: processDatacubeData(data || [], 'identity_management'),
         doorAccess: processDatacubeData(data || [], 'door_access'),
         documentManagement: processDatacubeData(data || [], 'document_management'),
+        voipSystems: processDatacubeData(data || [], 'voip'),
+        networkInfrastructure: processDatacubeData(data || [], 'network_infrastructure'),
         primaryOfficeHardware: processDatacubeData(data || [], 'primary_office_hardware'),
       };
 
