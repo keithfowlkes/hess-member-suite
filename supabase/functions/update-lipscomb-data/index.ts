@@ -13,18 +13,22 @@ Deno.serve(async (req) => {
       }
     )
 
-    // Update Lipscomb University with the correct data
+    // Update Fowlkes University with the correct data
     const { data, error } = await supabaseClient
       .from('organizations')
       .update({
-        identity_management: 'Microsoft Entra ID',
-        door_access: 'None',
-        document_management: 'None',
-        voip: 'None',
-        network_infrastructure: 'None',
+        identity_management: 'Fischer Identity',
+        door_access: 'CBORD',
+        document_management: 'Adobe Document Cloud',
+        voip: 'Microsoft Teams Voice',
+        network_infrastructure: 'Extreme Networks',
+        payment_platform: 'Flywire',
+        meal_plan_management: 'CBORD',
+        approximate_date_joined_hess: '2025-10-01',
+        secondary_contact_phone: '8595163571',
         updated_at: new Date().toISOString()
       })
-      .eq('name', 'Lipscomb University')
+      .eq('name', 'Fowlkes University')
       .select()
 
     if (error) throw error
@@ -32,7 +36,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Lipscomb University data updated successfully',
+        message: 'Fowlkes University data updated successfully',
         data 
       }),
       { headers: { 'Content-Type': 'application/json' } }
