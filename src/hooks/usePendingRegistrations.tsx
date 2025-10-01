@@ -19,6 +19,7 @@ export interface PendingRegistration {
   secondary_last_name: string | null;
   secondary_contact_title: string | null;
   secondary_contact_email: string | null;
+  secondary_contact_phone: string | null;
   student_information_system: string | null;
   financial_system: string | null;
   financial_aid: string | null;
@@ -38,8 +39,14 @@ export interface PendingRegistration {
   primary_office_other_details: string | null;
   other_software_comments: string | null;
   is_private_nonprofit: boolean;
+  payment_platform: string | null;
+  meal_plan_management: string | null;
+  identity_management: string | null;
+  door_access: string | null;
+  document_management: string | null;
   voip: string | null;
   network_infrastructure: string | null;
+  approximate_date_joined_hess: string | null;
   approval_status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   rejection_reason?: string | null;

@@ -234,6 +234,9 @@ export function PendingRegistrationApprovalDialog({
                 <div>
                   <span className="font-medium">Email:</span> {registration.secondary_contact_email || 'Not specified'}
                 </div>
+                <div>
+                  <span className="font-medium">Phone:</span> {registration.secondary_contact_phone || 'Not specified'}
+                </div>
               </div>
             </div>
           )}
@@ -253,6 +256,13 @@ export function PendingRegistrationApprovalDialog({
                 { label: 'Learning Management', value: registration.learning_management },
                 { label: 'Admissions CRM', value: registration.admissions_crm },
                 { label: 'Alumni/Advancement CRM', value: registration.alumni_advancement_crm },
+                { label: 'Payment Platform', value: registration.payment_platform },
+                { label: 'Meal Plan Management', value: registration.meal_plan_management },
+                { label: 'Identity Management', value: registration.identity_management },
+                { label: 'Door Access', value: registration.door_access },
+                { label: 'Document Management', value: registration.document_management },
+                { label: 'VoIP', value: registration.voip },
+                { label: 'Network Infrastructure', value: registration.network_infrastructure },
               ].map(({ label, value }) => (
                 <div key={label}>
                   <span className="font-medium">{label}:</span> {value || 'Not specified'}
@@ -287,8 +297,15 @@ export function PendingRegistrationApprovalDialog({
           {/* Registration Date */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-lg mb-3 text-gray-800">Registration Details</h3>
-            <div className="text-sm">
-              <span className="font-medium">Submitted:</span> {new Date(registration.created_at).toLocaleString()}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium">Submitted:</span> {new Date(registration.created_at).toLocaleString()}
+              </div>
+              {registration.approximate_date_joined_hess && (
+                <div>
+                  <span className="font-medium">Approximate Date Joined HESS:</span> {registration.approximate_date_joined_hess}
+                </div>
+              )}
             </div>
           </div>
 
