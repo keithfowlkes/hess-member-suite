@@ -37,8 +37,18 @@ const processDatacubeData = (datacubeEntries: Array<{system_field: string, syste
     count: entry.institution_count 
   }));
   
-  // For hardware fields, show all vendors regardless of count
-  if (field === 'primary_office_hardware') {
+  // Fields that should show all data without grouping into "Other"
+  const showAllDataFields = [
+    'primary_office_hardware',
+    'payment_platform',
+    'meal_plan_management',
+    'identity_management',
+    'door_access',
+    'document_management'
+  ];
+  
+  // For specified fields, show all systems regardless of count
+  if (showAllDataFields.includes(field)) {
     return systemData.sort((a, b) => b.count - a.count);
   }
   
