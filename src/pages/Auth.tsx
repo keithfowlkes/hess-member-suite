@@ -467,6 +467,28 @@ export default function Auth() {
       return;
     }
     
+    // Validate required system fields
+    const requiredSystemFields = [
+      { key: 'identityManagement', label: 'Identity Management' },
+      { key: 'doorAccess', label: 'Door Access' },
+      { key: 'documentManagement', label: 'Document Management' },
+      { key: 'voip', label: 'VoIP' },
+      { key: 'networkInfrastructure', label: 'Network Infrastructure' }
+    ];
+    
+    for (const field of requiredSystemFields) {
+      const value = signUpForm[field.key as keyof typeof signUpForm];
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        toast({
+          title: "Required field missing",
+          description: `Please select a value for ${field.label}.`,
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+    }
+    
     if (recaptchaEnabled && !signUpCaptcha) {
       console.warn('reCAPTCHA validation failed or incomplete');
       toast({

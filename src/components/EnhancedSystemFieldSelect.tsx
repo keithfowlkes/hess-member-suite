@@ -35,6 +35,11 @@ export const EnhancedSystemFieldSelect = ({
     if (val === 'other') {
       setShowCustomInput(true);
     } else {
+      // For required fields, don't allow "none" selection (empty string)
+      if (required && val === 'none') {
+        onChange('');
+        return;
+      }
       onChange(val === 'none' ? '' : val);
       setShowCustomInput(false);
     }
@@ -81,9 +86,11 @@ export const EnhancedSystemFieldSelect = ({
             <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
           </SelectTrigger>
           <SelectContent className="max-h-60 overflow-y-auto bg-background border border-input shadow-lg z-[9999]">
-            <SelectItem value="none" className="hover:bg-accent">
-              <span className="text-muted-foreground">None specified</span>
-            </SelectItem>
+            {!required && (
+              <SelectItem value="none" className="hover:bg-accent">
+                <span className="text-muted-foreground">None specified</span>
+              </SelectItem>
+            )}
             {options.map((option) => (
               <SelectItem key={option} value={option} className="hover:bg-accent">
                 {option}
