@@ -31,7 +31,7 @@ export function FollowUpReminders() {
     isLoading 
   } = useFollowUpCommunications();
   
-  const [isExpanded, setIsExpanded] = useState(totalCount > 0);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState<any>(null);
   const [showOrgDialog, setShowOrgDialog] = useState(false);
   const [loadingOrganization, setLoadingOrganization] = useState(false);
