@@ -248,7 +248,8 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      // Step 4: Update existing profile with new data
+      // Step 4: Update existing profile with contact person data only
+      // Note: All system fields are stored in organizations table, not profiles
       const { error: profileUpdateError } = await supabase
         .from('profiles')
         .update({
@@ -257,44 +258,12 @@ const handler = async (req: Request): Promise<Response> => {
           email: registrationData.email,
           phone: registrationData.phone,
           organization: organizationName,
-          state_association: registrationData.state_association,
-          address: registrationData.address,
-          city: registrationData.city,
-          state: registrationData.state,
-          zip: registrationData.zip,
           primary_contact_title: registrationData.primary_contact_title,
           secondary_first_name: registrationData.secondary_first_name,
           secondary_last_name: registrationData.secondary_last_name,
           secondary_contact_title: registrationData.secondary_contact_title,
           secondary_contact_email: registrationData.secondary_contact_email,
           secondary_contact_phone: registrationData.secondary_contact_phone || registrationUpdate.secondary_contact_phone,
-          student_information_system: registrationData.student_information_system,
-          financial_system: registrationData.financial_system,
-          financial_aid: registrationData.financial_aid,
-          hcm_hr: registrationData.hcm_hr,
-          payroll_system: registrationData.payroll_system,
-          purchasing_system: registrationData.purchasing_system,
-          housing_management: registrationData.housing_management,
-          learning_management: registrationData.learning_management,
-          admissions_crm: registrationData.admissions_crm,
-          alumni_advancement_crm: registrationData.alumni_advancement_crm,
-          payment_platform: registrationData.payment_platform,
-          meal_plan_management: registrationData.meal_plan_management,
-          identity_management: registrationData.identity_management,
-          door_access: registrationData.door_access,
-          document_management: registrationData.document_management,
-          voip: registrationData.voip || registrationUpdate.voip,
-          network_infrastructure: registrationData.network_infrastructure || registrationUpdate.network_infrastructure,
-          student_fte: organizationData.student_fte,
-          primary_office_apple: registrationData.primary_office_apple || false,
-          primary_office_lenovo: registrationData.primary_office_lenovo || false,
-          primary_office_dell: registrationData.primary_office_dell || false,
-          primary_office_hp: registrationData.primary_office_hp || false,
-          primary_office_microsoft: registrationData.primary_office_microsoft || false,
-          primary_office_other: registrationData.primary_office_other || false,
-          primary_office_other_details: registrationData.primary_office_other_details,
-          other_software_comments: registrationData.other_software_comments,
-          is_private_nonprofit: registrationData.is_private_nonprofit || false,
           updated_at: new Date().toISOString()
         })
         .eq('id', existingOrganization.contact_person_id);
@@ -381,7 +350,8 @@ const handler = async (req: Request): Promise<Response> => {
 
       console.log('User created successfully:', newUser.user.id);
 
-      // Step 4: Create profile for the new user (this should happen via trigger, but let's ensure it)
+      // Step 4: Create profile for the new user (contact person data only)
+      // Note: All system fields are stored in organizations table, not profiles
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -391,44 +361,12 @@ const handler = async (req: Request): Promise<Response> => {
           email: registrationData.email,
           phone: registrationData.phone,
           organization: organizationName,
-          state_association: registrationData.state_association,
-          address: registrationData.address,
-          city: registrationData.city,
-          state: registrationData.state,
-          zip: registrationData.zip,
           primary_contact_title: registrationData.primary_contact_title,
           secondary_first_name: registrationData.secondary_first_name,
           secondary_last_name: registrationData.secondary_last_name,
           secondary_contact_title: registrationData.secondary_contact_title,
           secondary_contact_email: registrationData.secondary_contact_email,
-          secondary_contact_phone: registrationData.secondary_contact_phone || registrationUpdate.secondary_contact_phone,
-          student_information_system: registrationData.student_information_system,
-          financial_system: registrationData.financial_system,
-          financial_aid: registrationData.financial_aid,
-          hcm_hr: registrationData.hcm_hr,
-          payroll_system: registrationData.payroll_system,
-          purchasing_system: registrationData.purchasing_system,
-          housing_management: registrationData.housing_management,
-          learning_management: registrationData.learning_management,
-          admissions_crm: registrationData.admissions_crm,
-          alumni_advancement_crm: registrationData.alumni_advancement_crm,
-          payment_platform: registrationData.payment_platform,
-          meal_plan_management: registrationData.meal_plan_management,
-          identity_management: registrationData.identity_management,
-          door_access: registrationData.door_access,
-          document_management: registrationData.document_management,
-          voip: registrationData.voip || registrationUpdate.voip,
-          network_infrastructure: registrationData.network_infrastructure || registrationUpdate.network_infrastructure,
-          student_fte: organizationData.student_fte,
-          primary_office_apple: registrationData.primary_office_apple || false,
-          primary_office_lenovo: registrationData.primary_office_lenovo || false,
-          primary_office_dell: registrationData.primary_office_dell || false,
-          primary_office_hp: registrationData.primary_office_hp || false,
-          primary_office_microsoft: registrationData.primary_office_microsoft || false,
-          primary_office_other: registrationData.primary_office_other || false,
-          primary_office_other_details: registrationData.primary_office_other_details,
-          other_software_comments: registrationData.other_software_comments,
-          is_private_nonprofit: registrationData.is_private_nonprofit || false
+          secondary_contact_phone: registrationData.secondary_contact_phone || registrationUpdate.secondary_contact_phone
         })
         .select()
         .single();
