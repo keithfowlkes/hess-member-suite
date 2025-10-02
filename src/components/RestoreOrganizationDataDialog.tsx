@@ -33,43 +33,24 @@ export function RestoreOrganizationDataDialog({ open, onOpenChange }: RestoreOrg
 
   const transformCSVToRestoreData = (data: CSVRow[]) => {
     return data.map(row => {
-      const isPrivateNonProfit = row['We are a private, non-profit institution: Yes, we are a private, non-profit institution of higher education']?.toLowerCase() === 'checked';
-      
       return {
-        organization_name: row['Your college or university']?.trim(),
-        state_association: row['State Association (if applicable)'] || null,
-        student_fte: row['Student FTE'] ? parseInt(row['Student FTE']) : null,
-        address: row['Institutional Mailing Address'] || null,
-        city: row['City'] || null,
-        state: row['State (two letter abbrev)'] || null,
-        zip: row['Zip Code'] || null,
-        primary_first_name: row['First Name- Primary Contact'] || null,
-        primary_last_name: row['Last Name- Primary Contact'] || null,
-        primary_contact_title: row['Primary Contact Title'] || null,
-        primary_email: row['Primary Email'] || null,
-        secondary_first_name: row['First Name- Secondary Contact'] || null,
-        secondary_last_name: row['Last Name- Secondary Contact'] || null,
-        secondary_contact_title: row['Secondary Contact Title'] || null,
-        secondary_contact_email: row['Secondary Contact Email'] || null,
-        secondary_contact_phone: row['Secondary Contact Phone'] || null,
-        student_information_system: row['Student Information System'] || null,
-        financial_system: row['Financial System'] || null,
-        financial_aid: row['Financial Aid'] || null,
-        hcm_hr: row['HCM (HR)'] || null,
-        payroll_system: row['Payroll system'] || null,
-        purchasing_system: row['Purchasing system'] || null,
-        housing_management: row['Housing Management'] || null,
-        learning_management: row['Learning Management (LMS)'] || null,
-        admissions_crm: row['Admissions CRM'] || null,
-        alumni_advancement_crm: row['Alumni / Advancement CRM'] || null,
-        primary_office_apple: row['Primary Office Computers: Apple']?.toLowerCase().trim() !== '',
-        primary_office_asus: false, // ASUS not in the CSV, but Lenovo is
-        primary_office_dell: row['Primary Office Computers: Dell']?.toLowerCase().trim() !== '',
-        primary_office_hp: row['Primary Office Computers: HP']?.toLowerCase().trim() !== '',
-        primary_office_microsoft: false,
-        primary_office_other: row['Primary Office Computers: Other']?.toLowerCase().trim() !== '',
-        primary_office_other_details: row['Other Office Computer Vendor?'] || null,
-        other_software_comments: row['If you answered other above, please share other software and any comments on your operation?'] || null,
+        college: row['College']?.trim(),
+        city: row['City']?.trim() || null,
+        state: row['State']?.trim() || null,
+        student_information_system: row['Student Information System']?.trim() || null,
+        financial_system: row['Financial System']?.trim() || null,
+        financial_aid: row['Financial Aid']?.trim() || null,
+        hcm_hr: row['HCM (HR)']?.trim() || null,
+        payroll_system: row['Payroll system']?.trim() || null,
+        purchasing_system: row['Purchasing system']?.trim() || null,
+        housing_management: row['Housing Management']?.trim() || null,
+        learning_management: row['Learning Management (LMS)']?.trim() || null,
+        admissions_crm: row['Admissions CRM']?.trim() || null,
+        alumni_advancement_crm: row['Alumni / Advancement CRM']?.trim() || null,
+        primary_office_apple: (row['Primary Office Computers: Apple']?.trim() || '') !== '',
+        primary_office_asus: (row['Primary Office Computers: Lenovo']?.trim() || '') !== '', // Note: CSV has Lenovo, DB has Asus
+        primary_office_dell: (row['Primary Office Computers: Dell']?.trim() || '') !== '',
+        primary_office_hp: (row['Primary Office Computers: HP']?.trim() || '') !== '',
       };
     });
   };
@@ -261,7 +242,7 @@ export function RestoreOrganizationDataDialog({ open, onOpenChange }: RestoreOrg
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Restore Organization Data</DialogTitle>
-          <DialogDescription>Upload the backup CSV file to restore organization data</DialogDescription>
+          <DialogDescription>Upload CSV with College, City, State columns to restore systems and hardware data</DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">
@@ -270,7 +251,7 @@ export function RestoreOrganizationDataDialog({ open, onOpenChange }: RestoreOrg
               <CardHeader>
                 <CardTitle>Upload Backup CSV File</CardTitle>
                 <CardDescription>
-                  Upload the HESS membership form CSV backup to restore organization data
+                  Upload CSV with College, City, State to match organizations and restore systems/hardware data
                 </CardDescription>
               </CardHeader>
               <CardContent>
