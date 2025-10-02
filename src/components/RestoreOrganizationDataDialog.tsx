@@ -48,7 +48,7 @@ export function RestoreOrganizationDataDialog({ open, onOpenChange }: RestoreOrg
         admissions_crm: row['Admissions CRM']?.trim() || null,
         alumni_advancement_crm: row['Alumni / Advancement CRM']?.trim() || null,
         primary_office_apple: (row['Primary Office Computers: Apple']?.trim() || '') !== '',
-        primary_office_asus: (row['Primary Office Computers: Lenovo']?.trim() || '') !== '', // Note: CSV has Lenovo, DB has Asus
+        primary_office_lenovo: (row['Primary Office Computers: Lenovo']?.trim() || '') !== '',
         primary_office_dell: (row['Primary Office Computers: Dell']?.trim() || '') !== '',
         primary_office_hp: (row['Primary Office Computers: HP']?.trim() || '') !== '',
       };

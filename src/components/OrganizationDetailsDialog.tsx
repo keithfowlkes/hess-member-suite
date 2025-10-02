@@ -88,7 +88,7 @@ interface PublicOrganization {
     door_access?: string;
     document_management?: string;
     primary_office_apple?: boolean;
-    primary_office_asus?: boolean;
+    primary_office_lenovo?: boolean;
     primary_office_dell?: boolean;
     primary_office_hp?: boolean;
     primary_office_microsoft?: boolean;
@@ -435,7 +435,7 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {[
                       { key: 'primary_office_apple', label: 'Apple' },
-                      { key: 'primary_office_asus', label: 'Lenovo' },
+                      { key: 'primary_office_lenovo', label: 'Lenovo' },
                       { key: 'primary_office_dell', label: 'Dell' },
                       { key: 'primary_office_hp', label: 'HP' },
                       { key: 'primary_office_microsoft', label: 'Microsoft' },

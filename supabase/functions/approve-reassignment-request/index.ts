@@ -189,7 +189,7 @@ serve(async (req) => {
       'primary_contact_title','secondary_first_name','secondary_last_name','secondary_contact_title','secondary_contact_email',
       'student_information_system','financial_system','financial_aid','hcm_hr','payroll_system','purchasing_system',
       'housing_management','learning_management','admissions_crm','alumni_advancement_crm','primary_office_apple',
-      'primary_office_asus','primary_office_dell','primary_office_hp','primary_office_microsoft','primary_office_other',
+      'primary_office_lenovo','primary_office_dell','primary_office_hp','primary_office_microsoft','primary_office_other',
       'primary_office_other_details','other_software_comments',
     ];
 
@@ -228,7 +228,7 @@ serve(async (req) => {
         'primary_contact_title', 'secondary_first_name', 'secondary_last_name', 'secondary_contact_title', 
         'secondary_contact_email', 'student_information_system', 'financial_system', 'financial_aid',
         'hcm_hr', 'payroll_system', 'purchasing_system', 'housing_management', 'learning_management',
-        'admissions_crm', 'alumni_advancement_crm', 'primary_office_apple', 'primary_office_asus',
+        'admissions_crm', 'alumni_advancement_crm', 'primary_office_apple', 'primary_office_lenovo',
         'primary_office_dell', 'primary_office_hp', 'primary_office_microsoft', 'primary_office_other',
         'primary_office_other_details', 'other_software_comments', 'student_fte', 'is_private_nonprofit'
       ];

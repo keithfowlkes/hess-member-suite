@@ -21,7 +21,7 @@ interface RestoreData {
   admissions_crm?: string;
   alumni_advancement_crm?: string;
   primary_office_apple?: boolean;
-  primary_office_asus?: boolean;
+  primary_office_lenovo?: boolean;
   primary_office_dell?: boolean;
   primary_office_hp?: boolean;
 }
@@ -115,7 +115,7 @@ serve(async (req) => {
             admissions_crm: org.admissions_crm || null,
             alumni_advancement_crm: org.alumni_advancement_crm || null,
             primary_office_apple: org.primary_office_apple || false,
-            primary_office_asus: org.primary_office_asus || false,
+            primary_office_lenovo: org.primary_office_lenovo || false,
             primary_office_dell: org.primary_office_dell || false,
             primary_office_hp: org.primary_office_hp || false,
             updated_at: new Date().toISOString()

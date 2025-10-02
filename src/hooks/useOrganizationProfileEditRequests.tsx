@@ -300,7 +300,7 @@ export function useApproveOrganizationProfileEditRequest() {
             admissions_crm: orgData.admissions_crm || '',
             alumni_advancement_crm: orgData.alumni_advancement_crm || '',
             primary_office_apple: orgData.primary_office_apple || false,
-            primary_office_asus: orgData.primary_office_asus || false,
+            primary_office_lenovo: orgData.primary_office_lenovo || false,
             primary_office_dell: orgData.primary_office_dell || false,
             primary_office_hp: orgData.primary_office_hp || false,
             primary_office_microsoft: orgData.primary_office_microsoft || false,

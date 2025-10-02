@@ -153,7 +153,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
         voip: editData.profiles?.voip,
         network_infrastructure: editData.profiles?.network_infrastructure,
         primary_office_apple: editData.profiles?.primary_office_apple,
-        primary_office_asus: editData.profiles?.primary_office_asus,
+        primary_office_lenovo: editData.profiles?.primary_office_lenovo,
         primary_office_dell: editData.profiles?.primary_office_dell,
         primary_office_hp: editData.profiles?.primary_office_hp,
         primary_office_microsoft: editData.profiles?.primary_office_microsoft,
@@ -764,7 +764,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {[
                     { key: 'primary_office_apple', label: 'Apple' },
-                    { key: 'primary_office_asus', label: 'Lenovo' },
+                    { key: 'primary_office_lenovo', label: 'Lenovo' },
                     { key: 'primary_office_dell', label: 'Dell' },
                     { key: 'primary_office_hp', label: 'HP' },
                     { key: 'primary_office_microsoft', label: 'Microsoft' },

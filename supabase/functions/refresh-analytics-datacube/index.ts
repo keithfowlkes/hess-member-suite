@@ -44,7 +44,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Define the hardware fields to analyze (boolean fields)
     const hardwareFields = [
       'primary_office_apple',
-      'primary_office_asus',
+      'primary_office_lenovo',
       'primary_office_dell',
       'primary_office_hp',
       'primary_office_microsoft',
@@ -87,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
         voip,
         network_infrastructure,
         primary_office_apple,
-        primary_office_asus,
+        primary_office_lenovo,
         primary_office_dell,
         primary_office_hp,
         primary_office_microsoft,

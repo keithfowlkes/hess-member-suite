@@ -43,7 +43,7 @@ export interface UnifiedProfile {
     network_infrastructure?: string;
     // Hardware fields - available for all users
     primary_office_apple?: boolean;
-    primary_office_asus?: boolean;
+    primary_office_lenovo?: boolean;
     primary_office_dell?: boolean;
     primary_office_hp?: boolean;
     primary_office_microsoft?: boolean;
@@ -92,7 +92,7 @@ export interface UnifiedProfile {
     network_infrastructure?: string;
     // Hardware fields
     primary_office_apple?: boolean;
-    primary_office_asus?: boolean;
+    primary_office_lenovo?: boolean;
     primary_office_dell?: boolean;
     primary_office_hp?: boolean;
     primary_office_microsoft?: boolean;

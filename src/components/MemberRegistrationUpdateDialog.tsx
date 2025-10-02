@@ -122,7 +122,7 @@ export function MemberRegistrationUpdateDialog({
       document_management: existingOrganization.document_management ?? '',
       // Hardware preferences
       primary_office_apple: existingOrganization.primary_office_apple ?? false,
-      primary_office_asus: existingOrganization.primary_office_asus ?? false,
+      primary_office_lenovo: existingOrganization.primary_office_lenovo ?? false,
       primary_office_dell: existingOrganization.primary_office_dell ?? false,
       primary_office_hp: existingOrganization.primary_office_hp ?? false,
       primary_office_microsoft: existingOrganization.primary_office_microsoft ?? false,
@@ -169,7 +169,7 @@ export function MemberRegistrationUpdateDialog({
       document_management: orgData.document_management || regData.document_management || '',
       // Hardware preferences
       primary_office_apple: regData.primary_office_apple !== undefined ? regData.primary_office_apple : false,
-      primary_office_asus: regData.primary_office_asus !== undefined ? regData.primary_office_asus : false,
+      primary_office_lenovo: regData.primary_office_lenovo !== undefined ? regData.primary_office_lenovo : false,
       primary_office_dell: regData.primary_office_dell !== undefined ? regData.primary_office_dell : false,
       primary_office_hp: regData.primary_office_hp !== undefined ? regData.primary_office_hp : false,
       primary_office_microsoft: regData.primary_office_microsoft !== undefined ? regData.primary_office_microsoft : false,

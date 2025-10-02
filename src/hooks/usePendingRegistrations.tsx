@@ -31,7 +31,7 @@ export interface PendingRegistration {
   admissions_crm: string | null;
   alumni_advancement_crm: string | null;
   primary_office_apple: boolean;
-  primary_office_asus: boolean;
+  primary_office_lenovo: boolean;
   primary_office_dell: boolean;
   primary_office_hp: boolean;
   primary_office_microsoft: boolean;

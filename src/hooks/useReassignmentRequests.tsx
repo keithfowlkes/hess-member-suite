@@ -79,7 +79,7 @@ export const useReassignmentRequests = () => {
                 notes,
                 other_software_comments,
                 primary_office_apple,
-                primary_office_asus,
+                primary_office_lenovo,
                 primary_office_dell,
                 primary_office_hp,
                 primary_office_microsoft,

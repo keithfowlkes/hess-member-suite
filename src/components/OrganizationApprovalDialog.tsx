@@ -77,7 +77,7 @@ export const OrganizationApprovalDialog = ({
       'hcm_hr', 'payroll_system', 'purchasing_system', 'housing_management',
       'learning_management', 'admissions_crm', 'alumni_advancement_crm',
       'voip', 'network_infrastructure',
-      'primary_office_apple', 'primary_office_asus', 'primary_office_dell',
+      'primary_office_apple', 'primary_office_lenovo', 'primary_office_dell',
       'primary_office_hp', 'primary_office_microsoft', 'primary_office_other',
       'primary_office_other_details', 'other_software_comments', 'notes'
     ];
@@ -385,12 +385,12 @@ export const OrganizationApprovalDialog = ({
             )}
             
             {/* Office Software */}
-            {(organization?.primary_office_apple || organization?.primary_office_asus || organization?.primary_office_dell || organization?.primary_office_hp || organization?.primary_office_microsoft || organization?.primary_office_other) && (
+            {(organization?.primary_office_apple || organization?.primary_office_lenovo || organization?.primary_office_dell || organization?.primary_office_hp || organization?.primary_office_microsoft || organization?.primary_office_other) && (
               <div className="pt-1">
                 <div className="font-medium">Primary Office Software:</div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {organization.primary_office_apple && <Badge variant="outline" className="text-xs px-1 py-0">Apple</Badge>}
-                  {organization.primary_office_asus && <Badge variant="outline" className="text-xs px-1 py-0">Lenovo</Badge>}
+                  {organization.primary_office_lenovo && <Badge variant="outline" className="text-xs px-1 py-0">Lenovo</Badge>}
                   {organization.primary_office_dell && <Badge variant="outline" className="text-xs px-1 py-0">Dell</Badge>}
                   {organization.primary_office_hp && <Badge variant="outline" className="text-xs px-1 py-0">HP</Badge>}
                   {organization.primary_office_microsoft && <Badge variant="outline" className="text-xs px-1 py-0">Microsoft</Badge>}

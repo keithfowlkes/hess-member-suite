@@ -134,7 +134,7 @@ serve(async (req) => {
         admissions_crm: profile.admissions_crm || organization.admissions_crm || '',
         alumni_advancement_crm: profile.alumni_advancement_crm || organization.alumni_advancement_crm || '',
         primary_office_apple: profile.primary_office_apple ?? organization.primary_office_apple ?? false,
-        primary_office_asus: profile.primary_office_asus ?? organization.primary_office_asus ?? false,
+        primary_office_lenovo: profile.primary_office_lenovo ?? organization.primary_office_lenovo ?? false,
         primary_office_dell: profile.primary_office_dell ?? organization.primary_office_dell ?? false,
         primary_office_hp: profile.primary_office_hp ?? organization.primary_office_hp ?? false,
         primary_office_microsoft: profile.primary_office_microsoft ?? organization.primary_office_microsoft ?? false,

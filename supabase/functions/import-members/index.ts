@@ -34,7 +34,7 @@ interface ImportMemberData {
   admissions_crm?: string;
   alumni_advancement_crm?: string;
   primary_office_apple?: boolean;
-  primary_office_asus?: boolean;
+  primary_office_lenovo?: boolean;
   primary_office_dell?: boolean;
   primary_office_hp?: boolean;
   primary_office_microsoft?: boolean;
@@ -165,7 +165,7 @@ serve(async (req) => {
             admissions_crm: member.admissions_crm,
             alumni_advancement_crm: member.alumni_advancement_crm,
             primary_office_apple: member.primary_office_apple || false,
-            primary_office_asus: member.primary_office_asus || false,
+            primary_office_lenovo: member.primary_office_lenovo || false,
             primary_office_dell: member.primary_office_dell || false,
             primary_office_hp: member.primary_office_hp || false,
             primary_office_microsoft: member.primary_office_microsoft || false,

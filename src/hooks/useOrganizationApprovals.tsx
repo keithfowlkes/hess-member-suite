@@ -35,7 +35,7 @@ export interface PendingOrganization {
   admissions_crm?: string;
   alumni_advancement_crm?: string;
   primary_office_apple?: boolean;
-  primary_office_asus?: boolean;
+  primary_office_lenovo?: boolean;
   primary_office_dell?: boolean;
   primary_office_hp?: boolean;
   primary_office_microsoft?: boolean;
@@ -205,7 +205,7 @@ export const useOrganizationApprovals = () => {
           admissions_crm: org.admissions_crm,
           alumni_advancement_crm: org.alumni_advancement_crm,
           primary_office_apple: org.primary_office_apple,
-          primary_office_asus: org.primary_office_asus,
+          primary_office_lenovo: org.primary_office_lenovo,
           primary_office_dell: org.primary_office_dell,
           primary_office_hp: org.primary_office_hp,
           primary_office_microsoft: org.primary_office_microsoft,

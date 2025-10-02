@@ -59,7 +59,7 @@ export interface Organization {
     door_access?: string;
     document_management?: string;
     primary_office_apple?: boolean;
-    primary_office_asus?: boolean;
+    primary_office_lenovo?: boolean;
     primary_office_dell?: boolean;
     primary_office_hp?: boolean;
     primary_office_microsoft?: boolean;

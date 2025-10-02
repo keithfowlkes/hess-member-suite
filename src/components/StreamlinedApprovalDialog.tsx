@@ -270,7 +270,7 @@ export function StreamlinedApprovalDialog({
                 <div className="flex flex-wrap gap-2">
                   {[
                     { key: 'primary_office_apple', label: 'Apple' },
-                    { key: 'primary_office_asus', label: 'Lenovo' },
+                    { key: 'primary_office_lenovo', label: 'Lenovo' },
                     { key: 'primary_office_dell', label: 'Dell' },
                     { key: 'primary_office_hp', label: 'HP' },
                     { key: 'primary_office_microsoft', label: 'Microsoft' },

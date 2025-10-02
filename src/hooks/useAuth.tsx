@@ -285,7 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           admissions_crm: userData.admissionsCrm,
           alumni_advancement_crm: userData.alumniAdvancementCrm,
           primary_office_apple: userData.primaryOfficeApple,
-          primary_office_asus: userData.primaryOfficeLenovo,
+          primary_office_lenovo: userData.primaryOfficeLenovo,
           primary_office_dell: userData.primaryOfficeDell,
           primary_office_hp: userData.primaryOfficeHp,
           primary_office_microsoft: userData.primaryOfficeMicrosoft,

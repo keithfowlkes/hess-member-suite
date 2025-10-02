@@ -75,7 +75,7 @@ const organizationSchema = z.object({
   door_access: z.string().optional(),
   document_management: z.string().optional(),
   primary_office_apple: z.boolean().optional(),
-  primary_office_asus: z.boolean().optional(),
+  primary_office_lenovo: z.boolean().optional(),
   primary_office_dell: z.boolean().optional(),
   primary_office_hp: z.boolean().optional(),
   primary_office_microsoft: z.boolean().optional(),
@@ -132,7 +132,7 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
       door_access: '',
       document_management: '',
       primary_office_apple: false,
-      primary_office_asus: false,
+      primary_office_lenovo: false,
       primary_office_dell: false,
       primary_office_hp: false,
       primary_office_microsoft: false,
@@ -180,7 +180,7 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
         door_access: profile?.door_access || '',
         document_management: profile?.document_management || '',
         primary_office_apple: profile?.primary_office_apple || false,
-        primary_office_asus: profile?.primary_office_asus || false,
+        primary_office_lenovo: profile?.primary_office_lenovo || false,
         primary_office_dell: profile?.primary_office_dell || false,
         primary_office_hp: profile?.primary_office_hp || false,
         primary_office_microsoft: profile?.primary_office_microsoft || false,
@@ -222,7 +222,7 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
         door_access: '',
         document_management: '',
         primary_office_apple: false,
-        primary_office_asus: false,
+        primary_office_lenovo: false,
         primary_office_dell: false,
         primary_office_hp: false,
         primary_office_microsoft: false,
@@ -747,7 +747,7 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
                           />
                           <FormField
                             control={form.control}
-                            name="primary_office_asus"
+                            name="primary_office_lenovo"
                             render={({ field }) => (
                               <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                                 <FormControl>

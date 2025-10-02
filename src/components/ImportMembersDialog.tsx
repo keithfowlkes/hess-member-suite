@@ -50,7 +50,7 @@ const profileFields = [
   { value: 'admissions_crm', label: 'Admissions CRM' },
   { value: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM' },
   { value: 'primary_office_apple', label: 'Primary Office - Apple' },
-  { value: 'primary_office_asus', label: 'Primary Office - Lenovo' },
+  { value: 'primary_office_lenovo', label: 'Primary Office - Lenovo' },
   { value: 'primary_office_dell', label: 'Primary Office - Dell' },
   { value: 'primary_office_hp', label: 'Primary Office - HP' },
   { value: 'primary_office_microsoft', label: 'Primary Office - Microsoft' },
