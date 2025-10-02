@@ -59,11 +59,11 @@ const processDatacubeData = (datacubeEntries: Array<{system_field: string, syste
   const mainItems = systemData.filter(item => item.count >= 11);
   const smallItems = systemData.filter(item => item.count < 11);
   
-  // If there are small items, group them into "Other"
+  // If there are small items, group them into "Other Systems"
   if (smallItems.length > 0) {
     const otherCount = smallItems.reduce((sum, item) => sum + item.count, 0);
     if (otherCount > 0) {
-      mainItems.push({ name: 'Other', count: otherCount });
+      mainItems.push({ name: 'Other Systems', count: otherCount });
     }
   }
   

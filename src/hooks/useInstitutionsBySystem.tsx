@@ -16,8 +16,8 @@ export const useInstitutionsBySystem = (systemField: string | null, systemName: 
     queryFn: async (): Promise<Institution[]> => {
       if (!systemField || !systemName) return [];
 
-      // Handle "Other" case - use datacube to identify small systems first
-      if (systemName === 'Other') {
+      // Handle "Other Systems" and "Other" case - use datacube to identify small systems first
+      if (systemName === 'Other Systems' || systemName === 'Other') {
         // Get small systems from datacube (count < 11)
         const { data: systemCounts, error: countsError } = await supabase
           .from('system_analytics_datacube')
