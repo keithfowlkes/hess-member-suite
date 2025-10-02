@@ -64,35 +64,42 @@ export function InstitutionsModal({
               
               <div className="flex-1 overflow-y-auto pr-2 space-y-2">
                  {institutions.map((institution) => (
-                   <div 
-                     key={institution.id} 
-                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                   >
-                     <div className="flex-1 min-w-0">
-                       <h3 className="font-medium text-foreground truncate">
-                         {institution.name}
-                       </h3>
-                       
-                       <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                         {(institution.city || institution.state) && (
-                           <div className="flex items-center gap-1">
-                             <MapPin className="h-3 w-3 flex-shrink-0" />
-                             <span className="truncate">
-                               {[institution.city, institution.state].filter(Boolean).join(', ')}
-                             </span>
-                           </div>
-                         )}
-                         
-                         {institution.email && (
-                           <div className="flex items-center gap-1 min-w-0">
-                             <Mail className="h-3 w-3 flex-shrink-0" />
-                             <span className="truncate" title={institution.email}>
-                               {institution.email}
-                             </span>
-                           </div>
-                         )}
-                       </div>
-                     </div>
+                    <div 
+                      key={institution.id} 
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-foreground truncate">
+                            {institution.name}
+                          </h3>
+                          {institution.systemName && systemName === 'Other' && (
+                            <Badge variant="outline" className="text-xs flex-shrink-0">
+                              {institution.systemName}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                          {(institution.city || institution.state) && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">
+                                {[institution.city, institution.state].filter(Boolean).join(', ')}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {institution.email && (
+                            <div className="flex items-center gap-1 min-w-0">
+                              <Mail className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate" title={institution.email}>
+                                {institution.email}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                      
                      <DropdownMenu>
                        <DropdownMenuTrigger asChild>

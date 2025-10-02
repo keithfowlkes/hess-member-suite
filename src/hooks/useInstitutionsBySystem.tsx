@@ -8,6 +8,7 @@ export interface Institution {
   state?: string;
   email?: string;
   website?: string;
+  systemName?: string;
 }
 
 export const useInstitutionsBySystem = (systemField: string | null, systemName: string | null) => {
@@ -16,14 +17,14 @@ export const useInstitutionsBySystem = (systemField: string | null, systemName: 
     queryFn: async (): Promise<Institution[]> => {
       if (!systemField || !systemName) return [];
 
-      // Handle "Other Systems" and "Other" case - use datacube to identify small systems first
-      if (systemName === 'Other Systems' || systemName === 'Other') {
-        // Get small systems from datacube (count < 11)
+      // Handle "Other" case - use datacube to identify small systems first
+      if (systemName === 'Other') {
+        // Get small systems from datacube (count < 10)
         const { data: systemCounts, error: countsError } = await supabase
           .from('system_analytics_datacube')
           .select('system_name')
           .eq('system_field', systemField)
-          .lt('institution_count', 11);
+          .lt('institution_count', 10);
 
         if (countsError) throw countsError;
         if (!systemCounts || systemCounts.length === 0) return [];
@@ -39,7 +40,7 @@ export const useInstitutionsBySystem = (systemField: string | null, systemName: 
         if (orgsError) throw orgsError;
         if (!allOrgs) return [];
 
-        // Filter for small systems
+        // Filter for small systems and include system name
         const filteredOrgs = allOrgs.filter(org => {
           const value = (org as any)[systemField];
           return value && smallSystemNames.includes(value);
@@ -53,6 +54,7 @@ export const useInstitutionsBySystem = (systemField: string | null, systemName: 
             state: org.state,
             email: org.email,
             website: org.website,
+            systemName: (org as any)[systemField], // Include the specific system name
           }))
           .sort((a, b) => a.name.localeCompare(b.name));
       }
