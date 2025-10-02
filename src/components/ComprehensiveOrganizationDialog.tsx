@@ -433,6 +433,33 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
           membership_end_date: orgData.membership_end_date?.toISOString().split('T')[0] || null,
           student_fte: profileData.student_fte || null,
           notes: orgData.notes || null,
+          // System fields from profileData
+          student_information_system: profileData.student_information_system || null,
+          financial_system: profileData.financial_system || null,
+          financial_aid: profileData.financial_aid || null,
+          hcm_hr: profileData.hcm_hr || null,
+          payroll_system: profileData.payroll_system || null,
+          purchasing_system: profileData.purchasing_system || null,
+          housing_management: profileData.housing_management || null,
+          learning_management: profileData.learning_management || null,
+          admissions_crm: profileData.admissions_crm || null,
+          alumni_advancement_crm: profileData.alumni_advancement_crm || null,
+          payment_platform: profileData.payment_platform || null,
+          meal_plan_management: profileData.meal_plan_management || null,
+          identity_management: profileData.identity_management || null,
+          door_access: profileData.door_access || null,
+          document_management: profileData.document_management || null,
+          voip: profileData.voip || null,
+          network_infrastructure: profileData.network_infrastructure || null,
+          // Hardware fields from profileData
+          primary_office_apple: profileData.primary_office_apple || false,
+          primary_office_lenovo: profileData.primary_office_lenovo || false,
+          primary_office_dell: profileData.primary_office_dell || false,
+          primary_office_hp: profileData.primary_office_hp || false,
+          primary_office_microsoft: profileData.primary_office_microsoft || false,
+          primary_office_other: profileData.primary_office_other || false,
+          primary_office_other_details: profileData.primary_office_other_details || null,
+          other_software_comments: profileData.other_software_comments || null,
         };
 
         console.log('Updating organization with data:', orgUpdateData);
@@ -440,7 +467,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
         // This automatically calls fetchOrganizations() after update
         await updateOrganization(organization.id, orgUpdateData);
 
-        // Then update the profile if it exists
+        // Then update the profile if it exists (only basic contact info)
         if (organization.contact_person_id) {
           const profileUpdateData = {
             first_name: profileData.first_name || '',
@@ -448,42 +475,12 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
             email: profileData.email || '',
             phone: profileData.phone || null,
             organization: profileData.organization || '',
-            state_association: profileData.state_association || null,
-            address: profileData.address || null,
-            city: profileData.city || null,
-            state: profileData.state || null,
-            zip: profileData.zip || null,
             primary_contact_title: profileData.primary_contact_title || null,
             secondary_first_name: profileData.secondary_first_name || null,
             secondary_last_name: profileData.secondary_last_name || null,
             secondary_contact_title: profileData.secondary_contact_title || null,
             secondary_contact_email: profileData.secondary_contact_email || null,
             secondary_contact_phone: profileData.secondary_contact_phone || null,
-            student_information_system: profileData.student_information_system || null,
-            financial_system: profileData.financial_system || null,
-            financial_aid: profileData.financial_aid || null,
-            hcm_hr: profileData.hcm_hr || null,
-            payroll_system: profileData.payroll_system || null,
-            purchasing_system: profileData.purchasing_system || null,
-            housing_management: profileData.housing_management || null,
-            learning_management: profileData.learning_management || null,
-            admissions_crm: profileData.admissions_crm || null,
-            alumni_advancement_crm: profileData.alumni_advancement_crm || null,
-            payment_platform: profileData.payment_platform || null,
-            meal_plan_management: profileData.meal_plan_management || null,
-            identity_management: profileData.identity_management || null,
-            door_access: profileData.door_access || null,
-            document_management: profileData.document_management || null,
-            primary_office_apple: profileData.primary_office_apple || false,
-            primary_office_lenovo: profileData.primary_office_lenovo || false,
-            primary_office_dell: profileData.primary_office_dell || false,
-            primary_office_hp: profileData.primary_office_hp || false,
-            primary_office_microsoft: profileData.primary_office_microsoft || false,
-            primary_office_other: profileData.primary_office_other || false,
-            primary_office_other_details: profileData.primary_office_other_details || null,
-            other_software_comments: profileData.other_software_comments || null,
-            voip: profileData.voip || null,
-            network_infrastructure: profileData.network_infrastructure || null,
           };
           
           console.log('Profile update data:', profileUpdateData);

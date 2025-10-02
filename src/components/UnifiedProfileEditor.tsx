@@ -93,8 +93,16 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
     console.log('🚀 handleSave - Original data:', data);
     console.log('🚀 handleSave - Edited data:', editedData);
     
+    // Fields that should NOT be updated in profiles table (they belong to organizations)
+    const excludedProfileFields = ['address', 'city', 'state', 'zip', 'state_association'];
+    
     // Compare profile data
     Object.keys(editedData.profile).forEach(key => {
+      // Skip address-related fields that don't exist in profiles table
+      if (excludedProfileFields.includes(key)) {
+        return;
+      }
+      
       const typedKey = key as keyof UnifiedProfile['profile'];
       const originalValue = data.profile[typedKey];
       const editedValue = editedData.profile[typedKey];
