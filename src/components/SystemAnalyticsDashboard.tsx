@@ -198,6 +198,54 @@ export function SystemAnalyticsDashboard() {
     );
   }
 
+  // Check if datacube is empty (no data populated yet)
+  const hasData = analytics && Object.values(analytics).some(arr => arr.length > 0);
+  
+  if (!hasData && !isLoading) {
+    return (
+      <Card className="mb-8 bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <BarChart3 className="h-6 w-6 text-primary" />
+            </div>
+            System Usage Analytics
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center h-48 gap-4">
+            <p className="text-muted-foreground text-center">
+              No analytics data available. Click "Refresh Data" to generate system usage analytics from your organizations.
+            </p>
+            <Button
+              onClick={async () => {
+                try {
+                  const response = await fetch('https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/refresh-analytics-datacube', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470',
+                      'Content-Type': 'application/json'
+                    }
+                  });
+                  
+                  if (response.ok) {
+                    window.location.reload();
+                  }
+                } catch (error) {
+                  console.error('Failed to refresh analytics:', error);
+                }
+              }}
+              className="gap-2"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Refresh Data
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (error) {
     return (
       <Card className="mb-8 bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
