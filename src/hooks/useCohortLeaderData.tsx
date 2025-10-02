@@ -98,7 +98,7 @@ export function useCohortLeaderData() {
         // Get all user IDs for profile lookup
         const userIds = cohortMembersData.map(item => item.user_id);
         
-        // Get profiles for all users
+        // Get profiles for all users with their organization data
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select(`
@@ -108,11 +108,15 @@ export function useCohortLeaderData() {
             last_name,
             email,
             organization,
-            city,
-            state,
             primary_contact_title
           `)
           .in('user_id', userIds);
+        
+        // Get organization data for cities and states
+        const { data: organizationsData, error: orgsError } = await supabase
+          .from('organizations')
+          .select('name, city, state, contact_person_id')
+          .eq('membership_status', 'active');
 
         // Get user roles for all users
         const { data: rolesData, error: rolesError } = await supabase
@@ -122,6 +126,10 @@ export function useCohortLeaderData() {
 
         if (profilesError) {
           throw new Error('Failed to fetch profiles');
+        }
+
+        if (orgsError) {
+          console.error('Failed to fetch organizations:', orgsError);
         }
 
         if (rolesError) {
@@ -142,8 +150,23 @@ export function useCohortLeaderData() {
           return;
         }
 
+        // Create a map of organization name to org data
+        const orgMap = new Map(
+          organizationsData?.map(org => [org.name, org]) || []
+        );
+
         // Create a map of user_id to profile for easier lookup
-        const profileMap = new Map(profilesData.map(profile => [profile.user_id, profile]));
+        const profileMap = new Map(profilesData.map(profile => {
+          const orgData = profile.organization ? orgMap.get(profile.organization) : null;
+          return [
+            profile.user_id,
+            {
+              ...profile,
+              city: orgData?.city,
+              state: orgData?.state
+            }
+          ];
+        }));
         
         // Create a map of user_id to roles for easier lookup
         const rolesMap = new Map<string, { role: 'admin' | 'member' | 'cohort_leader' }[]>();

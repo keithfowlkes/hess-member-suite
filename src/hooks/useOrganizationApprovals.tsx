@@ -49,7 +49,6 @@ export interface PendingOrganization {
     last_name: string;
     email: string;
     primary_contact_title: string;
-    is_private_nonprofit: boolean;
   };
 }
 
@@ -68,8 +67,7 @@ export const useOrganizationApprovals = () => {
             first_name,
             last_name,
             email,
-            primary_contact_title,
-            is_private_nonprofit
+            primary_contact_title
           )
         `)
         .eq('membership_status', 'pending')

@@ -102,8 +102,8 @@ export function useMembers() {
         .select(`
           *,
           profiles:contact_person_id (
-            id, user_id, first_name, last_name, email, phone, organization, state_association,
-            address, city, state, zip, primary_contact_title,
+            id, user_id, first_name, last_name, email, phone, organization,
+            primary_contact_title,
             secondary_first_name, secondary_last_name, secondary_contact_title,
             secondary_contact_email, secondary_contact_phone
           )

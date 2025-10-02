@@ -67,7 +67,7 @@ export const useCohortStatistics = () => {
           
           const { data: profiles, error: profileError } = await supabase
             .from('profiles')
-            .select('id, user_id, organization, first_name, last_name, city, state')
+            .select('id, user_id, organization, first_name, last_name')
             .in('user_id', userIds);
 
           if (profileError) {
@@ -85,14 +85,21 @@ export const useCohortStatistics = () => {
             continue;
           }
 
-          // Get organization data to find primary contacts
+          // Get organization data for cities and states
+          const organizationNames = [...new Set(profiles.map(p => p.organization).filter(Boolean))] as string[];
           const { data: orgData, error: orgError } = await supabase
             .from('organizations')
-            .select('name, contact_person_id, profiles!organizations_contact_person_id_fkey(first_name, last_name)');
+            .select('name, city, state, contact_person_id, profiles!organizations_contact_person_id_fkey(first_name, last_name)')
+            .in('name', organizationNames);
 
           if (orgError) {
             console.error(`Error fetching organization data for cohort ${cohortName}:`, orgError);
           }
+
+          // Create a map of organization names to org data
+          const orgDataMap = new Map(
+            orgData?.map(org => [org.name, org]) || []
+          );
 
           // Create a map of organization names to primary contact info
           const orgContactMap = new Map<string, string>();
@@ -112,11 +119,12 @@ export const useCohortStatistics = () => {
 
           profiles.forEach(profile => {
             if (profile.organization) {
+              const orgInfo = orgDataMap.get(profile.organization);
               if (!organizationMap.has(profile.organization)) {
                 organizationMap.set(profile.organization, {
                   members: [],
-                  city: profile.city || undefined,
-                  state: profile.state || undefined,
+                  city: orgInfo?.city || undefined,
+                  state: orgInfo?.state || undefined,
                   primaryContactName: orgContactMap.get(profile.organization) || undefined
                 });
               }

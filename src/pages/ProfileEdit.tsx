@@ -24,35 +24,12 @@ interface ProfileData {
   email: string;
   phone: string;
   organization: string;
-  state_association: string;
-  student_fte: number | null;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
   primary_contact_title: string;
   secondary_first_name: string;
   secondary_last_name: string;
   secondary_contact_title: string;
   secondary_contact_email: string;
-  student_information_system: string;
-  financial_system: string;
-  financial_aid: string;
-  hcm_hr: string;
-  payroll_system: string;
-  purchasing_system: string;
-  housing_management: string;
-  learning_management: string;
-  admissions_crm: string;
-  alumni_advancement_crm: string;
-  primary_office_apple: boolean;
-  primary_office_asus: boolean;
-  primary_office_dell: boolean;
-  primary_office_hp: boolean;
-  primary_office_microsoft: boolean;
-  primary_office_other: boolean;
-  primary_office_other_details: string;
-  other_software_comments: string;
+  secondary_contact_phone: string;
   login_hint: string;
 }
 
@@ -414,55 +391,9 @@ const ProfileEdit = () => {
                       id="organization"
                       value={editedProfile?.organization || ''}
                       onChange={(e) => updateField('organization', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="state_association">State Association</Label>
-                    <Input
-                      id="state_association"
-                      value={editedProfile?.state_association || ''}
-                      onChange={(e) => updateField('state_association', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="address">Address</Label>
-                    <Input
-                      id="address"
-                      value={editedProfile?.address || ''}
-                      onChange={(e) => updateField('address', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      value={editedProfile?.city || ''}
-                      onChange={(e) => updateField('city', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State</Label>
-                    <Input
-                      id="state"
-                      value={editedProfile?.state || ''}
-                      onChange={(e) => updateField('state', e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="zip">ZIP Code</Label>
-                    <Input
-                      id="zip"
-                      value={editedProfile?.zip || ''}
-                      onChange={(e) => updateField('zip', e.target.value)}
-                      disabled={!isEditing}
+                      disabled={true}
+                      className="bg-muted"
+                      title="Organization name is managed at the organization level"
                     />
                   </div>
                 </div>

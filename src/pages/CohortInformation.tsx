@@ -81,10 +81,10 @@ const CohortInformation = () => {
 
         // Check if user is admin or cohort leader
         if (primaryRole === 'admin' || primaryRole === 'cohort_leader') {
-          // Fetch all users with their roles
+          // Fetch all users with their roles and organization data for city/state
           const { data: usersData, error: usersError } = await supabase
             .from('profiles')
-            .select('id, first_name, last_name, email, organization, city, state, primary_contact_title, user_id');
+            .select('id, first_name, last_name, email, organization, primary_contact_title, user_id');
 
           if (usersError) {
             console.error('Error fetching users:', usersError);
@@ -95,6 +95,21 @@ const CohortInformation = () => {
             });
             return;
           }
+
+          // Fetch organization data for city and state
+          const { data: organizationsData, error: orgsError } = await supabase
+            .from('organizations')
+            .select('name, city, state')
+            .eq('membership_status', 'active');
+
+          if (orgsError) {
+            console.error('Error fetching organizations:', orgsError);
+          }
+
+          // Create a map of organization name to city/state
+          const orgMap = new Map(
+            organizationsData?.map(org => [org.name, { city: org.city, state: org.state }]) || []
+          );
 
           // Fetch user roles for cohort leaders
           const { data: rolesData, error: rolesError } = await supabase
@@ -112,17 +127,22 @@ const CohortInformation = () => {
             return;
           }
 
-          // Combine users with their roles
+          // Combine users with their roles and org data
           const cohortLeaders = usersData
             ?.filter(user => 
               rolesData?.some(role => role.user_id === user.user_id && role.role === 'cohort_leader')
             )
-            .map(user => ({
-              ...user,
-              user_roles: rolesData
-                ?.filter(role => role.user_id === user.user_id)
-                .map(role => ({ role: role.role })) || []
-            })) || [];
+            .map(user => {
+              const orgData = user.organization ? orgMap.get(user.organization) : null;
+              return {
+                ...user,
+                city: orgData?.city,
+                state: orgData?.state,
+                user_roles: rolesData
+                  ?.filter(role => role.user_id === user.user_id)
+                  .map(role => ({ role: role.role })) || []
+              };
+            }) || [];
           
           setCohortMembers(cohortLeaders);
         }

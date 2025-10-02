@@ -258,42 +258,6 @@ export function OrganizationDialog({ open, onOpenChange, organization }: Organiz
           notes: data.notes || null,
         };
         await updateOrganization(organization.id, orgUpdateData);
-
-        // Also update the profile with systems data if profile exists
-        if (organization.profiles?.id) {
-          const profileUpdateData = {
-            student_information_system: data.student_information_system || null,
-            financial_system: data.financial_system || null,
-            financial_aid: data.financial_aid || null,
-            hcm_hr: data.hcm_hr || null,
-            payroll_system: data.payroll_system || null,
-            purchasing_system: data.purchasing_system || null,
-            housing_management: data.housing_management || null,
-            learning_management: data.learning_management || null,
-            admissions_crm: data.admissions_crm || null,
-            alumni_advancement_crm: data.alumni_advancement_crm || null,
-            payment_platform: data.payment_platform || null,
-            meal_plan_management: data.meal_plan_management || null,
-            identity_management: data.identity_management || null,
-            door_access: data.door_access || null,
-            document_management: data.document_management || null,
-            primary_office_apple: data.primary_office_apple || false,
-            primary_office_asus: data.primary_office_asus || false,
-            primary_office_dell: data.primary_office_dell || false,
-            primary_office_hp: data.primary_office_hp || false,
-            primary_office_microsoft: data.primary_office_microsoft || false,
-            primary_office_other: data.primary_office_other || false,
-            primary_office_other_details: data.primary_office_other_details || null,
-            other_software_comments: data.other_software_comments || null,
-            voip: data.voip || null,
-            network_infrastructure: data.network_infrastructure || null,
-          };
-          
-          await supabase
-            .from('profiles')
-            .update(profileUpdateData)
-            .eq('id', organization.profiles.id);
-        }
       } else {
         // For creates, ensure we have all required data
         const createData: CreateOrganizationData = {

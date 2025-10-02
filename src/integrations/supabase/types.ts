@@ -776,6 +776,7 @@ export type Database = {
           secondary_first_name: string | null
           secondary_last_name: string | null
           state: string | null
+          state_association: string | null
           student_fte: number | null
           student_information_system: string | null
           updated_at: string
@@ -833,6 +834,7 @@ export type Database = {
           secondary_first_name?: string | null
           secondary_last_name?: string | null
           state?: string | null
+          state_association?: string | null
           student_fte?: number | null
           student_information_system?: string | null
           updated_at?: string
@@ -890,6 +892,7 @@ export type Database = {
           secondary_first_name?: string | null
           secondary_last_name?: string | null
           state?: string | null
+          state_association?: string | null
           student_fte?: number | null
           student_information_system?: string | null
           updated_at?: string
@@ -1103,154 +1106,58 @@ export type Database = {
       }
       profiles: {
         Row: {
-          address: string | null
-          admissions_crm: string | null
-          alumni_advancement_crm: string | null
-          city: string | null
           created_at: string
-          document_management: string | null
-          door_access: string | null
           email: string
-          financial_aid: string | null
-          financial_system: string | null
           first_name: string
-          hcm_hr: string | null
-          housing_management: string | null
           id: string
-          identity_management: string | null
-          is_private_nonprofit: boolean | null
           last_name: string
-          learning_management: string | null
           login_hint: string | null
-          meal_plan_management: string | null
-          network_infrastructure: string | null
           organization: string | null
-          other_software_comments: string | null
-          payment_platform: string | null
-          payroll_system: string | null
           phone: string | null
           primary_contact_title: string | null
-          primary_office_apple: boolean | null
-          primary_office_asus: boolean | null
-          primary_office_dell: boolean | null
-          primary_office_hp: boolean | null
-          primary_office_microsoft: boolean | null
-          primary_office_other: boolean | null
-          primary_office_other_details: string | null
-          purchasing_system: string | null
           secondary_contact_email: string | null
           secondary_contact_phone: string | null
           secondary_contact_title: string | null
           secondary_first_name: string | null
           secondary_last_name: string | null
-          state: string | null
-          state_association: string | null
-          student_fte: number | null
-          student_information_system: string | null
           updated_at: string
           user_id: string
-          voip: string | null
-          zip: string | null
         }
         Insert: {
-          address?: string | null
-          admissions_crm?: string | null
-          alumni_advancement_crm?: string | null
-          city?: string | null
           created_at?: string
-          document_management?: string | null
-          door_access?: string | null
           email: string
-          financial_aid?: string | null
-          financial_system?: string | null
           first_name: string
-          hcm_hr?: string | null
-          housing_management?: string | null
           id?: string
-          identity_management?: string | null
-          is_private_nonprofit?: boolean | null
           last_name: string
-          learning_management?: string | null
           login_hint?: string | null
-          meal_plan_management?: string | null
-          network_infrastructure?: string | null
           organization?: string | null
-          other_software_comments?: string | null
-          payment_platform?: string | null
-          payroll_system?: string | null
           phone?: string | null
           primary_contact_title?: string | null
-          primary_office_apple?: boolean | null
-          primary_office_asus?: boolean | null
-          primary_office_dell?: boolean | null
-          primary_office_hp?: boolean | null
-          primary_office_microsoft?: boolean | null
-          primary_office_other?: boolean | null
-          primary_office_other_details?: string | null
-          purchasing_system?: string | null
           secondary_contact_email?: string | null
           secondary_contact_phone?: string | null
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
           secondary_last_name?: string | null
-          state?: string | null
-          state_association?: string | null
-          student_fte?: number | null
-          student_information_system?: string | null
           updated_at?: string
           user_id: string
-          voip?: string | null
-          zip?: string | null
         }
         Update: {
-          address?: string | null
-          admissions_crm?: string | null
-          alumni_advancement_crm?: string | null
-          city?: string | null
           created_at?: string
-          document_management?: string | null
-          door_access?: string | null
           email?: string
-          financial_aid?: string | null
-          financial_system?: string | null
           first_name?: string
-          hcm_hr?: string | null
-          housing_management?: string | null
           id?: string
-          identity_management?: string | null
-          is_private_nonprofit?: boolean | null
           last_name?: string
-          learning_management?: string | null
           login_hint?: string | null
-          meal_plan_management?: string | null
-          network_infrastructure?: string | null
           organization?: string | null
-          other_software_comments?: string | null
-          payment_platform?: string | null
-          payroll_system?: string | null
           phone?: string | null
           primary_contact_title?: string | null
-          primary_office_apple?: boolean | null
-          primary_office_asus?: boolean | null
-          primary_office_dell?: boolean | null
-          primary_office_hp?: boolean | null
-          primary_office_microsoft?: boolean | null
-          primary_office_other?: boolean | null
-          primary_office_other_details?: string | null
-          purchasing_system?: string | null
           secondary_contact_email?: string | null
           secondary_contact_phone?: string | null
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
           secondary_last_name?: string | null
-          state?: string | null
-          state_association?: string | null
-          student_fte?: number | null
-          student_information_system?: string | null
           updated_at?: string
           user_id?: string
-          voip?: string | null
-          zip?: string | null
         }
         Relationships: []
       }

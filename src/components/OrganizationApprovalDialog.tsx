@@ -94,8 +94,7 @@ export const OrganizationApprovalDialog = ({
     // Compare profile fields if they exist
     if (originalData.profiles && organization.profiles) {
       const profileFields = [
-        'first_name', 'last_name', 'email', 'primary_contact_title',
-        'is_private_nonprofit'
+        'first_name', 'last_name', 'email', 'primary_contact_title'
       ];
       
       profileFields.forEach(field => {
@@ -255,19 +254,6 @@ export const OrganizationApprovalDialog = ({
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">{organization?.name}</h3>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="flex items-center gap-1">
-            {organization?.profiles?.is_private_nonprofit ? (
-              <>
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                Private Non-Profit
-              </>
-            ) : (
-              <>
-                <XCircle className="h-3 w-3 text-red-600" />
-                Not Approved
-              </>
-            )}
-          </Badge>
           <Badge variant="secondary" className="flex items-center gap-1">
             <DollarSign className="h-3 w-3" />
             Prorated Fee: ${getProratedFee().toLocaleString()}
