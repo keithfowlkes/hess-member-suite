@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface UnifiedProfile {
-  // Profile (user) data
+  // Profile (user) data - ONLY basic contact info
   profile: {
     id: string;
     user_id: string;
@@ -11,43 +11,15 @@ export interface UnifiedProfile {
     last_name: string;
     email: string;
     phone?: string;
+    organization?: string;
     primary_contact_title?: string;
     secondary_first_name?: string;
     secondary_last_name?: string;
     secondary_contact_title?: string;
     secondary_contact_email?: string;
     secondary_contact_phone?: string;
-    state_association?: string;
-    is_private_nonprofit?: boolean;
-    // System fields - available for all users
-    student_information_system?: string;
-    financial_system?: string;
-    financial_aid?: string;
-    hcm_hr?: string;
-    payroll_system?: string;
-    purchasing_system?: string;
-    housing_management?: string;
-    learning_management?: string;
-    admissions_crm?: string;
-    alumni_advancement_crm?: string;
-    payment_platform?: string;
-    meal_plan_management?: string;
-    identity_management?: string;
-    door_access?: string;
-    document_management?: string;
-    voip?: string;
-    network_infrastructure?: string;
-    // Hardware fields - available for all users
-    primary_office_apple?: boolean;
-    primary_office_lenovo?: boolean;
-    primary_office_dell?: boolean;
-    primary_office_hp?: boolean;
-    primary_office_microsoft?: boolean;
-    primary_office_other?: boolean;
-    primary_office_other_details?: string;
-    other_software_comments?: string;
   };
-  // Organization data (if user is primary contact)
+  // Organization data (if user is primary contact) - includes ALL system/hardware fields
   organization?: {
     id: string;
     name: string;
@@ -68,6 +40,7 @@ export interface UnifiedProfile {
     student_fte?: number;
     notes?: string;
     approximate_date_joined_hess?: string;
+    state_association?: string;
     // System fields
     student_information_system?: string;
     financial_system?: string;

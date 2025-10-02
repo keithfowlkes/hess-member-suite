@@ -93,8 +93,8 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
     console.log('🚀 handleSave - Original data:', data);
     console.log('🚀 handleSave - Edited data:', editedData);
     
-    // Fields that should NOT be updated in profiles table (they belong to organizations)
-    const excludedProfileFields = ['address', 'city', 'state', 'zip', 'state_association'];
+    // Since system/hardware fields are now on organization only, no exclusion list needed for profile
+    const excludedProfileFields: string[] = [];
     
     // Compare profile data
     Object.keys(editedData.profile).forEach(key => {
@@ -336,8 +336,8 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               <Label htmlFor="state_association">State Association</Label>
               <Input
                 id="state_association"
-                value={editedData.profile.state_association || ''}
-                onChange={(e) => updateProfileField('state_association', e.target.value)}
+                value={editedData.organization?.state_association || ''}
+                onChange={(e) => updateOrganizationField('state_association', e.target.value)}
                 disabled={!isEditing}
               />
             </div>
@@ -475,106 +475,106 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
             <EnhancedSystemFieldSelect
               fieldName="student_information_system"
               label="Student Information System"
-              value={editedData.profile.student_information_system || ''}
-              onChange={(value) => updateProfileField('student_information_system', value)}
+              value={editedData.organization?.student_information_system || ''}
+              onChange={(value) => updateOrganizationField('student_information_system', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="financial_system"
               label="Financial System"
-              value={editedData.profile.financial_system || ''}
-              onChange={(value) => updateProfileField('financial_system', value)}
+              value={editedData.organization?.financial_system || ''}
+              onChange={(value) => updateOrganizationField('financial_system', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="financial_aid"
               label="Financial Aid"
-              value={editedData.profile.financial_aid || ''}
-              onChange={(value) => updateProfileField('financial_aid', value)}
+              value={editedData.organization?.financial_aid || ''}
+              onChange={(value) => updateOrganizationField('financial_aid', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="hcm_hr"
               label="HCM/HR"
-              value={editedData.profile.hcm_hr || ''}
-              onChange={(value) => updateProfileField('hcm_hr', value)}
+              value={editedData.organization?.hcm_hr || ''}
+              onChange={(value) => updateOrganizationField('hcm_hr', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="payroll_system"
               label="Payroll System"
-              value={editedData.profile.payroll_system || ''}
-              onChange={(value) => updateProfileField('payroll_system', value)}
+              value={editedData.organization?.payroll_system || ''}
+              onChange={(value) => updateOrganizationField('payroll_system', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="purchasing_system"
               label="Purchasing System"
-              value={editedData.profile.purchasing_system || ''}
-              onChange={(value) => updateProfileField('purchasing_system', value)}
+              value={editedData.organization?.purchasing_system || ''}
+              onChange={(value) => updateOrganizationField('purchasing_system', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="housing_management"
               label="Housing Management"
-              value={editedData.profile.housing_management || ''}
-              onChange={(value) => updateProfileField('housing_management', value)}
+              value={editedData.organization?.housing_management || ''}
+              onChange={(value) => updateOrganizationField('housing_management', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="learning_management"
               label="Learning Management"
-              value={editedData.profile.learning_management || ''}
-              onChange={(value) => updateProfileField('learning_management', value)}
+              value={editedData.organization?.learning_management || ''}
+              onChange={(value) => updateOrganizationField('learning_management', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="admissions_crm"
               label="Admissions CRM"
-              value={editedData.profile.admissions_crm || ''}
-              onChange={(value) => updateProfileField('admissions_crm', value)}
+              value={editedData.organization?.admissions_crm || ''}
+              onChange={(value) => updateOrganizationField('admissions_crm', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="alumni_advancement_crm"
               label="Alumni/Advancement CRM"
-              value={editedData.profile.alumni_advancement_crm || ''}
-              onChange={(value) => updateProfileField('alumni_advancement_crm', value)}
+              value={editedData.organization?.alumni_advancement_crm || ''}
+              onChange={(value) => updateOrganizationField('alumni_advancement_crm', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="payment_platform"
               label="Payment Platform"
-              value={editedData.profile.payment_platform || ''}
-              onChange={(value) => updateProfileField('payment_platform', value)}
+              value={editedData.organization?.payment_platform || ''}
+              onChange={(value) => updateOrganizationField('payment_platform', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="meal_plan_management"
               label="Meal Plan Management"
-              value={editedData.profile.meal_plan_management || ''}
-              onChange={(value) => updateProfileField('meal_plan_management', value)}
+              value={editedData.organization?.meal_plan_management || ''}
+              onChange={(value) => updateOrganizationField('meal_plan_management', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="identity_management"
               label="Identity Management"
-              value={editedData.profile.identity_management || ''}
-              onChange={(value) => updateProfileField('identity_management', value)}
+              value={editedData.organization?.identity_management || ''}
+              onChange={(value) => updateOrganizationField('identity_management', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="door_access"
               label="Door Access"
-              value={editedData.profile.door_access || ''}
-              onChange={(value) => updateProfileField('door_access', value)}
+              value={editedData.organization?.door_access || ''}
+              onChange={(value) => updateOrganizationField('door_access', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="document_management"
               label="Document Management"
-              value={editedData.profile.document_management || ''}
-              onChange={(value) => updateProfileField('document_management', value)}
+              value={editedData.organization?.document_management || ''}
+              onChange={(value) => updateOrganizationField('document_management', value)}
               disabled={!isEditing}
             />
           </div>
@@ -591,15 +591,15 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
             <EnhancedSystemFieldSelect
               fieldName="voip"
               label="VoIP"
-              value={editedData.profile.voip || ''}
-              onChange={(value) => updateProfileField('voip', value)}
+              value={editedData.organization?.voip || ''}
+              onChange={(value) => updateOrganizationField('voip', value)}
               disabled={!isEditing}
             />
             <EnhancedSystemFieldSelect
               fieldName="network_infrastructure"
               label="Network Infrastructure"
-              value={editedData.profile.network_infrastructure || ''}
-              onChange={(value) => updateProfileField('network_infrastructure', value)}
+              value={editedData.organization?.network_infrastructure || ''}
+              onChange={(value) => updateOrganizationField('network_infrastructure', value)}
               disabled={!isEditing}
             />
           </div>
@@ -619,8 +619,8 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                   <div key={key} className="flex items-center space-x-2">
                     <Checkbox
                       id={key}
-                      checked={editedData.profile[key as keyof UnifiedProfile['profile']] as boolean || false}
-                      onCheckedChange={(checked) => updateProfileField(key as keyof UnifiedProfile['profile'], checked)}
+                      checked={editedData.organization?.[key as keyof UnifiedProfile['organization']] as boolean || false}
+                      onCheckedChange={(checked) => updateOrganizationField(key as keyof UnifiedProfile['organization'], checked)}
                       disabled={!isEditing}
                     />
                     <Label htmlFor={key}>{label}</Label>
@@ -632,8 +632,8 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               <Label htmlFor="primary_office_other_details">Other Hardware Details</Label>
               <Textarea
                 id="primary_office_other_details"
-                value={editedData.profile.primary_office_other_details || ''}
-                onChange={(e) => updateProfileField('primary_office_other_details', e.target.value)}
+                value={editedData.organization?.primary_office_other_details || ''}
+                onChange={(e) => updateOrganizationField('primary_office_other_details', e.target.value)}
                 disabled={!isEditing}
                 rows={4}
               />
@@ -652,8 +652,8 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
             <Label htmlFor="other_software_comments">Other Software Comments</Label>
             <Textarea
               id="other_software_comments"
-              value={editedData.profile.other_software_comments || ''}
-              onChange={(e) => updateProfileField('other_software_comments', e.target.value)}
+              value={editedData.organization?.other_software_comments || ''}
+              onChange={(e) => updateOrganizationField('other_software_comments', e.target.value)}
               disabled={!isEditing}
               rows={4}
               placeholder="Please describe any other software systems or tools you use..."
