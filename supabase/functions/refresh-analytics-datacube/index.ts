@@ -18,7 +18,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log('Starting analytics datacube refresh...');
+    console.log('Starting analytics datacube refresh (v2)...');
 
     // Define the system fields to analyze
     const systemFields = [
