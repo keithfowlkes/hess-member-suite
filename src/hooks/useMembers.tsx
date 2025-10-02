@@ -59,11 +59,6 @@ export interface Organization {
     email: string;
     phone?: string;
     organization?: string;
-    state_association?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
     primary_contact_title?: string;
     secondary_first_name?: string;
     secondary_last_name?: string;

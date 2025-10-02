@@ -32,22 +32,9 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   
-  // Initialize editedData with address sync
+  // Initialize editedData
   const initializeEditedData = (data: UnifiedProfile): UnifiedProfile => {
-    const initialized = { ...data };
-    
-    // Sync organization address with profile address if both exist
-    if (initialized.organization && initialized.profile.address) {
-      initialized.organization = {
-        ...initialized.organization,
-        address_line_1: initialized.profile.address,
-        city: initialized.profile.city,
-        state: initialized.profile.state,
-        zip_code: initialized.profile.zip
-      };
-    }
-    
-    return initialized;
+    return { ...data };
   };
   
   const [editedData, setEditedData] = useState<UnifiedProfile>(initializeEditedData(data));
@@ -171,35 +158,25 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
     });
   };
 
-  // Special handler for address fields that need to sync between profile and organization
+  // Handler for address fields in organization
   const updateAddressField = (field: 'address' | 'city' | 'state' | 'zip', value: any) => {
-    // Update profile field
+    if (!editedData.organization) return;
+    
+    const orgFieldMap = {
+      address: 'address_line_1',
+      city: 'city',
+      state: 'state', 
+      zip: 'zip_code'
+    };
+    
+    const orgField = orgFieldMap[field];
     setEditedData(prev => ({
       ...prev,
-      profile: {
-        ...prev.profile,
-        [field]: value
-      }
+      organization: prev.organization ? {
+        ...prev.organization,
+        [orgField]: value
+      } : prev.organization
     }));
-
-    // Also update corresponding organization field if organization exists
-    if (editedData.organization) {
-      const orgFieldMap = {
-        address: 'address_line_1',
-        city: 'city',
-        state: 'state', 
-        zip: 'zip_code'
-      };
-      
-      const orgField = orgFieldMap[field];
-      setEditedData(prev => ({
-        ...prev,
-        organization: prev.organization ? {
-          ...prev.organization,
-          [orgField]: value
-        } : prev.organization
-      }));
-    }
   };
 
   return (
@@ -315,7 +292,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               <Label htmlFor="address">Address</Label>
               <Input
                 id="address"
-                value={editedData.profile.address || ''}
+                value={editedData.organization?.address_line_1 || ''}
                 onChange={(e) => updateAddressField('address', e.target.value)}
                 disabled={!isEditing}
               />
@@ -324,7 +301,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               <Label htmlFor="city">City</Label>
               <Input
                 id="city"
-                value={editedData.profile.city || ''}
+                value={editedData.organization?.city || ''}
                 onChange={(e) => updateAddressField('city', e.target.value)}
                 disabled={!isEditing}
               />
@@ -333,7 +310,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               <Label htmlFor="state">State</Label>
               <Input
                 id="state"
-                value={editedData.profile.state || ''}
+                value={editedData.organization?.state || ''}
                 onChange={(e) => updateAddressField('state', e.target.value)}
                 disabled={!isEditing}
               />
@@ -342,7 +319,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               <Label htmlFor="zip">ZIP Code</Label>
               <Input
                 id="zip"
-                value={editedData.profile.zip || ''}
+                value={editedData.organization?.zip_code || ''}
                 onChange={(e) => updateAddressField('zip', e.target.value)}
                 disabled={!isEditing}
               />

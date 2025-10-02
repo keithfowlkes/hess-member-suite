@@ -11,10 +11,6 @@ export interface UnifiedProfile {
     last_name: string;
     email: string;
     phone?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
     primary_contact_title?: string;
     secondary_first_name?: string;
     secondary_last_name?: string;
