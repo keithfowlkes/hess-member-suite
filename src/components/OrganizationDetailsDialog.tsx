@@ -441,20 +441,20 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                       { key: 'primary_office_microsoft', label: 'Microsoft' },
                       { key: 'primary_office_other', label: 'Other' },
                     ].map(({ key, label }) => {
-                      const isSelected = profile?.[key as keyof typeof profile] as boolean;
+                      const isSelected = currentData[key as keyof typeof currentData] as boolean;
                       return (
                         <div key={key} className="flex items-center space-x-2">
-                          <Switch checked={isSelected} disabled />
+                          <Switch checked={isSelected || false} disabled />
                           <span className="text-sm">{label}</span>
                         </div>
                       );
                     })}
                   </div>
                   
-                  {profile?.primary_office_other_details && (
+                  {currentData.primary_office_other_details && (
                     <div className="mt-4">
                       <Label>Other Hardware Details</Label>
-                      <p className="text-sm text-muted-foreground mt-1">{profile.primary_office_other_details}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{currentData.primary_office_other_details}</p>
                     </div>
                   )}
                 </CardContent>

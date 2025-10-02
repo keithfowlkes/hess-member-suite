@@ -24,6 +24,7 @@ interface PublicOrganization {
   membership_end_date?: string;
   annual_fee_amount?: number;
   notes?: string;
+  student_fte?: number;
   profiles?: {
     first_name?: string;
     last_name?: string;
@@ -31,7 +32,6 @@ interface PublicOrganization {
     phone?: string;
     organization?: string;
     state_association?: string;
-    student_fte?: number;
     address?: string;
     city?: string;
     state?: string;
@@ -83,14 +83,9 @@ function DirectoryContent({ showHeader = false, showStats = false }: DirectoryCo
           *,
           profiles:contact_person_id (
             first_name, last_name, email, phone, organization, state_association,
-            student_fte, address, city, state, zip, primary_contact_title,
+            address, city, state, zip, primary_contact_title,
             secondary_first_name, secondary_last_name, secondary_contact_title,
-            secondary_contact_email, student_information_system, financial_system,
-            financial_aid, hcm_hr, payroll_system, purchasing_system,
-            housing_management, learning_management, admissions_crm,
-            alumni_advancement_crm, primary_office_apple, primary_office_asus,
-            primary_office_dell, primary_office_hp, primary_office_microsoft,
-            primary_office_other, primary_office_other_details, other_software_comments
+            secondary_contact_email, secondary_contact_phone
           )
         `)
         .eq('membership_status', 'active')

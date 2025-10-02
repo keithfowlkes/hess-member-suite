@@ -15,7 +15,6 @@ interface MemberLocation {
   profiles?: {
     first_name?: string;
     last_name?: string;
-    student_fte?: number;
   };
 }
 
@@ -140,8 +139,7 @@ export function PublicUSMap() {
           student_fte,
           profiles:contact_person_id (
             first_name,
-            last_name,
-            student_fte
+            last_name
           )
         `)
         .eq('membership_status', 'active')

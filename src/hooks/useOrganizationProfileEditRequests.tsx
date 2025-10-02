@@ -281,7 +281,7 @@ export function useApproveOrganizationProfileEditRequest() {
             secondary_last_name: profile.secondary_last_name || orgData.secondary_last_name || '',
             secondary_contact_title: profile.secondary_contact_title || orgData.secondary_contact_title || '',
             secondary_contact_email: profile.secondary_contact_email || orgData.secondary_contact_email || '',
-            student_fte: profile.student_fte || orgData.student_fte,
+            student_fte: orgData.student_fte,
             address_line_1: orgData.address_line_1 || '',
             city: orgData.city || '',
             state: orgData.state || '',
