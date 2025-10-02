@@ -80,3 +80,9 @@ verify_jwt = true
 
 [functions.verify-email-config]
 verify_jwt = true
+
+[functions.backup-database]
+verify_jwt = true
+
+[functions.restore-database]
+verify_jwt = true

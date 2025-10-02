@@ -117,6 +117,7 @@ import {
 } from 'lucide-react';
 import { SystemHealthStatus } from '@/components/SystemHealthStatus';
 import { FollowUpReminders } from '@/components/FollowUpReminders';
+import { DatabaseBackupRestore } from '@/components/DatabaseBackupRestore';
 import { format } from 'date-fns';
 
 const MasterDashboard = () => {
@@ -834,7 +835,7 @@ const MasterDashboard = () => {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="organizations" className="relative">
                 Approvals
@@ -848,6 +849,7 @@ const MasterDashboard = () => {
                 )}
               </TabsTrigger>
               <TabsTrigger value="users">Users</TabsTrigger>
+              <TabsTrigger value="backup">Backup/Restore</TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
@@ -1636,6 +1638,11 @@ const MasterDashboard = () => {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Backup/Restore Tab */}
+            <TabsContent value="backup" className="space-y-6">
+              <DatabaseBackupRestore />
             </TabsContent>
           </Tabs>
         </main>
