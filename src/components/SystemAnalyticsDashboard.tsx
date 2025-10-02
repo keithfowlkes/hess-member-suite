@@ -8,6 +8,8 @@ import { InstitutionsModal } from '@/components/InstitutionsModal';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { PieChart as PieChartIcon, TrendingUp, BarChart3, Monitor, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff'];
 
@@ -56,6 +58,7 @@ const SYSTEM_DATA_MAP = [
 
 export function SystemAnalyticsDashboard() {
   const { data: analytics, isLoading, error } = useSystemAnalytics();
+  const queryClient = useQueryClient();
   const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
   const [selectedSystem, setSelectedSystem] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
@@ -63,6 +66,7 @@ export function SystemAnalyticsDashboard() {
   const [selectedSystemName, setSelectedSystemName] = useState<string | null>(null);
   const [selectedSystemDisplayName, setSelectedSystemDisplayName] = useState<string | null>(null);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleSystemClick = (systemField: string, systemName: string, systemDisplayName: string) => {
     setSelectedSystemField(systemField);
@@ -240,26 +244,32 @@ export function SystemAnalyticsDashboard() {
               variant="outline"
               size="sm"
               onClick={async () => {
+                setIsRefreshing(true);
+                toast.info('Refreshing analytics data...');
+                
                 try {
-                  const response = await fetch('https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/refresh-analytics-datacube', {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470',
-                      'Content-Type': 'application/json'
-                    }
-                  });
+                  const { data, error } = await supabase.functions.invoke('refresh-analytics-datacube');
                   
-                  if (response.ok) {
-                    window.location.reload();
+                  if (error) {
+                    throw error;
                   }
+                  
+                  // Invalidate the query cache to refetch the data
+                  await queryClient.invalidateQueries({ queryKey: ['system-analytics-datacube'] });
+                  
+                  toast.success('Analytics data refreshed successfully!');
                 } catch (error) {
                   console.error('Failed to refresh analytics:', error);
+                  toast.error('Failed to refresh analytics data. Please try again.');
+                } finally {
+                  setIsRefreshing(false);
                 }
               }}
               className="gap-2"
+              disabled={isRefreshing}
             >
-              <TrendingUp className="h-4 w-4" />
-              Refresh Data
+              <TrendingUp className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
             </Button>
             <Button
               variant="outline"

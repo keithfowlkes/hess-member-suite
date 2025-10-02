@@ -176,7 +176,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
           <div className="text-center p-3 bg-secondary/10 rounded">
             <div className="text-xl font-bold text-foreground">
               {organizations.reduce((total, org) => {
-                const fte = org.profiles?.student_fte || 0;
+                const fte = org.student_fte || 0;
                 return total + fte;
               }, 0).toLocaleString()}
             </div>

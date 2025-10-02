@@ -52,6 +52,32 @@ interface PublicOrganization {
   membership_end_date?: string;
   annual_fee_amount?: number;
   notes?: string;
+  student_fte?: number;
+  voip?: string;
+  network_infrastructure?: string;
+  student_information_system?: string;
+  financial_system?: string;
+  financial_aid?: string;
+  hcm_hr?: string;
+  payroll_system?: string;
+  purchasing_system?: string;
+  housing_management?: string;
+  learning_management?: string;
+  admissions_crm?: string;
+  alumni_advancement_crm?: string;
+  payment_platform?: string;
+  meal_plan_management?: string;
+  identity_management?: string;
+  door_access?: string;
+  document_management?: string;
+  primary_office_apple?: boolean;
+  primary_office_asus?: boolean;
+  primary_office_dell?: boolean;
+  primary_office_hp?: boolean;
+  primary_office_microsoft?: boolean;
+  primary_office_other?: boolean;
+  primary_office_other_details?: string;
+  other_software_comments?: string;
   profiles?: {
     first_name?: string;
     last_name?: string;
@@ -59,7 +85,6 @@ interface PublicOrganization {
     phone?: string;
     organization?: string;
     state_association?: string;
-    student_fte?: number;
     address?: string;
     city?: string;
     state?: string;
@@ -70,31 +95,6 @@ interface PublicOrganization {
     secondary_contact_title?: string;
     secondary_contact_email?: string;
     secondary_contact_phone?: string;
-    voip?: string;
-    network_infrastructure?: string;
-    student_information_system?: string;
-    financial_system?: string;
-    financial_aid?: string;
-    hcm_hr?: string;
-    payroll_system?: string;
-    purchasing_system?: string;
-    housing_management?: string;
-    learning_management?: string;
-    admissions_crm?: string;
-    alumni_advancement_crm?: string;
-    payment_platform?: string;
-    meal_plan_management?: string;
-    identity_management?: string;
-    door_access?: string;
-    document_management?: string;
-    primary_office_apple?: boolean;
-    primary_office_asus?: boolean;
-    primary_office_dell?: boolean;
-    primary_office_hp?: boolean;
-    primary_office_microsoft?: boolean;
-    primary_office_other?: boolean;
-    primary_office_other_details?: string;
-    other_software_comments?: string;
   };
 }
 
@@ -214,10 +214,10 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                       </div>
                     )}
 
-                    {profile?.student_fte && (
+                    {currentData.student_fte && (
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{profile.student_fte.toLocaleString()} Student FTE</span>
+                        <span className="text-sm">{currentData.student_fte.toLocaleString()} Student FTE</span>
                       </div>
                     )}
 
@@ -369,7 +369,7 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                   { key: 'door_access', label: 'Door Access', icon: Building2 },
                   { key: 'document_management', label: 'Document Management', icon: Database },
                 ].map(({ key, label, icon: Icon }) => {
-                  const value = profile?.[key as keyof typeof profile] as string;
+                  const value = currentData[key as keyof typeof currentData] as string;
                   if (!value) return null;
                   
                   return (
@@ -388,13 +388,13 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                 })}
               </div>
 
-              {profile?.other_software_comments && (
+              {currentData.other_software_comments && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Additional Software Comments</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm whitespace-pre-wrap">{profile.other_software_comments}</p>
+                    <p className="text-sm whitespace-pre-wrap">{currentData.other_software_comments}</p>
                   </CardContent>
                 </Card>
               )}
@@ -409,16 +409,16 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {profile?.voip && (
+                  {currentData.voip && (
                     <div>
                       <Label>VoIP</Label>
-                      <p className="text-sm text-muted-foreground mt-1">{profile.voip}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{currentData.voip}</p>
                     </div>
                   )}
-                  {profile?.network_infrastructure && (
+                  {currentData.network_infrastructure && (
                     <div>
                       <Label>Network Infrastructure</Label>
-                      <p className="text-sm text-muted-foreground mt-1">{profile.network_infrastructure}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{currentData.network_infrastructure}</p>
                     </div>
                   )}
                 </CardContent>
