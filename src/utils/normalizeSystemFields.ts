@@ -21,10 +21,10 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     
     // Jenzabar variations
     "Jenzabar ONE": "Jenzabar ONE",
-    "Jenzabar EX": "Jenzabar EX",
-    "Jenzabar EX ": "Jenzabar EX",
-    "Jenzabar CX/JX": "Jenzabar EX",
-    "Jenzabar CX (legacy)": "Jenzabar EX",
+    "Jenzabar EX": "Jenzabar ONE",
+    "Jenzabar EX ": "Jenzabar ONE",
+    "Jenzabar CX/JX": "Jenzabar ONE",
+    "Jenzabar CX (legacy)": "Jenzabar ONE",
     "Jenzabar SONIS": "Jenzabar ONE",
     
     // Anthology/Campus Management variations
@@ -301,10 +301,8 @@ export function normalizeFieldValue(fieldName: string, currentValue: string | nu
   if (fieldName === 'student_information_system') {
     if (currentValue.toLowerCase().includes('colleague')) return 'Ellucian Colleague';
     if (currentValue.toLowerCase().includes('banner')) return 'Ellucian Banner';
-    if (currentValue.toLowerCase().includes('jenzabar')) {
-      if (currentValue.toLowerCase().includes('one') || currentValue.toLowerCase().includes('sonis')) return 'Jenzabar ONE';
-      return 'Jenzabar EX';
-    }
+    if (currentValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE';
+    if (currentValue.toLowerCase().includes('workday')) return 'Workday Student';
     if (currentValue.toLowerCase().includes('powercampus')) return 'Ellucian PowerCampus';
     if (currentValue.toLowerCase().includes('campus management') || currentValue.toLowerCase().includes('anthology')) {
       return 'Anthology/Campus Management';
@@ -312,7 +310,6 @@ export function normalizeFieldValue(fieldName: string, currentValue: string | nu
     if (currentValue.toLowerCase().includes('cams') || currentValue.toLowerCase().includes('unit4')) {
       return 'Unit4 CAMS';
     }
-    if (currentValue.toLowerCase().includes('workday')) return 'Workday Student';
   }
   
   if (fieldName === 'financial_system') {
