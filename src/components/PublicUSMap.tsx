@@ -162,7 +162,7 @@ export function PublicUSMap() {
             stats[state] = { count: 0, totalFTE: 0, organizations: [] };
           }
           stats[state].count++;
-          const fte = org.student_fte || 0;
+          const fte = org.profiles?.student_fte || org.student_fte || 0;
           stats[state].totalFTE += fte;
           stats[state].organizations.push(org);
         }
