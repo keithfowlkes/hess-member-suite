@@ -55,9 +55,9 @@ const processDatacubeData = (datacubeEntries: Array<{system_field: string, syste
   }
   
   // For other fields, maintain the existing logic
-  // Separate items with count >= 10 and < 10
-  const mainItems = systemData.filter(item => item.count >= 10);
-  const smallItems = systemData.filter(item => item.count < 10);
+  // Separate items with count >= 10 and < 10, treating "Other" as a small item
+  const mainItems = systemData.filter(item => item.count >= 10 && item.name !== 'Other');
+  const smallItems = systemData.filter(item => item.count < 10 || item.name === 'Other');
   
   // If there are small items, group them into "Other"
   if (smallItems.length > 0) {
