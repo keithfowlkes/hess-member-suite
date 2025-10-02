@@ -227,6 +227,39 @@ export type Database = {
         }
         Relationships: []
       }
+      database_backups: {
+        Row: {
+          backup_data: Json
+          backup_size: number | null
+          backup_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          row_count: number | null
+          table_count: number | null
+        }
+        Insert: {
+          backup_data: Json
+          backup_size?: number | null
+          backup_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          row_count?: number | null
+          table_count?: number | null
+        }
+        Update: {
+          backup_data?: Json
+          backup_size?: number | null
+          backup_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          row_count?: number | null
+          table_count?: number | null
+        }
+        Relationships: []
+      }
       email_logs: {
         Row: {
           created_at: string
@@ -1427,6 +1460,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_backups: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_reassignment_placeholders: {
         Args: Record<PropertyKey, never>
         Returns: {

@@ -6,10 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface BackupRequest {
-  tables: string[];
-}
-
 serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -17,47 +13,43 @@ serve(async (req: Request) => {
   }
 
   try {
+    console.log("Starting scheduled database backup...");
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
-    // Verify admin user
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("Missing authorization header");
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-
-    if (userError || !user) {
-      throw new Error("Unauthorized");
-    }
-
-    // Check if user is admin
-    const { data: userRoles, error: roleError } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .single();
-
-    if (roleError || userRoles?.role !== "admin") {
-      throw new Error("Unauthorized: Admin access required");
-    }
-
-    const { tables }: BackupRequest = await req.json();
-
-    console.log(`Starting backup of ${tables.length} tables`);
+    const tables = [
+      'organizations',
+      'profiles',
+      'user_roles',
+      'pending_registrations',
+      'member_registration_updates',
+      'organization_profile_edit_requests',
+      'organization_reassignment_requests',
+      'communications',
+      'custom_software_entries',
+      'invoices',
+      'system_field_options',
+      'system_settings',
+      'system_messages',
+      'user_messages',
+      'organization_invitations',
+      'audit_log'
+    ];
 
     const backup: Record<string, any[]> = {
       metadata: {
         timestamp: new Date().toISOString(),
         version: "1.0",
-        tables: tables
+        tables: tables,
+        backup_type: "scheduled"
       }
     };
+
+    let totalRows = 0;
 
     // Backup each table
     for (const table of tables) {
@@ -73,6 +65,7 @@ serve(async (req: Request) => {
           backup[table] = { error: error.message };
         } else {
           backup[table] = data || [];
+          totalRows += data?.length || 0;
           console.log(`Backed up ${data?.length || 0} rows from ${table}`);
         }
       } catch (err) {
@@ -81,14 +74,7 @@ serve(async (req: Request) => {
       }
     }
 
-    // Calculate total rows and backup size
-    let totalRows = 0;
-    for (const table of tables) {
-      if (Array.isArray(backup[table])) {
-        totalRows += backup[table].length;
-      }
-    }
-
+    // Calculate backup size (approximate JSON size)
     const backupJson = JSON.stringify(backup);
     const backupSize = new Blob([backupJson]).size;
 
@@ -98,24 +84,39 @@ serve(async (req: Request) => {
       .insert({
         backup_data: backup,
         backup_size: backupSize,
-        created_by: user.id,
-        backup_type: 'manual',
+        backup_type: 'scheduled',
         table_count: tables.length,
         row_count: totalRows
       });
 
     if (insertError) {
       console.error("Error storing backup:", insertError);
-      // Continue even if storage fails - still return backup to user
+      throw insertError;
     }
 
-    console.log("Backup completed successfully");
+    console.log(`Scheduled backup completed: ${tables.length} tables, ${totalRows} rows, ${(backupSize / 1024 / 1024).toFixed(2)} MB`);
+
+    // Log the backup operation
+    await supabase.from('audit_log').insert({
+      action: 'scheduled_database_backup',
+      entity_type: 'system',
+      details: {
+        table_count: tables.length,
+        row_count: totalRows,
+        backup_size: backupSize,
+        timestamp: new Date().toISOString()
+      }
+    });
 
     return new Response(
       JSON.stringify({
         success: true,
-        backup,
-        message: "Database backup completed successfully"
+        message: "Scheduled backup completed successfully",
+        stats: {
+          table_count: tables.length,
+          row_count: totalRows,
+          backup_size: backupSize
+        }
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -123,7 +124,7 @@ serve(async (req: Request) => {
       }
     );
   } catch (error: any) {
-    console.error("Backup error:", error);
+    console.error("Scheduled backup error:", error);
     return new Response(
       JSON.stringify({
         success: false,

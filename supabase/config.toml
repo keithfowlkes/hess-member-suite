@@ -86,3 +86,6 @@ verify_jwt = true
 
 [functions.restore-database]
 verify_jwt = true
+
+[functions.scheduled-backup]
+verify_jwt = false
