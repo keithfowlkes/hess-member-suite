@@ -18,6 +18,7 @@ export const useOrganizationByName = (organizationName: string | null) => {
             phone,
             organization,
             state_association,
+            student_fte,
             address,
             city,
             state,
@@ -27,7 +28,24 @@ export const useOrganizationByName = (organizationName: string | null) => {
             secondary_last_name,
             secondary_contact_title,
             secondary_contact_email,
-            secondary_contact_phone
+            student_information_system,
+            financial_system,
+            financial_aid,
+            hcm_hr,
+            payroll_system,
+            purchasing_system,
+            housing_management,
+            learning_management,
+            admissions_crm,
+            alumni_advancement_crm,
+            primary_office_apple,
+            primary_office_asus,
+            primary_office_dell,
+            primary_office_hp,
+            primary_office_microsoft,
+            primary_office_other,
+            primary_office_other_details,
+            other_software_comments
           )
         `)
         .eq('name', organizationName)

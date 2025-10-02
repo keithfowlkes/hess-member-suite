@@ -16,6 +16,7 @@ interface MemberLocation {
   profiles?: {
     first_name?: string;
     last_name?: string;
+    student_fte?: number;
   };
 }
 
@@ -148,7 +149,8 @@ export function USMap() {
           student_fte,
           profiles:contact_person_id (
             first_name,
-            last_name
+            last_name,
+            student_fte
           )
         `)
         .eq('membership_status', 'active')
@@ -169,7 +171,7 @@ export function USMap() {
             stats[state] = { count: 0, totalFTE: 0, organizations: [] };
           }
           stats[state].count++;
-          const fte = org.student_fte || 0;
+          const fte = org.profiles?.student_fte || org.student_fte || 0;
           stats[state].totalFTE += fte;
           stats[state].organizations.push(org);
         }

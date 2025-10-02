@@ -33,7 +33,7 @@ export function OrganizationInfoModal({ organization, isOpen, onClose }: Organiz
     : '';
   
   const contactEmail = organization.profiles?.email || organization.email;
-  const studentFTE = organization.student_fte;
+  const studentFTE = organization.profiles?.student_fte || organization.student_fte;
   const location = [organization.city, organization.state].filter(Boolean).join(', ');
 
   return (
