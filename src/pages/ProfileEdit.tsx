@@ -8,11 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
-import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
 import { MemberCohortSelector } from '@/components/MemberCohortSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Edit, Save, X, ArrowLeft } from 'lucide-react';
@@ -44,47 +40,6 @@ const ProfileEdit = () => {
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
 
-  // System field select component
-  const SystemFieldSelect = ({ 
-    fieldName, 
-    label, 
-    value, 
-    onChange, 
-    disabled 
-  }: {
-    fieldName: SystemField;
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    disabled: boolean;
-  }) => {
-    const options = useSimpleFieldOptions(fieldName);
-    
-    return (
-      <div className="space-y-2">
-        <Label htmlFor={fieldName}>{label}</Label>
-        <Select 
-          value={value || "none"} 
-          onValueChange={(val) => onChange(val === "none" ? "" : val)} 
-          disabled={disabled}
-        >
-          <SelectTrigger className="bg-background border-input">
-            <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
-          </SelectTrigger>
-          <SelectContent className="max-h-60 overflow-y-auto bg-background border border-input shadow-lg z-[9999]">
-            <SelectItem value="none" className="hover:bg-accent">
-              <span className="text-muted-foreground">None specified</span>
-            </SelectItem>
-            {options.map((option) => (
-              <SelectItem key={option} value={option} className="hover:bg-accent">
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
-  };
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -408,16 +363,6 @@ const ProfileEdit = () => {
                       disabled={!isEditing}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="student_fte">Student FTE</Label>
-                    <Input
-                      id="student_fte"
-                      type="number"
-                      value={editedProfile?.student_fte || ''}
-                      onChange={(e) => updateField('student_fte', parseInt(e.target.value) || null)}
-                      disabled={!isEditing}
-                    />
-                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -506,176 +451,6 @@ const ProfileEdit = () => {
                     />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Software Systems */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Software Systems</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <SystemFieldSelect
-                    fieldName="student_information_system"
-                    label="Student Information System"
-                    value={editedProfile?.student_information_system || ''}
-                    onChange={(value) => updateField('student_information_system', value)}
-                    disabled={!isEditing}
-                  />
-                  <SystemFieldSelect
-                    fieldName="financial_system"
-                    label="Financial System"
-                    value={editedProfile?.financial_system || ''}
-                    onChange={(value) => updateField('financial_system', value)}
-                    disabled={!isEditing}
-                  />
-                  <SystemFieldSelect
-                    fieldName="financial_aid"
-                    label="Financial Aid System"
-                    value={editedProfile?.financial_aid || ''}
-                    onChange={(value) => updateField('financial_aid', value)}
-                    disabled={!isEditing}
-                  />
-                  <SystemFieldSelect
-                    fieldName="hcm_hr"
-                    label="Human Capital Management"
-                    value={editedProfile?.hcm_hr || ''}
-                    onChange={(value) => updateField('hcm_hr', value)}
-                    disabled={!isEditing}
-                  />
-                  <SystemFieldSelect
-                    fieldName="payroll_system"
-                    label="Payroll System"
-                    value={editedProfile?.payroll_system || ''}
-                    onChange={(value) => updateField('payroll_system', value)}
-                    disabled={!isEditing}
-                  />
-                  <SystemFieldSelect
-                    fieldName="purchasing_system"
-                    label="Purchasing System"
-                    value={editedProfile?.purchasing_system || ''}
-                    onChange={(value) => updateField('purchasing_system', value)}
-                    disabled={!isEditing}
-                  />
-                  <SystemFieldSelect
-                    fieldName="housing_management"
-                    label="Housing Management System"
-                    value={editedProfile?.housing_management || ''}
-                    onChange={(value) => updateField('housing_management', value)}
-                    disabled={!isEditing}
-                  />
-                  <SystemFieldSelect
-                    fieldName="learning_management"
-                    label="Learning Management System"
-                    value={editedProfile?.learning_management || ''}
-                    onChange={(value) => updateField('learning_management', value)}
-                    disabled={!isEditing}
-                  />
-                  <SystemFieldSelect
-                    fieldName="admissions_crm"
-                    label="Admissions CRM"
-                    value={editedProfile?.admissions_crm || ''}
-                    onChange={(value) => updateField('admissions_crm', value)}
-                    disabled={!isEditing}
-                  />
-                  <SystemFieldSelect
-                    fieldName="alumni_advancement_crm"
-                    label="Alumni/Advancement CRM"
-                    value={editedProfile?.alumni_advancement_crm || ''}
-                    onChange={(value) => updateField('alumni_advancement_crm', value)}
-                    disabled={!isEditing}
-                  />
-                </div>
-                
-                <div className="pt-4">
-                  <Label htmlFor="other_software_comments">Additional Software Comments</Label>
-                  <Textarea
-                    id="other_software_comments"
-                    value={editedProfile?.other_software_comments || ''}
-                    onChange={(e) => updateField('other_software_comments', e.target.value)}
-                    disabled={!isEditing}
-                    rows={3}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Primary Office Vendors */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Primary Office Vendors</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="primary_office_apple"
-                      checked={editedProfile?.primary_office_apple || false}
-                      onCheckedChange={(checked) => updateField('primary_office_apple', checked)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="primary_office_apple">Apple</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="primary_office_asus"
-                      checked={editedProfile?.primary_office_asus || false}
-                      onCheckedChange={(checked) => updateField('primary_office_asus', checked)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="primary_office_asus">Lenovo</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="primary_office_dell"
-                      checked={editedProfile?.primary_office_dell || false}
-                      onCheckedChange={(checked) => updateField('primary_office_dell', checked)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="primary_office_dell">Dell</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="primary_office_hp"
-                      checked={editedProfile?.primary_office_hp || false}
-                      onCheckedChange={(checked) => updateField('primary_office_hp', checked)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="primary_office_hp">HP</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="primary_office_microsoft"
-                      checked={editedProfile?.primary_office_microsoft || false}
-                      onCheckedChange={(checked) => updateField('primary_office_microsoft', checked)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="primary_office_microsoft">Microsoft</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="primary_office_other"
-                      checked={editedProfile?.primary_office_other || false}
-                      onCheckedChange={(checked) => updateField('primary_office_other', checked)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="primary_office_other">Other</Label>
-                  </div>
-                </div>
-                
-                {editedProfile?.primary_office_other && (
-                  <div className="pt-4">
-                    <Label htmlFor="primary_office_other_details">Other Vendor Details</Label>
-                    <Input
-                      id="primary_office_other_details"
-                      value={editedProfile?.primary_office_other_details || ''}
-                      onChange={(e) => updateField('primary_office_other_details', e.target.value)}
-                      disabled={!isEditing}
-                      placeholder="Please specify other vendors"
-                    />
-                  </div>
-                )}
               </CardContent>
             </Card>
 
