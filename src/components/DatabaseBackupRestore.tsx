@@ -4,6 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -17,7 +21,8 @@ import {
   Clock,
   History,
   RefreshCw,
-  Calendar
+  Calendar,
+  Settings
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -41,12 +46,45 @@ export function DatabaseBackupRestore() {
   } | null>(null);
   const [storedBackups, setStoredBackups] = useState<StoredBackup[]>([]);
   const [loadingBackups, setLoadingBackups] = useState(true);
+  const [scheduleEnabled, setScheduleEnabled] = useState(true);
+  const [frequency, setFrequency] = useState('daily');
+  const [time, setTime] = useState('02:00');
+  const [dayOfWeek, setDayOfWeek] = useState('1');
+  const [dayOfMonth, setDayOfMonth] = useState('1');
+  const [isSavingSchedule, setIsSavingSchedule] = useState(false);
   const { toast } = useToast();
 
   // Fetch stored backups
   useEffect(() => {
     fetchStoredBackups();
+    fetchScheduleSettings();
   }, []);
+
+  const fetchScheduleSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', [
+          'backup_schedule_enabled',
+          'backup_schedule_frequency',
+          'backup_schedule_time',
+          'backup_schedule_day_of_week',
+          'backup_schedule_day_of_month'
+        ]);
+
+      if (error) throw error;
+
+      const settingsMap = new Map(data?.map(s => [s.setting_key, s.setting_value]) || []);
+      setScheduleEnabled(settingsMap.get('backup_schedule_enabled') === 'true');
+      setFrequency(settingsMap.get('backup_schedule_frequency') || 'daily');
+      setTime(settingsMap.get('backup_schedule_time') || '02:00');
+      setDayOfWeek(settingsMap.get('backup_schedule_day_of_week') || '1');
+      setDayOfMonth(settingsMap.get('backup_schedule_day_of_month') || '1');
+    } catch (error: any) {
+      console.error('Error fetching schedule settings:', error);
+    }
+  };
 
   const fetchStoredBackups = async () => {
     try {
@@ -272,6 +310,42 @@ export function DatabaseBackupRestore() {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  const handleSaveSchedule = async () => {
+    setIsSavingSchedule(true);
+    try {
+      const updates = [
+        { setting_key: 'backup_schedule_enabled', setting_value: scheduleEnabled.toString() },
+        { setting_key: 'backup_schedule_frequency', setting_value: frequency },
+        { setting_key: 'backup_schedule_time', setting_value: time },
+        { setting_key: 'backup_schedule_day_of_week', setting_value: dayOfWeek },
+        { setting_key: 'backup_schedule_day_of_month', setting_value: dayOfMonth }
+      ];
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('system_settings')
+          .update({ setting_value: update.setting_value })
+          .eq('setting_key', update.setting_key);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: 'Schedule Updated',
+        description: 'Backup schedule has been saved successfully.',
+      });
+    } catch (error: any) {
+      console.error('Error saving schedule:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save backup schedule. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingSchedule(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -429,6 +503,124 @@ export function DatabaseBackupRestore() {
         </Card>
       </div>
 
+      {/* Automated Backup Schedule Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Automated Backup Schedule
+          </CardTitle>
+          <CardDescription>
+            Configure when automated backups should run
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="schedule-enabled">Enable Automated Backups</Label>
+              <p className="text-sm text-muted-foreground">
+                Automatically backup your database on a schedule
+              </p>
+            </div>
+            <Switch
+              id="schedule-enabled"
+              checked={scheduleEnabled}
+              onCheckedChange={setScheduleEnabled}
+            />
+          </div>
+
+          {scheduleEnabled && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="frequency">Frequency</Label>
+                <Select value={frequency} onValueChange={setFrequency}>
+                  <SelectTrigger id="frequency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="time">Time</Label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Time when the backup should run (24-hour format)
+                </p>
+              </div>
+
+              {frequency === 'weekly' && (
+                <div className="space-y-2">
+                  <Label htmlFor="day-of-week">Day of Week</Label>
+                  <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
+                    <SelectTrigger id="day-of-week">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Monday</SelectItem>
+                      <SelectItem value="2">Tuesday</SelectItem>
+                      <SelectItem value="3">Wednesday</SelectItem>
+                      <SelectItem value="4">Thursday</SelectItem>
+                      <SelectItem value="5">Friday</SelectItem>
+                      <SelectItem value="6">Saturday</SelectItem>
+                      <SelectItem value="7">Sunday</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {frequency === 'monthly' && (
+                <div className="space-y-2">
+                  <Label htmlFor="day-of-month">Day of Month</Label>
+                  <Select value={dayOfMonth} onValueChange={setDayOfMonth}>
+                    <SelectTrigger id="day-of-month">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                        <SelectItem key={day} value={day.toString()}>
+                          {day}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Limited to days 1-28 to ensure the date exists in all months
+                  </p>
+                </div>
+              )}
+
+              <Button 
+                onClick={handleSaveSchedule} 
+                disabled={isSavingSchedule}
+                className="w-full"
+              >
+                {isSavingSchedule ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Clock className="h-4 w-4 mr-2" />
+                    Save Schedule
+                  </>
+                )}
+              </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Backup History */}
       <Card>
         <CardHeader>
@@ -452,7 +644,10 @@ export function DatabaseBackupRestore() {
             </Button>
           </CardTitle>
           <CardDescription>
-            Automated backups run daily at 2:00 AM. Only the last 3 backups are retained.
+            {scheduleEnabled 
+              ? `Automated backups run ${frequency} at ${time}. Only the last 3 backups are retained.`
+              : 'Automated backups are disabled. Only the last 3 manual backups are retained.'
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>

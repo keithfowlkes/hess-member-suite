@@ -13,13 +13,118 @@ serve(async (req: Request) => {
   }
 
   try {
-    console.log("Starting scheduled database backup...");
+    console.log("🔄 Scheduled backup check initiated");
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // Check if backups are enabled
+    const { data: settings, error: settingsError } = await supabase
+      .from('system_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', [
+        'backup_schedule_enabled',
+        'backup_schedule_frequency',
+        'backup_schedule_time',
+        'backup_schedule_day_of_week',
+        'backup_schedule_day_of_month'
+      ]);
+
+    if (settingsError) {
+      console.error('Error fetching settings:', settingsError);
+      throw settingsError;
+    }
+
+    // Parse settings into a map
+    const settingsMap = new Map(
+      settings?.map((s: any) => [s.setting_key, s.setting_value]) || []
+    );
+
+    // Check if backups are enabled
+    if (settingsMap.get('backup_schedule_enabled') !== 'true') {
+      console.log('⏸️ Automated backups are disabled');
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Backups are disabled',
+          skipped: true
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    }
+
+    // Get current time info
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentDayOfWeek = now.getDay() || 7; // Convert Sunday from 0 to 7
+    const currentDayOfMonth = now.getDate();
+
+    // Parse schedule time
+    const scheduleTime = settingsMap.get('backup_schedule_time') || '02:00';
+    const [scheduleHour] = scheduleTime.split(':').map(Number);
+
+    // Check if it's the right hour (with 1-hour window since cron runs hourly)
+    const isCorrectTime = currentHour === scheduleHour;
+
+    if (!isCorrectTime) {
+      console.log(`⏭️ Not the scheduled time. Current: ${currentHour}:00, Scheduled: ${scheduleHour}:00`);
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Not the scheduled time',
+          skipped: true
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    }
+
+    // Check frequency-specific conditions
+    const frequency = settingsMap.get('backup_schedule_frequency') || 'daily';
+
+    if (frequency === 'weekly') {
+      const scheduledDayOfWeek = parseInt(settingsMap.get('backup_schedule_day_of_week') || '1');
+      if (currentDayOfWeek !== scheduledDayOfWeek) {
+        console.log(`⏭️ Not the scheduled day of week. Current: ${currentDayOfWeek}, Scheduled: ${scheduledDayOfWeek}`);
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            message: 'Not the scheduled day of week',
+            skipped: true
+          }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200 
+          }
+        );
+      }
+    } else if (frequency === 'monthly') {
+      const scheduledDayOfMonth = parseInt(settingsMap.get('backup_schedule_day_of_month') || '1');
+      if (currentDayOfMonth !== scheduledDayOfMonth) {
+        console.log(`⏭️ Not the scheduled day of month. Current: ${currentDayOfMonth}, Scheduled: ${scheduledDayOfMonth}`);
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            message: 'Not the scheduled day of month',
+            skipped: true
+          }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200 
+          }
+        );
+      }
+    }
+
+    console.log('✅ Schedule check passed, performing backup...');
 
     const tables = [
       'organizations',
@@ -54,7 +159,7 @@ serve(async (req: Request) => {
     // Backup each table
     for (const table of tables) {
       try {
-        console.log(`Backing up table: ${table}`);
+        console.log(`📦 Backing up table: ${table}`);
         
         const { data, error } = await supabase
           .from(table)
@@ -66,7 +171,7 @@ serve(async (req: Request) => {
         } else {
           backup[table] = data || [];
           totalRows += data?.length || 0;
-          console.log(`Backed up ${data?.length || 0} rows from ${table}`);
+          console.log(`✅ Backed up ${data?.length || 0} rows from ${table}`);
         }
       } catch (err) {
         console.error(`Failed to backup table ${table}:`, err);
@@ -94,7 +199,7 @@ serve(async (req: Request) => {
       throw insertError;
     }
 
-    console.log(`Scheduled backup completed: ${tables.length} tables, ${totalRows} rows, ${(backupSize / 1024 / 1024).toFixed(2)} MB`);
+    console.log(`✅ Scheduled backup completed: ${tables.length} tables, ${totalRows} rows, ${(backupSize / 1024 / 1024).toFixed(2)} MB`);
 
     // Log the backup operation
     await supabase.from('audit_log').insert({
