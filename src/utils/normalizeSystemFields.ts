@@ -52,28 +52,38 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "Comspec Empower": "Comspec Empower",
     "Populi": "Populi",
     "Campus Cafe": "Campus Cafe",
-    "Collegix": "Collegix",
-    "Aptron Collegix": "Collegix",
+    "Collegix": "Aptron Collegix",
+    "Aptron Collegix": "Aptron Collegix",
     "EDC Campus Anywhere": "Campus Anywhere",
     "SONIS": "Jenzabar ONE"
   },
   
   financial_system: {
     // Banner variations
-    "Banner Finance": "Ellucian Banner",
-    "Ellucian Banner Finance": "Ellucian Banner", 
-    "Banner": "Ellucian Banner",
+    "Banner Finance": "Ellucian Banner Finance",
+    "Ellucian Banner Finance": "Ellucian Banner Finance", 
+    "Banner": "Ellucian Banner Finance",
     
     // Colleague variations
-    "Colleague": "Ellucian Colleague",
-    "Ellucian Colleague": "Ellucian Colleague",
+    "Colleague": "Ellucian Colleague Finance",
+    "Ellucian Colleague": "Ellucian Colleague Finance",
+    "Colleague Finance": "Ellucian Colleague Finance",
+    "Ellucian Colleague Finance": "Ellucian Colleague Finance",
+    
+    // Jenzabar variations
+    "Jenzabar": "Jenzabar ONE Finance",
+    "Jenzabar ONE Finance": "Jenzabar ONE Finance",
+    "Jenzabar Finance": "Jenzabar ONE Finance",
+    "Jenzabar ONE": "Jenzabar ONE Finance",
+    "Jenzabar EX": "Jenzabar ONE Finance",
     
     // Anthology variations
     "Anthology/Campus Management": "Anthology/Campus Management",
     "Campus Management": "Anthology/Campus Management",
     
     // Blackbaud variations
-    "Blackbaud Education Edge": "Blackbaud Education Edge",
+    "Blackbaud": "Blackbaud Financial Edge",
+    "Blackbaud Education Edge": "Blackbaud Financial Edge",
     "Blackbaud Financial Edge": "Blackbaud Financial Edge",
     "Financial Edge": "Blackbaud Financial Edge",
     
@@ -82,15 +92,20 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "Great Plains": "Microsoft Dynamics GP",
     "Dynamics GP": "Microsoft Dynamics GP",
     
+    // Oracle variations
+    "Oracle": "Oracle PeopleSoft",
+    "PeopleSoft": "Oracle PeopleSoft",
+    "Oracle PeopleSoft": "Oracle PeopleSoft",
+    "Oracle Peoplesoft": "Oracle PeopleSoft",
+    
     // Unit4/CAMS variations  
-    "Unit4 / CAMS": "Unit4 CAMS",
-    "CAMS": "Unit4 CAMS",
-    "Unit4": "Unit4 CAMS",
+    "Unit4 / CAMS": "Unit4",
+    "CAMS": "Unit4",
+    "Unit4": "Unit4",
+    "Cam": "Unit4",
     
     // Other common systems
     "Workday": "Workday",
-    "Oracle": "Oracle Cloud",
-    "Jenzabar EX": "Jenzabar EX",
     "Populi": "Populi",
     "QuickBooks": "QuickBooks"
   },
@@ -303,21 +318,24 @@ export function normalizeFieldValue(fieldName: string, currentValue: string | nu
     if (currentValue.toLowerCase().includes('banner')) return 'Ellucian Banner';
     if (currentValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE';
     if (currentValue.toLowerCase().includes('workday')) return 'Workday Student';
+    if (currentValue.toLowerCase().includes('collegix')) return 'Aptron Collegix';
     if (currentValue.toLowerCase().includes('powercampus')) return 'Ellucian PowerCampus';
     if (currentValue.toLowerCase().includes('campus management') || currentValue.toLowerCase().includes('anthology')) {
       return 'Anthology/Campus Management';
     }
-    if (currentValue.toLowerCase().includes('cams') || currentValue.toLowerCase().includes('unit4')) {
-      return 'Unit4 CAMS';
+    if (currentValue.toLowerCase().includes('cams') || currentValue.toLowerCase().includes('unit4') || currentValue.toLowerCase().includes('cam')) {
+      return 'Unit4';
     }
   }
   
   if (fieldName === 'financial_system') {
-    if (currentValue.toLowerCase().includes('banner')) return 'Ellucian Banner';
-    if (currentValue.toLowerCase().includes('colleague')) return 'Ellucian Colleague';
+    if (currentValue.toLowerCase().includes('banner')) return 'Ellucian Banner Finance';
+    if (currentValue.toLowerCase().includes('colleague')) return 'Ellucian Colleague Finance';
+    if (currentValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE Finance';
     if (currentValue.toLowerCase().includes('dynamics') || currentValue.toLowerCase().includes('great plains')) return 'Microsoft Dynamics GP';
-    if (currentValue.toLowerCase().includes('blackbaud') && currentValue.toLowerCase().includes('financial')) return 'Blackbaud Financial Edge';
-    if (currentValue.toLowerCase().includes('cams') || currentValue.toLowerCase().includes('unit4')) return 'Unit4 CAMS';
+    if (currentValue.toLowerCase().includes('blackbaud')) return 'Blackbaud Financial Edge';
+    if (currentValue.toLowerCase().includes('peoplesoft')) return 'Oracle PeopleSoft';
+    if (currentValue.toLowerCase().includes('cams') || currentValue.toLowerCase().includes('unit4') || currentValue.toLowerCase().includes('cam')) return 'Unit4';
   }
   
   if (fieldName === 'admissions_crm') {
