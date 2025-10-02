@@ -44,9 +44,7 @@ const processDatacubeData = (datacubeEntries: Array<{system_field: string, syste
     'meal_plan_management',
     'identity_management',
     'door_access',
-    'document_management',
-    'voip',
-    'network_infrastructure'
+    'document_management'
   ];
   
   // For specified fields, show all systems regardless of count
