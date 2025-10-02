@@ -24,6 +24,33 @@ export interface Organization {
   notes?: string;
   created_at: string;
   updated_at: string;
+  // System fields
+  student_information_system?: string;
+  financial_system?: string;
+  financial_aid?: string;
+  hcm_hr?: string;
+  payroll_system?: string;
+  purchasing_system?: string;
+  housing_management?: string;
+  learning_management?: string;
+  admissions_crm?: string;
+  alumni_advancement_crm?: string;
+  payment_platform?: string;
+  meal_plan_management?: string;
+  identity_management?: string;
+  door_access?: string;
+  document_management?: string;
+  voip?: string;
+  network_infrastructure?: string;
+  // Hardware fields
+  primary_office_apple?: boolean;
+  primary_office_lenovo?: boolean;
+  primary_office_dell?: boolean;
+  primary_office_hp?: boolean;
+  primary_office_microsoft?: boolean;
+  primary_office_other?: boolean;
+  primary_office_other_details?: string;
+  other_software_comments?: string;
   profiles?: {
     id?: string;
     user_id?: string;
@@ -43,31 +70,6 @@ export interface Organization {
     secondary_contact_title?: string;
     secondary_contact_email?: string;
     secondary_contact_phone?: string;
-    student_information_system?: string;
-    financial_system?: string;
-    financial_aid?: string;
-    hcm_hr?: string;
-    payroll_system?: string;
-    purchasing_system?: string;
-    housing_management?: string;
-    learning_management?: string;
-    admissions_crm?: string;
-    alumni_advancement_crm?: string;
-    payment_platform?: string;
-    meal_plan_management?: string;
-    identity_management?: string;
-    door_access?: string;
-    document_management?: string;
-    primary_office_apple?: boolean;
-    primary_office_lenovo?: boolean;
-    primary_office_dell?: boolean;
-    primary_office_hp?: boolean;
-    primary_office_microsoft?: boolean;
-    primary_office_other?: boolean;
-    primary_office_other_details?: string;
-    other_software_comments?: string;
-    voip?: string;
-    network_infrastructure?: string;
   };
 }
 

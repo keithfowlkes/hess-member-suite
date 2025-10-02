@@ -128,38 +128,39 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
         annual_fee_amount: editData.annual_fee_amount,
         notes: editData.notes,
         student_fte: editData.student_fte,
-        // Include profile fields for contact, systems, and hardware
+        // Include contact fields
         primary_contact_title: editData.profiles?.primary_contact_title,
         secondary_first_name: editData.profiles?.secondary_first_name,
         secondary_last_name: editData.profiles?.secondary_last_name,
         secondary_contact_title: editData.profiles?.secondary_contact_title,
         secondary_contact_email: editData.profiles?.secondary_contact_email,
         secondary_contact_phone: editData.profiles?.secondary_contact_phone,
-        student_information_system: editData.profiles?.student_information_system,
-        financial_system: editData.profiles?.financial_system,
-        financial_aid: editData.profiles?.financial_aid,
-        hcm_hr: editData.profiles?.hcm_hr,
-        payroll_system: editData.profiles?.payroll_system,
-        purchasing_system: editData.profiles?.purchasing_system,
-        housing_management: editData.profiles?.housing_management,
-        learning_management: editData.profiles?.learning_management,
-        admissions_crm: editData.profiles?.admissions_crm,
-        alumni_advancement_crm: editData.profiles?.alumni_advancement_crm,
-        payment_platform: editData.profiles?.payment_platform,
-        meal_plan_management: editData.profiles?.meal_plan_management,
-        identity_management: editData.profiles?.identity_management,
-        door_access: editData.profiles?.door_access,
-        document_management: editData.profiles?.document_management,
-        voip: editData.profiles?.voip,
-        network_infrastructure: editData.profiles?.network_infrastructure,
-        primary_office_apple: editData.profiles?.primary_office_apple,
-        primary_office_lenovo: editData.profiles?.primary_office_lenovo,
-        primary_office_dell: editData.profiles?.primary_office_dell,
-        primary_office_hp: editData.profiles?.primary_office_hp,
-        primary_office_microsoft: editData.profiles?.primary_office_microsoft,
-        primary_office_other: editData.profiles?.primary_office_other,
-        primary_office_other_details: editData.profiles?.primary_office_other_details,
-        other_software_comments: editData.profiles?.other_software_comments,
+        // Include systems and hardware fields from organization
+        student_information_system: editData.student_information_system,
+        financial_system: editData.financial_system,
+        financial_aid: editData.financial_aid,
+        hcm_hr: editData.hcm_hr,
+        payroll_system: editData.payroll_system,
+        purchasing_system: editData.purchasing_system,
+        housing_management: editData.housing_management,
+        learning_management: editData.learning_management,
+        admissions_crm: editData.admissions_crm,
+        alumni_advancement_crm: editData.alumni_advancement_crm,
+        payment_platform: editData.payment_platform,
+        meal_plan_management: editData.meal_plan_management,
+        identity_management: editData.identity_management,
+        door_access: editData.door_access,
+        document_management: editData.document_management,
+        voip: editData.voip,
+        network_infrastructure: editData.network_infrastructure,
+        primary_office_apple: editData.primary_office_apple,
+        primary_office_lenovo: editData.primary_office_lenovo,
+        primary_office_dell: editData.primary_office_dell,
+        primary_office_hp: editData.primary_office_hp,
+        primary_office_microsoft: editData.primary_office_microsoft,
+        primary_office_other: editData.primary_office_other,
+        primary_office_other_details: editData.primary_office_other_details,
+        other_software_comments: editData.other_software_comments,
       };
       
       await updateOrganization(editData.id, orgUpdateData);
@@ -648,7 +649,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                 { key: 'door_access', label: 'Door Access', icon: Home },
                 { key: 'document_management', label: 'Document Management', icon: Database },
               ].map(({ key, label, icon: Icon }) => {
-                const value = profile?.[key as keyof typeof profile] as string;
+                const value = currentData[key as keyof typeof currentData] as string;
                 
                 return (
                   <Card key={key}>
@@ -665,10 +666,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                             value={value || ''}
                             onChange={(newValue) => setEditData({
                               ...editData!,
-                              profiles: { 
-                                ...editData!.profiles!, 
-                                [key]: newValue
-                              }
+                              [key]: newValue
                             })}
                           />
                         ) : (
@@ -688,16 +686,16 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
               <CardContent>
                 {isEditing ? (
                   <Textarea
-                    value={profile?.other_software_comments || ''}
+                    value={currentData.other_software_comments || ''}
                     onChange={(e) => setEditData({
                       ...editData!,
-                      profiles: { ...editData!.profiles!, other_software_comments: e.target.value }
+                      other_software_comments: e.target.value
                     })}
                     rows={3}
                     placeholder="Add any additional software comments..."
                   />
                 ) : (
-                  <p className="text-sm whitespace-pre-wrap">{profile?.other_software_comments || 'No additional comments'}</p>
+                  <p className="text-sm whitespace-pre-wrap">{currentData.other_software_comments || 'No additional comments'}</p>
                 )}
               </CardContent>
             </Card>
@@ -718,17 +716,14 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                     <SystemFieldSelect
                       fieldName="voip"
                       label="VoIP"
-                      value={profile?.voip || ''}
+                      value={currentData.voip || ''}
                       onChange={(newValue) => setEditData({
                         ...editData!,
-                        profiles: { 
-                          ...editData!.profiles!, 
-                          voip: newValue
-                        }
+                        voip: newValue
                       })}
                     />
                   ) : (
-                    <p className="text-sm text-muted-foreground">{profile?.voip || 'Not specified'}</p>
+                    <p className="text-sm text-muted-foreground">{currentData.voip || 'Not specified'}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -737,17 +732,14 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                     <SystemFieldSelect
                       fieldName="network_infrastructure"
                       label="Network Infrastructure"
-                      value={profile?.network_infrastructure || ''}
+                      value={currentData.network_infrastructure || ''}
                       onChange={(newValue) => setEditData({
                         ...editData!,
-                        profiles: { 
-                          ...editData!.profiles!, 
-                          network_infrastructure: newValue
-                        }
+                        network_infrastructure: newValue
                       })}
                     />
                   ) : (
-                    <p className="text-sm text-muted-foreground">{profile?.network_infrastructure || 'Not specified'}</p>
+                    <p className="text-sm text-muted-foreground">{currentData.network_infrastructure || 'Not specified'}</p>
                   )}
                 </div>
               </CardContent>
@@ -770,7 +762,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                     { key: 'primary_office_microsoft', label: 'Microsoft' },
                     { key: 'primary_office_other', label: 'Other' },
                   ].map(({ key, label }) => {
-                    const isSelected = profile?.[key as keyof typeof profile] as boolean;
+                    const isSelected = currentData[key as keyof typeof currentData] as boolean;
                     return (
                       <div key={key} className="flex items-center space-x-2">
                         {isEditing ? (
@@ -778,10 +770,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                             checked={isSelected || false}
                             onCheckedChange={(checked) => setEditData({
                               ...editData!,
-                              profiles: { 
-                                ...editData!.profiles!, 
-                                [key]: checked
-                              }
+                              [key]: checked
                             })}
                           />
                         ) : (
@@ -797,16 +786,16 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                   <Label>Other Hardware Details</Label>
                   {isEditing ? (
                     <Textarea
-                      value={profile?.primary_office_other_details || ''}
+                      value={currentData.primary_office_other_details || ''}
                       onChange={(e) => setEditData({
                         ...editData!,
-                        profiles: { ...editData!.profiles!, primary_office_other_details: e.target.value }
+                        primary_office_other_details: e.target.value
                       })}
                       rows={2}
                       placeholder="Specify other hardware details..."
                     />
                   ) : (
-                    <p className="text-sm text-muted-foreground">{profile?.primary_office_other_details || 'No additional details'}</p>
+                    <p className="text-sm text-muted-foreground">{currentData.primary_office_other_details || 'No additional details'}</p>
                   )}
                 </div>
               </CardContent>
