@@ -471,6 +471,7 @@ serve(async (req) => {
     
     if (!existingProfile) {
       console.log('Profile not found, creating manually...');
+      // Note: Only create profile with contact person data - all system fields go in organizations table
       const { data: createdProfile, error: profileCreateError } = await supabaseAdmin
         .from('profiles')
         .insert({
@@ -479,43 +480,12 @@ serve(async (req) => {
           last_name: pendingReg.last_name,
           email: pendingReg.email,
           organization: pendingReg.organization_name,
-          student_fte: pendingReg.student_fte,
-          address: pendingReg.address,
-          city: pendingReg.city,
-          state: pendingReg.state,
-          zip: pendingReg.zip,
           primary_contact_title: pendingReg.primary_contact_title,
           secondary_first_name: pendingReg.secondary_first_name,
           secondary_last_name: pendingReg.secondary_last_name,
           secondary_contact_title: pendingReg.secondary_contact_title,
           secondary_contact_email: pendingReg.secondary_contact_email,
-          student_information_system: pendingReg.student_information_system,
-          financial_system: pendingReg.financial_system,
-          financial_aid: pendingReg.financial_aid,
-          hcm_hr: pendingReg.hcm_hr,
-          payroll_system: pendingReg.payroll_system,
-          purchasing_system: pendingReg.purchasing_system,
-          housing_management: pendingReg.housing_management,
-          learning_management: pendingReg.learning_management,
-          admissions_crm: pendingReg.admissions_crm,
-          alumni_advancement_crm: pendingReg.alumni_advancement_crm,
-          primary_office_apple: pendingReg.primary_office_apple,
-          primary_office_lenovo: pendingReg.primary_office_lenovo,
-          primary_office_dell: pendingReg.primary_office_dell,
-          primary_office_hp: pendingReg.primary_office_hp,
-          primary_office_microsoft: pendingReg.primary_office_microsoft,
-          primary_office_other: pendingReg.primary_office_other,
-          primary_office_other_details: pendingReg.primary_office_other_details,
-          other_software_comments: pendingReg.other_software_comments,
-          is_private_nonprofit: pendingReg.is_private_nonprofit,
-          secondary_contact_phone: pendingReg.secondary_contact_phone,
-          payment_platform: pendingReg.payment_platform,
-          meal_plan_management: pendingReg.meal_plan_management,
-          identity_management: pendingReg.identity_management,
-          door_access: pendingReg.door_access,
-          document_management: pendingReg.document_management,
-          voip: pendingReg.voip,
-          network_infrastructure: pendingReg.network_infrastructure
+          secondary_contact_phone: pendingReg.secondary_contact_phone
         })
         .select('id')
         .single();
