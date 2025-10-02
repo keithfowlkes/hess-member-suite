@@ -33,7 +33,7 @@ export const useInstitutionsBySystem = (systemField: string | null, systemName: 
         // Get organizations with optimized query - select only needed fields
         const { data: allOrgs, error: orgsError } = await supabase
           .from('organizations')
-          .select('id, name, city, state, email, website, student_information_system, financial_system, learning_management, financial_aid, hcm_hr, payroll_system, purchasing_system, housing_management, admissions_crm, alumni_advancement_crm, payment_platform, meal_plan_management, identity_management, door_access, document_management, voip, network_infrastructure')
+          .select('id, name, city, state, email, website, student_information_system, financial_system, learning_management, financial_aid, hcm_hr, payroll_system, purchasing_system, housing_management, admissions_crm, alumni_advancement_crm, payment_platform, meal_plan_management, identity_management, door_access, document_management, voip, network_infrastructure, primary_office_apple, primary_office_lenovo, primary_office_dell, primary_office_hp, primary_office_microsoft, primary_office_other')
           .eq('membership_status', 'active');
 
         if (orgsError) throw orgsError;
@@ -60,13 +60,43 @@ export const useInstitutionsBySystem = (systemField: string | null, systemName: 
       // Regular case - optimized query for specific system
       const { data: allOrgs, error } = await supabase
         .from('organizations')
-        .select('id, name, city, state, email, website, student_information_system, financial_system, learning_management, financial_aid, hcm_hr, payroll_system, purchasing_system, housing_management, admissions_crm, alumni_advancement_crm, payment_platform, meal_plan_management, identity_management, door_access, document_management, voip, network_infrastructure')
+        .select('id, name, city, state, email, website, student_information_system, financial_system, learning_management, financial_aid, hcm_hr, payroll_system, purchasing_system, housing_management, admissions_crm, alumni_advancement_crm, payment_platform, meal_plan_management, identity_management, door_access, document_management, voip, network_infrastructure, primary_office_apple, primary_office_lenovo, primary_office_dell, primary_office_hp, primary_office_microsoft, primary_office_other')
         .eq('membership_status', 'active');
 
       if (error) throw error;
       if (!allOrgs) return [];
 
-      // Filter by system field
+      // Handle primary office hardware specially (boolean fields)
+      if (systemField === 'primary_office_hardware') {
+        const hardwareFieldMap: Record<string, string> = {
+          'Apple': 'primary_office_apple',
+          'Lenovo': 'primary_office_lenovo',
+          'Dell': 'primary_office_dell',
+          'HP': 'primary_office_hp',
+          'Microsoft': 'primary_office_microsoft',
+          'Other': 'primary_office_other',
+        };
+
+        const booleanField = hardwareFieldMap[systemName];
+        if (!booleanField) return [];
+
+        const filteredOrgs = allOrgs.filter(org => {
+          return (org as any)[booleanField] === true;
+        });
+
+        return filteredOrgs
+          .map(org => ({
+            id: org.id,
+            name: org.name,
+            city: org.city,
+            state: org.state,
+            email: org.email,
+            website: org.website,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+      }
+
+      // Filter by system field (regular text fields)
       const filteredOrgs = allOrgs.filter(org => {
         const value = (org as any)[systemField];
         return value === systemName;
