@@ -10,7 +10,6 @@ import { useOrganizationProfileEditRequests } from '@/hooks/useOrganizationProfi
 import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
 import { useMemberRegistrationUpdates } from '@/hooks/useMemberRegistrationUpdates';
 import { useUnreadMessageCount } from '@/hooks/useUserMessages';
-import { AdminCustomEntriesNotification } from '@/components/AdminCustomEntriesNotification';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -215,15 +214,6 @@ export function AppSidebar() {
         <SidebarMenu>
           {isAdmin && (
             <>
-              {isViewingAsAdmin && !isCollapsed && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <div className="w-full px-3 py-2">
-                      <AdminCustomEntriesNotification />
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Button

@@ -81,6 +81,7 @@ import { AddExternalUserDialog } from '@/components/AddExternalUserDialog';
 import { DebugRequestsComponent } from '@/components/DebugRequestsComponent';
 import { MemberRegistrationUpdateDialog } from '@/components/MemberRegistrationUpdateDialog';
 import { MultiRoleSelector } from '@/components/MultiRoleSelector';
+import { AdminCustomEntriesNotification } from '@/components/AdminCustomEntriesNotification';
 import type { PendingRegistration } from '@/hooks/usePendingRegistrations';
 
 // Icons
@@ -823,6 +824,7 @@ const MasterDashboard = () => {
               <p className="text-muted-foreground">System administration and overview</p>
             </div>
             <div className="flex items-center gap-4">
+              <AdminCustomEntriesNotification />
               <Button variant="outline" onClick={() => setShowAddExternalUser(true)}>
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add External User
