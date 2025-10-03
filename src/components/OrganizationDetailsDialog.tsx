@@ -133,6 +133,9 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
     if (!editData) return;
     
     try {
+      // Helper function to convert empty strings to null
+      const toNullIfEmpty = (value: string | undefined) => value === '' ? null : value;
+      
       // Update organization fields
       const orgUpdateData = {
         name: editData.name,
@@ -152,24 +155,24 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
         notes: editData.notes,
         student_fte: editData.student_fte,
         state_association: editData.state_association,
-        // System fields
-        student_information_system: editData.student_information_system,
-        financial_system: editData.financial_system,
-        financial_aid: editData.financial_aid,
-        hcm_hr: editData.hcm_hr,
-        payroll_system: editData.payroll_system,
-        purchasing_system: editData.purchasing_system,
-        housing_management: editData.housing_management,
-        learning_management: editData.learning_management,
-        admissions_crm: editData.admissions_crm,
-        alumni_advancement_crm: editData.alumni_advancement_crm,
-        payment_platform: editData.payment_platform,
-        meal_plan_management: editData.meal_plan_management,
-        identity_management: editData.identity_management,
-        door_access: editData.door_access,
-        document_management: editData.document_management,
-        voip: editData.voip,
-        network_infrastructure: editData.network_infrastructure,
+        // System fields - convert empty strings to null
+        student_information_system: toNullIfEmpty(editData.student_information_system),
+        financial_system: toNullIfEmpty(editData.financial_system),
+        financial_aid: toNullIfEmpty(editData.financial_aid),
+        hcm_hr: toNullIfEmpty(editData.hcm_hr),
+        payroll_system: toNullIfEmpty(editData.payroll_system),
+        purchasing_system: toNullIfEmpty(editData.purchasing_system),
+        housing_management: toNullIfEmpty(editData.housing_management),
+        learning_management: toNullIfEmpty(editData.learning_management),
+        admissions_crm: toNullIfEmpty(editData.admissions_crm),
+        alumni_advancement_crm: toNullIfEmpty(editData.alumni_advancement_crm),
+        payment_platform: toNullIfEmpty(editData.payment_platform),
+        meal_plan_management: toNullIfEmpty(editData.meal_plan_management),
+        identity_management: toNullIfEmpty(editData.identity_management),
+        door_access: toNullIfEmpty(editData.door_access),
+        document_management: toNullIfEmpty(editData.document_management),
+        voip: toNullIfEmpty(editData.voip),
+        network_infrastructure: toNullIfEmpty(editData.network_infrastructure),
         // Hardware fields
         primary_office_apple: editData.primary_office_apple,
         primary_office_lenovo: editData.primary_office_lenovo,
@@ -177,8 +180,8 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
         primary_office_hp: editData.primary_office_hp,
         primary_office_microsoft: editData.primary_office_microsoft,
         primary_office_other: editData.primary_office_other,
-        primary_office_other_details: editData.primary_office_other_details,
-        other_software_comments: editData.other_software_comments,
+        primary_office_other_details: toNullIfEmpty(editData.primary_office_other_details),
+        other_software_comments: toNullIfEmpty(editData.other_software_comments),
       };
       
       await updateOrganization(editData.id, orgUpdateData);
