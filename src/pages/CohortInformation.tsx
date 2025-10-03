@@ -422,19 +422,7 @@ const handleOrganizationDialogClose = () => {
                       Manage and view information for your cohort group members
                     </p>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-80">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        type="text"
-                        placeholder="Search organizations or contacts..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                    <Badge variant="secondary">Cohort Leader</Badge>
-                  </div>
+                  <Badge variant="secondary">Cohort Leader</Badge>
                 </div>
               </div>
 
@@ -516,10 +504,30 @@ const handleOrganizationDialogClose = () => {
                       </TabsList>
                       
                       <TabsContent value="banner" className="space-y-4">
+                        <div className="relative w-full max-w-md mb-4">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                          <Input
+                            type="text"
+                            placeholder="Search organizations or contacts..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
                         {renderMemberGrid('Ellucian Banner')}
                       </TabsContent>
                       
                       <TabsContent value="colleague" className="space-y-4">
+                        <div className="relative w-full max-w-md mb-4">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                          <Input
+                            type="text"
+                            placeholder="Search organizations or contacts..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
                         {renderMemberGrid('Ellucian Colleague')}
                       </TabsContent>
                     </Tabs>
