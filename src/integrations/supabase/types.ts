@@ -1470,6 +1470,28 @@ export type Database = {
           cleaned_count: number
         }[]
       }
+      cohort_leader_can_access_org: {
+        Args: {
+          org_admissions_crm: string
+          org_alumni_advancement_crm: string
+          org_document_management: string
+          org_door_access: string
+          org_financial_aid: string
+          org_financial_system: string
+          org_hcm_hr: string
+          org_housing_management: string
+          org_identity_management: string
+          org_learning_management: string
+          org_meal_plan_management: string
+          org_network_infrastructure: string
+          org_payment_platform: string
+          org_payroll_system: string
+          org_purchasing_system: string
+          org_student_system: string
+          org_voip: string
+        }
+        Returns: boolean
+      }
       fix_user_password_from_registration: {
         Args: Record<PropertyKey, never>
         Returns: string
