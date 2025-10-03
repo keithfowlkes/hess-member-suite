@@ -544,7 +544,7 @@ const handleOrganizationDialogClose = () => {
                 organization={selectedOrganization}
                 isOpen={isOrganizationDialogOpen}
                 onClose={handleOrganizationDialogClose}
-                canEdit={false}
+                canEdit={true}
               />
             </div>
           </main>
