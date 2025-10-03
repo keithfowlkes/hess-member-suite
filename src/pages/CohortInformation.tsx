@@ -435,7 +435,7 @@ const handleOrganizationDialogClose = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4 md:grid-cols-4">
+                  <div className="grid gap-4 md:grid-cols-3">
                     <div className="text-center p-4 bg-muted/50 rounded-lg">
                       <div className="text-2xl font-bold">
                         {cohortLeaderData?.cohortStats.totalMembers || 0}
@@ -453,12 +453,6 @@ const handleOrganizationDialogClose = () => {
                         {cohortLeaderData?.cohortStats.representedStates || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">States Represented</div>
-                    </div>
-                    <div className="text-center p-4 bg-muted/50 rounded-lg">
-                      <div className="text-2xl font-bold">
-                        {cohortLeaderData?.userCohorts.length || 0}
-                      </div>
-                      <div className="text-sm text-muted-foreground">Cohort Systems</div>
                     </div>
                   </div>
                 </CardContent>
