@@ -42,7 +42,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useMembers, Organization, CreateOrganizationData } from '@/hooks/useMembers';
-import { useSimpleFieldOptions } from '@/hooks/useSimpleSystemFieldOptions';
+import { type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
+import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
 import { CalendarIcon, User, Building2, Mail, Phone, MapPin, Database, Monitor, Trash2, AlertTriangle, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -131,9 +132,10 @@ interface OrganizationDialogProps {
 
 interface SystemFieldsSectionProps {
   profileForm: any;
+  organizationId?: string;
 }
 
-function SystemFieldsSection({ profileForm }: SystemFieldsSectionProps) {
+function SystemFieldsSection({ profileForm, organizationId }: SystemFieldsSectionProps) {
   const systemFields = [
     { key: 'student_information_system', label: 'Student Information System' },
     { key: 'financial_system', label: 'Financial System' },
@@ -157,8 +159,6 @@ function SystemFieldsSection({ profileForm }: SystemFieldsSectionProps) {
   return (
     <div className="grid grid-cols-2 gap-4">
       {systemFields.map(({ key, label }) => {
-        const options = useSimpleFieldOptions(key as any);
-        
         return (
           <FormField
             key={key}
@@ -167,24 +167,16 @@ function SystemFieldsSection({ profileForm }: SystemFieldsSectionProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{label}</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  value={field.value as string || ''}
-                >
-                  <FormControl>
-                    <SelectTrigger className="bg-popover">
-                      <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-popover max-h-[200px] overflow-y-auto">
-                    <SelectItem value="none">None</SelectItem>
-                    {options.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <EnhancedSystemFieldSelect
+                    fieldName={key as SystemField}
+                    label={label}
+                    value={field.value as string || ''}
+                    onChange={field.onChange}
+                    disabled={false}
+                    organizationId={organizationId || ''}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -1037,7 +1029,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
                     Systems & Software Information
                   </h3>
                   
-                  <SystemFieldsSection profileForm={profileForm} />
+                  <SystemFieldsSection profileForm={profileForm} organizationId={organization?.id} />
 
                   <FormField
                     control={profileForm.control}
