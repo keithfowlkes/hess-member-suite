@@ -586,17 +586,17 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                           </Label>
                           {isEditing ? (
                             <Select
-                              value={(editData?.[key as keyof typeof editData] as string) || ''}
+                              value={(editData?.[key as keyof typeof editData] as string) || '__none__'}
                               onValueChange={(newValue) => setEditData({
                                 ...editData!,
-                                [key]: newValue
+                                [key]: newValue === '__none__' ? '' : newValue
                               })}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">None</SelectItem>
+                                <SelectItem value="__none__">None</SelectItem>
                                 {fieldOptions.map((option) => (
                                   <SelectItem key={option} value={option}>
                                     {option}
