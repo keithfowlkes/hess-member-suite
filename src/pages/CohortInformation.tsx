@@ -306,14 +306,28 @@ const handleOrganizationDialogClose = () => {
           <AppSidebar />
           <main className="flex-1 p-8">
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight">Your Cohort Information</h1>
-                  <p className="text-muted-foreground">
-                    Manage and view information for your cohort group members
-                  </p>
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Your Cohort Information</h1>
+                    <p className="text-muted-foreground">
+                      Manage and view information for your cohort group members
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-80">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        type="text"
+                        placeholder="Search organizations or contacts..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Badge variant="secondary">Cohort Leader</Badge>
+                  </div>
                 </div>
-                <Badge variant="secondary">Cohort Leader</Badge>
               </div>
 
               {/* Cohort Leader Overview */}
@@ -387,6 +401,17 @@ const handleOrganizationDialogClose = () => {
                     {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {[...cohortLeaderData.cohortMembers]
+                          .filter((member) => {
+                            if (!searchTerm) return true;
+                            const search = searchTerm.toLowerCase();
+                            return (
+                              member.organization?.toLowerCase().includes(search) ||
+                              member.first_name?.toLowerCase().includes(search) ||
+                              member.last_name?.toLowerCase().includes(search) ||
+                              `${member.first_name} ${member.last_name}`.toLowerCase().includes(search) ||
+                              member.email?.toLowerCase().includes(search)
+                            );
+                          })
                           .sort((a, b) => {
                             // Define role priority
                             const getRolePriority = (roles: {role: 'admin' | 'member' | 'cohort_leader'}[]) => {
@@ -481,14 +506,26 @@ const handleOrganizationDialogClose = () => {
           <AppSidebar />
           <main className="flex-1 p-8">
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <div>
                   <h1 className="text-3xl font-bold tracking-tight">Software System Cohorts</h1>
                   <p className="text-muted-foreground">
                     View organization membership statistics by software systems (Ellucian Banner, Ellucian Colleague, Jenzabar, Oracle Cloud, etc.)
                   </p>
                 </div>
-                <Badge variant="default">Admin View</Badge>
+                <div className="flex items-center gap-4">
+                  <div className="relative w-80">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      type="text"
+                      placeholder="Search organizations or contacts..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Badge variant="default">Admin View</Badge>
+                </div>
               </div>
 
               {statsLoading ? (
@@ -694,17 +731,6 @@ const handleOrganizationDialogClose = () => {
                     <p className="text-sm text-muted-foreground">
                       Cohort numbers are based on financial system reporting.
                     </p>
-                    
-                    {/* Search Field */}
-                    <div className="relative w-80 ml-auto">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        placeholder="Search organizations or contacts..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9"
-                      />
-                    </div>
                     
                     {(!cohortStats || cohortStats.length === 0) ? (
                       <Card>
