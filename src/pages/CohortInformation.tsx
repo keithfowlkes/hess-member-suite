@@ -186,7 +186,7 @@ const CohortInformation = () => {
     ];
 
     const csvData = [...cohortLeaderData.cohortMembers]
-      .sort((a, b) => (a.last_name || '').localeCompare(b.last_name || ''))
+      .sort((a, b) => (b.last_name || '').localeCompare(a.last_name || ''))
       .map(member => [
       member.first_name || '',
       member.last_name || '',
@@ -354,11 +354,11 @@ const handleOrganizationDialogClose = () => {
               const aPriority = getRolePriority(a.user_roles || []);
               const bPriority = getRolePriority(b.user_roles || []);
               
-              // Sort by role priority first, then by last name
+              // Sort by role priority first, then by last name (descending)
               if (aPriority !== bPriority) {
                 return aPriority - bPriority;
               }
-              return (a.last_name || '').localeCompare(b.last_name || '');
+              return (b.last_name || '').localeCompare(a.last_name || '');
             })
             .map((member) => (
               <Card 
@@ -985,11 +985,11 @@ const handleOrganizationDialogClose = () => {
                         const aPriority = getRolePriority(a.user_roles || []);
                         const bPriority = getRolePriority(b.user_roles || []);
                         
-                        // Sort by role priority first, then by last name
+                        // Sort by role priority first, then by last name (descending)
                         if (aPriority !== bPriority) {
                           return aPriority - bPriority;
                         }
-                        return (a.last_name || '').localeCompare(b.last_name || '');
+                        return (b.last_name || '').localeCompare(a.last_name || '');
                       })
                       .map((member) => (
                       <Card key={member.id} className="hover:shadow-md transition-shadow">
