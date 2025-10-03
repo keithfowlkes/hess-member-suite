@@ -3,8 +3,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
+import { useSimpleFieldOptions, type SystemField, useAddSimpleSystemFieldOption } from '@/hooks/useSimpleSystemFieldOptions';
 import { useSubmitCustomEntry } from '@/hooks/useCustomSoftwareEntries';
+import { useAuth } from '@/hooks/useAuth';
 import { Plus } from 'lucide-react';
 
 interface EnhancedSystemFieldSelectProps {
@@ -30,6 +31,8 @@ export const EnhancedSystemFieldSelect = ({
 }: EnhancedSystemFieldSelectProps) => {
   const options = useSimpleFieldOptions(fieldName);
   const submitCustomEntry = useSubmitCustomEntry();
+  const addSystemOption = useAddSimpleSystemFieldOption();
+  const { isAdmin } = useAuth();
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState('');
   const [pendingValue, setPendingValue] = useState<string | null>(null);
@@ -51,18 +54,34 @@ export const EnhancedSystemFieldSelect = ({
   };
 
   const handleSubmitCustom = async () => {
-    if (!customValue.trim() || !organizationId) return;
+    if (!customValue.trim()) return;
 
     try {
-      await submitCustomEntry.mutateAsync({
-        organizationId,
-        fieldName,
-        customValue: customValue.trim()
-      });
+      if (isAdmin) {
+        // Admins add directly to system options
+        await addSystemOption.mutateAsync({
+          fieldName,
+          optionValue: customValue.trim()
+        });
+        
+        // Set the value immediately since it's now in the options
+        onChange(customValue.trim());
+        setPendingValue(null);
+      } else {
+        // Non-admins submit for review
+        if (!organizationId) return;
+        
+        await submitCustomEntry.mutateAsync({
+          organizationId,
+          fieldName,
+          customValue: customValue.trim()
+        });
+        
+        // Set the value and mark it as pending
+        onChange(customValue.trim());
+        setPendingValue(customValue.trim());
+      }
       
-      // Set the value and mark it as pending
-      onChange(customValue.trim());
-      setPendingValue(customValue.trim());
       setCustomValue('');
       setShowCustomInput(false);
     } catch (error) {
@@ -145,9 +164,9 @@ export const EnhancedSystemFieldSelect = ({
             <Button
               size="sm"
               onClick={handleSubmitCustom}
-              disabled={!customValue.trim() || submitCustomEntry.isPending}
+              disabled={!customValue.trim() || (submitCustomEntry.isPending || addSystemOption.isPending)}
             >
-              Submit for Review
+              {isAdmin ? 'Add Option' : 'Submit for Review'}
             </Button>
             <Button
               size="sm"
@@ -157,9 +176,11 @@ export const EnhancedSystemFieldSelect = ({
               Cancel
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            This custom entry will be reviewed by an administrator before being added to the system.
-          </p>
+          {!isAdmin && (
+            <p className="text-xs text-muted-foreground">
+              This custom entry will be reviewed by an administrator before being added to the system.
+            </p>
+          )}
         </div>
       )}
     </div>
