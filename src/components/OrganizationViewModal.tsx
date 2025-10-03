@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
+import { type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
+import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
 import { 
   Building2, 
   User, 
@@ -50,39 +51,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { OrganizationCRMTab } from '@/components/OrganizationCRMTab';
-
-// System field dropdown component for organization editing
-const SystemFieldSelect = ({ 
-  fieldName,
-  label,
-  value,
-  onChange
-}: {
-  fieldName: SystemField;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) => {
-  const options = useSimpleFieldOptions(fieldName);
-  
-  return (
-    <Select value={value || "none"} onValueChange={(val) => onChange(val === "none" ? "" : val)}>
-      <SelectTrigger>
-        <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
-      </SelectTrigger>
-      <SelectContent className="max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-input shadow-lg z-[9999]">
-        <SelectItem value="none" className="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
-          <span className="text-muted-foreground">None specified</span>
-        </SelectItem>
-        {options.map((option) => (
-          <SelectItem key={option} value={option} className="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
-            {option}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-};
 
 interface OrganizationViewModalProps {
   organization: Organization | null;
@@ -660,7 +628,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                           <Label className="text-sm font-medium">{label}</Label>
                         </div>
                         {isEditing ? (
-                          <SystemFieldSelect
+                          <EnhancedSystemFieldSelect
                             fieldName={key as SystemField}
                             label={label}
                             value={value || ''}
@@ -668,6 +636,8 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                               ...editData!,
                               [key]: newValue
                             })}
+                            organizationId={organization.id}
+                            disabled={false}
                           />
                         ) : (
                           <p className="text-sm text-muted-foreground ml-6">{value || 'Not specified'}</p>
@@ -713,7 +683,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                 <div className="space-y-2">
                   <Label>VoIP</Label>
                   {isEditing ? (
-                    <SystemFieldSelect
+                    <EnhancedSystemFieldSelect
                       fieldName="voip"
                       label="VoIP"
                       value={currentData.voip || ''}
@@ -721,6 +691,8 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                         ...editData!,
                         voip: newValue
                       })}
+                      organizationId={organization.id}
+                      disabled={false}
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground">{currentData.voip || 'Not specified'}</p>
@@ -729,7 +701,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                 <div className="space-y-2">
                   <Label>Network Infrastructure</Label>
                   {isEditing ? (
-                    <SystemFieldSelect
+                    <EnhancedSystemFieldSelect
                       fieldName="network_infrastructure"
                       label="Network Infrastructure"
                       value={currentData.network_infrastructure || ''}
@@ -737,6 +709,8 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                         ...editData!,
                         network_infrastructure: newValue
                       })}
+                      organizationId={organization.id}
+                      disabled={false}
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground">{currentData.network_infrastructure || 'Not specified'}</p>
