@@ -991,6 +991,7 @@ export type Database = {
           purchasing_system: string | null
           rejection_reason: string | null
           rejection_requires_resubmission: boolean | null
+          requested_cohorts: Json | null
           resubmission_count: number | null
           secondary_contact_email: string | null
           secondary_contact_phone: string | null
@@ -1052,6 +1053,7 @@ export type Database = {
           purchasing_system?: string | null
           rejection_reason?: string | null
           rejection_requires_resubmission?: boolean | null
+          requested_cohorts?: Json | null
           resubmission_count?: number | null
           secondary_contact_email?: string | null
           secondary_contact_phone?: string | null
@@ -1113,6 +1115,7 @@ export type Database = {
           purchasing_system?: string | null
           rejection_reason?: string | null
           rejection_requires_resubmission?: boolean | null
+          requested_cohorts?: Json | null
           resubmission_count?: number | null
           secondary_contact_email?: string | null
           secondary_contact_phone?: string | null

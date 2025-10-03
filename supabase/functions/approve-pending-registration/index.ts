@@ -519,6 +519,27 @@ serve(async (req) => {
       console.log(`User role assigned: ${isAdminOrg ? 'admin' : 'member'}`);
     }
 
+    // Create user cohorts if requested during registration
+    if (pendingReg.requested_cohorts && Array.isArray(pendingReg.requested_cohorts) && pendingReg.requested_cohorts.length > 0) {
+      console.log(`Creating ${pendingReg.requested_cohorts.length} user cohort memberships...`);
+      
+      const cohortsToInsert = pendingReg.requested_cohorts.map((cohort: string) => ({
+        user_id: authUser.user?.id,
+        cohort: cohort
+      }));
+      
+      const { error: cohortError } = await supabaseAdmin
+        .from('user_cohorts')
+        .insert(cohortsToInsert);
+      
+      if (cohortError) {
+        console.error('Error creating user cohorts:', cohortError);
+        // Don't fail the whole approval if cohort creation fails
+      } else {
+        console.log(`Successfully created cohort memberships for: ${pendingReg.requested_cohorts.join(', ')}`);
+      }
+    }
+
     // Get the newly created organization and activate it
     // First check if organization already exists by name AND contact person
     let newOrganization = null;
