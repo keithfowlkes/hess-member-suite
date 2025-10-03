@@ -1949,6 +1949,45 @@ export default function Auth() {
                   </div>
                 </div>
 
+                {/* Cohort Selection */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">System Cohort Membership</h3>
+                    <p className="text-gray-600 text-sm">Select the system cohorts you wish to join to collaborate with other institutions using similar technology platforms.</p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {availableCohorts.map((cohort) => (
+                        <div key={cohort} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                          <Checkbox
+                            id={`cohort-${cohort.replace(/\s+/g, '-').toLowerCase()}`}
+                            checked={signUpForm.requestedCohorts.includes(cohort)}
+                            onCheckedChange={(checked) => {
+                              setSignUpForm(prev => ({
+                                ...prev,
+                                requestedCohorts: checked
+                                  ? [...prev.requestedCohorts, cohort]
+                                  : prev.requestedCohorts.filter(c => c !== cohort)
+                              }));
+                            }}
+                            disabled={!signUpForm.isPrivateNonProfit}
+                          />
+                          <Label 
+                            htmlFor={`cohort-${cohort.replace(/\s+/g, '-').toLowerCase()}`} 
+                            className="text-sm font-medium cursor-pointer"
+                          >
+                            {cohort}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    {signUpForm.requestedCohorts.length === 0 && (
+                      <p className="text-xs text-gray-500 italic">You can join cohorts later from your profile settings if you prefer.</p>
+                    )}
+                  </div>
+                </div>
+
                 {/* Hardware & Additional Information */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
@@ -2052,45 +2091,6 @@ export default function Auth() {
                         />
                       </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Cohort Selection */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">System Cohort Membership</h3>
-                    <p className="text-gray-600 text-sm">Select the system cohorts you wish to join to collaborate with other institutions using similar technology platforms.</p>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {availableCohorts.map((cohort) => (
-                        <div key={cohort} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                          <Checkbox
-                            id={`cohort-${cohort.replace(/\s+/g, '-').toLowerCase()}`}
-                            checked={signUpForm.requestedCohorts.includes(cohort)}
-                            onCheckedChange={(checked) => {
-                              setSignUpForm(prev => ({
-                                ...prev,
-                                requestedCohorts: checked
-                                  ? [...prev.requestedCohorts, cohort]
-                                  : prev.requestedCohorts.filter(c => c !== cohort)
-                              }));
-                            }}
-                            disabled={!signUpForm.isPrivateNonProfit}
-                          />
-                          <Label 
-                            htmlFor={`cohort-${cohort.replace(/\s+/g, '-').toLowerCase()}`} 
-                            className="text-sm font-medium cursor-pointer"
-                          >
-                            {cohort}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                    {signUpForm.requestedCohorts.length === 0 && (
-                      <p className="text-xs text-gray-500 italic">You can join cohorts later from your profile settings if you prefer.</p>
-                    )}
                   </div>
                 </div>
 
