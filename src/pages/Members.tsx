@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { OrganizationDialog } from '@/components/OrganizationDialog';
 import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
 import { ImportMembersDialog } from '@/components/ImportMembersDialog';
-import { RestoreOrganizationDataDialog } from '@/components/RestoreOrganizationDataDialog';
 import { OrganizationViewModal } from '@/components/OrganizationViewModal';
 
 export default function Members() {
@@ -26,7 +25,6 @@ export default function Members() {
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [viewModalOpen, setViewModalOpen] = useState(false);
 
@@ -87,13 +85,6 @@ export default function Members() {
                 >
                   <Upload className="h-4 w-4 mr-2" />
                   Import Members
-                </Button>
-                <Button 
-                  variant="secondary"
-                  onClick={() => setRestoreDialogOpen(true)}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Restore Backup Data
                 </Button>
                 <Button onClick={() => {
                   setSelectedOrganization(null);
@@ -390,11 +381,6 @@ export default function Members() {
           <ImportMembersDialog
             open={importDialogOpen}
             onOpenChange={setImportDialogOpen}
-          />
-
-          <RestoreOrganizationDataDialog
-            open={restoreDialogOpen}
-            onOpenChange={setRestoreDialogOpen}
           />
         </main>
       </div>
