@@ -850,7 +850,7 @@ serve(async (req) => {
           to: pendingReg.email,
           data: {
             organization_name: pendingReg.organization_name,
-            contact_name: `${pendingReg.first_name} ${pendingReg.last_name}`,
+            primary_contact_name: `${pendingReg.first_name} ${pendingReg.last_name}`,
             email: pendingReg.email
           }
         }
