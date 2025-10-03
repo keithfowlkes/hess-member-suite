@@ -35,6 +35,8 @@ import {
 import { useMembers } from '@/hooks/useMembers';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useSystemFieldOptions } from '@/hooks/useSystemFieldOptions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface PublicOrganization {
   id: string;
@@ -110,8 +112,17 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
   const [editData, setEditData] = useState<PublicOrganization | null>(null);
   const { updateOrganization } = useMembers();
   const { toast } = useToast();
+  const { data: systemFieldOptions } = useSystemFieldOptions();
 
   if (!organization) return null;
+
+  // Get options for a specific field
+  const getFieldOptions = (fieldName: string) => {
+    return systemFieldOptions
+      ?.filter(opt => opt.field_name === fieldName)
+      .map(opt => opt.option_value)
+      .sort((a, b) => a.localeCompare(b)) || [];
+  };
 
   const handleEdit = () => {
     setEditData({ ...organization });
@@ -562,6 +573,7 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                   { key: 'network_infrastructure', label: 'Network Infrastructure', icon: Database },
                 ].map(({ key, label, icon: Icon }) => {
                   const value = currentData?.[key as keyof typeof currentData] as string;
+                  const fieldOptions = getFieldOptions(key);
                   if (!value && !isEditing) return null;
                   
                   return (
@@ -573,14 +585,25 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                             {label}
                           </Label>
                           {isEditing ? (
-                            <Input
+                            <Select
                               value={(editData?.[key as keyof typeof editData] as string) || ''}
-                              onChange={(e) => setEditData({
+                              onValueChange={(newValue) => setEditData({
                                 ...editData!,
-                                [key]: e.target.value
+                                [key]: newValue
                               })}
-                              placeholder={`Enter ${label.toLowerCase()}`}
-                            />
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">None</SelectItem>
+                                {fieldOptions.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           ) : (
                             <p className="text-sm text-muted-foreground">{value}</p>
                           )}
