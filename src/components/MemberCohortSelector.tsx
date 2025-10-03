@@ -105,14 +105,18 @@ export function MemberCohortSelector({
                   <Plus className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <div className="p-2 text-sm font-medium text-muted-foreground">Available Cohorts</div>
+              <DropdownMenuContent align="end" className="w-48 bg-popover border border-border z-50">
+                <div className="p-2 text-sm font-medium text-muted-foreground bg-popover">Available Cohorts</div>
                 {availableCohorts.map(cohort => (
-                  <DropdownMenuItem key={cohort} onClick={() => toggleCohort(cohort)}>
+                  <DropdownMenuItem 
+                    key={cohort} 
+                    onClick={() => toggleCohort(cohort)}
+                    className="bg-popover hover:bg-accent cursor-pointer"
+                  >
                     <div className="flex items-center w-full">
                       {cohort}
                       {cohorts.includes(cohort) && (
-                        <Check className="ml-auto h-4 w-4" />
+                        <Check className="ml-auto h-4 w-4 text-primary" />
                       )}
                     </div>
                   </DropdownMenuItem>
