@@ -175,6 +175,7 @@ function SystemFieldsSection({ profileForm, organizationId }: SystemFieldsSectio
                     onChange={field.onChange}
                     disabled={false}
                     organizationId={organizationId || ''}
+                    showLabel={false}
                   />
                 </FormControl>
                 <FormMessage />

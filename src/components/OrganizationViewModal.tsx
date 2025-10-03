@@ -638,6 +638,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                             })}
                             organizationId={organization.id}
                             disabled={false}
+                            showLabel={false}
                           />
                         ) : (
                           <p className="text-sm text-muted-foreground ml-6">{value || 'Not specified'}</p>
@@ -693,6 +694,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                       })}
                       organizationId={organization.id}
                       disabled={false}
+                      showLabel={false}
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground">{currentData.voip || 'Not specified'}</p>
@@ -711,6 +713,7 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                       })}
                       organizationId={organization.id}
                       disabled={false}
+                      showLabel={false}
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground">{currentData.network_infrastructure || 'Not specified'}</p>
