@@ -368,7 +368,7 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                   { key: 'door_access', label: 'Door Access', icon: Building2 },
                   { key: 'document_management', label: 'Document Management', icon: Database },
                 ].map(({ key, label, icon: Icon }) => {
-                  const value = profile?.[key as keyof typeof profile] as string;
+                  const value = currentData?.[key as keyof typeof currentData] as string;
                   if (!value) return null;
                   
                   return (
