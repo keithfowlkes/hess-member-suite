@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useMembers } from '@/hooks/useMembers';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PublicOrganization {
   id: string;
@@ -121,7 +122,7 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
     if (!editData) return;
     
     try {
-      // Extract only organization fields that can be updated
+      // Update organization fields
       const orgUpdateData = {
         name: editData.name,
         address_line_1: editData.address_line_1,
@@ -138,14 +139,80 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
         membership_end_date: editData.membership_end_date,
         annual_fee_amount: editData.annual_fee_amount,
         notes: editData.notes,
+        student_fte: editData.student_fte,
+        state_association: editData.state_association,
+        // System fields
+        student_information_system: editData.student_information_system,
+        financial_system: editData.financial_system,
+        financial_aid: editData.financial_aid,
+        hcm_hr: editData.hcm_hr,
+        payroll_system: editData.payroll_system,
+        purchasing_system: editData.purchasing_system,
+        housing_management: editData.housing_management,
+        learning_management: editData.learning_management,
+        admissions_crm: editData.admissions_crm,
+        alumni_advancement_crm: editData.alumni_advancement_crm,
+        payment_platform: editData.payment_platform,
+        meal_plan_management: editData.meal_plan_management,
+        identity_management: editData.identity_management,
+        door_access: editData.door_access,
+        document_management: editData.document_management,
+        voip: editData.voip,
+        network_infrastructure: editData.network_infrastructure,
+        // Hardware fields
+        primary_office_apple: editData.primary_office_apple,
+        primary_office_lenovo: editData.primary_office_lenovo,
+        primary_office_dell: editData.primary_office_dell,
+        primary_office_hp: editData.primary_office_hp,
+        primary_office_microsoft: editData.primary_office_microsoft,
+        primary_office_other: editData.primary_office_other,
+        primary_office_other_details: editData.primary_office_other_details,
+        other_software_comments: editData.other_software_comments,
       };
       
       await updateOrganization(editData.id, orgUpdateData);
+      
+      // Update profile fields if they exist
+      if (editData.profiles && organization?.profiles) {
+        const { data: orgs } = await supabase
+          .from('organizations')
+          .select('contact_person_id')
+          .eq('id', editData.id)
+          .single();
+        
+        if (orgs?.contact_person_id) {
+          await supabase
+            .from('profiles')
+            .update({
+              first_name: editData.profiles.first_name,
+              last_name: editData.profiles.last_name,
+              email: editData.profiles.email,
+              phone: editData.profiles.phone,
+              primary_contact_title: editData.profiles.primary_contact_title,
+              secondary_first_name: editData.profiles.secondary_first_name,
+              secondary_last_name: editData.profiles.secondary_last_name,
+              secondary_contact_title: editData.profiles.secondary_contact_title,
+              secondary_contact_email: editData.profiles.secondary_contact_email,
+              secondary_contact_phone: editData.profiles.secondary_contact_phone,
+            })
+            .eq('id', orgs.contact_person_id);
+        }
+      }
+      
+      toast({
+        title: 'Success',
+        description: 'Organization and profile updated successfully',
+      });
+      
       setIsEditing(false);
       setEditData(null);
       onClose();
     } catch (error) {
-      // Error is handled in the hook
+      toast({
+        title: 'Error',
+        description: 'Failed to update organization',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -280,38 +347,102 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {profile?.first_name && (
-                      <div>
-                        <Label>Name</Label>
-                        <p className="text-sm">{profile.first_name} {profile.last_name}</p>
+                      <div className="space-y-2">
+                        <Label>First Name</Label>
+                        {isEditing ? (
+                          <Input
+                            value={editData?.profiles?.first_name || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { ...editData!.profiles!, first_name: e.target.value }
+                            })}
+                          />
+                        ) : (
+                          <p className="text-sm">{profile.first_name}</p>
+                        )}
+                      </div>
+                    )}
+                    {profile?.last_name && (
+                      <div className="space-y-2">
+                        <Label>Last Name</Label>
+                        {isEditing ? (
+                          <Input
+                            value={editData?.profiles?.last_name || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { ...editData!.profiles!, last_name: e.target.value }
+                            })}
+                          />
+                        ) : (
+                          <p className="text-sm">{profile.last_name}</p>
+                        )}
                       </div>
                     )}
                     {profile?.primary_contact_title && (
-                      <div>
+                      <div className="space-y-2">
                         <Label>Title</Label>
-                        <p className="text-sm">{profile.primary_contact_title}</p>
+                        {isEditing ? (
+                          <Input
+                            value={editData?.profiles?.primary_contact_title || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { ...editData!.profiles!, primary_contact_title: e.target.value }
+                            })}
+                          />
+                        ) : (
+                          <p className="text-sm">{profile.primary_contact_title}</p>
+                        )}
                       </div>
                     )}
                     {profile?.email && (
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <a 
-                          href={`mailto:${profile.email}`}
-                          className="text-sm text-primary hover:underline"
-                        >
-                          {profile.email}
-                        </a>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          Email
+                        </Label>
+                        {isEditing ? (
+                          <Input
+                            type="email"
+                            value={editData?.profiles?.email || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { ...editData!.profiles!, email: e.target.value }
+                            })}
+                          />
+                        ) : (
+                          <a 
+                            href={`mailto:${profile.email}`}
+                            className="text-sm text-primary hover:underline block"
+                          >
+                            {profile.email}
+                          </a>
+                        )}
                       </div>
                     )}
                     {profile?.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{profile.phone}</span>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          Phone
+                        </Label>
+                        {isEditing ? (
+                          <Input
+                            type="tel"
+                            value={editData?.profiles?.phone || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { ...editData!.profiles!, phone: e.target.value }
+                            })}
+                          />
+                        ) : (
+                          <span className="text-sm">{profile.phone}</span>
+                        )}
                       </div>
                     )}
                   </CardContent>
                 </Card>
 
-                {(profile?.secondary_first_name || profile?.secondary_contact_email) && (
+                {(profile?.secondary_first_name || profile?.secondary_contact_email || isEditing) && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -320,29 +451,89 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {profile.secondary_first_name && (
-                        <div>
-                          <Label>Name</Label>
-                          <p className="text-sm">{profile.secondary_first_name} {profile.secondary_last_name}</p>
-                        </div>
-                      )}
-                      {profile.secondary_contact_title && (
-                        <div>
-                          <Label>Title</Label>
+                      <div className="space-y-2">
+                        <Label>First Name</Label>
+                        {isEditing ? (
+                          <Input
+                            value={editData?.profiles?.secondary_first_name || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { ...editData!.profiles!, secondary_first_name: e.target.value }
+                            })}
+                          />
+                        ) : profile?.secondary_first_name ? (
+                          <p className="text-sm">{profile.secondary_first_name}</p>
+                        ) : null}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Last Name</Label>
+                        {isEditing ? (
+                          <Input
+                            value={editData?.profiles?.secondary_last_name || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { ...editData!.profiles!, secondary_last_name: e.target.value }
+                            })}
+                          />
+                        ) : profile?.secondary_last_name ? (
+                          <p className="text-sm">{profile.secondary_last_name}</p>
+                        ) : null}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Title</Label>
+                        {isEditing ? (
+                          <Input
+                            value={editData?.profiles?.secondary_contact_title || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { ...editData!.profiles!, secondary_contact_title: e.target.value }
+                            })}
+                          />
+                        ) : profile?.secondary_contact_title ? (
                           <p className="text-sm">{profile.secondary_contact_title}</p>
-                        </div>
-                      )}
-                      {profile.secondary_contact_email && (
-                        <div className="flex items-center gap-2">
+                        ) : null}
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
                           <Mail className="h-4 w-4 text-muted-foreground" />
+                          Email
+                        </Label>
+                        {isEditing ? (
+                          <Input
+                            type="email"
+                            value={editData?.profiles?.secondary_contact_email || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { ...editData!.profiles!, secondary_contact_email: e.target.value }
+                            })}
+                          />
+                        ) : profile?.secondary_contact_email ? (
                           <a 
                             href={`mailto:${profile.secondary_contact_email}`}
-                            className="text-sm text-primary hover:underline"
+                            className="text-sm text-primary hover:underline block"
                           >
                             {profile.secondary_contact_email}
                           </a>
-                        </div>
-                      )}
+                        ) : null}
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          Phone
+                        </Label>
+                        {isEditing ? (
+                          <Input
+                            type="tel"
+                            value={editData?.profiles?.secondary_contact_phone || ''}
+                            onChange={(e) => setEditData({
+                              ...editData!,
+                              profiles: { ...editData!.profiles!, secondary_contact_phone: e.target.value }
+                            })}
+                          />
+                        ) : profile?.secondary_contact_phone ? (
+                          <span className="text-sm">{profile.secondary_contact_phone}</span>
+                        ) : null}
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -367,19 +558,32 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                   { key: 'identity_management', label: 'Identity Management', icon: UserCheck },
                   { key: 'door_access', label: 'Door Access', icon: Building2 },
                   { key: 'document_management', label: 'Document Management', icon: Database },
+                  { key: 'voip', label: 'VoIP', icon: Phone },
+                  { key: 'network_infrastructure', label: 'Network Infrastructure', icon: Database },
                 ].map(({ key, label, icon: Icon }) => {
                   const value = currentData?.[key as keyof typeof currentData] as string;
-                  if (!value) return null;
+                  if (!value && !isEditing) return null;
                   
                   return (
                     <Card key={key}>
                       <CardContent className="pt-4">
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">{label}</p>
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <Icon className="h-4 w-4 text-muted-foreground" />
+                            {label}
+                          </Label>
+                          {isEditing ? (
+                            <Input
+                              value={(editData?.[key as keyof typeof editData] as string) || ''}
+                              onChange={(e) => setEditData({
+                                ...editData!,
+                                [key]: e.target.value
+                              })}
+                              placeholder={`Enter ${label.toLowerCase()}`}
+                            />
+                          ) : (
                             <p className="text-sm text-muted-foreground">{value}</p>
-                          </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -387,42 +591,31 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                 })}
               </div>
 
-              {organization?.other_software_comments && (
+              {(organization?.other_software_comments || isEditing) && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Additional Software Comments</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm whitespace-pre-wrap">{organization.other_software_comments}</p>
+                    {isEditing ? (
+                      <Textarea
+                        value={editData?.other_software_comments || ''}
+                        onChange={(e) => setEditData({
+                          ...editData!,
+                          other_software_comments: e.target.value
+                        })}
+                        rows={4}
+                        placeholder="Enter any additional software comments"
+                      />
+                    ) : (
+                      <p className="text-sm whitespace-pre-wrap">{organization?.other_software_comments}</p>
+                    )}
                   </CardContent>
                 </Card>
               )}
             </TabsContent>
 
             <TabsContent value="hardware" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Monitor className="h-4 w-4" />
-                    Network & Communications
-                  </CardTitle>
-                </CardHeader>
-                 <CardContent className="space-y-4">
-                  {organization?.voip && (
-                    <div>
-                      <Label>VoIP</Label>
-                      <p className="text-sm text-muted-foreground mt-1">{organization.voip}</p>
-                    </div>
-                  )}
-                  {organization?.network_infrastructure && (
-                    <div>
-                      <Label>Network Infrastructure</Label>
-                      <p className="text-sm text-muted-foreground mt-1">{organization.network_infrastructure}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -440,22 +633,45 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                       { key: 'primary_office_microsoft', label: 'Microsoft' },
                       { key: 'primary_office_other', label: 'Other' },
                     ].map(({ key, label }) => {
-                      const isSelected = organization?.[key as keyof typeof organization] as boolean;
+                      const isSelected = currentData?.[key as keyof typeof currentData] as boolean;
                       return (
                         <div key={key} className="flex items-center space-x-2">
-                          <Switch checked={isSelected} disabled />
+                          <Switch 
+                            checked={isSelected || false} 
+                            disabled={!isEditing}
+                            onCheckedChange={(checked) => {
+                              if (isEditing) {
+                                setEditData({
+                                  ...editData!,
+                                  [key]: checked
+                                });
+                              }
+                            }}
+                          />
                           <span className="text-sm">{label}</span>
                         </div>
                       );
                     })}
                   </div>
                   
-                  {organization?.primary_office_other_details && (
-                    <div className="mt-4">
-                      <Label>Other Hardware Details</Label>
-                      <p className="text-sm text-muted-foreground mt-1">{organization.primary_office_other_details}</p>
-                    </div>
-                  )}
+                  <div className="mt-4 space-y-2">
+                    <Label>Other Hardware Details</Label>
+                    {isEditing ? (
+                      <Textarea
+                        value={editData?.primary_office_other_details || ''}
+                        onChange={(e) => setEditData({
+                          ...editData!,
+                          primary_office_other_details: e.target.value
+                        })}
+                        rows={3}
+                        placeholder="Enter details about other hardware"
+                      />
+                    ) : organization?.primary_office_other_details ? (
+                      <p className="text-sm text-muted-foreground">{organization.primary_office_other_details}</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No additional hardware details</p>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
