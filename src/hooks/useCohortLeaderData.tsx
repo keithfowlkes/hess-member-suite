@@ -11,6 +11,7 @@ export interface CohortMemberDetails {
   city?: string;
   state?: string;
   primary_contact_title?: string;
+  cohort?: string; // Added cohort field
   user_roles: {
     role: 'admin' | 'member' | 'cohort_leader';
   }[];
@@ -55,7 +56,16 @@ export function useCohortLeaderData() {
         const userCohorts = userCohortsData?.map(c => c.cohort) || [];
         console.log('CohortLeaderData - Extracted cohorts:', userCohorts);
 
-        if (userCohorts.length === 0) {
+        // Special handling for Ellucian Banner and Colleague cohort leaders
+        const isEllucianCohortLeader = userCohorts.some(
+          cohort => cohort === 'Ellucian Banner' || cohort === 'Ellucian Colleague'
+        );
+        
+        const cohortsToFetch = isEllucianCohortLeader 
+          ? ['Ellucian Banner', 'Ellucian Colleague']
+          : userCohorts;
+
+        if (cohortsToFetch.length === 0) {
           setData({
             userCohorts: [],
             cohortMembers: [],
@@ -73,7 +83,7 @@ export function useCohortLeaderData() {
         const { data: cohortMembersData, error: membersError } = await supabase
           .from('user_cohorts')
           .select('user_id, cohort')
-          .in('cohort', userCohorts);
+          .in('cohort', cohortsToFetch);
 
         console.log('CohortLeaderData - Cohort members query result:', cohortMembersData, 'Error:', membersError);
 
@@ -196,6 +206,7 @@ export function useCohortLeaderData() {
               city: profile.city,
               state: profile.state,
               primary_contact_title: profile.primary_contact_title,
+              cohort: item.cohort, // Include cohort information
               user_roles: userRoles
             });
 

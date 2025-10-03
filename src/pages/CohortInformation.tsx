@@ -300,6 +300,114 @@ const handleOrganizationDialogClose = () => {
       );
     }
 
+    // Check if user is an Ellucian Banner or Colleague cohort leader
+    const isEllucianCohortLeader = cohortLeaderData?.userCohorts.some(
+      cohort => cohort === 'Ellucian Banner' || cohort === 'Ellucian Colleague'
+    );
+
+    // Filter members by cohort for Ellucian cohort leaders
+    const bannerMembers = cohortLeaderData?.cohortMembers.filter(member => 
+      member.organization && cohortLeaderData.cohortStats.cohortsBySystem['Ellucian Banner']
+    ) || [];
+    
+    const colleagueMembers = cohortLeaderData?.cohortMembers.filter(member =>
+      member.organization && cohortLeaderData.cohortStats.cohortsBySystem['Ellucian Colleague']
+    ) || [];
+
+    // Helper function to render member grid
+    const renderMemberGrid = (cohortFilter?: string) => {
+      const membersToDisplay = cohortFilter
+        ? cohortLeaderData?.cohortMembers.filter(m => m.cohort === cohortFilter) || []
+        : cohortLeaderData?.cohortMembers || [];
+
+      if (membersToDisplay.length === 0) {
+        return (
+          <div className="text-center py-8 text-muted-foreground">
+            <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No cohort members found</p>
+          </div>
+        );
+      }
+
+      return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[...membersToDisplay]
+            .filter((member) => {
+              if (!searchTerm) return true;
+              const search = searchTerm.toLowerCase();
+              return (
+                member.organization?.toLowerCase().includes(search) ||
+                member.first_name?.toLowerCase().includes(search) ||
+                member.last_name?.toLowerCase().includes(search) ||
+                `${member.first_name} ${member.last_name}`.toLowerCase().includes(search) ||
+                member.email?.toLowerCase().includes(search)
+              );
+            })
+            .sort((a, b) => {
+              // Define role priority
+              const getRolePriority = (roles: {role: 'admin' | 'member' | 'cohort_leader'}[]) => {
+                if (roles.some(r => r.role === 'admin')) return 1;
+                if (roles.some(r => r.role === 'cohort_leader')) return 2;
+                return 3; // member
+              };
+              
+              const aPriority = getRolePriority(a.user_roles || []);
+              const bPriority = getRolePriority(b.user_roles || []);
+              
+              // Sort by role priority first, then by last name
+              if (aPriority !== bPriority) {
+                return aPriority - bPriority;
+              }
+              return (a.last_name || '').localeCompare(b.last_name || '');
+            })
+            .map((member) => (
+              <Card 
+                key={member.id} 
+                className="border bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors"
+                onClick={() => handleMemberCardClick(member.organization || '')}
+              >
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">
+                        {member.first_name} {member.last_name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Mail className="h-4 w-4" />
+                      <span>{member.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Building2 className="h-4 w-4" />
+                      <span>{member.organization || 'No organization'}</span>
+                    </div>
+                    {member.primary_contact_title && (
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-medium">Title:</span> {member.primary_contact_title}
+                      </div>
+                    )}
+                    {(member.city || member.state) && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="h-4 w-4" />
+                        <span>
+                          {[member.city, member.state].filter(Boolean).join(', ')}
+                        </span>
+                      </div>
+                    )}
+                    {member.organization && member.organization !== 'No organization' && (
+                      <div className="text-xs text-primary font-medium mt-2">
+                        Click to view organization details →
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+        </div>
+      );
+    };
+
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
@@ -393,94 +501,33 @@ const handleOrganizationDialogClose = () => {
                     )}
                   </CardTitle>
                   <CardDescription>
-                    All members in your cohort groups
+                    {isEllucianCohortLeader 
+                      ? 'All members in Ellucian Banner and Ellucian Colleague cohorts'
+                      : 'All members in your cohort groups'
+                    }
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {cohortLeaderData?.cohortMembers && cohortLeaderData.cohortMembers.length > 0 ? (
-                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {[...cohortLeaderData.cohortMembers]
-                          .filter((member) => {
-                            if (!searchTerm) return true;
-                            const search = searchTerm.toLowerCase();
-                            return (
-                              member.organization?.toLowerCase().includes(search) ||
-                              member.first_name?.toLowerCase().includes(search) ||
-                              member.last_name?.toLowerCase().includes(search) ||
-                              `${member.first_name} ${member.last_name}`.toLowerCase().includes(search) ||
-                              member.email?.toLowerCase().includes(search)
-                            );
-                          })
-                          .sort((a, b) => {
-                            // Define role priority
-                            const getRolePriority = (roles: {role: 'admin' | 'member' | 'cohort_leader'}[]) => {
-                              if (roles.some(r => r.role === 'admin')) return 1;
-                              if (roles.some(r => r.role === 'cohort_leader')) return 2;
-                              return 3; // member
-                            };
-                            
-                            const aPriority = getRolePriority(a.user_roles || []);
-                            const bPriority = getRolePriority(b.user_roles || []);
-                            
-                            // Sort by role priority first, then by last name
-                            if (aPriority !== bPriority) {
-                              return aPriority - bPriority;
-                            }
-                            return (a.last_name || '').localeCompare(b.last_name || '');
-                          })
-                          .map((member) => (
-                        <Card 
-                          key={member.id} 
-                          className="border bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors"
-                          onClick={() => handleMemberCardClick(member.organization || '')}
-                        >
-                          <CardContent className="p-4">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <User className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">
-                                  {member.first_name} {member.last_name}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Mail className="h-4 w-4" />
-                                <span>{member.email}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Building2 className="h-4 w-4" />
-                                <span>{member.organization || 'No organization'}</span>
-                              </div>
-                              {member.primary_contact_title && (
-                                <div className="text-sm text-muted-foreground">
-                                  <span className="font-medium">Title:</span> {member.primary_contact_title}
-                                </div>
-                              )}
-                              {(member.city || member.state) && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <MapPin className="h-4 w-4" />
-                                  <span>
-                                    {[member.city, member.state].filter(Boolean).join(', ')}
-                                  </span>
-                                </div>
-                              )}
-                              {member.organization && member.organization !== 'No organization' && (
-                                <div className="text-xs text-primary font-medium mt-2">
-                                  Click to view organization details →
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No cohort members found</p>
-                      </div>
-                    )}
-                  </div>
+                  {isEllucianCohortLeader ? (
+                    <Tabs defaultValue="banner" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="banner">Ellucian Banner ({cohortLeaderData?.cohortMembers.filter(m => m.cohort === 'Ellucian Banner').length || 0})</TabsTrigger>
+                        <TabsTrigger value="colleague">Ellucian Colleague ({cohortLeaderData?.cohortMembers.filter(m => m.cohort === 'Ellucian Colleague').length || 0})</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="banner" className="space-y-4">
+                        {renderMemberGrid('Ellucian Banner')}
+                      </TabsContent>
+                      
+                      <TabsContent value="colleague" className="space-y-4">
+                        {renderMemberGrid('Ellucian Colleague')}
+                      </TabsContent>
+                    </Tabs>
+                  ) : (
+                    <div className="space-y-4">
+                      {renderMemberGrid()}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
