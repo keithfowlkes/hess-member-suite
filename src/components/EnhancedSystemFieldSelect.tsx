@@ -96,7 +96,7 @@ export const EnhancedSystemFieldSelect = ({
 
   // Check if current value is in the options list
   const isValueInOptions = value && options.includes(value);
-  const isPending = pendingValue === value || (!isValueInOptions && value && value !== '');
+  const isPending = !isAdmin && (pendingValue === value || (!isValueInOptions && value && value !== ''));
 
   return (
     <div className="space-y-2">
@@ -109,7 +109,7 @@ export const EnhancedSystemFieldSelect = ({
       {!showCustomInput ? (
         <div className="space-y-1">
           <Select 
-            value={isValueInOptions ? value : "custom"} 
+            value={isValueInOptions ? value : (isPending ? "custom" : value || "none")} 
             onValueChange={handleSelectChange} 
             disabled={disabled}
             required={required}
