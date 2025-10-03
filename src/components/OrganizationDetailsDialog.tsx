@@ -223,8 +223,8 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
       onClose();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to update organization',
+        title: 'Update Not Permitted',
+        description: 'You can only edit organizations within the cohorts you lead. Please contact an administrator if you need access.',
         variant: 'destructive',
       });
     }

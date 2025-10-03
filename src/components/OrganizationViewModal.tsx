@@ -140,8 +140,8 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
       });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update organization",
+        title: "Update Not Permitted",
+        description: "You can only edit organizations within the cohorts you lead. Please contact an administrator if you need access.",
         variant: "destructive"
       });
     }
