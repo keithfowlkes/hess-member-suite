@@ -61,11 +61,16 @@ export default function RegistrationConfirmation() {
                 {description}
               </p>
               
-              <div className="flex items-center justify-center gap-3 text-base bg-muted/30 rounded-lg p-4 max-w-md mx-auto">
-                <Mail className="h-5 w-5 text-primary flex-shrink-0" />
-                <span>
-                  You will receive an email notification once your {isReassignment ? 'member information update request' : 'application'} has been approved.
-                </span>
+              <div className="flex items-start justify-center gap-3 text-base bg-muted/30 rounded-lg p-4 max-w-md mx-auto">
+                <Mail className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div className="space-y-2">
+                  <p>
+                    You will receive an email notification once your {isReassignment ? 'member information update request' : 'application'} has been approved.
+                  </p>
+                  <p className="text-sm">
+                    Please check your spam and junk folders, and whitelist email messages coming from <strong>hessconsortium.org</strong> or <strong>members.hessconsortium.app</strong> to ensure you receive the confirmation message.
+                  </p>
+                </div>
               </div>
             </div>
 
