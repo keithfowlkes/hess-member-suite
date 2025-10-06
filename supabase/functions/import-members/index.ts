@@ -115,6 +115,7 @@ serve(async (req) => {
             user_metadata: {
               first_name: member.first_name,
               last_name: member.last_name,
+              organization: member.organization,
               imported: true
             }
           });
