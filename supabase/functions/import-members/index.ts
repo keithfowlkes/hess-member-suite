@@ -98,7 +98,7 @@ serve(async (req) => {
           .from('profiles')
           .select('user_id')
           .eq('email', cleanEmail)
-          .single();
+          .maybeSingle();
 
         if (existingProfile) {
           // User already exists, update their profile
@@ -152,7 +152,7 @@ serve(async (req) => {
           })
           .eq('user_id', userId)
           .select()
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error(`Failed to update profile for ${cleanEmail}:`, profileError);
@@ -167,7 +167,7 @@ serve(async (req) => {
             .select('id')
             .eq('name', member.organization)
             .eq('contact_person_id', updatedProfile.id)
-            .single();
+            .maybeSingle();
 
           if (!existingOrg) {
             // Create new organization with all imported data
