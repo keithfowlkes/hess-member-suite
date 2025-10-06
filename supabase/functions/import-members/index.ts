@@ -138,40 +138,17 @@ serve(async (req) => {
         }
 
         // Update profile with imported data (works for both new and existing users)
+        // Note: Only updating fields that exist in the profiles table
         const { data: updatedProfile, error: profileError } = await supabaseAdmin
           .from('profiles')
           .update({
             phone: member.phone,
             organization: member.organization,
-            state_association: member.state_association,
-            student_fte: member.student_fte,
-            address: member.address,
-            city: member.city,
-            state: member.state,
-            zip: member.zip,
             primary_contact_title: member.primary_contact_title,
             secondary_first_name: member.secondary_first_name,
             secondary_last_name: member.secondary_last_name,
             secondary_contact_title: member.secondary_contact_title,
-            secondary_contact_email: member.secondary_contact_email,
-            student_information_system: member.student_information_system,
-            financial_system: member.financial_system,
-            financial_aid: member.financial_aid,
-            hcm_hr: member.hcm_hr,
-            payroll_system: member.payroll_system,
-            purchasing_system: member.purchasing_system,
-            housing_management: member.housing_management,
-            learning_management: member.learning_management,
-            admissions_crm: member.admissions_crm,
-            alumni_advancement_crm: member.alumni_advancement_crm,
-            primary_office_apple: member.primary_office_apple || false,
-            primary_office_lenovo: member.primary_office_lenovo || false,
-            primary_office_dell: member.primary_office_dell || false,
-            primary_office_hp: member.primary_office_hp || false,
-            primary_office_microsoft: member.primary_office_microsoft || false,
-            primary_office_other: member.primary_office_other || false,
-            primary_office_other_details: member.primary_office_other_details,
-            other_software_comments: member.other_software_comments
+            secondary_contact_email: member.secondary_contact_email
           })
           .eq('user_id', userId)
           .select()
@@ -193,7 +170,7 @@ serve(async (req) => {
             .single();
 
           if (!existingOrg) {
-            // Create new organization
+            // Create new organization with all imported data
             const { error: orgError } = await supabaseAdmin
               .from('organizations')
               .insert({
@@ -207,7 +184,27 @@ serve(async (req) => {
                 zip_code: member.zip,
                 country: 'United States',
                 membership_status: 'active',
-                annual_fee_amount: 1000.00
+                annual_fee_amount: 1000.00,
+                state_association: member.state_association,
+                student_fte: member.student_fte,
+                student_information_system: member.student_information_system,
+                financial_system: member.financial_system,
+                financial_aid: member.financial_aid,
+                hcm_hr: member.hcm_hr,
+                payroll_system: member.payroll_system,
+                purchasing_system: member.purchasing_system,
+                housing_management: member.housing_management,
+                learning_management: member.learning_management,
+                admissions_crm: member.admissions_crm,
+                alumni_advancement_crm: member.alumni_advancement_crm,
+                primary_office_apple: member.primary_office_apple || false,
+                primary_office_lenovo: member.primary_office_lenovo || false,
+                primary_office_dell: member.primary_office_dell || false,
+                primary_office_hp: member.primary_office_hp || false,
+                primary_office_microsoft: member.primary_office_microsoft || false,
+                primary_office_other: member.primary_office_other || false,
+                primary_office_other_details: member.primary_office_other_details,
+                other_software_comments: member.other_software_comments
               });
 
             if (orgError) {
