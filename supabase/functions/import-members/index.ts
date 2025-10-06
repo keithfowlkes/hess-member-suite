@@ -134,7 +134,22 @@ serve(async (req) => {
           isNewUser = true;
 
           // Wait for the handle_new_user trigger to complete
-          await new Promise(resolve => setTimeout(resolve, 100));
+          console.log(`Waiting for profile creation trigger for ${cleanEmail}...`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Verify profile was created
+          const { data: checkProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('user_id', userId)
+            .maybeSingle();
+          
+          if (!checkProfile) {
+            console.error(`Profile was not created by trigger for ${cleanEmail}`);
+            results.failed.push({ email: member.email, error: 'Profile creation failed' });
+            continue;
+          }
+          console.log(`Profile created by trigger for ${cleanEmail}, ID: ${checkProfile.id}`);
         }
 
         // Update profile with imported data (works for both new and existing users)
@@ -160,8 +175,17 @@ serve(async (req) => {
           continue;
         }
 
+        if (!updatedProfile) {
+          console.error(`Profile update returned no data for ${cleanEmail}`);
+          results.failed.push({ email: member.email, error: 'Profile update returned no data' });
+          continue;
+        }
+
+        console.log(`Profile updated successfully for ${cleanEmail}, profile ID: ${updatedProfile.id}`);
+
         // Create or update organization for this member
         if (member.organization && updatedProfile) {
+          console.log(`Attempting to create/update organization: ${member.organization} for ${cleanEmail}`);
           const { data: existingOrg } = await supabaseAdmin
             .from('organizations')
             .select('id')
