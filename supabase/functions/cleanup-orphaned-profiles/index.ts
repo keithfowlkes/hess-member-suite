@@ -161,15 +161,108 @@ serve(async (req) => {
       }
     }
 
+    // Now check for orphaned auth users (users without profiles)
+    console.log('🔍 Checking for orphaned auth users...');
+    const orphanedAuthUsers = [];
+    const authCleanupErrors = [];
+
+    try {
+      // Get all auth users (paginated)
+      let page = 1;
+      let hasMore = true;
+      const allAuthUsers = [];
+
+      while (hasMore) {
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage: 1000
+        });
+
+        if (authError) {
+          console.error('❌ Error listing auth users:', authError);
+          break;
+        }
+
+        if (authData?.users && authData.users.length > 0) {
+          allAuthUsers.push(...authData.users);
+          page++;
+          hasMore = authData.users.length === 1000; // Check if there might be more
+        } else {
+          hasMore = false;
+        }
+      }
+
+      console.log(`📊 Found ${allAuthUsers.length} auth users to check`);
+
+      // Check each auth user to see if they have a profile
+      for (const authUser of allAuthUsers) {
+        try {
+          const { data: profileData, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('id')
+            .eq('user_id', authUser.id)
+            .maybeSingle();
+
+          if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+            console.error(`⚠️ Error checking profile for ${authUser.email}:`, profileError);
+            continue;
+          }
+
+          if (!profileData) {
+            console.log(`⚠️ Orphaned auth user found: ${authUser.email} (${authUser.id})`);
+            orphanedAuthUsers.push(authUser);
+
+            // Delete the orphaned auth user
+            console.log(`🧹 Cleaning up orphaned auth user: ${authUser.email}`);
+            
+            try {
+              const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(authUser.id);
+              
+              if (deleteError) {
+                console.error(`❌ Error deleting auth user ${authUser.email}:`, deleteError);
+                authCleanupErrors.push({
+                  email: authUser.email,
+                  error: deleteError.message
+                });
+              } else {
+                console.log(`✅ Deleted orphaned auth user: ${authUser.email}`);
+              }
+            } catch (deleteError) {
+              console.error(`❌ Failed to delete auth user ${authUser.email}:`, deleteError);
+              authCleanupErrors.push({
+                email: authUser.email,
+                error: `Deletion failed: ${(deleteError as any)?.message || 'Unknown error'}`
+              });
+            }
+          }
+        } catch (error) {
+          console.error(`❌ Error processing auth user ${authUser.email}:`, error);
+          authCleanupErrors.push({
+            email: authUser.email,
+            error: `Processing error: ${(error as any)?.message || 'Unknown'}`
+          });
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error during auth user cleanup:', error);
+    }
+
     const result = {
       totalProfilesChecked: profiles?.length || 0,
       orphanedProfilesFound: orphanedProfiles.length,
       orphanedProfilesCleaned: orphanedProfiles.length - cleanupErrors.length,
-      errors: cleanupErrors,
+      totalAuthUsersChecked: 0, // Will be set below
+      orphanedAuthUsersFound: orphanedAuthUsers.length,
+      orphanedAuthUsersCleaned: orphanedAuthUsers.length - authCleanupErrors.length,
+      errors: [...cleanupErrors, ...authCleanupErrors],
       orphanedProfiles: orphanedProfiles.map(p => ({
         email: p.email,
         userId: p.user_id,
         name: `${p.first_name} ${p.last_name}`
+      })),
+      orphanedAuthUsers: orphanedAuthUsers.map(u => ({
+        email: u.email,
+        userId: u.id
       }))
     };
 
