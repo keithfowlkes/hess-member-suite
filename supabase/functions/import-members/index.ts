@@ -23,6 +23,7 @@ interface ImportMemberData {
   secondary_last_name?: string;
   secondary_contact_title?: string;
   secondary_contact_email?: string;
+  secondary_contact_phone?: string;
   student_information_system?: string;
   financial_system?: string;
   financial_aid?: string;
@@ -33,7 +34,15 @@ interface ImportMemberData {
   learning_management?: string;
   admissions_crm?: string;
   alumni_advancement_crm?: string;
+  payment_platform?: string;
+  meal_plan_management?: string;
+  identity_management?: string;
+  door_access?: string;
+  document_management?: string;
+  voip?: string;
+  network_infrastructure?: string;
   primary_office_apple?: boolean;
+  primary_office_asus?: boolean;
   primary_office_lenovo?: boolean;
   primary_office_dell?: boolean;
   primary_office_hp?: boolean;
@@ -226,6 +235,7 @@ serve(async (req) => {
             voip: member.voip,
             network_infrastructure: member.network_infrastructure,
             primary_office_apple: member.primary_office_apple || false,
+            primary_office_asus: member.primary_office_asus || false,
             primary_office_lenovo: member.primary_office_lenovo || false,
             primary_office_dell: member.primary_office_dell || false,
             primary_office_hp: member.primary_office_hp || false,
