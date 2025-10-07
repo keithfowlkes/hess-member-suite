@@ -59,11 +59,12 @@ export function useDashboardStats() {
     try {
       console.log('Fetching dashboard stats...');
       
-      // Get organization statistics
+      // Get organization statistics - only active members
       const { data: orgStats, error: orgError } = await supabase
         .from('organizations')
         .select('membership_status, annual_fee_amount, student_fte')
-        .eq('organization_type', 'member');
+        .eq('organization_type', 'member')
+        .eq('membership_status', 'active');
 
       if (orgError) {
         console.error('Organization stats error:', orgError);
