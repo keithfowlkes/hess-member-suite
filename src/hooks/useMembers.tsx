@@ -86,15 +86,15 @@ export interface CreateOrganizationData {
   notes?: string | null;
 }
 
-export function useMembers() {
+export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired' | 'cancelled' = 'active') {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const query = useQuery({
-    queryKey: ['organizations'],
+    queryKey: ['organizations', statusFilter],
     queryFn: async () => {
-      // Fetch all organizations at once
-      const { data, error } = await supabase
+      // Build query
+      let dbQuery = supabase
         .from('organizations')
         .select(`
           *,
@@ -105,10 +105,15 @@ export function useMembers() {
             secondary_contact_email, secondary_contact_phone
           )
         `)
-        .eq('membership_status', 'active')
         .eq('organization_type', 'member')
-        .not('name', 'ilike', '%Administrator%')
-        .order('name');
+        .not('name', 'ilike', '%Administrator%');
+
+      // Apply status filter if not 'all'
+      if (statusFilter !== 'all') {
+        dbQuery = dbQuery.eq('membership_status', statusFilter);
+      }
+
+      const { data, error } = await dbQuery.order('name');
 
       if (error) throw error;
       return data || [];

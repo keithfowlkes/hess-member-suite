@@ -18,7 +18,8 @@ import { OrganizationViewModal } from '@/components/OrganizationViewModal';
 
 export default function Members() {
   const navigate = useNavigate();
-  const { organizations, loading } = useMembers();
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'expired' | 'cancelled'>('active');
+  const { organizations, loading } = useMembers(statusFilter);
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState<string>('');
@@ -143,6 +144,18 @@ export default function Members() {
                         className="pl-10"
                       />
                     </div>
+                    <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Filter by status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All statuses</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="expired">Expired</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Select value={selectedState} onValueChange={setSelectedState}>
                       <SelectTrigger className="w-48">
                         <SelectValue placeholder="Filter by state" />
