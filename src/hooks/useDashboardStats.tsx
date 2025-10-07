@@ -21,6 +21,40 @@ export function useDashboardStats() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Set up real-time subscription for organizations
+  useEffect(() => {
+    const channelName = `dashboard_stats_${Math.random().toString(36).substr(2, 9)}`;
+    const subscription = supabase
+      .channel(channelName)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'organizations' 
+        }, 
+        () => {
+          console.log('Organizations changed, refetching dashboard stats...');
+          fetchStats();
+        }
+      )
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'invoices' 
+        }, 
+        () => {
+          console.log('Invoices changed, refetching dashboard stats...');
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const fetchStats = async () => {
     try {
       console.log('Fetching dashboard stats...');

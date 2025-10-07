@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
 export interface SystemUsage {
   name: string;
@@ -71,6 +72,42 @@ const processDatacubeData = (datacubeEntries: Array<{system_field: string, syste
 };
 
 export const useSystemAnalytics = () => {
+  const queryClient = useQueryClient();
+
+  // Set up real-time subscription to invalidate cache when analytics data changes
+  useEffect(() => {
+    const channelName = `system_analytics_${Math.random().toString(36).substr(2, 9)}`;
+    const subscription = supabase
+      .channel(channelName)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'system_analytics_datacube' 
+        }, 
+        () => {
+          console.log('Analytics datacube changed, invalidating system analytics cache...');
+          queryClient.invalidateQueries({ queryKey: ['system-analytics-datacube'] });
+        }
+      )
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'organizations' 
+        }, 
+        () => {
+          console.log('Organizations changed, invalidating system analytics cache...');
+          queryClient.invalidateQueries({ queryKey: ['system-analytics-datacube'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['system-analytics-datacube'],
     queryFn: async () => {
