@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 
 export interface DashboardStats {
   totalOrganizations: number;
@@ -20,6 +21,7 @@ export function useDashboardStats() {
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
 
   // Set up real-time subscription for organizations and datacube
   useEffect(() => {
@@ -70,33 +72,13 @@ export function useDashboardStats() {
     try {
       console.log('Fetching dashboard stats...');
       
-      // Get organization totals from the datacube (single source of truth)
-      const { data: datacubeData, error: datacubeError } = await supabase
-        .from('system_analytics_datacube')
-        .select('system_name, institution_count')
-        .eq('system_field', 'organization_totals');
-
-      if (datacubeError) {
-        console.error('Datacube error:', datacubeError);
-        throw datacubeError;
-      }
-
-      const totalsMap = datacubeData.reduce((acc, item) => {
-        acc[item.system_name] = item.institution_count;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const totalOrganizations = totalsMap['total_organizations'] || 0;
-      const totalStudentFte = totalsMap['total_student_fte'] || 0;
-
-      console.log('Organization totals from datacube:', { totalOrganizations, totalStudentFte });
-
       // Get organization statistics for revenue calculation
+      // Use the same query as datacube to ensure consistency
       const { data: orgStats, error: orgError } = await supabase
         .from('organizations')
         .select('membership_status, annual_fee_amount')
-        .eq('organization_type', 'member')
-        .eq('membership_status', 'active');
+        .eq('membership_status', 'active')
+        .or('organization_type.eq.member,organization_type.is.null');
 
       if (orgError) {
         console.error('Organization stats error:', orgError);
@@ -127,11 +109,11 @@ export function useDashboardStats() {
       }, 0) || 0;
 
       const calculatedStats = {
-        totalOrganizations, // From datacube
+        totalOrganizations: totals?.totalOrganizations || 0, // From datacube
         activeOrganizations,
         pendingInvoices,
         totalRevenue,
-        totalStudentFte // From datacube
+        totalStudentFte: totals?.totalStudentFte || 0 // From datacube
       };
       
       console.log('Calculated stats:', calculatedStats);
@@ -151,12 +133,14 @@ export function useDashboardStats() {
   };
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    if (!totalsLoading) {
+      fetchStats();
+    }
+  }, [totalsLoading, totals]);
 
   return {
     stats,
-    loading,
+    loading: loading || totalsLoading,
     refetch: fetchStats
   };
 }
