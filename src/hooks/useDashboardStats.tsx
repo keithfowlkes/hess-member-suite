@@ -21,11 +21,22 @@ export function useDashboardStats() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Set up real-time subscription for organizations
+  // Set up real-time subscription for organizations and datacube
   useEffect(() => {
     const channelName = `dashboard_stats_${Math.random().toString(36).substr(2, 9)}`;
     const subscription = supabase
       .channel(channelName)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'system_analytics_datacube' 
+        }, 
+        () => {
+          console.log('Analytics datacube changed, refetching dashboard stats...');
+          fetchStats();
+        }
+      )
       .on('postgres_changes', 
         { 
           event: '*', 
@@ -59,10 +70,31 @@ export function useDashboardStats() {
     try {
       console.log('Fetching dashboard stats...');
       
-      // Get organization statistics - only active members
+      // Get organization totals from the datacube (single source of truth)
+      const { data: datacubeData, error: datacubeError } = await supabase
+        .from('system_analytics_datacube')
+        .select('system_name, institution_count')
+        .eq('system_field', 'organization_totals');
+
+      if (datacubeError) {
+        console.error('Datacube error:', datacubeError);
+        throw datacubeError;
+      }
+
+      const totalsMap = datacubeData.reduce((acc, item) => {
+        acc[item.system_name] = item.institution_count;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const totalOrganizations = totalsMap['total_organizations'] || 0;
+      const totalStudentFte = totalsMap['total_student_fte'] || 0;
+
+      console.log('Organization totals from datacube:', { totalOrganizations, totalStudentFte });
+
+      // Get organization statistics for revenue calculation
       const { data: orgStats, error: orgError } = await supabase
         .from('organizations')
-        .select('membership_status, annual_fee_amount, student_fte')
+        .select('membership_status, annual_fee_amount')
         .eq('organization_type', 'member')
         .eq('membership_status', 'active');
 
@@ -87,30 +119,19 @@ export function useDashboardStats() {
       console.log('Invoice stats fetched:', invoiceStats?.length || 0, 'records');
 
       // Calculate statistics
-      const totalOrganizations = orgStats?.length || 0;
-      const activeOrganizations = orgStats?.filter(org => org.membership_status === 'active').length || 0;
+      const activeOrganizations = orgStats?.length || 0;
       const pendingInvoices = invoiceStats?.length || 0;
       
       const totalRevenue = orgStats?.reduce((sum, org) => {
-        if (org.membership_status === 'active') {
-          return sum + (org.annual_fee_amount || 0);
-        }
-        return sum;
-      }, 0) || 0;
-
-      const totalStudentFte = orgStats?.reduce((sum, org) => {
-        if (org.membership_status === 'active') {
-          return sum + (org.student_fte || 0);
-        }
-        return sum;
+        return sum + (org.annual_fee_amount || 0);
       }, 0) || 0;
 
       const calculatedStats = {
-        totalOrganizations,
+        totalOrganizations, // From datacube
         activeOrganizations,
         pendingInvoices,
         totalRevenue,
-        totalStudentFte
+        totalStudentFte // From datacube
       };
       
       console.log('Calculated stats:', calculatedStats);
