@@ -1495,6 +1495,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      cohort_leader_can_update_profile: {
+        Args: { _profile_id: string }
+        Returns: boolean
+      }
       fix_user_password_from_registration: {
         Args: Record<PropertyKey, never>
         Returns: string
