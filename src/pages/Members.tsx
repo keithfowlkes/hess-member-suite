@@ -102,12 +102,12 @@ export default function Members() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Organizations ({statusFilter === 'all' ? 'All Statuses' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)})
+                    Total Organizations
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {loading ? '...' : filteredOrganizations.length}
+                    {totalsLoading ? '...' : totals?.totalOrganizations || 0}
                   </div>
                 </CardContent>
               </Card>
@@ -120,7 +120,7 @@ export default function Members() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {loading ? '...' : filteredOrganizations.reduce((sum, org) => sum + (org.student_fte || 0), 0).toLocaleString()}
+                    {totalsLoading ? '...' : (totals?.totalStudentFte || 0).toLocaleString()}
                   </div>
                 </CardContent>
               </Card>
