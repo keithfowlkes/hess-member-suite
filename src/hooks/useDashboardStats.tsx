@@ -101,7 +101,6 @@ export function useDashboardStats() {
       console.log('Invoice stats fetched:', invoiceStats?.length || 0, 'records');
 
       // Calculate statistics
-      const activeOrganizations = orgStats?.length || 0;
       const pendingInvoices = invoiceStats?.length || 0;
       
       const totalRevenue = orgStats?.reduce((sum, org) => {
@@ -110,7 +109,7 @@ export function useDashboardStats() {
 
       const calculatedStats = {
         totalOrganizations: totals?.totalOrganizations || 0, // From datacube
-        activeOrganizations,
+        activeOrganizations: totals?.totalOrganizations || 0, // From datacube - same as total
         pendingInvoices,
         totalRevenue,
         totalStudentFte: totals?.totalStudentFte || 0 // From datacube
