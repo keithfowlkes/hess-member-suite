@@ -194,43 +194,64 @@ serve(async (req) => {
             .eq('contact_person_id', updatedProfile.id)
             .maybeSingle();
 
-          if (!existingOrg) {
+          const organizationData = {
+            name: member.organization,
+            contact_person_id: updatedProfile.id,
+            email: cleanEmail,
+            phone: member.phone,
+            address_line_1: member.address,
+            city: member.city,
+            state: member.state,
+            zip_code: member.zip,
+            country: 'United States',
+            membership_status: 'active' as const,
+            annual_fee_amount: 1000.00,
+            state_association: member.state_association,
+            student_fte: member.student_fte,
+            student_information_system: member.student_information_system,
+            financial_system: member.financial_system,
+            financial_aid: member.financial_aid,
+            hcm_hr: member.hcm_hr,
+            payroll_system: member.payroll_system,
+            purchasing_system: member.purchasing_system,
+            housing_management: member.housing_management,
+            learning_management: member.learning_management,
+            admissions_crm: member.admissions_crm,
+            alumni_advancement_crm: member.alumni_advancement_crm,
+            payment_platform: member.payment_platform,
+            meal_plan_management: member.meal_plan_management,
+            identity_management: member.identity_management,
+            door_access: member.door_access,
+            document_management: member.document_management,
+            voip: member.voip,
+            network_infrastructure: member.network_infrastructure,
+            primary_office_apple: member.primary_office_apple || false,
+            primary_office_lenovo: member.primary_office_lenovo || false,
+            primary_office_dell: member.primary_office_dell || false,
+            primary_office_hp: member.primary_office_hp || false,
+            primary_office_microsoft: member.primary_office_microsoft || false,
+            primary_office_other: member.primary_office_other || false,
+            primary_office_other_details: member.primary_office_other_details,
+            other_software_comments: member.other_software_comments
+          };
+
+          if (existingOrg) {
+            // Update existing organization with all imported data
+            const { error: orgError } = await supabaseAdmin
+              .from('organizations')
+              .update(organizationData)
+              .eq('id', existingOrg.id);
+
+            if (orgError) {
+              console.error(`Failed to update organization for ${cleanEmail}:`, orgError);
+            } else {
+              console.log(`Updated organization ${member.organization} for ${cleanEmail}`);
+            }
+          } else {
             // Create new organization with all imported data
             const { error: orgError } = await supabaseAdmin
               .from('organizations')
-              .insert({
-                name: member.organization,
-                contact_person_id: updatedProfile.id,
-                email: cleanEmail,
-                phone: member.phone,
-                address_line_1: member.address,
-                city: member.city,
-                state: member.state,
-                zip_code: member.zip,
-                country: 'United States',
-                membership_status: 'active',
-                annual_fee_amount: 1000.00,
-                state_association: member.state_association,
-                student_fte: member.student_fte,
-                student_information_system: member.student_information_system,
-                financial_system: member.financial_system,
-                financial_aid: member.financial_aid,
-                hcm_hr: member.hcm_hr,
-                payroll_system: member.payroll_system,
-                purchasing_system: member.purchasing_system,
-                housing_management: member.housing_management,
-                learning_management: member.learning_management,
-                admissions_crm: member.admissions_crm,
-                alumni_advancement_crm: member.alumni_advancement_crm,
-                primary_office_apple: member.primary_office_apple || false,
-                primary_office_lenovo: member.primary_office_lenovo || false,
-                primary_office_dell: member.primary_office_dell || false,
-                primary_office_hp: member.primary_office_hp || false,
-                primary_office_microsoft: member.primary_office_microsoft || false,
-                primary_office_other: member.primary_office_other || false,
-                primary_office_other_details: member.primary_office_other_details,
-                other_software_comments: member.other_software_comments
-              });
+              .insert(organizationData);
 
             if (orgError) {
               console.error(`Failed to create organization for ${cleanEmail}:`, orgError);
