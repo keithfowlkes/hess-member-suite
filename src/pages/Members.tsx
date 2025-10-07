@@ -146,7 +146,7 @@ export default function Members() {
                     </div>
                     <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}>
                       <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Filter by status" />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All statuses</SelectItem>
