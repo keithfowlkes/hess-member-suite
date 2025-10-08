@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, ExternalLink, MapPin, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { OrganizationDetailsDialog } from '@/components/OrganizationDetailsDialog';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 
 interface PublicOrganization {
@@ -73,8 +72,6 @@ function DirectoryContent({ showHeader = false, showStats = false }: DirectoryCo
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [selectedOrganization, setSelectedOrganization] = useState<PublicOrganization | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: totals } = useOrganizationTotals();
 
   const fetchOrganizations = async () => {
@@ -124,11 +121,6 @@ function DirectoryContent({ showHeader = false, showStats = false }: DirectoryCo
   });
 
   const uniqueStates = Array.from(new Set(organizations.map(org => org.state).filter(Boolean))).sort();
-
-  const handleOrganizationClick = (org: PublicOrganization) => {
-    setSelectedOrganization(org);
-    setIsDialogOpen(true);
-  };
 
   if (loading) {
     return (
@@ -204,8 +196,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: DirectoryCo
         {filteredOrganizations.map((org) => (
           <div 
             key={org.id} 
-            className="flex items-center justify-between p-3 border border-border rounded hover:bg-accent/5 transition-colors cursor-pointer"
-            onClick={() => handleOrganizationClick(org)}
+            className="flex items-center justify-between p-3 border border-border rounded"
           >
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <h3 className="font-medium text-foreground">
@@ -237,13 +228,6 @@ function DirectoryContent({ showHeader = false, showStats = false }: DirectoryCo
           </div>
         ))}
       </div>
-
-      <OrganizationDetailsDialog
-        organization={selectedOrganization}
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        canEdit={false}
-      />
 
       {filteredOrganizations.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
