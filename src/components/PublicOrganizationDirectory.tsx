@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { OrganizationDetailsDialog } from '@/components/OrganizationDetailsDialog';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 
 interface PublicOrganization {
   id: string;
@@ -74,6 +75,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
   const [selectedOrganization, setSelectedOrganization] = useState<PublicOrganization | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user } = useAuth();
+  const { data: totals } = useOrganizationTotals();
 
   const fetchOrganizations = async () => {
     try {
@@ -160,7 +162,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
       {showStats && (
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="text-center p-3 bg-primary/5 rounded">
-            <div className="text-xl font-bold text-primary">{organizations.length}</div>
+            <div className="text-xl font-bold text-primary">{totals?.totalOrganizations || 0}</div>
             <div className="text-xs text-muted-foreground">Active Organizations</div>
           </div>
           <div className="text-center p-3 bg-accent/10 rounded">
@@ -171,10 +173,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
           </div>
           <div className="text-center p-3 bg-secondary/10 rounded">
             <div className="text-xl font-bold text-foreground">
-              {organizations.reduce((total, org) => {
-                const fte = org.profiles?.student_fte || 0;
-                return total + fte;
-              }, 0).toLocaleString()}
+              {totals?.totalStudentFte?.toLocaleString() || 0}
             </div>
             <div className="text-xs text-muted-foreground">Total Student FTE</div>
           </div>
