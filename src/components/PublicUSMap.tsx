@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { MapPin, Building2, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { OrganizationInfoModal } from '@/components/OrganizationInfoModal';
@@ -429,20 +430,22 @@ export function PublicUSMap() {
 
                   <div className="space-y-2">
                     <h4 className="font-medium">Organizations:</h4>
-                    {stateStats[selectedState].organizations.map((org) => (
-                      <div key={org.id} className="p-2 bg-muted/50 rounded text-sm">
-                        <Button
-                          variant="link"
-                          className="p-0 h-auto font-medium text-left justify-start"
-                          onClick={() => handleOrganizationClick(org.id)}
-                        >
-                          {org.name}
-                        </Button>
-                        {org.city && (
-                          <div className="text-muted-foreground text-xs">{org.city}</div>
-                        )}
-                      </div>
-                    ))}
+                    <ScrollArea className="h-[400px] pr-4">
+                      {stateStats[selectedState].organizations.map((org) => (
+                        <div key={org.id} className="p-2 bg-muted/50 rounded text-sm mb-2">
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto font-medium text-left justify-start"
+                            onClick={() => handleOrganizationClick(org.id)}
+                          >
+                            {org.name}
+                          </Button>
+                          {org.city && (
+                            <div className="text-muted-foreground text-xs">{org.city}</div>
+                          )}
+                        </div>
+                      ))}
+                    </ScrollArea>
                   </div>
                 </div>
               ) : (

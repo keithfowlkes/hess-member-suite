@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { MapPin, Building2, Users, Edit, Save, RotateCcw, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -573,14 +574,16 @@ export function USMap() {
 
                   <div className="space-y-2">
                     <h4 className="font-medium">Organizations:</h4>
-                    {stateStats[selectedState].organizations.map((org) => (
-                      <div key={org.id} className="p-2 bg-muted/50 rounded text-sm">
-                        <div className="font-medium">{org.name}</div>
-                        {org.city && (
-                          <div className="text-muted-foreground text-xs">{org.city}</div>
-                        )}
-                      </div>
-                    ))}
+                    <ScrollArea className="h-[400px] pr-4">
+                      {stateStats[selectedState].organizations.map((org) => (
+                        <div key={org.id} className="p-2 bg-muted/50 rounded text-sm mb-2">
+                          <div className="font-medium">{org.name}</div>
+                          {org.city && (
+                            <div className="text-muted-foreground text-xs">{org.city}</div>
+                          )}
+                        </div>
+                      ))}
+                    </ScrollArea>
                   </div>
                 </div>
               ) : (
