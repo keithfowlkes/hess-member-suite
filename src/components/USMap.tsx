@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Building2, Users, Edit, Save, RotateCcw, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { toast } from 'sonner';
 
 interface MemberLocation {
@@ -94,6 +95,7 @@ export function USMap() {
   });
   
   const { user, isAdmin, isViewingAsAdmin } = useAuth();
+  const { data: organizationTotals } = useOrganizationTotals();
 
   useEffect(() => {
     fetchMemberLocations();
@@ -424,7 +426,7 @@ export function USMap() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {memberLocations.length}
+              {organizationTotals?.totalOrganizations ?? 0}
             </div>
           </CardContent>
         </Card>
@@ -452,9 +454,7 @@ export function USMap() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {Object.values(stateStats)
-                .reduce((total, state) => total + state.totalFTE, 0)
-                .toLocaleString()}
+              {organizationTotals?.totalStudentFte?.toLocaleString() ?? 0}
             </div>
           </CardContent>
         </Card>
