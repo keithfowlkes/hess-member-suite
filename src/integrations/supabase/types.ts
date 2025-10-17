@@ -1530,6 +1530,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_analytics_datacube_sql: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       setup_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: undefined
