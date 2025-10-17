@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Building2, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { OrganizationInfoModal } from '@/components/OrganizationInfoModal';
+import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 
 interface MemberLocation {
   id: string;
@@ -86,6 +87,7 @@ export function PublicUSMap() {
   const [loading, setLoading] = useState(true);
   const [selectedOrganization, setSelectedOrganization] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { data: organizationTotals } = useOrganizationTotals();
 
   useEffect(() => {
     fetchMemberLocations();
@@ -271,7 +273,7 @@ export function PublicUSMap() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {memberLocations.length}
+              {organizationTotals?.totalOrganizations ?? memberLocations.length}
             </div>
           </CardContent>
         </Card>
@@ -299,9 +301,10 @@ export function PublicUSMap() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {Object.values(stateStats)
-                .reduce((total, state) => total + state.totalFTE, 0)
-                .toLocaleString()}
+              {organizationTotals?.totalStudentFte?.toLocaleString() ?? 
+                Object.values(stateStats)
+                  .reduce((total, state) => total + state.totalFTE, 0)
+                  .toLocaleString()}
             </div>
           </CardContent>
         </Card>
