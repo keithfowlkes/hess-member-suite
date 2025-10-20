@@ -88,12 +88,18 @@ export function ImportMembersDialog({ open, onOpenChange }: ImportMembersDialogP
   const { toast } = useToast();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    console.log('onDrop called with files:', acceptedFiles);
     const file = acceptedFiles[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file provided');
+      return;
+    }
+    console.log('Parsing file:', file.name, 'type:', file.type);
 
     Papa.parse(file, {
       header: true,
       complete: (results) => {
+        console.log('Parse complete, results:', results);
         if (results.errors.length > 0) {
           toast({
             title: 'CSV Parse Error',
