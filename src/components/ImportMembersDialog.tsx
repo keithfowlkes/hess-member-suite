@@ -100,6 +100,17 @@ export function ImportMembersDialog({ open, onOpenChange }: ImportMembersDialogP
       header: true,
       complete: (results) => {
         console.log('Parse complete, results:', results);
+        
+        // Check if we got data
+        if (results.data.length === 0) {
+          toast({
+            title: 'CSV Format Error',
+            description: 'The CSV file appears to be missing a header row or has no data rows. Please ensure the first row contains column names (like "Organization Name", "Email", etc.) and subsequent rows contain the actual data.',
+            variant: 'destructive'
+          });
+          return;
+        }
+        
         if (results.errors.length > 0) {
           toast({
             title: 'CSV Parse Error',
