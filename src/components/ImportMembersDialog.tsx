@@ -49,6 +49,14 @@ const profileFields = [
   { value: 'learning_management', label: 'Learning Management' },
   { value: 'admissions_crm', label: 'Admissions CRM' },
   { value: 'alumni_advancement_crm', label: 'Alumni/Advancement CRM' },
+  { value: 'payment_platform', label: 'Payment Platform' },
+  { value: 'meal_plan_management', label: 'Meal Plan Management' },
+  { value: 'identity_management', label: 'Identity Management' },
+  { value: 'door_access', label: 'Door Access' },
+  { value: 'document_management', label: 'Document Management' },
+  { value: 'voip', label: 'VoIP' },
+  { value: 'network_infrastructure', label: 'Network Infrastructure' },
+  { value: 'secondary_contact_phone', label: 'Secondary Contact Phone' },
   { value: 'primary_office_apple', label: 'Primary Office - Apple' },
   { value: 'primary_office_lenovo', label: 'Primary Office - Lenovo' },
   { value: 'primary_office_dell', label: 'Primary Office - Dell' },
@@ -192,9 +200,10 @@ export function ImportMembersDialog({ open, onOpenChange }: ImportMembersDialogP
           return;
         }
         
-        // Transform boolean fields
+        // Transform boolean fields - convert to actual boolean, not string
         if (mapping.profileField.startsWith('primary_office_') && mapping.profileField !== 'primary_office_other_details') {
-          value = ['yes', 'true', '1', 'x'].includes(value?.toLowerCase()) ? 'true' : 'false';
+          transformedRow[mapping.profileField] = ['yes', 'true', '1', 'x'].includes(value?.toLowerCase());
+          return;
         }
         
         // Transform numeric fields
