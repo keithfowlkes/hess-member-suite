@@ -31,10 +31,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  useOrganizationProfileEditRequests,
-  useApproveOrganizationProfileEditRequest,
-  useRejectOrganizationProfileEditRequest
-} from '@/hooks/useOrganizationProfileEditRequests';
+  useMemberRegistrationUpdates,
+  type MemberRegistrationUpdate 
+} from '@/hooks/useMemberRegistrationUpdates';
 import { SideBySideComparisonModal } from '@/components/SideBySideComparisonModal';
 import { CheckCircle, XCircle, Eye, Trash2, AlertTriangle } from 'lucide-react';
 
@@ -44,85 +43,50 @@ interface MemberInfoUpdateRequestsDialogProps {
 }
 
 export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInfoUpdateRequestsDialogProps) {
-  const { requests, loading: isLoading } = useOrganizationProfileEditRequests();
-  const { approveRequest, loading: isApproving } = useApproveOrganizationProfileEditRequest();
-  const { rejectRequest, loading: isRejecting } = useRejectOrganizationProfileEditRequest();
+  const { registrationUpdates, isLoading, processRegistrationUpdate, isProcessing } = useMemberRegistrationUpdates();
   const { user } = useAuth();
 
-  const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<MemberRegistrationUpdate | null>(null);
   const [actionNotes, setActionNotes] = useState('');
   const [showDetails, setShowDetails] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Filter to only show pending requests (already filtered in hook)
-  const pendingRequests = requests;
+  // Filter to only show pending requests
+  const pendingRequests = registrationUpdates.filter(r => r.status === 'pending');
 
   // Generate comparison data for the side-by-side modal
   const comparisonData = useMemo(() => {
     if (!selectedRequest) return {};
 
-    const originalOrg = selectedRequest.original_organization_data || {};
-    const updatedOrg = selectedRequest.updated_organization_data || {};
-    const originalProfile = selectedRequest.original_profile_data || {};
-    const updatedProfile = selectedRequest.updated_profile_data || {};
-
-    console.log('🔍 Request Data:', selectedRequest);
-    console.log('🏢 Original Org:', originalOrg);
-    console.log('📦 Updated Org:', updatedOrg);
-    console.log('🔧 VoIP - Old:', originalOrg.voip, 'New:', updatedOrg.voip);
-    console.log('🌐 Network - Old:', originalOrg.network_infrastructure, 'New:', updatedOrg.network_infrastructure);
+    // CRITICAL: Extract from the nested organization_data JSON field
+    const orgData = (selectedRequest.organization_data as Record<string, any>) || {};
     
-    // Check if fields exist at all
-    console.log('🔍 All keys in originalOrg:', Object.keys(originalOrg));
-    console.log('🔍 All keys in updatedOrg:', Object.keys(updatedOrg));
-
-    const orgChanges = [
-      { field: 'name', label: 'Organization Name', oldValue: originalOrg.name, newValue: updatedOrg.name },
-      { field: 'student_fte', label: 'Student FTE', oldValue: originalOrg.student_fte, newValue: updatedOrg.student_fte },
-      { field: 'website', label: 'Website', oldValue: originalOrg.website, newValue: updatedOrg.website },
-      { field: 'address_line_1', label: 'Address', oldValue: originalOrg.address_line_1, newValue: updatedOrg.address_line_1 },
-      { field: 'city', label: 'City', oldValue: originalOrg.city, newValue: updatedOrg.city },
-      { field: 'state', label: 'State', oldValue: originalOrg.state, newValue: updatedOrg.state },
-      { field: 'zip_code', label: 'ZIP Code', oldValue: originalOrg.zip_code, newValue: updatedOrg.zip_code },
-    ].filter(item => item.newValue !== undefined && item.oldValue !== item.newValue);
-
-    const softwareChanges = [
-      { field: 'student_information_system', label: 'Student Information System', oldValue: originalOrg.student_information_system, newValue: updatedOrg.student_information_system },
-      { field: 'financial_system', label: 'Financial System', oldValue: originalOrg.financial_system, newValue: updatedOrg.financial_system },
-      { field: 'financial_aid', label: 'Financial Aid', oldValue: originalOrg.financial_aid, newValue: updatedOrg.financial_aid },
-    ].filter(item => item.newValue !== undefined && item.oldValue !== item.newValue);
-
-    const hardwareChanges = [
-      { field: 'voip', label: 'VoIP', oldValue: originalOrg.voip, newValue: updatedOrg.voip },
-      { field: 'network_infrastructure', label: 'Network Infrastructure', oldValue: originalOrg.network_infrastructure, newValue: updatedOrg.network_infrastructure },
-    ].filter(item => item.newValue !== undefined && item.oldValue !== item.newValue);
-
-    const contactChanges = [
-      { field: 'first_name', label: 'First Name', oldValue: originalProfile.first_name, newValue: updatedProfile.first_name },
-      { field: 'last_name', label: 'Last Name', oldValue: originalProfile.last_name, newValue: updatedProfile.last_name },
-      { field: 'email', label: 'Email', oldValue: originalProfile.email, newValue: updatedProfile.email },
-      { field: 'phone', label: 'Phone', oldValue: originalProfile.phone, newValue: updatedProfile.phone },
-    ].filter(item => item.newValue !== undefined && item.oldValue !== item.newValue);
+    console.log('🔍 CRITICAL DEBUG - Full Request:', selectedRequest);
+    console.log('🏢 Nested organization_data:', orgData);
+    console.log('🔧 VoIP from nested data:', orgData.voip);
+    console.log('🌐 Network Infrastructure from nested data:', orgData.network_infrastructure);
 
     return {
-      organizationChanges: orgChanges,
-      softwareChanges,
-      hardwareChanges,
-      contactChanges,
-      originalData: originalOrg,
-      updatedData: updatedOrg
+      organizationChanges: [],
+      softwareChanges: [],
+      hardwareChanges: [],
+      contactChanges: [],
+      originalData: {}, // No original data for member updates
+      updatedData: orgData // Use the nested organization_data
     };
   }, [selectedRequest]);
 
-  const [isProcessing, setIsProcessing] = useState(false);
-  const isProcessingRequest = isApproving || isRejecting || isProcessing;
-
   const handleApprove = async () => {
-    if (!selectedRequest) return;
+    if (!selectedRequest || !user) return;
     
     try {
-      await approveRequest(selectedRequest.id, actionNotes);
+      await processRegistrationUpdate({
+        registrationUpdateId: selectedRequest.id,
+        action: 'approve',
+        adminUserId: user.id,
+        adminNotes: actionNotes
+      });
       setSelectedRequest(null);
       setActionNotes('');
       setShowApprovalDialog(false);
@@ -133,10 +97,15 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
   };
 
   const handleReject = async () => {
-    if (!selectedRequest) return;
+    if (!selectedRequest || !user) return;
     
     try {
-      await rejectRequest(selectedRequest.id, actionNotes);
+      await processRegistrationUpdate({
+        registrationUpdateId: selectedRequest.id,
+        action: 'reject',
+        adminUserId: user.id,
+        adminNotes: actionNotes
+      });
       setSelectedRequest(null);
       setActionNotes('');
       setShowDetails(false);
@@ -158,10 +127,9 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
     }
   };
 
-  const getOrganizationName = (request: any) => {
-    return request.updated_organization_data?.name || 
-           request.original_organization_data?.name || 
-           'Unknown Organization';
+  const getOrganizationName = (request: MemberRegistrationUpdate) => {
+    const orgData = (request.organization_data as any) || {};
+    return request.existing_organization_name || orgData.name || 'Unknown Organization';
   };
 
   return (
@@ -185,7 +153,7 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
             onActionNotesChange={setActionNotes}
             onApprove={handleApprove}
             onReject={handleReject}
-            isSubmitting={isProcessingRequest}
+            isSubmitting={isProcessing}
           >
             {selectedRequest.admin_notes && (
               <Card className="mt-4">
@@ -224,11 +192,11 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
                         {getOrganizationName(request)}
                       </TableCell>
                       <TableCell>
-                        {request.updated_profile_data?.email || 'N/A'}
+                        {request.submitted_email}
                       </TableCell>
                       <TableCell>{getStatusBadge(request.status)}</TableCell>
                       <TableCell>
-                        {new Date(request.created_at).toLocaleDateString()}
+                        {new Date(request.submitted_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
@@ -310,9 +278,9 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
               <AlertDialogAction
                 onClick={handleApprove}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                disabled={isProcessingRequest}
+                disabled={isProcessing}
               >
-                {isProcessingRequest ? 'Approving...' : 'Approve Update Request'}
+                {isProcessing ? 'Approving...' : 'Approve Update Request'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
