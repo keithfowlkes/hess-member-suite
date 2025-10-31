@@ -80,6 +80,15 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
     const newData = selectedRequest.new_organization_data as Record<string, any> || {};
     const currentData = selectedRequest.organizations as Record<string, any> || {};
 
+    // Debug logging for VoIP and Network Infrastructure
+    console.log('=== MEMBER INFO UPDATE DEBUG ===');
+    console.log('Current Data (organizations):', currentData);
+    console.log('Current VoIP:', currentData.voip);
+    console.log('Current Network Infrastructure:', currentData.network_infrastructure);
+    console.log('New Data (new_organization_data):', newData);
+    console.log('New VoIP:', newData.voip);
+    console.log('New Network Infrastructure:', newData.network_infrastructure);
+
     return {
       organizationChanges,
       contactChanges,
