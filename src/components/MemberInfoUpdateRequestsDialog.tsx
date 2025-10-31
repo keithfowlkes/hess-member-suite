@@ -90,10 +90,17 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
     // Extract from organization_data JSON (voip and network_infrastructure are IN the JSON)
     const orgData = (selectedRequest.organization_data as Record<string, any>) || {};
     
-    console.log('🔍 Original Organization Data:', originalOrgData);
-    console.log('🏢 Updated organization_data (should include voip/network):', orgData);
-    console.log('🔧 VoIP - Original:', originalOrgData.voip, 'Updated:', orgData.voip);
-    console.log('🌐 Network - Original:', originalOrgData.network_infrastructure, 'Updated:', orgData.network_infrastructure);
+    console.log('============================================');
+    console.log('MEMBER UPDATE REQUEST DATA EXTRACTION');
+    console.log('============================================');
+    console.log('Original Org Data from DB:', originalOrgData);
+    console.log('Updated Org Data from JSON:', orgData);
+    console.log('---');
+    console.log('VoIP Original:', originalOrgData.voip);
+    console.log('VoIP Updated:', orgData.voip);
+    console.log('Network Original:', originalOrgData.network_infrastructure);
+    console.log('Network Updated:', orgData.network_infrastructure);
+    console.log('============================================');
 
     return {
       organizationChanges: [],
