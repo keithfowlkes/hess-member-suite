@@ -67,6 +67,12 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
     const originalProfile = selectedRequest.original_profile_data || {};
     const updatedProfile = selectedRequest.updated_profile_data || {};
 
+    console.log('🔍 Request Data:', selectedRequest);
+    console.log('🏢 Original Org:', originalOrg);
+    console.log('📦 Updated Org:', updatedOrg);
+    console.log('🔧 VoIP - Old:', originalOrg.voip, 'New:', updatedOrg.voip);
+    console.log('🌐 Network - Old:', originalOrg.network_infrastructure, 'New:', updatedOrg.network_infrastructure);
+
     const orgChanges = [
       { field: 'name', label: 'Organization Name', oldValue: originalOrg.name, newValue: updatedOrg.name },
       { field: 'student_fte', label: 'Student FTE', oldValue: originalOrg.student_fte, newValue: updatedOrg.student_fte },
