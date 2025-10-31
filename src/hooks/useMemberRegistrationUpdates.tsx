@@ -18,6 +18,8 @@ export interface MemberRegistrationUpdate {
   submission_type: 'new_member' | 'member_update' | 'primary_contact_change';
   created_at: string;
   updated_at: string;
+  voip?: string;
+  network_infrastructure?: string;
 }
 
 export function useMemberRegistrationUpdates() {

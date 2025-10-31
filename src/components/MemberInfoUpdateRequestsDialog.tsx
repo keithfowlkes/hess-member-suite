@@ -87,21 +87,28 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
   const comparisonData = useMemo(() => {
     if (!selectedRequest) return {};
 
-    // CRITICAL: Extract from the nested organization_data JSON field
+    // CRITICAL: voip and network_infrastructure are TOP-LEVEL columns, not in organization_data JSON
     const orgData = (selectedRequest.organization_data as Record<string, any>) || {};
     
+    // Merge top-level fields with organization_data JSON
+    const updatedData = {
+      ...orgData,
+      voip: selectedRequest.voip,
+      network_infrastructure: selectedRequest.network_infrastructure
+    };
+    
     console.log('🔍 Original Organization Data:', originalOrgData);
-    console.log('🏢 Updated organization_data:', orgData);
-    console.log('🔧 VoIP - Original:', originalOrgData.voip, 'Updated:', orgData.voip);
-    console.log('🌐 Network - Original:', originalOrgData.network_infrastructure, 'Updated:', orgData.network_infrastructure);
+    console.log('🏢 Updated data with merged fields:', updatedData);
+    console.log('🔧 VoIP - Original:', originalOrgData.voip, 'Updated:', updatedData.voip);
+    console.log('🌐 Network - Original:', originalOrgData.network_infrastructure, 'Updated:', updatedData.network_infrastructure);
 
     return {
       organizationChanges: [],
       softwareChanges: [],
       hardwareChanges: [],
       contactChanges: [],
-      originalData: originalOrgData, // Fetched current organization data
-      updatedData: orgData // Use the nested organization_data
+      originalData: originalOrgData,
+      updatedData: updatedData
     };
   }, [selectedRequest, originalOrgData]);
 
