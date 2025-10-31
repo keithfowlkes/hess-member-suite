@@ -87,19 +87,33 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
   const comparisonData = useMemo(() => {
     if (!selectedRequest) return {};
 
-    // Extract from organization_data JSON (voip and network_infrastructure are IN the JSON)
+    // Extract from organization_data JSON
     const orgData = (selectedRequest.organization_data as Record<string, any>) || {};
     
+    // CRITICAL: Ensure we're using the correct data structure for the modal
+    // The modal expects originalData and updatedData to have all fields at the top level
+    const updatedDataForModal = {
+      ...orgData,
+      // Explicitly ensure these fields are present
+      voip: orgData.voip || null,
+      network_infrastructure: orgData.network_infrastructure || null
+    };
+
+    const originalDataForModal = {
+      ...originalOrgData,
+      // Explicitly ensure these fields are present  
+      voip: originalOrgData.voip || null,
+      network_infrastructure: originalOrgData.network_infrastructure || null
+    };
+    
     console.log('============================================');
-    console.log('MEMBER UPDATE REQUEST DATA EXTRACTION');
+    console.log('🔍 MEMBER UPDATE MODAL DATA');
     console.log('============================================');
-    console.log('Original Org Data from DB:', originalOrgData);
-    console.log('Updated Org Data from JSON:', orgData);
+    console.log('Original Org (from DB):', originalDataForModal);
+    console.log('Updated Org (from submission):', updatedDataForModal);
     console.log('---');
-    console.log('VoIP Original:', originalOrgData.voip);
-    console.log('VoIP Updated:', orgData.voip);
-    console.log('Network Original:', originalOrgData.network_infrastructure);
-    console.log('Network Updated:', orgData.network_infrastructure);
+    console.log('VoIP - Original:', originalDataForModal.voip, '| Updated:', updatedDataForModal.voip);
+    console.log('Network - Original:', originalDataForModal.network_infrastructure, '| Updated:', updatedDataForModal.network_infrastructure);
     console.log('============================================');
 
     return {
@@ -107,8 +121,8 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
       softwareChanges: [],
       hardwareChanges: [],
       contactChanges: [],
-      originalData: originalOrgData,
-      updatedData: orgData // voip and network_infrastructure are already in orgData
+      originalData: originalDataForModal,
+      updatedData: updatedDataForModal
     };
   }, [selectedRequest, originalOrgData]);
 
