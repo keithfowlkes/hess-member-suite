@@ -87,8 +87,17 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
   const comparisonData = useMemo(() => {
     if (!selectedRequest) return {};
 
+    console.log('🔍 RAW DATA CHECK:');
+    console.log('selectedRequest.organization_data:', selectedRequest.organization_data);
+    console.log('Type:', typeof selectedRequest.organization_data);
+    
     // Extract from organization_data JSON
     const orgData = (selectedRequest.organization_data as Record<string, any>) || {};
+    
+    console.log('🔍 AFTER CAST - orgData:', orgData);
+    console.log('orgData.voip:', orgData.voip);
+    console.log('orgData.network_infrastructure:', orgData.network_infrastructure);
+    console.log('Keys in orgData:', Object.keys(orgData));
     
     // CRITICAL: Ensure we're using the correct data structure for the modal
     // The modal expects originalData and updatedData to have all fields at the top level
