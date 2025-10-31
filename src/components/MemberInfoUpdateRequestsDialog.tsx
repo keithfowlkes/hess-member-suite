@@ -87,6 +87,11 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
   const comparisonData = useMemo(() => {
     if (!selectedRequest) return {};
 
+    console.log('🚨 FULL selectedRequest object:', selectedRequest);
+    console.log('🚨 selectedRequest.voip:', selectedRequest.voip);
+    console.log('🚨 selectedRequest.network_infrastructure:', selectedRequest.network_infrastructure);
+    console.log('🚨 selectedRequest.organization_data:', selectedRequest.organization_data);
+
     // CRITICAL: voip and network_infrastructure are TOP-LEVEL columns, not in organization_data JSON
     const orgData = (selectedRequest.organization_data as Record<string, any>) || {};
     
