@@ -72,6 +72,10 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
     console.log('📦 Updated Org:', updatedOrg);
     console.log('🔧 VoIP - Old:', originalOrg.voip, 'New:', updatedOrg.voip);
     console.log('🌐 Network - Old:', originalOrg.network_infrastructure, 'New:', updatedOrg.network_infrastructure);
+    
+    // Check if fields exist at all
+    console.log('🔍 All keys in originalOrg:', Object.keys(originalOrg));
+    console.log('🔍 All keys in updatedOrg:', Object.keys(updatedOrg));
 
     const orgChanges = [
       { field: 'name', label: 'Organization Name', oldValue: originalOrg.name, newValue: updatedOrg.name },
