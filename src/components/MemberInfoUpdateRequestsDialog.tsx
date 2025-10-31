@@ -87,25 +87,13 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
   const comparisonData = useMemo(() => {
     if (!selectedRequest) return {};
 
-    console.log('🚨 FULL selectedRequest object:', selectedRequest);
-    console.log('🚨 selectedRequest.voip:', selectedRequest.voip);
-    console.log('🚨 selectedRequest.network_infrastructure:', selectedRequest.network_infrastructure);
-    console.log('🚨 selectedRequest.organization_data:', selectedRequest.organization_data);
-
-    // CRITICAL: voip and network_infrastructure are TOP-LEVEL columns, not in organization_data JSON
+    // Extract from organization_data JSON (voip and network_infrastructure are IN the JSON)
     const orgData = (selectedRequest.organization_data as Record<string, any>) || {};
     
-    // Merge top-level fields with organization_data JSON
-    const updatedData = {
-      ...orgData,
-      voip: selectedRequest.voip,
-      network_infrastructure: selectedRequest.network_infrastructure
-    };
-    
     console.log('🔍 Original Organization Data:', originalOrgData);
-    console.log('🏢 Updated data with merged fields:', updatedData);
-    console.log('🔧 VoIP - Original:', originalOrgData.voip, 'Updated:', updatedData.voip);
-    console.log('🌐 Network - Original:', originalOrgData.network_infrastructure, 'Updated:', updatedData.network_infrastructure);
+    console.log('🏢 Updated organization_data (should include voip/network):', orgData);
+    console.log('🔧 VoIP - Original:', originalOrgData.voip, 'Updated:', orgData.voip);
+    console.log('🌐 Network - Original:', originalOrgData.network_infrastructure, 'Updated:', orgData.network_infrastructure);
 
     return {
       organizationChanges: [],
@@ -113,7 +101,7 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
       hardwareChanges: [],
       contactChanges: [],
       originalData: originalOrgData,
-      updatedData: updatedData
+      updatedData: orgData // voip and network_infrastructure are already in orgData
     };
   }, [selectedRequest, originalOrgData]);
 
