@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -240,16 +240,16 @@ export function SideBySideComparisonModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto" aria-describedby="comparison-description">
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5" />
             {title}
           </DialogTitle>
+          <DialogDescription>
+            Side-by-side comparison of organization data changes for review and approval
+          </DialogDescription>
         </DialogHeader>
-        <div id="comparison-description" className="sr-only">
-          Side-by-side comparison of organization data changes for review and approval
-        </div>
 
         <div className="space-y-6">
           {/* Contact Email Change - Special Section */}
