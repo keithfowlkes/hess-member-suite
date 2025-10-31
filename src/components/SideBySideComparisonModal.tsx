@@ -217,12 +217,12 @@ export function SideBySideComparisonModal({
     { key: 'identity_management', label: 'Identity Management', type: 'text' },
     { key: 'door_access', label: 'Door Access System', type: 'text' },
     { key: 'document_management', label: 'Document Management', type: 'text' },
+    { key: 'voip', label: 'VoIP', type: 'text' },
+    { key: 'network_infrastructure', label: 'Network Infrastructure', type: 'text' },
   ];
 
   // Hardware fields
   const hardwareFields = [
-    { key: 'voip', label: 'VoIP', type: 'text' },
-    { key: 'network_infrastructure', label: 'Network Infrastructure', type: 'text' },
     { key: 'primary_office_apple', label: 'Apple Products', type: 'boolean' },
     { key: 'primary_office_lenovo', label: 'Lenovo Products', type: 'boolean' },
     { key: 'primary_office_dell', label: 'Dell Products', type: 'boolean' },
