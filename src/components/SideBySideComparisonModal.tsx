@@ -157,9 +157,14 @@ export function SideBySideComparisonModal({
               const currentValue = data.originalData?.[field.key];
               const newValue = data.updatedData?.[field.key];
               
-              // Debug logging for software fields
-              if (title === 'Software Systems') {
-                console.log(`Field ${field.key}: currentValue="${currentValue}" newValue="${newValue}"`);
+              // Enhanced debug logging
+              if (field.key === 'voip' || field.key === 'network_infrastructure') {
+                console.log(`🔍 ${field.label} Debug:`);
+                console.log(`  - Field key: ${field.key}`);
+                console.log(`  - Current value (originalData):`, currentValue);
+                console.log(`  - New value (updatedData):`, newValue);
+                console.log(`  - Original data object:`, data.originalData);
+                console.log(`  - Updated data object:`, data.updatedData);
               }
               
               // Simple comparison - if values are different, it's a change

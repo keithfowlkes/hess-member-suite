@@ -41,6 +41,8 @@ export const useReassignmentRequests = () => {
 
       if (error) throw error;
 
+      console.log('🔍 Raw reassignment requests from DB:', data);
+
       // For each request, try to fetch organization data separately
       const enrichedRequests = await Promise.all(
         (data || []).map(async (request) => {
@@ -97,6 +99,10 @@ export const useReassignmentRequests = () => {
               .eq('id', request.organization_id)
               .maybeSingle();
 
+            console.log(`🏢 Organization data for request ${request.id}:`, orgData);
+            console.log(`📞 VoIP value:`, orgData?.voip);
+            console.log(`🌐 Network Infrastructure value:`, orgData?.network_infrastructure);
+
             let profileData = null;
             if (orgData?.contact_person_id) {
               const { data: profile } = await supabase
@@ -107,13 +113,17 @@ export const useReassignmentRequests = () => {
               profileData = profile;
             }
 
-            return {
+            const enrichedRequest = {
               ...request,
               organizations: orgData ? {
                 ...orgData,
                 profiles: profileData
               } : null
             };
+
+            console.log(`📦 Enriched request ${request.id}:`, enrichedRequest);
+            
+            return enrichedRequest;
           } catch (error) {
             console.error('Error fetching org data for request:', request.id, error);
             // Return request without org data if fetch fails
@@ -125,6 +135,7 @@ export const useReassignmentRequests = () => {
         })
       );
 
+      console.log('✅ Final enriched requests:', enrichedRequests);
       return enrichedRequests as MemberInfoUpdateRequest[];
     },
   });
