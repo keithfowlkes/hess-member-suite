@@ -31,14 +31,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  useReassignmentRequests, 
-  useApproveReassignmentRequest, 
-  useRejectReassignmentRequest,
-  useDeleteReassignmentRequest,
-  type MemberInfoUpdateRequest 
-} from '@/hooks/useReassignmentRequests';
+  useMemberRegistrationUpdates,
+  type MemberRegistrationUpdate 
+} from '@/hooks/useMemberRegistrationUpdates';
 import { SideBySideComparisonModal } from '@/components/SideBySideComparisonModal';
-import { CheckCircle, XCircle, Eye, Trash2, AlertTriangle, User, Building2, Mail, Monitor } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, Trash2, AlertTriangle } from 'lucide-react';
 
 interface MemberInfoUpdateRequestsDialogProps {
   open: boolean;
@@ -46,89 +43,89 @@ interface MemberInfoUpdateRequestsDialogProps {
 }
 
 export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInfoUpdateRequestsDialogProps) {
-  const { data: requests = [], isLoading } = useReassignmentRequests();
-  const approveRequest = useApproveReassignmentRequest();
-  const rejectRequest = useRejectReassignmentRequest();
-  const deleteRequest = useDeleteReassignmentRequest();
+  const { registrationUpdates = [], isLoading, processRegistrationUpdate, isProcessing } = useMemberRegistrationUpdates();
   const { user } = useAuth();
 
-  const [selectedRequest, setSelectedRequest] = useState<MemberInfoUpdateRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<MemberRegistrationUpdate | null>(null);
   const [actionNotes, setActionNotes] = useState('');
   const [showDetails, setShowDetails] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // Filter to only show pending requests
+  const pendingRequests = registrationUpdates.filter(r => r.status === 'pending');
+
   // Generate comparison data for the side-by-side modal
   const comparisonData = useMemo(() => {
     if (!selectedRequest) return {};
 
-    const organizationChanges = [];
-    const contactChanges = [];
+    // Get organization data from registration_data and organization_data
+    const registrationData = (selectedRequest.registration_data as Record<string, any>) || {};
+    const organizationData = (selectedRequest.organization_data as Record<string, any>) || {};
+    
+    // For current data, we'd need to fetch from the database, but for now we'll use empty
+    // The comparison will show all fields as new
+    const currentData = {};
+    const newData = {
+      ...organizationData,
+      ...registrationData,
+      // Ensure voip and network_infrastructure are included
+      voip: organizationData.voip || registrationData.voip,
+      network_infrastructure: organizationData.network_infrastructure || registrationData.network_infrastructure,
+    };
 
-    // Contact change (primary contact email change)
-    if (selectedRequest.new_contact_email && selectedRequest.organizations?.profiles?.email) {
-      contactChanges.push({
-        field: 'primary_contact_email',
-        label: 'Primary Contact Email',
-        oldValue: selectedRequest.organizations.profiles.email,
-        newValue: selectedRequest.new_contact_email,
-        type: 'email' as const
-      });
-    }
-
-    // Compare organization data if available
-    const newData = selectedRequest.new_organization_data as Record<string, any> || {};
-    const currentData = selectedRequest.organizations as Record<string, any> || {};
-
-    // Debug logging for VoIP and Network Infrastructure
-    console.log('=== MEMBER INFO UPDATE DEBUG ===');
-    console.log('Current Data (organizations):', currentData);
-    console.log('Current VoIP:', currentData.voip);
-    console.log('Current Network Infrastructure:', currentData.network_infrastructure);
-    console.log('New Data (new_organization_data):', newData);
-    console.log('New VoIP:', newData.voip);
-    console.log('New Network Infrastructure:', newData.network_infrastructure);
+    console.log('🔍 Member Registration Update - Comparison Data:', {
+      selectedRequest,
+      registrationData,
+      organizationData,
+      newData,
+      voip: newData.voip,
+      network_infrastructure: newData.network_infrastructure
+    });
 
     return {
-      organizationChanges,
-      contactChanges,
+      organizationChanges: [],
+      contactChanges: [],
       originalData: currentData,
       updatedData: newData
     };
   }, [selectedRequest]);
 
   const handleApprove = async () => {
-    if (!selectedRequest) return;
+    if (!selectedRequest || !user) return;
     
     try {
-      await approveRequest.mutateAsync({
-        id: selectedRequest.id,
-        notes: actionNotes,
-        adminUserId: user?.id
+      await processRegistrationUpdate({
+        registrationUpdateId: selectedRequest.id,
+        action: 'approve',
+        adminUserId: user.id,
+        adminNotes: actionNotes
       });
       setSelectedRequest(null);
       setActionNotes('');
       setShowApprovalDialog(false);
+      setShowDetails(false);
     } catch (error) {
       console.error('Error approving request:', error);
     }
   };
 
-  const handleDelete = async () => {
-    if (!selectedRequest) return;
-    await deleteRequest.mutateAsync(selectedRequest.id);
-    setSelectedRequest(null);
-    setShowDeleteDialog(false);
-  };
-
   const handleReject = async () => {
-    if (!selectedRequest) return;
-    await rejectRequest.mutateAsync({
-      id: selectedRequest.id,
-      notes: actionNotes
-    });
-    setSelectedRequest(null);
-    setActionNotes('');
+    if (!selectedRequest || !user) return;
+    
+    try {
+      await processRegistrationUpdate({
+        registrationUpdateId: selectedRequest.id,
+        action: 'reject',
+        adminUserId: user.id,
+        adminNotes: actionNotes
+      });
+      setSelectedRequest(null);
+      setActionNotes('');
+      setShowDetails(false);
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -142,6 +139,12 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
       default:
         return <Badge>{status}</Badge>;
     }
+  };
+
+  const getOrganizationName = (request: MemberRegistrationUpdate) => {
+    const regData = (request.registration_data as any) || {};
+    const orgData = (request.organization_data as any) || {};
+    return request.existing_organization_name || orgData.name || regData.organization || 'Unknown';
   };
 
   return (
@@ -158,14 +161,14 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
           <SideBySideComparisonModal
             open={showDetails}
             onOpenChange={setShowDetails}
-            title={`Member Information Update Request - ${selectedRequest.organizations?.name || 'Unknown Organization'}`}
+            title={`Member Information Update Request - ${getOrganizationName(selectedRequest)}`}
             data={comparisonData}
             showActions={selectedRequest.status === 'pending'}
             actionNotes={actionNotes}
             onActionNotesChange={setActionNotes}
             onApprove={handleApprove}
             onReject={handleReject}
-            isSubmitting={approveRequest.isPending || rejectRequest.isPending}
+            isSubmitting={isProcessing}
           >
             {selectedRequest.admin_notes && (
               <Card className="mt-4">
@@ -182,41 +185,33 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
           <div className="space-y-4">
             {isLoading ? (
               <div className="text-center py-4">Loading requests...</div>
-            ) : requests.length === 0 ? (
+            ) : pendingRequests.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No member information update requests found
+                No pending member information update requests found
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Organization</TableHead>
-                    <TableHead>Current Contact</TableHead>
-                    <TableHead>New Contact Email</TableHead>
+                    <TableHead>Submitted Email</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead>Submitted</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {requests.map((request) => (
+                  {pendingRequests.map((request) => (
                     <TableRow key={request.id}>
                       <TableCell className="font-medium">
-                        {request.organizations?.name || 'Unknown'}
+                        {getOrganizationName(request)}
                       </TableCell>
                       <TableCell>
-                        {request.organizations?.profiles?.first_name && request.organizations?.profiles?.last_name
-                          ? `${request.organizations.profiles.first_name} ${request.organizations.profiles.last_name}`
-                          : request.organizations?.profiles?.email || 'No current contact'
-                        }
-                        <div className="text-xs text-muted-foreground">
-                          {request.organizations?.profiles?.email}
-                        </div>
+                        {request.submitted_email}
                       </TableCell>
-                      <TableCell>{request.new_contact_email}</TableCell>
                       <TableCell>{getStatusBadge(request.status)}</TableCell>
                       <TableCell>
-                        {new Date(request.created_at).toLocaleDateString()}
+                        {new Date(request.submitted_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
@@ -245,17 +240,6 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
                                 <CheckCircle className="w-4 h-4 mr-2" />
                                 Approve
                               </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedRequest(request);
-                                  setShowDeleteDialog(true);
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete
-                              </Button>
                             </>
                           )}
                         </div>
@@ -280,22 +264,14 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
                 <div className="space-y-4">
                   <p>
                     You are about to approve the member information update request for{' '}
-                    <strong>{selectedRequest?.organizations?.name}</strong>.
+                    <strong>{selectedRequest && getOrganizationName(selectedRequest)}</strong>.
                   </p>
                   
                   <div className="bg-muted p-4 rounded-lg space-y-2">
                     <h4 className="font-semibold text-sm">Changes that will be made:</h4>
                     <ul className="text-sm space-y-1">
-                      <li>
-                        • Primary contact will change from{' '}
-                        <strong>
-                          {selectedRequest?.organizations?.profiles?.email || 'current contact'}
-                        </strong>{' '}
-                        to <strong>{selectedRequest?.new_contact_email}</strong>
-                      </li>
-                      <li>• All organization information will be completely replaced with the new submitted data</li>
-                      <li>• The current primary contact will lose access to manage this organization</li>
-                      <li>• The member information update request will be deleted after approval</li>
+                      <li>• All submitted organization information will be processed</li>
+                      <li>• The system will update the organization details with the new information</li>
                       <li><strong>• This action cannot be undone</strong></li>
                     </ul>
                   </div>
@@ -317,32 +293,9 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
               <AlertDialogAction
                 onClick={handleApprove}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                disabled={approveRequest.isPending}
+                disabled={isProcessing}
               >
-                {approveRequest.isPending ? 'Approving...' : 'Approve Update Request'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Member Information Update Request</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this member information update request for{' '}
-                <strong>{selectedRequest?.organizations?.name}</strong>? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                disabled={deleteRequest.isPending}
-              >
-                {deleteRequest.isPending ? 'Deleting...' : 'Delete Request'}
+                {isProcessing ? 'Approving...' : 'Approve Update Request'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
