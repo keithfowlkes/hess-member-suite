@@ -187,7 +187,7 @@ async function generateInvoiceHTML(template: any, templateData: Record<string, s
       <!-- Header with Logo and Invoice Title -->
       <div class="invoice-header">
         <div class="logo-section">
-          <img src="https://9f0afb12-d741-415b-9bbb-e40cfcba281a.lovableproject.com/assets/hess-logo.png" alt="HESS Consortium Logo" style="width: 150px; height: auto;">
+          <img src="https://members.hessconsortium.app/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" alt="HESS Consortium Logo" style="width: 150px; height: auto;">
           <div class="company-info">
             <h3>HESS Consortium</h3>
             <p>Higher Education Systems & Services Consortium</p>
@@ -343,7 +343,7 @@ serve(async (req) => {
     };
     
     const templateData = {
-      '{{LOGO}}': '<img src="https://9f0afb12-d741-415b-9bbb-e40cfcba281a.lovableproject.com/assets/hess-logo.png" alt="HESS Consortium Logo" style="max-height: 80px; width: auto;">',
+      '{{LOGO}}': '<img src="https://members.hessconsortium.app/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" alt="HESS Consortium Logo" style="max-height: 80px; width: auto;">',
       '{{INVOICE_NUMBER}}': invoice.invoice_number,
       '{{INVOICE_DATE}}': formatDate(invoice.invoice_date),
       '{{DUE_DATE}}': formatDate(invoice.due_date),
@@ -403,9 +403,7 @@ serve(async (req) => {
       .eq('is_active', true)
       .maybeSingle();
 
-    const subject = messageTemplate?.title 
-      ? messageTemplate.title.replace('{{organization_name}}', organization.name)
-      : `HESS Consortium Membership Invoice - ${organization.name}`;
+    const subject = 'HESS Consortium Membership Fee Invoice';
 
     // Migrate resend-invoice to centralized method
     const emailData = {
