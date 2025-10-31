@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -51,9 +52,36 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
   const [showDetails, setShowDetails] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [originalOrgData, setOriginalOrgData] = useState<Record<string, any>>({});
 
   // Filter to only show pending requests
   const pendingRequests = registrationUpdates.filter(r => r.status === 'pending');
+
+  // Fetch original organization data when a request is selected
+  useEffect(() => {
+    const fetchOriginalData = async () => {
+      if (!selectedRequest?.existing_organization_id) {
+        setOriginalOrgData({});
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', selectedRequest.existing_organization_id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching original organization data:', error);
+        setOriginalOrgData({});
+        return;
+      }
+
+      setOriginalOrgData(data || {});
+    };
+
+    fetchOriginalData();
+  }, [selectedRequest?.existing_organization_id]);
 
   // Generate comparison data for the side-by-side modal
   const comparisonData = useMemo(() => {
@@ -62,20 +90,20 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
     // CRITICAL: Extract from the nested organization_data JSON field
     const orgData = (selectedRequest.organization_data as Record<string, any>) || {};
     
-    console.log('🔍 CRITICAL DEBUG - Full Request:', selectedRequest);
-    console.log('🏢 Nested organization_data:', orgData);
-    console.log('🔧 VoIP from nested data:', orgData.voip);
-    console.log('🌐 Network Infrastructure from nested data:', orgData.network_infrastructure);
+    console.log('🔍 Original Organization Data:', originalOrgData);
+    console.log('🏢 Updated organization_data:', orgData);
+    console.log('🔧 VoIP - Original:', originalOrgData.voip, 'Updated:', orgData.voip);
+    console.log('🌐 Network - Original:', originalOrgData.network_infrastructure, 'Updated:', orgData.network_infrastructure);
 
     return {
       organizationChanges: [],
       softwareChanges: [],
       hardwareChanges: [],
       contactChanges: [],
-      originalData: {}, // No original data for member updates
+      originalData: originalOrgData, // Fetched current organization data
       updatedData: orgData // Use the nested organization_data
     };
-  }, [selectedRequest]);
+  }, [selectedRequest, originalOrgData]);
 
   const handleApprove = async () => {
     if (!selectedRequest || !user) return;
