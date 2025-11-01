@@ -9,12 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMembers } from '@/hooks/useMembers';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
-import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload } from 'lucide-react';
+import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload, TrendingUp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OrganizationDialog } from '@/components/OrganizationDialog';
 import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
 import { ImportMembersDialog } from '@/components/ImportMembersDialog';
 import { OrganizationViewModal } from '@/components/OrganizationViewModal';
+import { OrganizationUpdateTrackerDialog } from '@/components/OrganizationUpdateTrackerDialog';
 
 export default function Members() {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export default function Members() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [updateTrackerOpen, setUpdateTrackerOpen] = useState(false);
 
   const filteredOrganizations = organizations.filter(org => {
     const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,6 +82,13 @@ export default function Members() {
                 </p>
               </div>
               <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setUpdateTrackerOpen(true)}
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Update Tracker
+                </Button>
                 <Button 
                   variant="outline"
                   onClick={() => setImportDialogOpen(true)}
@@ -394,6 +403,12 @@ export default function Members() {
           <ImportMembersDialog
             open={importDialogOpen}
             onOpenChange={setImportDialogOpen}
+          />
+
+          <OrganizationUpdateTrackerDialog
+            open={updateTrackerOpen}
+            onOpenChange={setUpdateTrackerOpen}
+            organizations={organizations}
           />
         </main>
       </div>
