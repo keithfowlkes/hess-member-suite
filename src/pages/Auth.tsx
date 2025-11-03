@@ -970,7 +970,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-gray-100">
       <AuthHeader />
-      <div className="p-4">
+      <div className="p-4 pt-8 md:pt-4">
         <div className="w-full max-w-4xl mx-auto">
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
