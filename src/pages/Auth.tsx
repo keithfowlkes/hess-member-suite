@@ -980,7 +980,7 @@ export default function Auth() {
             <TabsTrigger value="member-update" className="text-sm md:text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Current Member Updates</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="signin">
+          <TabsContent value="signin" className="mt-8 md:mt-2">
             <div className="bg-auth-form rounded-lg shadow-sm p-8">
               <div className="border-b border-gray-200 pb-4 mb-6">
                 <div className="flex items-center justify-between">
@@ -1211,7 +1211,7 @@ export default function Auth() {
             </div>
           </TabsContent>
           
-          <TabsContent value="signup">
+          <TabsContent value="signup" className="mt-8 md:mt-2">
             <div className="bg-auth-form rounded-lg shadow-sm border border-gray-200">
               <div className="p-8 border-b border-gray-200">
                 <div className="flex items-center justify-between">
@@ -2143,7 +2143,7 @@ export default function Auth() {
             </div>
           </TabsContent>
           
-          <TabsContent value="member-update">
+          <TabsContent value="member-update" className="mt-8 md:mt-2">
             <div className="bg-auth-form rounded-lg shadow-sm border border-gray-200">
               <div className="p-8 border-b border-gray-200">
                 <div className="flex items-center justify-between">
