@@ -974,7 +974,7 @@ export default function Auth() {
         <div className="w-full max-w-4xl mx-auto">
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-16 md:mb-6 bg-white gap-3 md:gap-0">
+          <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-16 md:mb-6 bg-white gap-3 md:gap-0 h-auto md:h-10">
             <TabsTrigger value="signin" className="text-sm md:text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Sign In</TabsTrigger>
             <TabsTrigger value="signup" className="text-sm md:text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">New Member Registration</TabsTrigger>
             <TabsTrigger value="member-update" className="text-sm md:text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Current Member Updates</TabsTrigger>
