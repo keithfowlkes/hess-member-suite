@@ -20,6 +20,21 @@ export default function MemberMap() {
             
             <PublicUSMap />
           </div>
+          
+          {/* Footer */}
+          <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
+            <img 
+              src="/lovable-uploads/95b9e225-2202-4407-bdb2-f95edf683d93.png" 
+              alt="DeusLogic Logo" 
+              className="h-8 w-auto mb-2 opacity-70"
+            />
+            <p className="text-xs text-muted-foreground">
+              Copyright 2025 DeusLogic, LLC.
+            </p>
+            <p className="text-xs text-muted-foreground text-center mt-4 max-w-2xl px-4">
+              The member information on this website portal is confidential to HESS Consortium members. This information should not be shared with outside organizations without the written permission of the members.
+            </p>
+          </div>
         </main>
       </div>
     </SidebarProvider>

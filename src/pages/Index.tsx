@@ -380,6 +380,9 @@ const Index = () => {
               <p className="text-xs text-muted-foreground">
                 Copyright 2025 DeusLogic, LLC.
               </p>
+              <p className="text-xs text-muted-foreground text-center mt-4 max-w-2xl px-4">
+                The member information on this website portal is confidential to HESS Consortium members. This information should not be shared with outside organizations without the written permission of the members.
+              </p>
             </div>
             </div>
           </div>
