@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMembers } from '@/hooks/useMembers';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
-import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload, TrendingUp } from 'lucide-react';
+import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload, TrendingUp, Download } from 'lucide-react';
+import Papa from 'papaparse';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OrganizationDialog } from '@/components/OrganizationDialog';
 import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
@@ -57,6 +58,128 @@ export default function Members() {
     }
   };
 
+  const handleExportCSV = async () => {
+    try {
+      toast.info('Preparing export...');
+      
+      // Fetch all organizations with their profiles
+      const { data: allOrgs, error } = await supabase
+        .from('organizations')
+        .select(`
+          *,
+          profiles:contact_person_id (
+            first_name,
+            last_name,
+            email,
+            phone,
+            primary_contact_title,
+            secondary_first_name,
+            secondary_last_name,
+            secondary_contact_title,
+            secondary_contact_email,
+            secondary_contact_phone
+          )
+        `)
+        .order('name');
+
+      if (error) throw error;
+
+      // Transform data for CSV export
+      const csvData = allOrgs.map(org => ({
+        // Organization Basic Info
+        'Organization Name': org.name,
+        'Membership Status': org.membership_status,
+        'Organization Type': org.organization_type,
+        'Membership Start Date': org.membership_start_date || '',
+        'Membership End Date': org.membership_end_date || '',
+        'Annual Fee Amount': org.annual_fee_amount || '',
+        'Date Joined HESS': org.approximate_date_joined_hess || '',
+        
+        // Address Information
+        'Address Line 1': org.address_line_1 || '',
+        'Address Line 2': org.address_line_2 || '',
+        'City': org.city || '',
+        'State': org.state || '',
+        'Zip Code': org.zip_code || '',
+        'Country': org.country || '',
+        'State Association': org.state_association || '',
+        
+        // Contact Information
+        'Organization Phone': org.phone || '',
+        'Organization Email': org.email || '',
+        'Website': org.website || '',
+        
+        // Primary Contact
+        'Primary Contact First Name': org.profiles?.first_name || '',
+        'Primary Contact Last Name': org.profiles?.last_name || '',
+        'Primary Contact Email': org.profiles?.email || '',
+        'Primary Contact Phone': org.profiles?.phone || '',
+        'Primary Contact Title': org.primary_contact_title || '',
+        
+        // Secondary Contact
+        'Secondary Contact First Name': org.secondary_first_name || '',
+        'Secondary Contact Last Name': org.secondary_last_name || '',
+        'Secondary Contact Title': org.secondary_contact_title || '',
+        'Secondary Contact Email': org.secondary_contact_email || '',
+        'Secondary Contact Phone': org.secondary_contact_phone || '',
+        
+        // Student Information
+        'Student FTE': org.student_fte || '',
+        
+        // Systems Information
+        'Student Information System': org.student_information_system || '',
+        'Financial System': org.financial_system || '',
+        'Financial Aid': org.financial_aid || '',
+        'HCM/HR': org.hcm_hr || '',
+        'Payroll System': org.payroll_system || '',
+        'Purchasing System': org.purchasing_system || '',
+        'Housing Management': org.housing_management || '',
+        'Learning Management': org.learning_management || '',
+        'Admissions CRM': org.admissions_crm || '',
+        'Alumni/Advancement CRM': org.alumni_advancement_crm || '',
+        'Payment Platform': org.payment_platform || '',
+        'Meal Plan Management': org.meal_plan_management || '',
+        'Identity Management': org.identity_management || '',
+        'Door Access': org.door_access || '',
+        'Document Management': org.document_management || '',
+        'VoIP': org.voip || '',
+        'Network Infrastructure': org.network_infrastructure || '',
+        
+        // Hardware Information
+        'Primary Office - Apple': org.primary_office_apple ? 'Yes' : 'No',
+        'Primary Office - Lenovo': org.primary_office_lenovo ? 'Yes' : 'No',
+        'Primary Office - Dell': org.primary_office_dell ? 'Yes' : 'No',
+        'Primary Office - HP': org.primary_office_hp ? 'Yes' : 'No',
+        'Primary Office - Microsoft': org.primary_office_microsoft ? 'Yes' : 'No',
+        'Primary Office - Other': org.primary_office_other ? 'Yes' : 'No',
+        'Primary Office Other Details': org.primary_office_other_details || '',
+        
+        // Additional Information
+        'Other Software Comments': org.other_software_comments || '',
+        'Notes': org.notes || '',
+      }));
+
+      // Convert to CSV
+      const csv = Papa.unparse(csvData);
+      
+      // Create blob and download
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `hess-member-organizations-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success(`Successfully exported ${csvData.length} organizations`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export data');
+    }
+  };
+
   if (loading) {
     return (
       <SidebarProvider>
@@ -77,11 +200,22 @@ export default function Members() {
         <main className="flex-1 p-8">
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Member Organizations</h1>
-                <p className="text-muted-foreground mt-2">
-                  Manage member organizations and their membership details
-                </p>
+              <div className="flex items-center gap-3">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground">Member Organizations</h1>
+                  <p className="text-muted-foreground mt-2">
+                    Manage member organizations and their membership details
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportCSV}
+                  className="ml-2"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </Button>
               </div>
               <div className="flex gap-2">
                 <Button 
