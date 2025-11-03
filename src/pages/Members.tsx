@@ -9,9 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMembers } from '@/hooks/useMembers';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
-import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload, TrendingUp, Download } from 'lucide-react';
+import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload, TrendingUp, Download, ChevronDown } from 'lucide-react';
 import Papa from 'papaparse';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { OrganizationDialog } from '@/components/OrganizationDialog';
 import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
 import { ImportMembersDialog } from '@/components/ImportMembersDialog';
@@ -200,37 +201,37 @@ export default function Members() {
         <main className="flex-1 p-8">
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div>
-                  <h1 className="text-3xl font-bold text-foreground">Member Organizations</h1>
-                  <p className="text-muted-foreground mt-2">
-                    Manage member organizations and their membership details
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportCSV}
-                  className="ml-2"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Member Organizations</h1>
+                <p className="text-muted-foreground mt-2">
+                  Manage member organizations and their membership details
+                </p>
               </div>
               <div className="flex gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      Import/Export
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 bg-background">
+                    <DropdownMenuItem onClick={handleExportCSV}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Export CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Import Members
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button 
                   variant="outline"
                   onClick={() => setUpdateTrackerOpen(true)}
                 >
                   <TrendingUp className="h-4 w-4 mr-2" />
                   Update Tracker
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => setImportDialogOpen(true)}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import Members
                 </Button>
                 <Button onClick={() => {
                   setSelectedOrganization(null);
