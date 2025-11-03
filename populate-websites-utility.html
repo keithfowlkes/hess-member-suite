@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Populate Organization Websites - One Time Utility</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .warning {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+      color: #856404;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 5px;
+      display: none;
+    }
+    .status.success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      display: block;
+    }
+    .status.error {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      display: block;
+    }
+    .status.loading {
+      background: #d1ecf1;
+      border: 1px solid #bee5eb;
+      color: #0c5460;
+      display: block;
+    }
+    .details {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌐 Populate Organization Websites</h1>
+    <p>This utility will search for and populate website URLs for all organizations that don't have a website listed.</p>
+    
+    <div class="warning">
+      <strong>⚠️ Important:</strong>
+      <ul>
+        <li>This process uses AI to search for organization websites based on their name, city, and state.</li>
+        <li>It will only update organizations that currently have no website listed.</li>
+        <li>The process may take several minutes depending on the number of organizations.</li>
+        <li>You should only need to run this once.</li>
+      </ul>
+    </div>
+
+    <button id="populateBtn" onclick="populateWebsites()">Start Population</button>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://tyovnvuluyosjnabrzjc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function populateWebsites() {
+      const button = document.getElementById('populateBtn');
+      const status = document.getElementById('status');
+      
+      button.disabled = true;
+      status.className = 'status loading';
+      status.innerHTML = '<strong>Processing...</strong><div class="details">Searching for organization websites. This may take several minutes...</div>';
+
+      try {
+        const { data, error } = await supabase.functions.invoke('populate-organization-websites');
+        
+        if (error) throw error;
+
+        status.className = 'status success';
+        status.innerHTML = `
+          <strong>✅ Success!</strong>
+          <div class="details">
+            <strong>${data.message || 'Websites populated successfully'}</strong><br>
+            Total organizations processed: ${data.total || 0}<br>
+            Successfully updated: ${data.updated || 0}<br>
+            Failed: ${data.failed || 0}
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error:', error);
+        status.className = 'status error';
+        status.innerHTML = `
+          <strong>❌ Error</strong>
+          <div class="details">${error.message || 'Failed to populate websites'}</div>
+        `;
+        button.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

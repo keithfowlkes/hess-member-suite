@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMembers } from '@/hooks/useMembers';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
-import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload, TrendingUp, Globe } from 'lucide-react';
+import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload, TrendingUp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OrganizationDialog } from '@/components/OrganizationDialog';
 import { ComprehensiveOrganizationDialog } from '@/components/ComprehensiveOrganizationDialog';
@@ -32,25 +32,6 @@ export default function Members() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [updateTrackerOpen, setUpdateTrackerOpen] = useState(false);
-  const [isPopulatingWebsites, setIsPopulatingWebsites] = useState(false);
-
-  const handlePopulateWebsites = async () => {
-    setIsPopulatingWebsites(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('populate-organization-websites');
-      
-      if (error) throw error;
-      
-      toast.success(data.message || 'Websites populated successfully', {
-        description: `Updated: ${data.updated || 0}, Failed: ${data.failed || 0}`
-      });
-    } catch (error) {
-      console.error('Error populating websites:', error);
-      toast.error('Failed to populate websites');
-    } finally {
-      setIsPopulatingWebsites(false);
-    }
-  };
 
   const filteredOrganizations = organizations.filter(org => {
     const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -109,14 +90,6 @@ export default function Members() {
                 >
                   <TrendingUp className="h-4 w-4 mr-2" />
                   Update Tracker
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={handlePopulateWebsites}
-                  disabled={isPopulatingWebsites}
-                >
-                  <Globe className="h-4 w-4 mr-2" />
-                  {isPopulatingWebsites ? 'Populating...' : 'Populate Websites'}
                 </Button>
                 <Button 
                   variant="outline"
