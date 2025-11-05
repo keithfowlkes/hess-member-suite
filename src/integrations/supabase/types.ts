@@ -1463,12 +1463,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_old_backups: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_old_backups: { Args: never; Returns: undefined }
       cleanup_reassignment_placeholders: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cleaned_count: number
         }[]
@@ -1499,18 +1496,9 @@ export type Database = {
         Args: { _profile_id: string }
         Returns: boolean
       }
-      fix_user_password_from_registration: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_secure_token: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_organization: {
-        Args: { _user_id: string }
-        Returns: string
-      }
+      fix_user_password_from_registration: { Args: never; Returns: string }
+      generate_secure_token: { Args: never; Returns: string }
+      get_user_organization: { Args: { _user_id: string }; Returns: string }
       get_user_organization_by_contact: {
         Args: { _user_id: string }
         Returns: string
@@ -1530,14 +1518,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      refresh_analytics_datacube_sql: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      setup_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      refresh_analytics_datacube_sql: { Args: never; Returns: undefined }
+      setup_admin_user: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "member" | "cohort_leader"
