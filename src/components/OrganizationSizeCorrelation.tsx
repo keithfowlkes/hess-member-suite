@@ -230,7 +230,7 @@ export const OrganizationSizeCorrelation = () => {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={650}>
-          <ScatterChart margin={{ top: 20, right: 30, bottom: 50, left: 160 }}>
+          <ScatterChart margin={{ top: 20, right: 30, bottom: 50, left: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
             <XAxis
               type="number"
@@ -260,11 +260,11 @@ export const OrganizationSizeCorrelation = () => {
                 value: 'System Vendor', 
                 angle: -90, 
                 position: 'insideLeft',
-                offset: -5,
+                offset: 20,
                 style: { fill: 'hsl(var(--foreground))', fontWeight: 600, fontSize: 12 }
               }}
-              tick={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 500 }}
-              width={150}
+              tick={{ fill: 'hsl(var(--foreground))', fontSize: 10, fontWeight: 500 }}
+              width={200}
             />
             <ZAxis type="number" dataKey="z" range={[100, 100]} />
             <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '5 5', stroke: 'hsl(var(--primary))' }} />
