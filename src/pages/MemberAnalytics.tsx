@@ -29,6 +29,9 @@ const MemberAnalytics = () => {
                 <p className="text-muted-foreground mt-2">
                   System usage analytics across HESS Consortium member institutions
                 </p>
+                <p className="text-sm text-muted-foreground/80 mt-1 italic">
+                  This is confidential member-only data.
+                </p>
               </div>
             </div>
             
