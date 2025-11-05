@@ -126,6 +126,9 @@ export default function ResearchDashboard() {
                   <p className="text-muted-foreground mt-2">
                     Browse member organizations and their membership details
                   </p>
+                  <p className="text-sm text-muted-foreground/80 mt-1 italic">
+                    This is confidential member-only data.
+                  </p>
                 </div>
               </div>
 
@@ -175,6 +178,9 @@ export default function ResearchDashboard() {
                 <h1 className="text-3xl font-bold text-foreground">HESS Member Information</h1>
                 <p className="text-muted-foreground mt-2">
                   Browse member organizations and their membership details
+                </p>
+                <p className="text-sm text-muted-foreground/80 mt-1 italic">
+                  This is confidential member-only data.
                 </p>
               </div>
               <Button variant="outline" onClick={refresh} disabled={loading}>
