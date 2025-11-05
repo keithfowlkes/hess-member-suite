@@ -183,7 +183,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Generated ${datacubeEntries.length} datacube entries`);
 
-    // Insert new datacube data in batches
+    // Insert new datacube data in batches using upsert to handle duplicates
     if (datacubeEntries.length > 0) {
       const batchSize = 100;
       for (let i = 0; i < datacubeEntries.length; i += batchSize) {
@@ -191,10 +191,13 @@ const handler = async (req: Request): Promise<Response> => {
         
         const { error: insertError } = await supabase
           .from('system_analytics_datacube')
-          .insert(batch);
+          .upsert(batch, {
+            onConflict: 'system_field,system_name',
+            ignoreDuplicates: false
+          });
 
         if (insertError) {
-          console.error(`Error inserting batch ${i / batchSize + 1}:`, insertError);
+          console.error(`Error upserting batch ${i / batchSize + 1}:`, insertError);
           throw insertError;
         }
       }
