@@ -3,8 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-import { Building2, Filter } from 'lucide-react';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ZAxis } from 'recharts';
+import { Building2, TrendingUp } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 interface OrgSystemData {
@@ -15,34 +15,32 @@ interface OrgSystemData {
   hcm_hr: string;
 }
 
-// Dynamic color palette for different systems
-const generateSystemColor = (systemName: string, index: number) => {
-  const colors = [
-    'hsl(220, 90%, 56%)',   // Blue
-    'hsl(340, 75%, 55%)',   // Red
-    'hsl(142, 71%, 45%)',   // Green
-    'hsl(262, 83%, 58%)',   // Purple
-    'hsl(24, 90%, 53%)',    // Orange
-    'hsl(188, 86%, 45%)',   // Cyan
-    'hsl(48, 96%, 53%)',    // Yellow
-    'hsl(280, 67%, 55%)',   // Magenta
-    'hsl(168, 76%, 42%)',   // Teal
-    'hsl(14, 80%, 50%)',    // Coral
-    'hsl(199, 89%, 48%)',   // Sky Blue
-    'hsl(320, 85%, 48%)',   // Pink
-  ];
-  
-  // Generate consistent color based on system name hash
+// Vibrant color palette for different vendors
+const COLOR_PALETTE = [
+  'hsl(220, 90%, 56%)',   // Blue
+  'hsl(340, 75%, 55%)',   // Rose
+  'hsl(142, 71%, 45%)',   // Green
+  'hsl(262, 83%, 58%)',   // Purple
+  'hsl(24, 90%, 53%)',    // Orange
+  'hsl(188, 86%, 45%)',   // Cyan
+  'hsl(291, 64%, 51%)',   // Violet
+  'hsl(168, 76%, 42%)',   // Teal
+  'hsl(14, 80%, 50%)',    // Coral
+  'hsl(48, 96%, 53%)',    // Amber
+  'hsl(199, 89%, 48%)',   // Sky
+  'hsl(320, 85%, 48%)',   // Fuchsia
+];
+
+const generateVendorColor = (vendorName: string): string => {
   let hash = 0;
-  for (let i = 0; i < systemName.length; i++) {
-    hash = systemName.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < vendorName.length; i++) {
+    hash = vendorName.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const colorIndex = Math.abs(hash) % colors.length;
-  return colors[colorIndex];
+  return COLOR_PALETTE[Math.abs(hash) % COLOR_PALETTE.length];
 };
 
 export const OrganizationSizeCorrelation = () => {
-  const [selectedSystem, setSelectedSystem] = useState<'all' | 'sis' | 'financial' | 'hcm'>('all');
+  const [selectedSystemType, setSelectedSystemType] = useState<'sis' | 'financial' | 'hcm'>('sis');
   const [highlightedVendor, setHighlightedVendor] = useState<string | null>(null);
 
   const { data: organizations, isLoading } = useQuery({
@@ -78,83 +76,81 @@ export const OrganizationSizeCorrelation = () => {
     return null;
   }
 
-  // Get unique systems and their colors
-  const { uniqueSystems, systemColors } = useMemo(() => {
-    if (!organizations) return { uniqueSystems: new Set<string>(), systemColors: {} };
+  // Get system field name based on selected type
+  const getSystemField = (type: 'sis' | 'financial' | 'hcm') => {
+    switch (type) {
+      case 'sis': return 'student_information_system';
+      case 'financial': return 'financial_system';
+      case 'hcm': return 'hcm_hr';
+    }
+  };
+
+  // Build vendor list and assign Y positions
+  const { vendors, vendorYPositions, vendorColors } = useMemo(() => {
+    if (!organizations) return { vendors: [], vendorYPositions: {}, vendorColors: {} };
     
-    const systems = new Set<string>();
-    const colors: Record<string, string> = {};
+    const systemField = getSystemField(selectedSystemType);
+    const vendorSet = new Set<string>();
     
-    organizations.forEach((org) => {
-      if (selectedSystem === 'all' || selectedSystem === 'sis') {
-        const sis = org.student_information_system || 'Not specified';
-        systems.add(sis);
-        if (!colors[sis]) colors[sis] = generateSystemColor(sis, systems.size);
-      }
-      if (selectedSystem === 'all' || selectedSystem === 'financial') {
-        const fin = org.financial_system || 'Not specified';
-        systems.add(fin);
-        if (!colors[fin]) colors[fin] = generateSystemColor(fin, systems.size);
-      }
-      if (selectedSystem === 'all' || selectedSystem === 'hcm') {
-        const hcm = org.hcm_hr || 'Not specified';
-        systems.add(hcm);
-        if (!colors[hcm]) colors[hcm] = generateSystemColor(hcm, systems.size);
-      }
+    organizations.forEach(org => {
+      const vendor = (org as any)[systemField] || 'Not specified';
+      vendorSet.add(vendor);
     });
     
-    return { uniqueSystems: systems, systemColors: colors };
-  }, [organizations, selectedSystem]);
+    const vendorList = Array.from(vendorSet).sort();
+    const positions: Record<string, number> = {};
+    const colors: Record<string, string> = {};
+    
+    vendorList.forEach((vendor, index) => {
+      positions[vendor] = index;
+      colors[vendor] = generateVendorColor(vendor);
+    });
+    
+    return { 
+      vendors: vendorList, 
+      vendorYPositions: positions, 
+      vendorColors: colors 
+    };
+  }, [organizations, selectedSystemType]);
 
-  // Prepare data for scatter plot
+  // Prepare scatter plot data
   const chartData = useMemo(() => {
     if (!organizations) return [];
     
-    return organizations.map((org, idx) => {
-      let systemName = '';
-      let systemType = '';
-      
-      if (selectedSystem === 'sis' || selectedSystem === 'all') {
-        systemName = org.student_information_system || 'Not specified';
-        systemType = 'SIS';
-      } else if (selectedSystem === 'financial') {
-        systemName = org.financial_system || 'Not specified';
-        systemType = 'Financial';
-      } else if (selectedSystem === 'hcm') {
-        systemName = org.hcm_hr || 'Not specified';
-        systemType = 'HCM';
-      }
-      
-      return {
-        x: idx + 1,
-        y: org.student_fte,
-        name: org.name,
-        system: systemName,
-        systemType,
-        color: systemColors[systemName],
-        opacity: highlightedVendor ? (highlightedVendor === systemName ? 1 : 0.2) : 0.7,
-      };
-    });
-  }, [organizations, selectedSystem, systemColors, highlightedVendor]);
+    const systemField = getSystemField(selectedSystemType);
+    
+    return organizations
+      .filter(org => org.student_fte && org.student_fte > 0)
+      .map((org) => {
+        const vendor = (org as any)[systemField] || 'Not specified';
+        
+        return {
+          x: org.student_fte,
+          y: vendorYPositions[vendor],
+          z: 100, // Fixed size for all points
+          name: org.name,
+          vendor,
+          color: vendorColors[vendor],
+          opacity: highlightedVendor ? (highlightedVendor === vendor ? 1 : 0.15) : 0.8,
+        };
+      });
+  }, [organizations, selectedSystemType, vendorYPositions, vendorColors, highlightedVendor]);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-popover border border-border rounded-lg shadow-lg p-4 min-w-[200px]">
-          <p className="font-semibold text-sm mb-2">{data.name}</p>
-          <div className="space-y-1">
+        <div className="bg-popover border-2 rounded-lg shadow-xl p-4 min-w-[220px]"
+             style={{ borderColor: data.color }}>
+          <p className="font-bold text-base mb-2">{data.name}</p>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }} />
+              <p className="text-sm font-medium">{data.vendor}</p>
+            </div>
             <p className="text-xs text-muted-foreground">
-              <span className="font-medium">Student FTE:</span> {data.y.toLocaleString()}
+              <span className="font-semibold">Size:</span> {data.x.toLocaleString()} students
             </p>
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium">System:</span> {data.system}
-            </p>
-            {selectedSystem === 'all' && (
-              <p className="text-xs text-muted-foreground">
-                <span className="font-medium">Type:</span> {data.systemType}
-              </p>
-            )}
           </div>
         </div>
       );
@@ -162,138 +158,175 @@ export const OrganizationSizeCorrelation = () => {
     return null;
   };
 
-  // Get top vendors for the selected system type
-  const topVendors = useMemo(() => {
-    const vendorCounts = new Map<string, number>();
+  // Get vendor statistics
+  const vendorStats = useMemo(() => {
+    const stats = new Map<string, number>();
     chartData.forEach(item => {
-      vendorCounts.set(item.system, (vendorCounts.get(item.system) || 0) + 1);
+      stats.set(item.vendor, (stats.get(item.vendor) || 0) + 1);
     });
-    return Array.from(vendorCounts.entries())
+    return Array.from(stats.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([vendor]) => vendor);
+      .map(([vendor, count]) => ({ vendor, count }));
   }, [chartData]);
+
+  const getSystemTypeLabel = () => {
+    switch (selectedSystemType) {
+      case 'sis': return 'Student Information System';
+      case 'financial': return 'Financial System';
+      case 'hcm': return 'Human Capital Management';
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Building2 className="h-5 w-5 text-primary" />
+            <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10">
+              <TrendingUp className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle>Organization Size & System Preferences</CardTitle>
+              <CardTitle>Organization Size vs System Choice</CardTitle>
               <CardDescription className="mt-1.5">
-                Interactive correlation between institution size and technology system choices
+                {getSystemTypeLabel()} adoption across institutions by size
               </CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <div className="flex gap-2">
-              <Badge
-                variant={selectedSystem === 'all' ? 'default' : 'outline'}
-                className="cursor-pointer hover:bg-primary/80 transition-colors"
-                onClick={() => setSelectedSystem('all')}
-              >
-                All Systems
-              </Badge>
-              <Badge
-                variant={selectedSystem === 'sis' ? 'default' : 'outline'}
-                className="cursor-pointer hover:bg-primary/80 transition-colors"
-                onClick={() => setSelectedSystem('sis')}
-              >
-                SIS
-              </Badge>
-              <Badge
-                variant={selectedSystem === 'financial' ? 'default' : 'outline'}
-                className="cursor-pointer hover:bg-primary/80 transition-colors"
-                onClick={() => setSelectedSystem('financial')}
-              >
-                Financial
-              </Badge>
-              <Badge
-                variant={selectedSystem === 'hcm' ? 'default' : 'outline'}
-                className="cursor-pointer hover:bg-primary/80 transition-colors"
-                onClick={() => setSelectedSystem('hcm')}
-              >
-                HCM
-              </Badge>
-            </div>
+          <div className="flex gap-2">
+            <Badge
+              variant={selectedSystemType === 'sis' ? 'default' : 'outline'}
+              className="cursor-pointer hover:scale-105 transition-transform"
+              onClick={() => {
+                setSelectedSystemType('sis');
+                setHighlightedVendor(null);
+              }}
+            >
+              Student Info Systems
+            </Badge>
+            <Badge
+              variant={selectedSystemType === 'financial' ? 'default' : 'outline'}
+              className="cursor-pointer hover:scale-105 transition-transform"
+              onClick={() => {
+                setSelectedSystemType('financial');
+                setHighlightedVendor(null);
+              }}
+            >
+              Financial Systems
+            </Badge>
+            <Badge
+              variant={selectedSystemType === 'hcm' ? 'default' : 'outline'}
+              className="cursor-pointer hover:scale-105 transition-transform"
+              onClick={() => {
+                setSelectedSystemType('hcm');
+                setHighlightedVendor(null);
+              }}
+            >
+              HCM Systems
+            </Badge>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        {/* Top Vendors Legend */}
-        <div className="mb-4 flex flex-wrap gap-2">
-          <span className="text-xs font-medium text-muted-foreground mr-2">Top Vendors:</span>
-          {topVendors.map((vendor) => (
-            <Badge
-              key={vendor}
-              variant="secondary"
-              className="cursor-pointer transition-all hover:scale-105"
-              style={{
-                backgroundColor: highlightedVendor === vendor ? systemColors[vendor] : 'hsl(var(--secondary))',
-                color: highlightedVendor === vendor ? 'white' : 'hsl(var(--secondary-foreground))',
-              }}
-              onClick={() => setHighlightedVendor(highlightedVendor === vendor ? null : vendor)}
-            >
-              {vendor}
-            </Badge>
-          ))}
+        {/* Vendor Legend */}
+        <div className="mb-6 p-4 bg-muted/30 rounded-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-semibold text-foreground">Click to highlight vendor:</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {vendorStats.map(({ vendor, count }) => (
+              <Badge
+                key={vendor}
+                variant="secondary"
+                className="cursor-pointer transition-all hover:scale-110 active:scale-95"
+                style={{
+                  backgroundColor: highlightedVendor === vendor ? vendorColors[vendor] : 'hsl(var(--secondary))',
+                  color: highlightedVendor === vendor ? 'white' : 'hsl(var(--secondary-foreground))',
+                  borderColor: vendorColors[vendor],
+                  borderWidth: '2px',
+                }}
+                onClick={() => setHighlightedVendor(highlightedVendor === vendor ? null : vendor)}
+              >
+                <div className="w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: vendorColors[vendor] }} />
+                {vendor} ({count})
+              </Badge>
+            ))}
+          </div>
           {highlightedVendor && (
-            <Badge
-              variant="outline"
-              className="cursor-pointer"
-              onClick={() => setHighlightedVendor(null)}
-            >
-              Clear
-            </Badge>
+            <div className="mt-3">
+              <Badge
+                variant="outline"
+                className="cursor-pointer hover:bg-destructive/10"
+                onClick={() => setHighlightedVendor(null)}
+              >
+                ✕ Clear filter
+              </Badge>
+            </div>
           )}
         </div>
 
-        <ResponsiveContainer width="100%" height={450}>
-          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 60 }}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+        <ResponsiveContainer width="100%" height={500}>
+          <ScatterChart margin={{ top: 20, right: 30, bottom: 60, left: 150 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
             <XAxis
               type="number"
               dataKey="x"
-              name="Organization"
-              label={{ value: 'Organizations (ordered by size)', position: 'insideBottom', offset: -10 }}
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              name="Student FTE"
+              domain={['dataMin - 500', 'dataMax + 500']}
+              label={{ 
+                value: 'Institution Size (Student FTE)', 
+                position: 'insideBottom', 
+                offset: -15,
+                style: { fill: 'hsl(var(--foreground))', fontWeight: 600 }
+              }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              tickFormatter={(value) => value.toLocaleString()}
             />
             <YAxis
               type="number"
               dataKey="y"
-              name="Student FTE"
-              label={{ value: 'Student FTE', angle: -90, position: 'insideLeft' }}
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              tickFormatter={(value) => value.toLocaleString()}
+              name="Vendor"
+              domain={[-0.5, vendors.length - 0.5]}
+              ticks={vendors.map((_, idx) => idx)}
+              tickFormatter={(value) => vendors[value] || ''}
+              label={{ 
+                value: 'System Vendor', 
+                angle: -90, 
+                position: 'insideLeft',
+                offset: 10,
+                style: { fill: 'hsl(var(--foreground))', fontWeight: 600 }
+              }}
+              tick={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 500 }}
+              width={140}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+            <ZAxis type="number" dataKey="z" range={[100, 100]} />
+            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '5 5', stroke: 'hsl(var(--primary))' }} />
             
             <Scatter
               data={chartData}
               fill="hsl(var(--primary))"
-              onClick={(data) => setHighlightedVendor(highlightedVendor === data.system ? null : data.system)}
+              onClick={(data) => setHighlightedVendor(highlightedVendor === data.vendor ? null : data.vendor)}
             >
               {chartData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={entry.color}
                   opacity={entry.opacity}
-                  className="cursor-pointer transition-all hover:opacity-100"
+                  className="cursor-pointer transition-opacity hover:opacity-100"
+                  stroke="white"
+                  strokeWidth={1}
                 />
               ))}
             </Scatter>
           </ScatterChart>
         </ResponsiveContainer>
         
-        <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
-          <span>💡 Click system type badges to filter • Click vendor badges to highlight • Hover points for details</span>
+        <div className="mt-6 flex items-start gap-2 text-sm text-muted-foreground bg-muted/20 p-3 rounded-lg">
+          <span className="text-lg">💡</span>
+          <div className="space-y-1">
+            <p><strong>How to read:</strong> Each dot represents one institution. Position shows institution size (horizontal) and their chosen vendor (vertical).</p>
+            <p><strong>Interaction:</strong> Click vendor badges above to highlight • Switch system types with the top badges • Hover any dot for details</p>
+          </div>
         </div>
       </CardContent>
     </Card>
