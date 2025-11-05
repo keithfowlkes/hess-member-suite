@@ -206,6 +206,9 @@ export default function Members() {
                 <p className="text-muted-foreground mt-2">
                   Manage member organizations and their membership details
                 </p>
+                <p className="text-sm text-muted-foreground/80 mt-1 italic">
+                  This is confidential member-only data.
+                </p>
               </div>
               <div className="flex gap-2">
                 <DropdownMenu>
