@@ -3,7 +3,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
 import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrelation';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, ChartScatter } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -35,7 +35,10 @@ const MemberAnalytics = () => {
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="org-size-correlation">
                 <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                  Organization Size vs System Choice
+                  <div className="flex items-center gap-2">
+                    <ChartScatter className="h-5 w-5 text-primary" />
+                    <span>Organization Size vs System Choice</span>
+                  </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <OrganizationSizeCorrelation />
