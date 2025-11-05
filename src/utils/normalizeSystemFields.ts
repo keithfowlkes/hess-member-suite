@@ -105,7 +105,8 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "Cam": "Unit4",
     
     // Other common systems
-    "Workday": "Workday",
+    "Workday": "Workday Financial Management",
+    "Workday Financial Management": "Workday Financial Management",
     "Populi": "Populi",
     "QuickBooks": "QuickBooks"
   },
@@ -335,6 +336,7 @@ export function normalizeFieldValue(fieldName: string, currentValue: string | nu
     if (currentValue.toLowerCase().includes('dynamics') || currentValue.toLowerCase().includes('great plains')) return 'Microsoft Dynamics GP';
     if (currentValue.toLowerCase().includes('blackbaud')) return 'Blackbaud Financial Edge';
     if (currentValue.toLowerCase().includes('peoplesoft')) return 'Oracle PeopleSoft';
+    if (currentValue.toLowerCase().includes('workday')) return 'Workday Financial Management';
     if (currentValue.toLowerCase().includes('cams') || currentValue.toLowerCase().includes('unit4') || currentValue.toLowerCase().includes('cam')) return 'Unit4';
   }
   
