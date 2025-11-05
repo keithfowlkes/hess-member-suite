@@ -1258,8 +1258,140 @@ export default function Auth() {
                           </div>
                         </div>
                       </div>
+                  </div>
+                </div>
+
+                {/* Institution Information */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Institution Information</h3>
+                    <p className="text-gray-600 text-sm">Details about your college or university.</p>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="lg:col-span-2 flex items-center space-x-2">
+                        <Checkbox
+                          id="signup-is-private-nonprofit"
+                          checked={signUpForm.isPrivateNonProfit ?? true}
+                          onCheckedChange={(checked) => 
+                            setSignUpForm(prev => ({ ...prev, isPrivateNonProfit: checked as boolean }))
+                          }
+                        />
+                        <Label htmlFor="signup-is-private-nonprofit" className="text-sm text-gray-700">
+                          This is a private non-profit institution
+                        </Label>
+                      </div>
+
+                      <div className="lg:col-span-2 space-y-2">
+                        <Label htmlFor="signup-organization" className="text-gray-700 font-medium text-sm">
+                          Institution Name <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="signup-organization"
+                          placeholder="Your Institution Name"
+                          value={signUpForm.organization}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-student-fte" className="text-gray-700 font-medium text-sm">
+                          Student FTE <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="signup-student-fte"
+                          type="number"
+                          placeholder="e.g., 5000"
+                          value={signUpForm.studentFte}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, studentFte: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="lg:col-span-2 space-y-2">
+                        <Label htmlFor="signup-address" className="text-gray-700 font-medium text-sm">
+                          Address <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="signup-address"
+                          type="text"
+                          placeholder="123 Main Street"
+                          value={signUpForm.address}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-city" className="text-gray-700 font-medium text-sm">
+                          City <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="signup-city"
+                          type="text"
+                          placeholder="City"
+                          value={signUpForm.city}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-state" className="text-gray-700 font-medium text-sm">
+                          State <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="signup-state"
+                          type="text"
+                          placeholder="State"
+                          value={signUpForm.state}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-zip" className="text-gray-700 font-medium text-sm">
+                          ZIP Code <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="signup-zip"
+                          type="text"
+                          placeholder="12345"
+                          value={signUpForm.zip}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!signUpForm.isPrivateNonProfit}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-state-association" className="text-gray-700 font-medium text-sm">
+                          State Association
+                        </Label>
+                        <Input
+                          id="signup-state-association"
+                          type="text"
+                          placeholder="e.g., ACCS, CTC, etc."
+                          value={signUpForm.stateAssociation}
+                          onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
+                          className="h-11 bg-gray-50 border-gray-300"
+                          disabled={!signUpForm.isPrivateNonProfit}
+                        />
+                      </div>
                     </div>
                   </div>
+                </div>
 
                 {/* Account Information */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -1621,138 +1753,6 @@ export default function Auth() {
                           placeholder="(555) 123-4567"
                           value={signUpForm.secondaryContactPhone}
                           onChange={(e) => setSignUpForm(prev => ({ ...prev, secondaryContactPhone: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Institution Information */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Institution Information</h3>
-                    <p className="text-gray-600 text-sm">Details about your college or university.</p>
-                  </div>
-                  
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="lg:col-span-2 flex items-center space-x-2">
-                        <Checkbox
-                          id="signup-is-private-nonprofit"
-                          checked={signUpForm.isPrivateNonProfit ?? true}
-                          onCheckedChange={(checked) => 
-                            setSignUpForm(prev => ({ ...prev, isPrivateNonProfit: checked as boolean }))
-                          }
-                        />
-                        <Label htmlFor="signup-is-private-nonprofit" className="text-sm text-gray-700">
-                          This is a private non-profit institution
-                        </Label>
-                      </div>
-
-                      <div className="lg:col-span-2 space-y-2">
-                        <Label htmlFor="signup-organization" className="text-gray-700 font-medium text-sm">
-                          Institution Name <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="signup-organization"
-                          placeholder="Your Institution Name"
-                          value={signUpForm.organization}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, organization: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-student-fte" className="text-gray-700 font-medium text-sm">
-                          Student FTE <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="signup-student-fte"
-                          type="number"
-                          placeholder="e.g., 5000"
-                          value={signUpForm.studentFte}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, studentFte: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="lg:col-span-2 space-y-2">
-                        <Label htmlFor="signup-address" className="text-gray-700 font-medium text-sm">
-                          Address <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="signup-address"
-                          type="text"
-                          placeholder="123 Main Street"
-                          value={signUpForm.address}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, address: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-city" className="text-gray-700 font-medium text-sm">
-                          City <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="signup-city"
-                          type="text"
-                          placeholder="City"
-                          value={signUpForm.city}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, city: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-state" className="text-gray-700 font-medium text-sm">
-                          State <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="signup-state"
-                          type="text"
-                          placeholder="State"
-                          value={signUpForm.state}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-zip" className="text-gray-700 font-medium text-sm">
-                          ZIP Code <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="signup-zip"
-                          type="text"
-                          placeholder="12345"
-                          value={signUpForm.zip}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, zip: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
-                          disabled={!signUpForm.isPrivateNonProfit}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-state-association" className="text-gray-700 font-medium text-sm">
-                          State Association
-                        </Label>
-                        <Input
-                          id="signup-state-association"
-                          type="text"
-                          placeholder="e.g., ACCS, CTC, etc."
-                          value={signUpForm.stateAssociation}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, stateAssociation: e.target.value }))}
                           className="h-11 bg-gray-50 border-gray-300"
                           disabled={!signUpForm.isPrivateNonProfit}
                         />
