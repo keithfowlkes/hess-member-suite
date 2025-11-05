@@ -30,7 +30,7 @@ const MemberAnalytics = () => {
                   System usage analytics across HESS Consortium member institutions
                 </p>
                 <p className="text-sm text-muted-foreground/80 mt-1 italic">
-                  This is confidential member-only data.
+                  This is confidential member-only data and will not be shared to vendor partners.
                 </p>
               </div>
             </div>
