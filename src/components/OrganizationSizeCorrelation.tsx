@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ZAxis } from 'recharts';
-import { Building2, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 interface OrgSystemData {
@@ -41,7 +41,6 @@ const generateVendorColor = (vendorName: string): string => {
 
 export const OrganizationSizeCorrelation = () => {
   const [selectedSystemType, setSelectedSystemType] = useState<'sis' | 'financial' | 'hcm'>('sis');
-  const [highlightedVendor, setHighlightedVendor] = useState<string | null>(null);
 
   const { data: organizations, isLoading, error } = useQuery({
     queryKey: ['organization-size-correlation'],
@@ -155,10 +154,9 @@ export const OrganizationSizeCorrelation = () => {
           name: org.name,
           vendor,
           color: vendorColors[vendor],
-          opacity: highlightedVendor ? (highlightedVendor === vendor ? 1 : 0.15) : 0.8,
         };
       });
-  }, [organizations, selectedSystemType, vendorYPositions, vendorColors, highlightedVendor]);
+  }, [organizations, selectedSystemType, vendorYPositions, vendorColors]);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -181,17 +179,6 @@ export const OrganizationSizeCorrelation = () => {
     }
     return null;
   };
-
-  // Get vendor statistics
-  const vendorStats = useMemo(() => {
-    const stats = new Map<string, number>();
-    chartData.forEach(item => {
-      stats.set(item.vendor, (stats.get(item.vendor) || 0) + 1);
-    });
-    return Array.from(stats.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([vendor, count]) => ({ vendor, count }));
-  }, [chartData]);
 
   const getSystemTypeLabel = () => {
     switch (selectedSystemType) {
@@ -220,30 +207,21 @@ export const OrganizationSizeCorrelation = () => {
             <Badge
               variant={selectedSystemType === 'sis' ? 'default' : 'outline'}
               className="cursor-pointer hover:scale-105 transition-transform"
-              onClick={() => {
-                setSelectedSystemType('sis');
-                setHighlightedVendor(null);
-              }}
+              onClick={() => setSelectedSystemType('sis')}
             >
               Student Info Systems
             </Badge>
             <Badge
               variant={selectedSystemType === 'financial' ? 'default' : 'outline'}
               className="cursor-pointer hover:scale-105 transition-transform"
-              onClick={() => {
-                setSelectedSystemType('financial');
-                setHighlightedVendor(null);
-              }}
+              onClick={() => setSelectedSystemType('financial')}
             >
               Financial Systems
             </Badge>
             <Badge
               variant={selectedSystemType === 'hcm' ? 'default' : 'outline'}
               className="cursor-pointer hover:scale-105 transition-transform"
-              onClick={() => {
-                setSelectedSystemType('hcm');
-                setHighlightedVendor(null);
-              }}
+              onClick={() => setSelectedSystemType('hcm')}
             >
               HCM Systems
             </Badge>
@@ -251,44 +229,6 @@ export const OrganizationSizeCorrelation = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Vendor Legend */}
-        <div className="mb-6 p-4 bg-muted/30 rounded-lg">
-          <div className="flex items-center gap-2 mb-3">
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-semibold text-foreground">Click to highlight vendor:</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {vendorStats.map(({ vendor, count }) => (
-              <Badge
-                key={vendor}
-                variant="secondary"
-                className="cursor-pointer transition-all hover:scale-110 active:scale-95"
-                style={{
-                  backgroundColor: highlightedVendor === vendor ? vendorColors[vendor] : 'hsl(var(--secondary))',
-                  color: highlightedVendor === vendor ? 'white' : 'hsl(var(--secondary-foreground))',
-                  borderColor: vendorColors[vendor],
-                  borderWidth: '2px',
-                }}
-                onClick={() => setHighlightedVendor(highlightedVendor === vendor ? null : vendor)}
-              >
-                <div className="w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: vendorColors[vendor] }} />
-                {vendor} ({count})
-              </Badge>
-            ))}
-          </div>
-          {highlightedVendor && (
-            <div className="mt-3">
-              <Badge
-                variant="outline"
-                className="cursor-pointer hover:bg-destructive/10"
-                onClick={() => setHighlightedVendor(null)}
-              >
-                ✕ Clear filter
-              </Badge>
-            </div>
-          )}
-        </div>
-
         <ResponsiveContainer width="100%" height={500}>
           <ScatterChart margin={{ top: 20, right: 30, bottom: 60, left: 150 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
@@ -332,14 +272,13 @@ export const OrganizationSizeCorrelation = () => {
             <Scatter
               data={chartData}
               fill="hsl(var(--primary))"
-              onClick={(data) => setHighlightedVendor(highlightedVendor === data.vendor ? null : data.vendor)}
             >
               {chartData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={entry.color}
-                  opacity={entry.opacity}
-                  className="cursor-pointer transition-opacity hover:opacity-100"
+                  opacity={0.8}
+                  className="transition-opacity hover:opacity-100"
                   stroke="white"
                   strokeWidth={1}
                 />
@@ -352,7 +291,7 @@ export const OrganizationSizeCorrelation = () => {
           <span className="text-lg">💡</span>
           <div className="space-y-1">
             <p><strong>How to read:</strong> Each dot represents one institution. Position shows institution size (horizontal) and their chosen vendor (vertical).</p>
-            <p><strong>Interaction:</strong> Click vendor badges above to highlight • Switch system types with the top badges • Hover any dot for details</p>
+            <p><strong>Interaction:</strong> Switch system types with the badges above • Hover any dot for details</p>
           </div>
         </div>
       </CardContent>
