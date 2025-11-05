@@ -289,10 +289,7 @@ export const OrganizationSizeCorrelation = () => {
         
         <div className="mt-6 flex items-start gap-2 text-sm text-muted-foreground bg-muted/20 p-3 rounded-lg">
           <span className="text-lg">💡</span>
-          <div className="space-y-1">
-            <p><strong>How to read:</strong> Each dot represents one institution. Position shows institution size (horizontal) and their chosen vendor (vertical).</p>
-            <p><strong>Interaction:</strong> Switch system types with the badges above • Hover any dot for details</p>
-          </div>
+          <p><strong>How to read:</strong> Each dot represents one institution. Position shows institution size (horizontal) and their chosen vendor (vertical).</p>
         </div>
       </CardContent>
     </Card>
