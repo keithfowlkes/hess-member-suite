@@ -43,7 +43,7 @@ export const OrganizationSizeCorrelation = () => {
   const [selectedSystemType, setSelectedSystemType] = useState<'sis' | 'financial' | 'hcm'>('sis');
   const [highlightedVendor, setHighlightedVendor] = useState<string | null>(null);
 
-  const { data: organizations, isLoading } = useQuery({
+  const { data: organizations, isLoading, error } = useQuery({
     queryKey: ['organization-size-correlation'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -72,8 +72,32 @@ export const OrganizationSizeCorrelation = () => {
     );
   }
 
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Organization Size vs System Choice</CardTitle>
+          <CardDescription>Error loading data</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-destructive">Failed to load organization data. Please try again later.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!organizations || organizations.length === 0) {
-    return null;
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Organization Size vs System Choice</CardTitle>
+          <CardDescription>No data available</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">No organization data available to display.</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   // Get system field name based on selected type
@@ -286,9 +310,12 @@ export const OrganizationSizeCorrelation = () => {
               type="number"
               dataKey="y"
               name="Vendor"
-              domain={[-0.5, vendors.length - 0.5]}
+              domain={[-0.5, Math.max(vendors.length - 0.5, 0.5)]}
               ticks={vendors.map((_, idx) => idx)}
-              tickFormatter={(value) => vendors[value] || ''}
+              tickFormatter={(value) => {
+                const index = Math.round(value);
+                return vendors[index] || '';
+              }}
               label={{ 
                 value: 'System Vendor', 
                 angle: -90, 
