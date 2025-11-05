@@ -2,6 +2,7 @@ import { Layout } from '@/components/Layout';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
+import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrelation';
 import { BarChart3 } from 'lucide-react';
 
 const MemberAnalytics = () => {
@@ -24,6 +25,8 @@ const MemberAnalytics = () => {
                 </p>
               </div>
             </div>
+            
+            <OrganizationSizeCorrelation />
             
             <SystemAnalyticsDashboard />
           </div>
