@@ -1,29 +1,52 @@
 import { executeNormalization } from './normalizeSystemFields';
+import { supabase } from '@/integrations/supabase/client';
 
-// Utility to run normalization specifically for student information system
+/**
+ * Runs normalization specifically for student_information_system field
+ * and refreshes the analytics datacube
+ */
 export async function runStudentInfoNormalization() {
-  console.log('Starting student_information_system normalization...');
+  console.log('Starting Student Information System normalization...');
   
-  try {
-    const result = await executeNormalization(['student_information_system'], true);
+  // Run normalization for student_information_system field only
+  const result = await executeNormalization(['student_information_system'], true);
+  
+  console.log('Normalization result:', result);
+  
+  if (result.success || result.processed > 0) {
+    console.log(`Processed ${result.processed} records. Refreshing analytics datacube...`);
     
-    console.log('Student Information System normalization completed:', result);
-    console.log(`Processed ${result.processed} organizations`);
-    
-    if (result.errors.length > 0) {
-      console.error('Normalization errors:', result.errors);
+    // Refresh the analytics datacube
+    try {
+      const { data, error } = await supabase.functions.invoke('refresh-analytics-datacube');
+      
+      if (error) {
+        console.error('Error refreshing datacube:', error);
+        throw error;
+      }
+      
+      console.log('Analytics datacube refreshed successfully:', data);
+      return {
+        ...result,
+        datacubeRefreshed: true
+      };
+    } catch (error) {
+      console.error('Failed to refresh datacube:', error);
+      return {
+        ...result,
+        datacubeRefreshed: false,
+        errors: [...result.errors, 'Failed to refresh datacube']
+      };
     }
-    
-    return result;
-  } catch (error) {
-    console.error('Error during student information system normalization:', error);
-    throw error;
   }
+  
+  return {
+    ...result,
+    datacubeRefreshed: false
+  };
 }
 
-// Run the normalization immediately
-runStudentInfoNormalization().then((result) => {
-  console.log('Final result:', result);
-}).catch((error) => {
-  console.error('Failed to run student information system normalization:', error);
-});
+// Make it available globally for console access
+if (typeof window !== 'undefined') {
+  (window as any).runStudentInfoNormalization = runStudentInfoNormalization;
+}

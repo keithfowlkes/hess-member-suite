@@ -36,8 +36,10 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "Oracle Higher Ed / PeopleSoft": "Oracle PeopleSoft",
     "Oracle Cloud": "Oracle Cloud",
     
-    // Workday
+    // Workday variations
     "Workday": "Workday Student",
+    "Workday Student": "Workday Student",
+    "Workday Student Information": "Workday Student",
     
     // Unit4/CAMS variations
     "Unit4 / CAMS": "Unit4 CAMS",
