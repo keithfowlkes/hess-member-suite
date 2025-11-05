@@ -57,48 +57,6 @@ export const OrganizationSizeCorrelation = () => {
     },
   });
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-96 mt-2" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[400px] w-full" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Organization Size vs System Choice</CardTitle>
-          <CardDescription>Error loading data</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-destructive">Failed to load organization data. Please try again later.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!organizations || organizations.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Organization Size vs System Choice</CardTitle>
-          <CardDescription>No data available</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">No organization data available to display.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   // Get system field name based on selected type
   const getSystemField = (type: 'sis' | 'financial' | 'hcm') => {
     switch (type) {
@@ -158,6 +116,56 @@ export const OrganizationSizeCorrelation = () => {
       });
   }, [organizations, selectedSystemType, vendorYPositions, vendorColors]);
 
+  const getSystemTypeLabel = () => {
+    switch (selectedSystemType) {
+      case 'sis': return 'Student Information System';
+      case 'financial': return 'Financial System';
+      case 'hcm': return 'Human Capital Management';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-96 mt-2" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[400px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Organization Size vs System Choice</CardTitle>
+          <CardDescription>Error loading data</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-destructive">Failed to load organization data. Please try again later.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!organizations || organizations.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Organization Size vs System Choice</CardTitle>
+          <CardDescription>No data available</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">No organization data available to display.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -178,14 +186,6 @@ export const OrganizationSizeCorrelation = () => {
       );
     }
     return null;
-  };
-
-  const getSystemTypeLabel = () => {
-    switch (selectedSystemType) {
-      case 'sis': return 'Student Information System';
-      case 'financial': return 'Financial System';
-      case 'hcm': return 'Human Capital Management';
-    }
   };
 
   return (
