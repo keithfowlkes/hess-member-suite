@@ -5,8 +5,10 @@ import { useEffect } from 'react';
 export const useOrganizations = () => {
   const queryClient = useQueryClient();
 
-  // Set up real-time subscription to invalidate cache when organizations change
+  // Debounced real-time subscription to invalidate cache when organizations change
   useEffect(() => {
+    let invalidateTimeout: NodeJS.Timeout;
+    
     const channelName = `organizations_cache_invalidation_${Math.random().toString(36).substr(2, 9)}`;
     const subscription = supabase
       .channel(channelName)
@@ -17,13 +19,19 @@ export const useOrganizations = () => {
           table: 'organizations' 
         }, 
         () => {
-          console.log('Organizations table changed, invalidating React Query cache...');
-          queryClient.invalidateQueries({ queryKey: ['organizations'] });
+          console.log('Organizations table changed (debounced invalidation)');
+          
+          // Debounce to batch multiple rapid changes
+          clearTimeout(invalidateTimeout);
+          invalidateTimeout = setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['organizations'] });
+          }, 500);
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(invalidateTimeout);
       subscription.unsubscribe();
     };
   }, [queryClient]);

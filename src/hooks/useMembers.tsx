@@ -166,19 +166,43 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
       if (error) throw error;
       return data;
     },
+    onMutate: async ({ id, orgData }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['organizations'] });
+
+      // Snapshot the previous value
+      const previousOrgs = queryClient.getQueryData(['organizations', statusFilter]);
+
+      // Optimistically update cache
+      queryClient.setQueryData(['organizations', statusFilter], (old: Organization[] | undefined) => {
+        if (!old) return old;
+        return old.map(org => 
+          org.id === id ? { ...org, ...orgData, updated_at: new Date().toISOString() } : org
+        );
+      });
+
+      return { previousOrgs };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['organizations'] });
       toast({
         title: 'Success',
         description: 'Organization updated successfully'
       });
     },
-    onError: (error: any) => {
+    onError: (error: any, _variables, context) => {
+      // Rollback on error
+      if (context?.previousOrgs) {
+        queryClient.setQueryData(['organizations', statusFilter], context.previousOrgs);
+      }
       toast({
         title: 'Error updating organization',
         description: error.message,
         variant: 'destructive'
       });
+    },
+    onSettled: () => {
+      // Refetch in background to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['organizations', statusFilter] });
     }
   });
 
@@ -296,8 +320,10 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
 
   const unapproveOrganization = unapproveOrganizationMutation.mutateAsync;
 
-  // Set up real-time subscription for organization changes
+  // Debounced real-time subscription for organization changes
   useEffect(() => {
+    let invalidateTimeout: NodeJS.Timeout;
+    
     const channelName = `organizations_changes_${Math.random().toString(36).substr(2, 9)}`;
     const subscription = supabase
       .channel(channelName)
@@ -307,17 +333,30 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
           schema: 'public', 
           table: 'organizations' 
         }, 
-        () => {
-          console.log('Organizations table changed, invalidating queries...');
-          queryClient.invalidateQueries({ queryKey: ['organizations'] });
+        (payload) => {
+          console.log('Organizations table changed (debounced)');
+          
+          // Debounce to avoid multiple rapid invalidations
+          clearTimeout(invalidateTimeout);
+          invalidateTimeout = setTimeout(() => {
+            // Only invalidate queries that don't match current status filter to avoid disrupting active view
+            queryClient.invalidateQueries({ 
+              queryKey: ['organizations'],
+              predicate: (query) => {
+                const key = query.queryKey[1];
+                return key !== statusFilter;
+              }
+            });
+          }, 300);
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(invalidateTimeout);
       subscription.unsubscribe();
     };
-  }, [queryClient]);
+  }, [queryClient, statusFilter]);
 
   return { 
     organizations: query.data || [],
