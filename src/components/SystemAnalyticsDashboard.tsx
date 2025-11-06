@@ -248,27 +248,16 @@ export function SystemAnalyticsDashboard() {
   return (
     <Card className="mb-8 bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
       <CardHeader className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <BarChart3 className="h-6 w-6 text-primary" />
-              </div>
-              System Usage Analytics
-            </CardTitle>
-            <p className="text-muted-foreground mt-1">
-              Distribution of software systems across active member institutions
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setFeedbackDialogOpen(true)}
-            className="gap-2"
-          >
-            <MessageSquare className="h-4 w-4" />
-            What would you like to see?
-          </Button>
+        <div>
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <BarChart3 className="h-6 w-6 text-primary" />
+            </div>
+            System Usage Analytics
+          </CardTitle>
+          <p className="text-muted-foreground mt-1">
+            Distribution of software systems across active member institutions
+          </p>
         </div>
         
         <div className="flex flex-wrap items-center gap-4">

@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
 import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrelation';
-import { BarChart3, ChartScatter } from 'lucide-react';
+import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
+import { BarChart3, ChartScatter, MessageSquare } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Accordion,
@@ -13,6 +16,8 @@ import {
 } from "@/components/ui/accordion";
 
 const MemberAnalytics = () => {
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -38,15 +43,28 @@ const MemberAnalytics = () => {
             
             <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <ChartScatter className="h-6 w-6 text-primary" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <ChartScatter className="h-6 w-6 text-primary" />
+                      </div>
+                      Trend Analytics
+                    </CardTitle>
+                    <p className="text-muted-foreground mt-1">
+                      Explore correlations and trends in member data
+                    </p>
                   </div>
-                  Trend Analytics
-                </CardTitle>
-                <p className="text-muted-foreground mt-1">
-                  Explore correlations and trends in member data
-                </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFeedbackDialogOpen(true)}
+                    className="gap-2"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    What would you like to see?
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <Accordion type="single" collapsible className="w-full">
@@ -84,6 +102,11 @@ const MemberAnalytics = () => {
           </div>
         </main>
       </div>
+      
+      <AnalyticsFeedbackDialog
+        open={feedbackDialogOpen}
+        onOpenChange={setFeedbackDialogOpen}
+      />
     </SidebarProvider>
   );
 };
