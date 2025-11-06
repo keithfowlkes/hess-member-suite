@@ -2203,23 +2203,23 @@ export default function Auth() {
                          <Label htmlFor="member-update-existing-organization" className="text-gray-700 font-medium text-sm">
                            Select Existing Institution <span className="text-red-600">*</span>
                          </Label>
-                         <Select
-                           value={selectedOrganizationId}
-                           onValueChange={handleOrganizationSelect}
-                           disabled={!isReassignment}
-                           required
-                         >
-                           <SelectTrigger className="h-11 bg-gray-50 border-gray-300">
-                             <SelectValue placeholder="Choose your institution..." />
-                           </SelectTrigger>
-                           <SelectContent>
-                             {organizations.map((org) => (
-                               <SelectItem key={org.id} value={org.id}>
-                                 {org.name}
-                               </SelectItem>
-                             ))}
-                           </SelectContent>
-                         </Select>
+                          <Select
+                            value={selectedOrganizationId}
+                            onValueChange={handleOrganizationSelect}
+                            disabled={!isReassignment}
+                            required
+                          >
+                            <SelectTrigger className="h-11 bg-gray-50 border-gray-300">
+                              <SelectValue placeholder="Choose your institution..." />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border border-border z-50 max-h-[300px]">
+                              {organizations.map((org) => (
+                                <SelectItem key={org.id} value={org.id}>
+                                  {org.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                          <p className="text-sm text-muted-foreground">
                            Select your institution from the list above. This will update the existing record.
                          </p>
