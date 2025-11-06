@@ -74,8 +74,10 @@ const processDatacubeData = (datacubeEntries: Array<{system_field: string, syste
 export const useSystemAnalytics = () => {
   const queryClient = useQueryClient();
 
-  // Set up real-time subscription to invalidate cache when analytics data changes
+  // Debounced real-time subscription to prevent cascading refetches
   useEffect(() => {
+    let invalidateTimeout: NodeJS.Timeout;
+    
     const channelName = `system_analytics_${Math.random().toString(36).substr(2, 9)}`;
     const subscription = supabase
       .channel(channelName)
@@ -86,24 +88,17 @@ export const useSystemAnalytics = () => {
           table: 'system_analytics_datacube' 
         }, 
         () => {
-          console.log('Analytics datacube changed, invalidating system analytics cache...');
-          queryClient.invalidateQueries({ queryKey: ['system-analytics-datacube'] });
-        }
-      )
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'organizations' 
-        }, 
-        () => {
-          console.log('Organizations changed, invalidating system analytics cache...');
-          queryClient.invalidateQueries({ queryKey: ['system-analytics-datacube'] });
+          console.log('Analytics datacube changed (debounced)');
+          clearTimeout(invalidateTimeout);
+          invalidateTimeout = setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['system-analytics-datacube'] });
+          }, 1000);
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(invalidateTimeout);
       subscription.unsubscribe();
     };
   }, [queryClient]);
@@ -144,5 +139,7 @@ export const useSystemAnalytics = () => {
     },
     staleTime: 1000 * 60 * 30, // Consider data stale after 30 minutes
     gcTime: 1000 * 60 * 60, // Keep in cache for 1 hour
+    retry: 3, // Retry failed requests up to 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };

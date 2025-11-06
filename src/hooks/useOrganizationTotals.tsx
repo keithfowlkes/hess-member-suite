@@ -10,8 +10,10 @@ export interface OrganizationTotals {
 export const useOrganizationTotals = () => {
   const queryClient = useQueryClient();
 
-  // Set up real-time subscription to invalidate cache when analytics data changes
+  // Debounced real-time subscription to prevent cascading refetches
   useEffect(() => {
+    let invalidateTimeout: NodeJS.Timeout;
+    
     const channelName = `org_totals_cache_invalidation_${Math.random().toString(36).substr(2, 9)}`;
     const subscription = supabase
       .channel(channelName)
@@ -22,24 +24,17 @@ export const useOrganizationTotals = () => {
           table: 'system_analytics_datacube' 
         }, 
         () => {
-          console.log('Analytics datacube changed, invalidating organization totals cache...');
-          queryClient.invalidateQueries({ queryKey: ['organization-totals-datacube'] });
-        }
-      )
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'organizations' 
-        }, 
-        () => {
-          console.log('Organizations table changed, invalidating organization totals cache...');
-          queryClient.invalidateQueries({ queryKey: ['organization-totals-datacube'] });
+          console.log('Analytics datacube changed (debounced)');
+          clearTimeout(invalidateTimeout);
+          invalidateTimeout = setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['organization-totals-datacube'] });
+          }, 1000);
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(invalidateTimeout);
       subscription.unsubscribe();
     };
   }, [queryClient]);
@@ -67,5 +62,7 @@ export const useOrganizationTotals = () => {
     },
     staleTime: 1000 * 60 * 30, // Consider data stale after 30 minutes
     gcTime: 1000 * 60 * 60, // Keep in cache for 1 hour
+    retry: 3, // Retry failed requests up to 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };
