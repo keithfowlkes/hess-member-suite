@@ -1142,7 +1142,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
 
         <div className="flex justify-between items-center pt-4 border-t flex-shrink-0">
           <div className="flex gap-2">
-            {organization && isAdmin && (
+            {organization && isAdmin && activeTab === 'organization' && (
               <>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
