@@ -41,6 +41,8 @@ export interface UnifiedProfile {
     notes?: string;
     approximate_date_joined_hess?: string;
     state_association?: string;
+    created_at?: string;
+    updated_at?: string;
     // System fields
     student_information_system?: string;
     financial_system?: string;

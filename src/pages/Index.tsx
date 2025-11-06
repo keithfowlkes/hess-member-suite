@@ -22,37 +22,14 @@ const Index = () => {
   const { isViewingAsAdmin, signOut, user } = useAuth();
   const { data: systemSettings } = useSystemSettings();
   const navigate = useNavigate();
-  const [userOrganization, setUserOrganization] = useState<any>(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
-  const { getUserOrganization } = useUnifiedProfile();
+  const { data: unifiedProfileData, loading: profileLoading } = useUnifiedProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
   const { invoices, loading: invoicesLoading } = useInvoices();
 
-  // Fetch user's organization data with caching
-  useEffect(() => {
-    let isMounted = true;
-    
-    const fetchUserOrganization = async () => {
-      if (user?.id && isMounted) {
-        console.log('📥 Fetching organization for member dashboard...');
-        const startTime = performance.now();
-        const org = await getUserOrganization(user.id);
-        const endTime = performance.now();
-        console.log('📥 Member dashboard org fetch completed in', `${(endTime - startTime).toFixed(2)}ms`);
-        
-        if (isMounted) {
-          setUserOrganization(org);
-        }
-      }
-    };
-    
-    fetchUserOrganization();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.id]); // Only depend on user.id, not the function
+  // Use organization data from unified profile
+  const userOrganization = unifiedProfileData?.organization;
 
   // Redirect admin users to the Master Dashboard
   if (isViewingAsAdmin) {
