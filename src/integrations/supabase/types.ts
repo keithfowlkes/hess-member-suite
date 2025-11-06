@@ -139,6 +139,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "communications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organization_directory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       custom_software_entries: {
@@ -190,6 +197,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_software_entries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organization_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -440,6 +454,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "invoices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organization_directory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       map_coordinates: {
@@ -577,6 +598,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "organization_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organization_directory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       organization_profile_edit_requests: {
@@ -633,6 +661,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "organization_profile_edit_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organization_directory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       organization_reassignment_requests: {
@@ -687,6 +722,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_reassignment_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organization_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -754,6 +796,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_transfer_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organization_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -1460,7 +1509,114 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_organization_directory: {
+        Row: {
+          admissions_crm: string | null
+          alumni_advancement_crm: string | null
+          city: string | null
+          document_management: string | null
+          door_access: string | null
+          financial_aid: string | null
+          financial_system: string | null
+          hcm_hr: string | null
+          housing_management: string | null
+          id: string | null
+          identity_management: string | null
+          learning_management: string | null
+          meal_plan_management: string | null
+          membership_status:
+            | Database["public"]["Enums"]["membership_status"]
+            | null
+          name: string | null
+          network_infrastructure: string | null
+          organization_type: string | null
+          payment_platform: string | null
+          payroll_system: string | null
+          primary_office_apple: boolean | null
+          primary_office_dell: boolean | null
+          primary_office_hp: boolean | null
+          primary_office_lenovo: boolean | null
+          primary_office_microsoft: boolean | null
+          primary_office_other: boolean | null
+          purchasing_system: string | null
+          state: string | null
+          student_fte: number | null
+          student_information_system: string | null
+          voip: string | null
+          website: string | null
+        }
+        Insert: {
+          admissions_crm?: string | null
+          alumni_advancement_crm?: string | null
+          city?: string | null
+          document_management?: string | null
+          door_access?: string | null
+          financial_aid?: string | null
+          financial_system?: string | null
+          hcm_hr?: string | null
+          housing_management?: string | null
+          id?: string | null
+          identity_management?: string | null
+          learning_management?: string | null
+          meal_plan_management?: string | null
+          membership_status?:
+            | Database["public"]["Enums"]["membership_status"]
+            | null
+          name?: string | null
+          network_infrastructure?: string | null
+          organization_type?: string | null
+          payment_platform?: string | null
+          payroll_system?: string | null
+          primary_office_apple?: boolean | null
+          primary_office_dell?: boolean | null
+          primary_office_hp?: boolean | null
+          primary_office_lenovo?: boolean | null
+          primary_office_microsoft?: boolean | null
+          primary_office_other?: boolean | null
+          purchasing_system?: string | null
+          state?: string | null
+          student_fte?: number | null
+          student_information_system?: string | null
+          voip?: string | null
+          website?: string | null
+        }
+        Update: {
+          admissions_crm?: string | null
+          alumni_advancement_crm?: string | null
+          city?: string | null
+          document_management?: string | null
+          door_access?: string | null
+          financial_aid?: string | null
+          financial_system?: string | null
+          hcm_hr?: string | null
+          housing_management?: string | null
+          id?: string | null
+          identity_management?: string | null
+          learning_management?: string | null
+          meal_plan_management?: string | null
+          membership_status?:
+            | Database["public"]["Enums"]["membership_status"]
+            | null
+          name?: string | null
+          network_infrastructure?: string | null
+          organization_type?: string | null
+          payment_platform?: string | null
+          payroll_system?: string | null
+          primary_office_apple?: boolean | null
+          primary_office_dell?: boolean | null
+          primary_office_hp?: boolean | null
+          primary_office_lenovo?: boolean | null
+          primary_office_microsoft?: boolean | null
+          primary_office_other?: boolean | null
+          purchasing_system?: string | null
+          state?: string | null
+          student_fte?: number | null
+          student_information_system?: string | null
+          voip?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_old_backups: { Args: never; Returns: undefined }

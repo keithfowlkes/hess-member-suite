@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import DOMPurify from 'dompurify';
 
 export const PublicPageManager = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -144,7 +145,7 @@ export const PublicPageManager = () => {
               <div 
                 className="text-sm text-muted-foreground line-clamp-2"
                 dangerouslySetInnerHTML={{ 
-                  __html: page.content.replace(/<[^>]*>/g, '').substring(0, 150) + '...' 
+                  __html: DOMPurify.sanitize(page.content.replace(/<[^>]*>/g, '').substring(0, 150) + '...') 
                 }}
               />
             </CardContent>

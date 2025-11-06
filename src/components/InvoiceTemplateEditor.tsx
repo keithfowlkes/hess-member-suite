@@ -10,6 +10,7 @@ import { Upload, Eye, Settings } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '@/styles/quill.css';
+import DOMPurify from 'dompurify';
 
 interface InvoiceTemplateEditorProps {
   open: boolean;
@@ -112,7 +113,7 @@ export function InvoiceTemplateEditor({ open, onOpenChange }: InvoiceTemplateEdi
 
     return (
       <div className="invoice-preview border rounded-lg p-6 bg-white">
-        <div dangerouslySetInnerHTML={{ __html: previewHeader }} />
+        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewHeader) }} />
         <div className="invoice-body my-8">
           <table className="w-full border-collapse border">
             <thead>
@@ -135,7 +136,7 @@ export function InvoiceTemplateEditor({ open, onOpenChange }: InvoiceTemplateEdi
             </tfoot>
           </table>
         </div>
-        <div dangerouslySetInnerHTML={{ __html: previewFooter }} />
+        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewFooter) }} />
       </div>
     );
   };
