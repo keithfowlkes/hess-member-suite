@@ -7,12 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle, Edit3, Info } from 'lucide-react';
+import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle, Edit3, Info, MessageSquare } from 'lucide-react';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { useInvoices } from '@/hooks/useInvoices';
 import MemberSystemMessages from '@/components/MemberSystemMessages';
 import { ProfileEditModal } from '@/components/ProfileEditModal';
+import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { useState, useEffect } from 'react';
@@ -23,6 +24,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [userOrganization, setUserOrganization] = useState<any>(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const { getUserOrganization } = useUnifiedProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
   const { invoices, loading: invoicesLoading } = useInvoices();
@@ -324,6 +326,28 @@ const Index = () => {
                     </Card>
                   );
                 })}
+                
+                {/* Questions & Feedback Block */}
+                <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Questions & Feedback</CardTitle>
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Have suggestions or questions? We'd love to hear from you.
+                    </p>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFeedbackDialogOpen(true)}
+                      className="w-full gap-2"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      What would you like to see?
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
               
               {/* Second Row */}
@@ -404,6 +428,12 @@ const Index = () => {
           <ProfileEditModal 
             open={profileModalOpen} 
             onOpenChange={setProfileModalOpen} 
+          />
+          
+          {/* Feedback Dialog */}
+          <AnalyticsFeedbackDialog
+            open={feedbackDialogOpen}
+            onOpenChange={setFeedbackDialogOpen}
           />
         </main>
       </div>
