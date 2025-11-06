@@ -78,7 +78,8 @@ export const OrganizationSizeCorrelation = () => {
       vendorSet.add(vendor);
     });
     
-    const vendorList = Array.from(vendorSet).sort();
+    // Sort vendors alphabetically (case-insensitive)
+    const vendorList = Array.from(vendorSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     const positions: Record<string, number> = {};
     const colors: Record<string, string> = {};
     
