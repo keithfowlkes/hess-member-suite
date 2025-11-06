@@ -27,17 +27,30 @@ const Index = () => {
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
   const { invoices, loading: invoicesLoading } = useInvoices();
 
-  // Fetch user's organization data
+  // Fetch user's organization data with caching
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchUserOrganization = async () => {
-      if (user?.id) {
+      if (user?.id && isMounted) {
+        console.log('📥 Fetching organization for member dashboard...');
+        const startTime = performance.now();
         const org = await getUserOrganization(user.id);
-        console.log('Fetched user organization:', org);
-        setUserOrganization(org);
+        const endTime = performance.now();
+        console.log('📥 Member dashboard org fetch completed in', `${(endTime - startTime).toFixed(2)}ms`);
+        
+        if (isMounted) {
+          setUserOrganization(org);
+        }
       }
     };
+    
     fetchUserOrganization();
-  }, [user, getUserOrganization]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]); // Only depend on user.id, not the function
 
   // Redirect admin users to the Master Dashboard
   if (isViewingAsAdmin) {

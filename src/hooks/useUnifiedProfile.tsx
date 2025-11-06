@@ -297,33 +297,43 @@ export function useUnifiedProfile(userId?: string) {
 
   const getUserOrganization = async (userId: string) => {
     try {
-      const { data: profileData } = await supabase
+      console.log('⚡ Fast getUserOrganization - fetching for userId:', userId);
+      const startTime = performance.now();
+      
+      // Single optimized query using LEFT JOIN
+      const { data: orgData, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          id,
+          organization,
+          organizations!contact_person_id (*)
+        `)
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (!profileData) return null;
+      if (error) throw error;
+      if (!orgData) return null;
 
-      // First, try to get organization where user is primary contact
-      let { data: orgData } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('contact_person_id', profileData.id)
-        .maybeSingle();
+      const endTime = performance.now();
+      console.log('⚡ getUserOrganization completed in', `${(endTime - startTime).toFixed(2)}ms`);
 
-      // If not primary contact, check if user belongs to an organization by profile.organization field
-      if (!orgData && profileData.organization) {
+      // If user is primary contact, return that organization
+      if (orgData.organizations && orgData.organizations.length > 0) {
+        return orgData.organizations[0];
+      }
+
+      // If not primary contact but has organization name, fetch by name
+      if (orgData.organization) {
         const { data: memberOrgData } = await supabase
           .from('organizations')
           .select('*')
-          .eq('name', profileData.organization)
+          .eq('name', orgData.organization)
           .maybeSingle();
         
-        orgData = memberOrgData;
+        return memberOrgData;
       }
 
-      return orgData;
+      return null;
     } catch (error) {
       console.error('Error getting user organization:', error);
       return null;
