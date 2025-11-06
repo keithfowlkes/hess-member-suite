@@ -162,6 +162,24 @@ export function useCreateOrganizationProfileEditRequest() {
 
       if (error) throw error;
 
+      // Send admin notification for new profile edit request
+      try {
+        console.log('🔔 Sending admin notification for profile edit request');
+        await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'member_update',
+            updateData: {
+              organization_name: data.updatedOrganizationData?.name || data.originalOrganizationData?.name || 'Unknown Organization',
+              submitted_email: data.updatedProfileData?.email || data.originalProfileData?.email || 'Unknown Email'
+            }
+          }
+        });
+        console.log('✅ Admin notification sent successfully');
+      } catch (adminNotificationError) {
+        console.warn('[useCreateOrganizationProfileEditRequest] Failed to send admin notification:', adminNotificationError);
+        // Don't fail the whole operation for notification errors
+      }
+
       toast({
         title: 'Success',
         description: 'Profile edit request submitted for admin review'

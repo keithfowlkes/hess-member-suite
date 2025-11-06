@@ -185,6 +185,24 @@ export function useUnifiedProfile(userId?: string) {
 
         if (error) throw error;
 
+        // Send admin notification for new profile edit request
+        try {
+          console.log('🔔 Sending admin notification for profile edit request');
+          await supabase.functions.invoke('send-admin-notification', {
+            body: {
+              type: 'member_update',
+              updateData: {
+                organization_name: data.organization?.name || 'Unknown Organization',
+                submitted_email: data.profile?.email || 'Unknown Email'
+              }
+            }
+          });
+          console.log('✅ Admin notification sent successfully');
+        } catch (adminNotificationError) {
+          console.warn('[useUnifiedProfile] Failed to send admin notification:', adminNotificationError);
+          // Don't fail the whole operation for notification errors
+        }
+
         toast({
           title: 'Success',
           description: 'Profile changes submitted for admin approval'
