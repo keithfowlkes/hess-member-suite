@@ -83,8 +83,9 @@ export const OrganizationSizeCorrelation = () => {
     const positions: Record<string, number> = {};
     const colors: Record<string, string> = {};
     
+    // Assign positions in reverse so A-Z appears top to bottom on Y-axis
     vendorList.forEach((vendor, index) => {
-      positions[vendor] = index;
+      positions[vendor] = vendorList.length - 1 - index;
       colors[vendor] = generateVendorColor(vendor);
     });
     
