@@ -93,6 +93,8 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
   const query = useQuery({
     queryKey: ['organizations', statusFilter],
     queryFn: async () => {
+      console.log('🔍 Fetching organizations with filter:', statusFilter);
+      
       // Build query
       let dbQuery = supabase
         .from('organizations')
@@ -115,7 +117,18 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
 
       const { data, error } = await dbQuery.order('name');
 
-      if (error) throw error;
+      console.log('📊 Organizations query result:', { 
+        count: data?.length, 
+        error: error?.message,
+        hasData: !!data,
+        statusFilter 
+      });
+
+      if (error) {
+        console.error('❌ Organizations fetch error:', error);
+        throw error;
+      }
+      
       return data || [];
     },
     refetchOnWindowFocus: false,
