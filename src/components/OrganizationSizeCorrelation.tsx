@@ -78,14 +78,15 @@ export const OrganizationSizeCorrelation = () => {
       vendorSet.add(vendor);
     });
     
-    // Sort vendors alphabetically (case-insensitive)
-    const vendorList = Array.from(vendorSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    // Sort vendors alphabetically (case-insensitive), then reverse for top-to-bottom display
+    const vendorList = Array.from(vendorSet)
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+      .reverse();
     const positions: Record<string, number> = {};
     const colors: Record<string, string> = {};
     
-    // Assign positions in reverse so A-Z appears top to bottom on Y-axis
     vendorList.forEach((vendor, index) => {
-      positions[vendor] = vendorList.length - 1 - index;
+      positions[vendor] = index;
       colors[vendor] = generateVendorColor(vendor);
     });
     
