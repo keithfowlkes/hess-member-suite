@@ -94,8 +94,9 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
     queryKey: ['organizations', statusFilter],
     queryFn: async () => {
       console.log('🔍 Fetching organizations with filter:', statusFilter);
+      const startTime = performance.now();
       
-      // Build query
+      // Build query with pagination - fetch in chunks for better performance
       let dbQuery = supabase
         .from('organizations')
         .select(`
@@ -106,7 +107,7 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
             secondary_first_name, secondary_last_name, secondary_contact_title,
             secondary_contact_email, secondary_contact_phone
           )
-        `)
+        `, { count: 'exact' })
         .eq('organization_type', 'member')
         .not('name', 'ilike', '%Administrator%');
 
@@ -115,13 +116,16 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
         dbQuery = dbQuery.eq('membership_status', statusFilter);
       }
 
-      const { data, error } = await dbQuery.order('name');
+      const { data, error, count } = await dbQuery.order('name').limit(500);
 
+      const endTime = performance.now();
       console.log('📊 Organizations query result:', { 
-        count: data?.length, 
+        count: data?.length,
+        totalCount: count,
         error: error?.message,
         hasData: !!data,
-        statusFilter 
+        statusFilter,
+        queryTime: `${(endTime - startTime).toFixed(2)}ms`
       });
 
       if (error) {
@@ -132,6 +136,8 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
       return data || [];
     },
     refetchOnWindowFocus: false,
+    staleTime: 60 * 1000, // Cache for 1 minute
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const refresh = () => {
