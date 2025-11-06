@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -2094,6 +2095,60 @@ export default function Auth() {
                   </div>
                 </div>
 
+                {/* Member Agreement */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="member-agreement" className="border-none">
+                      <AccordionTrigger className="text-lg font-semibold text-gray-800 hover:no-underline">
+                        Member Agreement
+                      </AccordionTrigger>
+                      <AccordionContent className="text-gray-700 space-y-4 pt-4">
+                        <div className="space-y-4">
+                          <p className="font-semibold text-gray-900">
+                            HESS Consortium Member Confidentiality and Data Use Agreement
+                          </p>
+                          <p className="text-sm leading-relaxed">
+                            This agreement outlines the commitment of the HESS Consortium (the "Consortium") to protect the privacy and data integrity of its member institutions while facilitating secure, mutual information exchange.
+                          </p>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <p className="font-semibold text-gray-900">1. Member Information Confidentiality</p>
+                              <p className="text-sm leading-relaxed">
+                                The Consortium recognizes the sensitive nature of information provided by member institutions. All non-public institutional information, including operational data, contact lists, financial metrics, and internal reports, shall be treated as confidential.
+                              </p>
+                            </div>
+                            
+                            <div>
+                              <p className="font-semibold text-gray-900">2. Restrictions on External Data Sharing and Sale</p>
+                              <p className="text-sm leading-relaxed">
+                                The Consortium confirms that the primary purpose of collecting member data is to enable mutual information sharing among Authenticated Users (current HESS members and authorized non-profit state association partners) to foster better organizational understanding and cooperative efficiency.
+                              </p>
+                              <p className="text-sm leading-relaxed">
+                                Notwithstanding this authorized internal sharing, the Consortium explicitly agrees that any data or information submitted by a member institution shall not be shared, sold, rented, or otherwise distributed to commercial third parties, including but not limited to vendor partners, corporate affiliates, or outside industry analytics companies, without the express written consent of the submitting member institution(s). Data aggregation for internal, benchmarking, and analytics will be available to Consortium member institutions and our non-profit, state association partners.
+                              </p>
+                            </div>
+                            
+                            <div>
+                              <p className="font-semibold text-gray-900">3. Member Responsibility and User Access</p>
+                              <p className="text-sm leading-relaxed">
+                                The HESS Consortium Member Institution, including its primary account holders and any authorized personnel granted access to the Consortium's shared information systems, is responsible for maintaining the strict confidentiality of all data concerning other members and partners. Member Institution users shall not share, reproduce, or redistribute any specific or aggregated data of other member institutions outside of their own organization. The Member Institution must ensure that account credentials are kept secure and are not shared with unauthorized individuals. Any breach of confidentiality by an Authorized User may result in the suspension or termination of the Member Institution's access privileges.
+                              </p>
+                            </div>
+                            
+                            <div>
+                              <p className="font-semibold text-gray-900">4. Term and Acceptance</p>
+                              <p className="text-sm leading-relaxed">
+                                By clicking the submission button below the membership update or or new member application, the member institution acknowledges and accepts the terms of this agreement, which shall remain in effect throughout the duration of active membership.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
+
                 {/* Security Verification */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
@@ -2920,6 +2975,60 @@ export default function Auth() {
                     </div>
                   </div>
                   
+                  {/* Member Agreement */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="member-agreement" className="border-none">
+                        <AccordionTrigger className="text-lg font-semibold text-gray-800 hover:no-underline">
+                          Member Agreement
+                        </AccordionTrigger>
+                        <AccordionContent className="text-gray-700 space-y-4 pt-4">
+                          <div className="space-y-4">
+                            <p className="font-semibold text-gray-900">
+                              HESS Consortium Member Confidentiality and Data Use Agreement
+                            </p>
+                            <p className="text-sm leading-relaxed">
+                              This agreement outlines the commitment of the HESS Consortium (the "Consortium") to protect the privacy and data integrity of its member institutions while facilitating secure, mutual information exchange.
+                            </p>
+                            
+                            <div className="space-y-3">
+                              <div>
+                                <p className="font-semibold text-gray-900">1. Member Information Confidentiality</p>
+                                <p className="text-sm leading-relaxed">
+                                  The Consortium recognizes the sensitive nature of information provided by member institutions. All non-public institutional information, including operational data, contact lists, financial metrics, and internal reports, shall be treated as confidential.
+                                </p>
+                              </div>
+                              
+                              <div>
+                                <p className="font-semibold text-gray-900">2. Restrictions on External Data Sharing and Sale</p>
+                                <p className="text-sm leading-relaxed">
+                                  The Consortium confirms that the primary purpose of collecting member data is to enable mutual information sharing among Authenticated Users (current HESS members and authorized non-profit state association partners) to foster better organizational understanding and cooperative efficiency.
+                                </p>
+                                <p className="text-sm leading-relaxed">
+                                  Notwithstanding this authorized internal sharing, the Consortium explicitly agrees that any data or information submitted by a member institution shall not be shared, sold, rented, or otherwise distributed to commercial third parties, including but not limited to vendor partners, corporate affiliates, or outside industry analytics companies, without the express written consent of the submitting member institution(s). Data aggregation for internal, benchmarking, and analytics will be available to Consortium member institutions and our non-profit, state association partners.
+                                </p>
+                              </div>
+                              
+                              <div>
+                                <p className="font-semibold text-gray-900">3. Member Responsibility and User Access</p>
+                                <p className="text-sm leading-relaxed">
+                                  The HESS Consortium Member Institution, including its primary account holders and any authorized personnel granted access to the Consortium's shared information systems, is responsible for maintaining the strict confidentiality of all data concerning other members and partners. Member Institution users shall not share, reproduce, or redistribute any specific or aggregated data of other member institutions outside of their own organization. The Member Institution must ensure that account credentials are kept secure and are not shared with unauthorized individuals. Any breach of confidentiality by an Authorized User may result in the suspension or termination of the Member Institution's access privileges.
+                                </p>
+                              </div>
+                              
+                              <div>
+                                <p className="font-semibold text-gray-900">4. Term and Acceptance</p>
+                                <p className="text-sm leading-relaxed">
+                                  By clicking the submission button below the membership update or or new member application, the member institution acknowledges and accepts the terms of this agreement, which shall remain in effect throughout the duration of active membership.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </div>
+
                   {/* Security Verification */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="mb-6">
