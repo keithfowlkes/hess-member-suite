@@ -2097,15 +2097,15 @@ export default function Auth() {
 
                 {/* Member Agreement */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">View Member Agreement</h3>
-                    <p className="text-gray-600 text-sm">Please click here to review the Member Agreement before submitting your registration or changes.</p>
-                  </div>
-                  
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="member-agreement" className="border-none">
-                      <AccordionTrigger className="text-base font-medium text-gray-700 hover:no-underline">
-                        Click to expand Member Agreement
+                      <AccordionTrigger className="hover:no-underline [&[data-state=open]>div>svg]:rotate-180 p-0">
+                        <div className="text-left w-full">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">View Member Agreement</h3>
+                          <div className="flex items-center gap-2">
+                            <p className="text-gray-600 text-sm">Please click here to review the Member Agreement before submitting your registration or changes.</p>
+                          </div>
+                        </div>
                       </AccordionTrigger>
                       <AccordionContent className="text-gray-700 space-y-4 pt-4">
                         <div className="space-y-4">
@@ -2982,15 +2982,15 @@ export default function Auth() {
                   
                   {/* Member Agreement */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">View Member Agreement</h3>
-                      <p className="text-gray-600 text-sm">Please click here to review the Member Agreement before submitting your registration or changes.</p>
-                    </div>
-                    
                     <Accordion type="single" collapsible className="w-full">
                       <AccordionItem value="member-agreement" className="border-none">
-                        <AccordionTrigger className="text-base font-medium text-gray-700 hover:no-underline">
-                          Click to expand Member Agreement
+                        <AccordionTrigger className="hover:no-underline [&[data-state=open]>div>svg]:rotate-180 p-0">
+                          <div className="text-left w-full">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">View Member Agreement</h3>
+                            <div className="flex items-center gap-2">
+                              <p className="text-gray-600 text-sm">Please click here to review the Member Agreement before submitting your registration or changes.</p>
+                            </div>
+                          </div>
                         </AccordionTrigger>
                         <AccordionContent className="text-gray-700 space-y-4 pt-4">
                           <div className="space-y-4">
