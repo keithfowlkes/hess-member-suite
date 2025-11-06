@@ -6,7 +6,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { useSystemAnalytics, SystemUsage } from '@/hooks/useSystemAnalytics';
 import { InstitutionsModal } from '@/components/InstitutionsModal';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
-import { PieChart as PieChartIcon, TrendingUp, BarChart3, Monitor, MessageSquare } from 'lucide-react';
+import { PieChart as PieChartIcon, BarChart3, Monitor, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff'];
@@ -215,31 +215,8 @@ export function SystemAnalyticsDashboard() {
         <CardContent>
           <div className="flex flex-col items-center justify-center h-48 gap-4">
             <p className="text-muted-foreground text-center">
-              No analytics data available. Click "Refresh Data" to generate system usage analytics from your organizations.
+              No analytics data available yet. System usage analytics will be automatically refreshed from your organizations.
             </p>
-            <Button
-              onClick={async () => {
-                try {
-                  const response = await fetch('https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/refresh-analytics-datacube', {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470',
-                      'Content-Type': 'application/json'
-                    }
-                  });
-                  
-                  if (response.ok) {
-                    window.location.reload();
-                  }
-                } catch (error) {
-                  console.error('Failed to refresh analytics:', error);
-                }
-              }}
-              className="gap-2"
-            >
-              <TrendingUp className="h-4 w-4" />
-              Refresh Data
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -283,42 +260,15 @@ export function SystemAnalyticsDashboard() {
               Distribution of software systems across active member institutions
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                try {
-                  const response = await fetch('https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/refresh-analytics-datacube', {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470',
-                      'Content-Type': 'application/json'
-                    }
-                  });
-                  
-                  if (response.ok) {
-                    window.location.reload();
-                  }
-                } catch (error) {
-                  console.error('Failed to refresh analytics:', error);
-                }
-              }}
-              className="gap-2"
-            >
-              <TrendingUp className="h-4 w-4" />
-              Refresh Data
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFeedbackDialogOpen(true)}
-              className="gap-2"
-            >
-              <MessageSquare className="h-4 w-4" />
-              What would you like to see?
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setFeedbackDialogOpen(true)}
+            className="gap-2"
+          >
+            <MessageSquare className="h-4 w-4" />
+            What would you like to see?
+          </Button>
         </div>
         
         <div className="flex flex-wrap items-center gap-4">
