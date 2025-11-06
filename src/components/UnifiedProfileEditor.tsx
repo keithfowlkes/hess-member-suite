@@ -376,8 +376,12 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                 id="email"
                 value={editedData.profile.email || ''}
                 onChange={(e) => updateProfileField('email', e.target.value)}
-                disabled={!isEditing}
+                disabled={true}
+                className="bg-muted"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                This email is the authoritative account identifier and cannot be changed here. Contact support for email updates.
+              </p>
             </div>
             <div>
               <Label htmlFor="phone">Phone</Label>
