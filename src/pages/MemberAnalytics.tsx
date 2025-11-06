@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
 import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrelation';
 import { BarChart3, ChartScatter } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Accordion,
   AccordionContent,
@@ -35,19 +36,34 @@ const MemberAnalytics = () => {
               </div>
             </div>
             
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="org-size-correlation">
-                <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <ChartScatter className="h-5 w-5 text-primary" />
-                    <span>Organization Size vs System Choice</span>
+            <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <ChartScatter className="h-6 w-6 text-primary" />
                   </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <OrganizationSizeCorrelation />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                  Trend Analytics
+                </CardTitle>
+                <p className="text-muted-foreground mt-1">
+                  Explore correlations and trends in member data
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="org-size-correlation">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      <div className="flex items-center gap-2">
+                        <ChartScatter className="h-5 w-5 text-primary" />
+                        <span>Organization Size vs System Choice</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <OrganizationSizeCorrelation />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
             
             <SystemAnalyticsDashboard />
           </div>
