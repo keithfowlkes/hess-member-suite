@@ -119,6 +119,7 @@ import {
 import { SystemHealthStatus } from '@/components/SystemHealthStatus';
 import { FollowUpReminders } from '@/components/FollowUpReminders';
 import { DatabaseBackupRestore } from '@/components/DatabaseBackupRestore';
+import { LatestLoginsModal } from '@/components/LatestLoginsModal';
 import { format } from 'date-fns';
 
 const MasterDashboard = () => {
@@ -225,6 +226,7 @@ const MasterDashboard = () => {
   const [showRevenueModal, setShowRevenueModal] = useState(false);
   const [showPendingApprovalsModal, setShowPendingApprovalsModal] = useState(false);
   const [showActiveInvitationsModal, setShowActiveInvitationsModal] = useState(false);
+  const [showLatestLoginsModal, setShowLatestLoginsModal] = useState(false);
 
   // Fetch organization update statistics
   useEffect(() => {
@@ -1451,6 +1453,14 @@ const MasterDashboard = () => {
                   <p className="text-muted-foreground">Manage system users and their permissions</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowLatestLoginsModal(true)}
+                    className="gap-2"
+                  >
+                    <Activity className="h-4 w-4" />
+                    Latest Logins
+                  </Button>
                   <Badge variant="secondary">{users.length} users</Badge>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -1649,6 +1659,12 @@ const MasterDashboard = () => {
           </Tabs>
         </main>
       </div>
+
+      {/* Latest Logins Modal */}
+      <LatestLoginsModal 
+        open={showLatestLoginsModal}
+        onOpenChange={setShowLatestLoginsModal}
+      />
 
       {/* Member Info Update Comparison Dialog */}
       {selectedMemberInfoUpdate && showMemberInfoUpdateComparisonDialog && (
