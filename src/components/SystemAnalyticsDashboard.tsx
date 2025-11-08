@@ -256,7 +256,7 @@ export function SystemAnalyticsDashboard() {
             System Usage Analytics
           </CardTitle>
           <p className="text-muted-foreground mt-1">
-            Distribution of software systems across active member institutions
+            Distribution of software systems across active member institutions. Data is based on reporting member institutions.
           </p>
         </div>
         
