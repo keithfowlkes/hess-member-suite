@@ -114,7 +114,10 @@ import {
   Check,
   Map,
   CalendarIcon,
-  Filter
+  Filter,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { SystemHealthStatus } from '@/components/SystemHealthStatus';
 import { FollowUpReminders } from '@/components/FollowUpReminders';
@@ -188,6 +191,12 @@ const MasterDashboard = () => {
   // Search functionality
   const [organizationSearchTerm, setOrganizationSearchTerm] = useState('');
   const [userSearchTerm, setUserSearchTerm] = useState('');
+  
+  // User table sorting state
+  type SortColumn = 'name' | 'organization' | 'role' | 'lastSignIn' | null;
+  type SortDirection = 'asc' | 'desc';
+  const [userSortColumn, setUserSortColumn] = useState<SortColumn>(null);
+  const [userSortDirection, setUserSortDirection] = useState<SortDirection>('asc');
   
   // User management state
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
@@ -455,6 +464,17 @@ const MasterDashboard = () => {
     );
   });
 
+  const handleUserSort = (column: SortColumn) => {
+    if (userSortColumn === column) {
+      // Toggle direction if same column
+      setUserSortDirection(userSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New column, default to ascending
+      setUserSortColumn(column);
+      setUserSortDirection('asc');
+    }
+  };
+
   const filteredUsers = users.filter(user => {
     const searchLower = userSearchTerm.toLowerCase();
     return (
@@ -465,7 +485,38 @@ const MasterDashboard = () => {
       user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower)
     );
   }).sort((a, b) => {
-    // Sort by role first (admin > cohort_leader > member), then by email
+    // If a column is being sorted, use that
+    if (userSortColumn) {
+      let comparison = 0;
+      
+      switch (userSortColumn) {
+        case 'name':
+          const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+          const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+          comparison = nameA.localeCompare(nameB);
+          break;
+        case 'organization':
+          const orgA = (a.organization || '').toLowerCase();
+          const orgB = (b.organization || '').toLowerCase();
+          comparison = orgA.localeCompare(orgB);
+          break;
+        case 'role':
+          const roleA = a.user_roles?.[0]?.role || 'member';
+          const roleB = b.user_roles?.[0]?.role || 'member';
+          const roleOrder = { admin: 0, cohort_leader: 1, member: 2 };
+          comparison = (roleOrder[roleA as keyof typeof roleOrder] ?? 2) - (roleOrder[roleB as keyof typeof roleOrder] ?? 2);
+          break;
+        case 'lastSignIn':
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          comparison = dateA - dateB;
+          break;
+      }
+      
+      return userSortDirection === 'asc' ? comparison : -comparison;
+    }
+    
+    // Default sort: by role first (admin > cohort_leader > member), then by email
     const roleA = a.user_roles?.[0]?.role || 'member';
     const roleB = b.user_roles?.[0]?.role || 'member';
     
@@ -1480,10 +1531,58 @@ const MasterDashboard = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>User</TableHead>
-                          <TableHead>Organization</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Last Sign In</TableHead>
+                          <TableHead 
+                            className="cursor-pointer hover:bg-muted/50 select-none"
+                            onClick={() => handleUserSort('name')}
+                          >
+                            <div className="flex items-center gap-2">
+                              User
+                              {userSortColumn === 'name' ? (
+                                userSortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="cursor-pointer hover:bg-muted/50 select-none"
+                            onClick={() => handleUserSort('organization')}
+                          >
+                            <div className="flex items-center gap-2">
+                              Organization
+                              {userSortColumn === 'organization' ? (
+                                userSortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="cursor-pointer hover:bg-muted/50 select-none"
+                            onClick={() => handleUserSort('role')}
+                          >
+                            <div className="flex items-center gap-2">
+                              Role
+                              {userSortColumn === 'role' ? (
+                                userSortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="cursor-pointer hover:bg-muted/50 select-none"
+                            onClick={() => handleUserSort('lastSignIn')}
+                          >
+                            <div className="flex items-center gap-2">
+                              Last Sign In
+                              {userSortColumn === 'lastSignIn' ? (
+                                userSortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </div>
+                          </TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
