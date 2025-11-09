@@ -1,22 +1,30 @@
+import { useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { PublicUSMap } from '@/components/PublicUSMap';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export default function MemberMap() {
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 overflow-hidden">
           <div className="container mx-auto px-4 py-8 h-full">
-            <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                Member Organization Map
-              </h1>
-              <p className="text-muted-foreground">
-                Interactive map showing the geographic distribution of our member organizations
-              </p>
-            </div>
+            <Card 
+              className="mb-8 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setIsMapModalOpen(true)}
+            >
+              <CardHeader className="text-center">
+                <CardTitle className="text-3xl">Member Organization Map</CardTitle>
+                <CardDescription>
+                  Interactive map showing the geographic distribution of our member organizations (click to enlarge)
+                </CardDescription>
+              </CardHeader>
+            </Card>
             
             <PublicUSMap />
           </div>
@@ -36,6 +44,15 @@ export default function MemberMap() {
             </p>
           </div>
         </main>
+
+        {/* Map Modal */}
+        <Dialog open={isMapModalOpen} onOpenChange={setIsMapModalOpen}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-6">
+            <div className="w-full h-full overflow-auto">
+              <PublicUSMap />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarProvider>
   );
