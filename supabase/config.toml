@@ -107,3 +107,6 @@ verify_jwt = false
 
 [functions.normalize-moodle-lms]
 verify_jwt = false
+
+[functions.normalize-google-classroom-lms]
+verify_jwt = false

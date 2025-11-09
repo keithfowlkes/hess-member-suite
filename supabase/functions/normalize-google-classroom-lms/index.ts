@@ -1,0 +1,77 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    console.log('Starting normalization of Google Classroom LMS entries...');
+
+    // First, get count of records to update
+    const { count, error: countError } = await supabaseClient
+      .from('organizations')
+      .select('*', { count: 'exact', head: true })
+      .ilike('learning_management', '%google class%room%')
+      .eq('membership_status', 'active');
+
+    if (countError) {
+      console.error('Error counting organizations:', countError);
+      throw countError;
+    }
+
+    console.log(`Found ${count || 0} organizations to normalize`);
+
+    // Update all organizations with any Google Classroom variant to "Google Classroom"
+    const { error: updateError } = await supabaseClient
+      .from('organizations')
+      .update({ 
+        learning_management: 'Google Classroom',
+        updated_at: new Date().toISOString()
+      })
+      .ilike('learning_management', '%google class%room%')
+      .eq('membership_status', 'active');
+
+    if (updateError) {
+      console.error('Error updating organizations:', updateError);
+      throw updateError;
+    }
+
+    console.log(`Successfully normalized ${count || 0} organizations`);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: `Normalized ${count || 0} organizations to "Google Classroom"`,
+        count: count || 0
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    );
+
+  } catch (error) {
+    console.error('Error in normalize-google-classroom-lms:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    );
+  }
+});
