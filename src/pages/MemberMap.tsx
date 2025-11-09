@@ -9,7 +9,8 @@ export default function MemberMap() {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   return (
-    <SidebarProvider>
+    <>
+      <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 overflow-hidden">
@@ -47,16 +48,17 @@ export default function MemberMap() {
             </p>
           </div>
         </main>
-
-        {/* Map Modal */}
-        <Dialog open={isMapModalOpen} onOpenChange={setIsMapModalOpen}>
-          <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-6">
-            <div className="w-full h-full overflow-auto">
-              <PublicUSMap />
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </SidebarProvider>
+
+    {/* Map Modal */}
+    <Dialog open={isMapModalOpen} onOpenChange={setIsMapModalOpen}>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-6">
+        <div className="w-full h-full overflow-auto">
+          <PublicUSMap />
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
