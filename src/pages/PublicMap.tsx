@@ -7,24 +7,26 @@ export default function PublicMap() {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <Card 
-          className="mb-8 cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => {
-            console.log('Public map card clicked');
-            setIsMapModalOpen(true);
-          }}
-        >
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl">Member Organization Map</CardTitle>
-            <CardDescription>
-              Interactive map showing the geographic distribution of our member organizations (click to enlarge)
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        
-        <PublicUSMap />
+    <>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <Card 
+            className="mb-8 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => {
+              console.log('Public map card clicked, state:', isMapModalOpen);
+              setIsMapModalOpen(true);
+            }}
+          >
+            <CardHeader className="text-center">
+              <CardTitle className="text-3xl">Member Organization Map</CardTitle>
+              <CardDescription>
+                Interactive map showing the geographic distribution of our member organizations (click to enlarge)
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          
+          <PublicUSMap />
+        </div>
       </div>
 
       {/* Map Modal */}
@@ -35,6 +37,6 @@ export default function PublicMap() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
