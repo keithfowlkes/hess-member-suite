@@ -92,3 +92,6 @@ verify_jwt = false
 
 [functions.populate-organization-websites]
 verify_jwt = true
+
+[functions.update-workday-financial-systems]
+verify_jwt = false
