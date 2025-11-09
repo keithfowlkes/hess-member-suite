@@ -40,6 +40,9 @@ const processDatacubeData = (datacubeEntries: Array<{system_field: string, syste
   
   // Fields that should show all systems without grouping into "Other"
   const showAllSystemsFields = [
+    'student_information_system',
+    'financial_system',
+    'hcm_hr',
     'primary_office_hardware',
     'payment_platform',
     'meal_plan_management',
