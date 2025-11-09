@@ -98,3 +98,6 @@ verify_jwt = false
 
 [functions.normalize-workday-financial-aid]
 verify_jwt = false
+
+[functions.normalize-oracle-financial-aid]
+verify_jwt = false
