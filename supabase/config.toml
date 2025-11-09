@@ -104,3 +104,6 @@ verify_jwt = false
 
 [functions.normalize-slate-admissions]
 verify_jwt = false
+
+[functions.normalize-moodle-lms]
+verify_jwt = false
