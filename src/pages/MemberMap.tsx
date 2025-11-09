@@ -16,7 +16,10 @@ export default function MemberMap() {
           <div className="container mx-auto px-4 py-8 h-full">
             <Card 
               className="mb-8 cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => setIsMapModalOpen(true)}
+              onClick={() => {
+                console.log('Map card clicked');
+                setIsMapModalOpen(true);
+              }}
             >
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl">Member Organization Map</CardTitle>

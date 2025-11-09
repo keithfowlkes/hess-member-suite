@@ -1,20 +1,40 @@
+import { useState } from 'react';
 import { PublicUSMap } from '@/components/PublicUSMap';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export default function PublicMap() {
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Member Organization Map
-          </h1>
-          <p className="text-muted-foreground">
-            Interactive map showing the geographic distribution of our member organizations
-          </p>
-        </div>
+        <Card 
+          className="mb-8 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => {
+            console.log('Public map card clicked');
+            setIsMapModalOpen(true);
+          }}
+        >
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl">Member Organization Map</CardTitle>
+            <CardDescription>
+              Interactive map showing the geographic distribution of our member organizations (click to enlarge)
+            </CardDescription>
+          </CardHeader>
+        </Card>
         
         <PublicUSMap />
       </div>
+
+      {/* Map Modal */}
+      <Dialog open={isMapModalOpen} onOpenChange={setIsMapModalOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-6">
+          <div className="w-full h-full overflow-auto">
+            <PublicUSMap />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
