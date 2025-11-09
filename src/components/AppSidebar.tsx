@@ -113,7 +113,7 @@ export function AppSidebar() {
     { title: 'Member Organizations', url: '/members', icon: Users },
     { title: 'User Messages', url: '/user-messages', icon: MessageSquare, badge: unreadMessageCount },
     { title: 'Cohort Information', url: '/cohort-information', icon: GraduationCap },
-    { title: 'Dashboards', url: '/dashboards', icon: BarChart3 },
+    { title: 'Member Analytics', url: '/dashboards', icon: BarChart3 },
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
     { title: 'Organization Profile', url: '/profile', icon: User },
     { title: 'Settings', url: '/settings', icon: Settings },
