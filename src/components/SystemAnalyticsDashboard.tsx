@@ -241,9 +241,18 @@ export function SystemAnalyticsDashboard() {
     );
   }
 
+  // Key systems to always show prominently
+  const keySystemsMap = [
+    { key: 'student_information_system', title: 'Student Information Systems' },
+    { key: 'financial_system', title: 'Financial Systems' },
+    { key: 'hcm_hr', title: 'Human Capital Management' },
+  ];
+
   const systemsToShow = selectedSystem === 'all' 
-    ? SYSTEM_DATA_MAP
-    : SYSTEM_DATA_MAP.filter(system => system.key === selectedSystem);
+    ? SYSTEM_DATA_MAP.filter(s => !keySystemsMap.some(ks => ks.key === s.key))
+    : SYSTEM_DATA_MAP.filter(system => system.key === selectedSystem && !keySystemsMap.some(ks => ks.key === system.key));
+
+  const showKeySystemsSection = selectedSystem === 'all';
 
   return (
     <Card className="mb-8 bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
@@ -303,15 +312,50 @@ export function SystemAnalyticsDashboard() {
         </div>
       </CardHeader>
       
-      <CardContent>
-        <div className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {systemsToShow.map(({ key, title }) => {
-              const data = getSystemData(key);
-              return data.length > 0 ? renderChart(data, title, key) : null;
-            })}
+      <CardContent className="space-y-8">
+        {/* Key Systems Section - Always visible when showing all */}
+        {showKeySystemsSection && (
+          <div className="w-full">
+            <h3 className="text-lg font-semibold mb-4 text-foreground">Core Enterprise Systems</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {keySystemsMap.map(({ key, title }) => {
+                const data = getSystemData(key);
+                return data.length > 0 ? renderChart(data, title, key) : null;
+              })}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Other Systems Section */}
+        {systemsToShow.length > 0 && (
+          <div className="w-full">
+            {showKeySystemsSection && (
+              <h3 className="text-lg font-semibold mb-4 text-foreground">Additional Systems</h3>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {systemsToShow.map(({ key, title }) => {
+                const data = getSystemData(key);
+                return data.length > 0 ? renderChart(data, title, key) : null;
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Single System View - when filtering */}
+        {!showKeySystemsSection && selectedSystem !== 'all' && (
+          <div className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {(() => {
+                const selectedSystemData = SYSTEM_DATA_MAP.find(s => s.key === selectedSystem);
+                if (selectedSystemData) {
+                  const data = getSystemData(selectedSystemData.key);
+                  return data.length > 0 ? renderChart(data, selectedSystemData.title, selectedSystemData.key) : null;
+                }
+                return null;
+              })()}
+            </div>
+          </div>
+        )}
       </CardContent>
       
       <InstitutionsModal
