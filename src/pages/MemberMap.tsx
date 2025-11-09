@@ -8,27 +8,32 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 export default function MemberMap() {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
+  const handleCardClick = () => {
+    console.log('Map card clicked! Current state:', isMapModalOpen);
+    setIsMapModalOpen(true);
+    console.log('State should now be true');
+  };
+
   return (
     <>
       <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <main className="flex-1 overflow-hidden">
-          <div className="container mx-auto px-4 py-8 h-full">
-            <Card 
-              className="mb-8 cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => {
-                console.log('Map card clicked');
-                setIsMapModalOpen(true);
-              }}
-            >
-              <CardHeader className="text-center">
-                <CardTitle className="text-3xl">Member Organization Map</CardTitle>
-                <CardDescription>
-                  Interactive map showing the geographic distribution of our member organizations (click to enlarge)
-                </CardDescription>
-              </CardHeader>
-            </Card>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <main className="flex-1 overflow-hidden">
+            <div className="container mx-auto px-4 py-8 h-full">
+              <div 
+                onClick={handleCardClick}
+                className="mb-8 cursor-pointer"
+              >
+                <Card className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="text-center">
+                    <CardTitle className="text-3xl">Member Organization Map</CardTitle>
+                    <CardDescription>
+                      Interactive map showing the geographic distribution of our member organizations (click to enlarge)
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
             
             <PublicUSMap />
           </div>
