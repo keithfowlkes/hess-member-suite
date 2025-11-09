@@ -901,6 +901,72 @@ const handleOrganizationDialogClose = () => {
             </div>
           </main>
         </div>
+
+        {/* Pie Chart Modal - Admin View */}
+        <Dialog open={isPieChartModalOpen} onOpenChange={setIsPieChartModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <PieChart className="h-5 w-5" />
+                Member Distribution by Software System
+              </DialogTitle>
+              <DialogDescription>
+                Percentage breakdown of members across cohorts
+              </DialogDescription>
+            </DialogHeader>
+            <div className="h-[600px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPieChart>
+                  <Pie
+                    data={cohortStats?.map(cohort => ({
+                      name: cohort.cohortName,
+                      value: cohort.memberCount,
+                      percentage: ((cohort.memberCount / (cohortStats?.reduce((sum, c) => sum + c.memberCount, 0) || 1)) * 100).toFixed(1)
+                    })) || []}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={true}
+                    label={({ name, percentage }) => `${name}: ${percentage}%`}
+                    outerRadius={180}
+                    fill="#8884d8"
+                    dataKey="value"
+                    style={{ fontSize: '14px' }}
+                  >
+                    {cohortStats?.map((cohort, index) => (
+                      <Cell key={`cell-${index}`} fill={
+                        cohort.cohortName === 'Workday' ? '#FF8C00' : // Orange for Workday
+                        [
+                          '#FF6B6B', // Red
+                          '#4ECDC4', // Teal
+                          '#45B7D1', // Blue
+                          '#96CEB4', // Green
+                          '#FFEAA7', // Yellow
+                          '#DDA0DD', // Plum
+                          '#98D8C8', // Mint
+                          '#F7DC6F', // Light Yellow
+                          '#BB8FCE', // Light Purple
+                          '#85C1E9', // Light Blue
+                          '#F8C471', // Orange
+                          '#82E0AA', // Light Green
+                          '#F1948A', // Light Red
+                          '#85CCDA', // Cyan
+                          '#D2B4DE'  // Lavender
+                        ][index]
+                      } />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number, name: string) => [
+                      `${value} members (${((value / (cohortStats?.reduce((sum, c) => sum + c.memberCount, 0) || 1)) * 100).toFixed(1)}%)`,
+                      name
+                    ]}
+                  />
+                  <Legend />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </div>
+          </DialogContent>
+        </Dialog>
       </SidebarProvider>
     );
   }
@@ -1049,73 +1115,7 @@ const handleOrganizationDialogClose = () => {
         </div>
       </main>
     </div>
-
-    {/* Pie Chart Modal */}
-    <Dialog open={isPieChartModalOpen} onOpenChange={setIsPieChartModalOpen}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <PieChart className="h-5 w-5" />
-            Member Distribution by Software System
-          </DialogTitle>
-          <DialogDescription>
-            Percentage breakdown of members across cohorts
-          </DialogDescription>
-        </DialogHeader>
-        <div className="h-[600px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <RechartsPieChart>
-              <Pie
-                data={cohortStats?.map(cohort => ({
-                  name: cohort.cohortName,
-                  value: cohort.memberCount,
-                  percentage: ((cohort.memberCount / (cohortStats?.reduce((sum, c) => sum + c.memberCount, 0) || 1)) * 100).toFixed(1)
-                })) || []}
-                cx="50%"
-                cy="50%"
-                labelLine={true}
-                label={({ name, percentage }) => `${name}: ${percentage}%`}
-                outerRadius={180}
-                fill="#8884d8"
-                dataKey="value"
-                style={{ fontSize: '14px' }}
-              >
-                {cohortStats?.map((cohort, index) => (
-                  <Cell key={`cell-${index}`} fill={
-                    cohort.cohortName === 'Workday' ? '#FF8C00' : // Orange for Workday
-                    [
-                      '#FF6B6B', // Red
-                      '#4ECDC4', // Teal
-                      '#45B7D1', // Blue
-                      '#96CEB4', // Green
-                      '#FFEAA7', // Yellow
-                      '#DDA0DD', // Plum
-                      '#98D8C8', // Mint
-                      '#F7DC6F', // Light Yellow
-                      '#BB8FCE', // Light Purple
-                      '#85C1E9', // Light Blue
-                      '#F8C471', // Orange
-                      '#82E0AA', // Light Green
-                      '#F1948A', // Light Red
-                      '#85CCDA', // Cyan
-                      '#D2B4DE'  // Lavender
-                    ][index]
-                  } />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value: number, name: string) => [
-                  `${value} members (${((value / (cohortStats?.reduce((sum, c) => sum + c.memberCount, 0) || 1)) * 100).toFixed(1)}%)`,
-                  name
-                ]}
-              />
-              <Legend />
-            </RechartsPieChart>
-          </ResponsiveContainer>
-        </div>
-      </DialogContent>
-    </Dialog>
-  </SidebarProvider>
+    </SidebarProvider>
   );
 };
 
