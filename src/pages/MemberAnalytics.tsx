@@ -4,6 +4,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
 import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrelation';
+import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMSCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { BarChart3, ChartScatter, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -77,6 +78,18 @@ const MemberAnalytics = () => {
                     </AccordionTrigger>
                     <AccordionContent>
                       <OrganizationSizeCorrelation />
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="org-size-lms-correlation">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      <div className="flex items-center gap-2">
+                        <ChartScatter className="h-5 w-5 text-primary" />
+                        <span>Organization Size vs LMS Choice</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <OrganizationSizeLMSCorrelation />
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
