@@ -95,3 +95,6 @@ verify_jwt = true
 
 [functions.update-workday-financial-systems]
 verify_jwt = false
+
+[functions.normalize-workday-financial-aid]
+verify_jwt = false
