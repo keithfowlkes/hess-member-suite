@@ -101,3 +101,6 @@ verify_jwt = false
 
 [functions.normalize-oracle-financial-aid]
 verify_jwt = false
+
+[functions.normalize-slate-admissions]
+verify_jwt = false
