@@ -651,10 +651,15 @@ const handleOrganizationDialogClose = () => {
                     <div className="grid gap-6 md:grid-cols-2">
                       {/* Pie Chart */}
                       <Card 
-                        className="cursor-pointer hover:shadow-lg transition-all group"
-                        onClick={() => setIsPieChartModalOpen(true)}
+                        className="hover:shadow-lg transition-all group"
                       >
-                        <CardHeader>
+                        <CardHeader 
+                          className="cursor-pointer"
+                          onClick={() => {
+                            console.log('Opening pie chart modal');
+                            setIsPieChartModalOpen(true);
+                          }}
+                        >
                           <CardTitle className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <PieChart className="h-5 w-5" />
@@ -663,11 +668,11 @@ const handleOrganizationDialogClose = () => {
                             <Maximize2 className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                           </CardTitle>
                           <CardDescription>
-                            Percentage breakdown of members across cohorts • Click to enlarge
+                            Percentage breakdown of members across cohorts • Click header to enlarge
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <div className="h-80">
+                          <div className="h-80 pointer-events-none">
                             <ResponsiveContainer width="100%" height="100%">
                               <RechartsPieChart>
                                 <Pie
