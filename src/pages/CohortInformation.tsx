@@ -53,6 +53,7 @@ const CohortInformation = () => {
   const [selectedOrganizationName, setSelectedOrganizationName] = useState<string | null>(null);
   const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] = useState(false);
   const [isPieChartModalOpen, setIsPieChartModalOpen] = useState(false);
+  const [isBarChartModalOpen, setIsBarChartModalOpen] = useState(false);
   const { data: cohortStats, isLoading: statsLoading, error: statsError } = useCohortStatistics();
   const { data: cohortLeaderData, loading: cohortLeaderLoading, error: cohortLeaderError } = useCohortLeaderData();
   const { data: selectedOrganization, isLoading: organizationLoading } = useOrganizationByName(selectedOrganizationName);
@@ -727,18 +728,29 @@ const handleOrganizationDialogClose = () => {
                       </Card>
 
                       {/* Bar Chart */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2">
-                            <BarChart3 className="h-5 w-5" />
-                            Members & Organizations by System
+                      <Card 
+                        className="hover:shadow-lg transition-all group"
+                      >
+                        <CardHeader 
+                          className="cursor-pointer"
+                          onClick={() => {
+                            console.log('Opening bar chart modal');
+                            setIsBarChartModalOpen(true);
+                          }}
+                        >
+                          <CardTitle className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <BarChart3 className="h-5 w-5" />
+                              Members & Organizations by System
+                            </div>
+                            <Maximize2 className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                           </CardTitle>
                           <CardDescription>
-                            Comparison of member and organization counts
+                            Comparison of member and organization counts • Click header to enlarge
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <div className="h-80">
+                          <div className="h-80 pointer-events-none">
                             <ResponsiveContainer width="100%" height="100%">
                               <BarChart
                                 data={cohortStats.map(cohort => ({
@@ -965,11 +977,70 @@ const handleOrganizationDialogClose = () => {
                 </RechartsPieChart>
               </ResponsiveContainer>
             </div>
-          </DialogContent>
-        </Dialog>
-      </SidebarProvider>
-    );
-  }
+            </DialogContent>
+          </Dialog>
+
+          {/* Bar Chart Modal - Admin View */}
+          <Dialog open={isBarChartModalOpen} onOpenChange={setIsBarChartModalOpen}>
+            <DialogContent className="max-w-6xl max-h-[90vh]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Members & Organizations by System
+                </DialogTitle>
+                <DialogDescription>
+                  Comparison of member and organization counts across systems
+                </DialogDescription>
+              </DialogHeader>
+              <div className="h-[600px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={cohortStats?.map(cohort => ({
+                      name: cohort.cohortName.length > 20 ? 
+                        cohort.cohortName.substring(0, 17) + '...' : 
+                        cohort.cohortName,
+                      fullName: cohort.cohortName,
+                      members: cohort.memberCount,
+                      organizations: cohort.organizationCount
+                    })) || []}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 80
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="name" 
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                      interval={0}
+                      fontSize={14}
+                    />
+                    <YAxis fontSize={14} />
+                    <Tooltip 
+                      labelFormatter={(label, payload) => {
+                        const item = payload?.[0]?.payload;
+                        return item?.fullName || label;
+                      }}
+                      formatter={(value: number, name: string) => [
+                        value,
+                        name === 'members' ? 'Members' : 'Organizations'
+                      ]}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '14px', paddingTop: '20px' }} />
+                    <Bar dataKey="members" fill="hsl(var(--primary))" name="Members" />
+                    <Bar dataKey="organizations" fill="hsl(var(--secondary))" name="Organizations" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </SidebarProvider>
+      );
+    }
 
   return (
     <SidebarProvider>
