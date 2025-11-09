@@ -1,66 +1,21 @@
 import { useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Plus, Search, BarChart3, Edit, Trash2, Eye, Calendar, User } from 'lucide-react';
-import { useDashboards, useDeleteDashboard } from '@/hooks/useDashboards';
-import { DashboardBuilder } from '@/components/DashboardBuilder';
 import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
-import { format } from 'date-fns';
+import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrelation';
+import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
+import { BarChart3, ChartScatter, MessageSquare } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function Dashboards() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDashboard, setSelectedDashboard] = useState<string | null>(null);
-  const [builderOpen, setBuilderOpen] = useState(false);
-  
-  const { data: dashboards, isLoading } = useDashboards();
-  const deleteDashboardMutation = useDeleteDashboard();
-
-  const filteredDashboards = dashboards?.filter(dashboard =>
-    dashboard.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    dashboard.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-
-  const handleCreateNew = () => {
-    setSelectedDashboard(null);
-    setBuilderOpen(true);
-  };
-
-  const handleEdit = (dashboardId: string) => {
-    setSelectedDashboard(dashboardId);
-    setBuilderOpen(true);
-  };
-
-  const handleDelete = (dashboardId: string) => {
-    deleteDashboardMutation.mutate(dashboardId);
-  };
-
-  if (isLoading) {
-    return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full">
-          <AppSidebar />
-          <main className="flex-1 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-          </main>
-        </div>
-      </SidebarProvider>
-    );
-  }
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
 
   return (
     <SidebarProvider>
@@ -68,138 +23,88 @@ export default function Dashboards() {
         <AppSidebar />
         <main className="flex-1 p-8">
           <div className="space-y-6">
-            {/* System Analytics Dashboard */}
-            <SystemAnalyticsDashboard />
-            
-            <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <BarChart3 className="h-6 w-6 text-primary" />
+              </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Dashboards</h1>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Member Analytics
+                </h1>
                 <p className="text-muted-foreground mt-2">
-                  Create and manage custom dashboards with drag-and-drop reports
+                  System usage analytics across HESS Consortium member institutions
+                </p>
+                <p className="text-sm text-muted-foreground/80 mt-1 italic">
+                  This is confidential member-only data and will not be shared to vendor partners.
                 </p>
               </div>
-              <Button onClick={handleCreateNew} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create Dashboard
-              </Button>
             </div>
-
-            {/* Search */}
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search dashboards..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            {/* Dashboard Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredDashboards.map((dashboard) => (
-                <Card key={dashboard.id} className="group hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <CardTitle className="flex items-center gap-2">
-                          <BarChart3 className="h-5 w-5 text-primary" />
-                          {dashboard.title}
-                        </CardTitle>
-                        <CardDescription>
-                          {dashboard.description || 'No description provided'}
-                        </CardDescription>
+            
+            <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <ChartScatter className="h-6 w-6 text-primary" />
                       </div>
-                      <Badge variant={dashboard.is_public ? "default" : "secondary"}>
-                        {dashboard.is_public ? "Public" : "Private"}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>Updated {format(new Date(dashboard.updated_at), 'MMM d, yyyy')}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <User className="h-3 w-3" />
-                          <span>{dashboard.layout.components?.length || 0} components</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleEdit(dashboard.id)}
-                          className="flex-1"
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Edit
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="outline" className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Dashboard</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{dashboard.title}"? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(dashboard.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {filteredDashboards.length === 0 && (
-              <div className="text-center py-12">
-                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-muted-foreground">
-                  {searchTerm ? 'No dashboards found' : 'No dashboards created yet'}
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchTerm 
-                    ? 'Try adjusting your search terms'
-                    : 'Create your first dashboard to get started with custom reports'
-                  }
-                </p>
-                {!searchTerm && (
-                  <Button onClick={handleCreateNew} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Create Your First Dashboard
+                      Trend Analytics
+                    </CardTitle>
+                    <p className="text-muted-foreground mt-1">
+                      Explore correlations and trends in member data
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFeedbackDialogOpen(true)}
+                    className="gap-2"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    What would you like to see?
                   </Button>
-                )}
-              </div>
-            )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="org-size-correlation">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      <div className="flex items-center gap-2">
+                        <ChartScatter className="h-5 w-5 text-primary" />
+                        <span>Organization Size vs System Choice</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <OrganizationSizeCorrelation />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
+            
+            <SystemAnalyticsDashboard />
+          </div>
+          
+          {/* Footer */}
+          <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
+            <img 
+              src="/lovable-uploads/95b9e225-2202-4407-bdb2-f95edf683d93.png" 
+              alt="DeusLogic Logo" 
+              className="h-8 w-auto mb-2 opacity-70"
+            />
+            <p className="text-xs text-muted-foreground">
+              Copyright 2025 DeusLogic, LLC.
+            </p>
+            <p className="text-xs text-muted-foreground text-center mt-4 max-w-2xl px-4">
+              The member information on this website portal is confidential to HESS Consortium members. This information should not be shared with outside organizations without the written permission of the members.
+            </p>
           </div>
         </main>
       </div>
-
-      {/* Dashboard Builder Modal */}
-      <DashboardBuilder
-        open={builderOpen}
-        onOpenChange={setBuilderOpen}
-        dashboardId={selectedDashboard}
+      
+      <AnalyticsFeedbackDialog
+        open={feedbackDialogOpen}
+        onOpenChange={setFeedbackDialogOpen}
       />
     </SidebarProvider>
   );
