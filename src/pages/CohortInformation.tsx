@@ -193,14 +193,16 @@ const CohortInformation = () => {
                 // Build cohort list from user_cohorts
                 let cohortList = userCohorts.map(uc => uc.cohort);
                 
-                // Check if organization has Campus Management in SIS or Financial System
+                // Check if organization has Anthology or Campus Management in SIS or Financial System
                 if (orgData) {
-                  const hasCampusManagement = 
+                  const hasAnthologyOrCampusManagement = 
+                    orgData.student_information_system === 'Anthology' ||
+                    orgData.financial_system === 'Anthology' ||
                     orgData.student_information_system === 'Campus Management' ||
                     orgData.financial_system === 'Campus Management';
                   
-                  // Add Anthology cohort if Campus Management is detected and not already in cohorts
-                  if (hasCampusManagement && !cohortList.includes('Anthology')) {
+                  // Add Anthology cohort if Anthology or Campus Management is detected and not already in cohorts
+                  if (hasAnthologyOrCampusManagement && !cohortList.includes('Anthology')) {
                     cohortList.push('Anthology');
                   }
                 }
