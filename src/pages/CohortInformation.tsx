@@ -1235,7 +1235,12 @@ const handleOrganizationDialogClose = () => {
                       }, {} as Record<string, Array<typeof allMembers[0]>>);
 
                       return Object.entries(cohortGroups)
-                        .sort(([a], [b]) => a.localeCompare(b))
+                        .sort(([a], [b]) => {
+                          // Move "No cohort" to the end
+                          if (a === 'No cohort') return 1;
+                          if (b === 'No cohort') return -1;
+                          return a.localeCompare(b);
+                        })
                         .map(([cohort, members]: [string, Array<typeof allMembers[0]>]) => {
                           // Filter for cohort leaders in this cohort
                           const cohortLeaders = members.filter(m => 
