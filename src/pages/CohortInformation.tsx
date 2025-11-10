@@ -1151,13 +1151,28 @@ const handleOrganizationDialogClose = () => {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Cohort Leader Overview
-                  </CardTitle>
-                  <CardDescription>
-                    Current cohort leaders in the HESS Consortium
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Cohort Leader Overview
+                      </CardTitle>
+                      <CardDescription>
+                        Current cohort leaders in the HESS Consortium
+                      </CardDescription>
+                    </div>
+                    {userRole === 'admin' && allMembers.length > 0 && (
+                      <Button
+                        onClick={downloadCohortMembersExcel}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download Excel
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-2 md:grid-cols-3">
