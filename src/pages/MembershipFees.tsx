@@ -2512,18 +2512,18 @@ export default function MembershipFees() {
                             });
 
                             // Prepare data for Excel
-                            const excelData = filteredOrgs.map(org => ({
-                              'Organization Name': org.name,
-                              'Email': org.email || '',
-                              'Status': org.membership_status,
-                              'Annual Fee': org.annual_fee_amount || 0,
-                              'Membership End Date': org.membership_end_date ? format(new Date(org.membership_end_date), 'MM/dd/yyyy') : '',
-                              'Membership Start': org.membership_start_date ? format(new Date(org.membership_start_date), 'MM/dd/yyyy') : '',
-                              'Contact Name': org.profiles ? `${org.profiles.first_name} ${org.profiles.last_name}` : '',
-                              'Contact Phone': org.profiles?.phone || '',
-                              'City': org.city || '',
-                              'State': org.state || ''
-                            }));
+                            const excelData = filteredOrgs.map(org => {
+                              const orgInvoices = invoices.filter(inv => inv.organization_id === org.id);
+                              const hasPaidInvoice = orgInvoices.some(inv => inv.status === 'paid');
+                              const paymentStatus = hasPaidInvoice ? 'Paid' : 'Unpaid';
+                              
+                              return {
+                                'Organization Name': org.name,
+                                'Email': org.email || '',
+                                'Annual Fee': org.annual_fee_amount || 0,
+                                'Payment Status': paymentStatus
+                              };
+                            });
 
                             // Create workbook
                             const ws = XLSX.utils.json_to_sheet(excelData);
@@ -2532,16 +2532,10 @@ export default function MembershipFees() {
 
                             // Set column widths
                             const colWidths = [
-                              { wch: 30 }, // Organization Name
+                              { wch: 35 }, // Organization Name
                               { wch: 30 }, // Email
-                              { wch: 15 }, // Status
-                              { wch: 12 }, // Annual Fee
-                              { wch: 18 }, // Next Renewal Date
-                              { wch: 18 }, // Membership Start
-                              { wch: 25 }, // Contact Name
-                              { wch: 15 }, // Contact Phone
-                              { wch: 20 }, // City
-                              { wch: 10 }  // State
+                              { wch: 15 }, // Annual Fee
+                              { wch: 15 }  // Payment Status
                             ];
                             ws['!cols'] = colWidths;
 
@@ -2581,11 +2575,8 @@ export default function MembershipFees() {
                               <tr>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Organization</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
                                 <th className="px-4 py-3 text-right text-sm font-medium">Annual Fee</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium">Membership End</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium">Contact</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium">Location</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Payment Status</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -2606,48 +2597,37 @@ export default function MembershipFees() {
                                 if (filteredOrgs.length === 0) {
                                   return (
                                     <tr>
-                                      <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                                      <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
                                         No organizations found for the selected date range.
                                       </td>
                                     </tr>
                                   );
                                 }
 
-                                return filteredOrgs.map((org) => (
-                                  <tr key={org.id} className="border-t hover:bg-muted/50">
-                                    <td className="px-4 py-3">
-                                      <div>
-                                        <p className="font-medium">{org.name}</p>
-                                      </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm">{org.email || '-'}</td>
-                                    <td className="px-4 py-3">
-                                      <Badge className={getStatusColor(org.membership_status)}>
-                                        {org.membership_status}
-                                      </Badge>
-                                    </td>
-                                    <td className="px-4 py-3 text-right font-medium">
-                                      ${org.annual_fee_amount?.toLocaleString() || '0'}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm">
-                                      {org.membership_end_date 
-                                        ? format(new Date(org.membership_end_date), 'MMM dd, yyyy')
-                                        : '-'
-                                      }
-                                    </td>
-                                    <td className="px-4 py-3 text-sm">
-                                      <div>
-                                        <p>{org.profiles ? `${org.profiles.first_name} ${org.profiles.last_name}` : '-'}</p>
-                                        {org.profiles?.phone && (
-                                          <p className="text-xs text-muted-foreground">{org.profiles.phone}</p>
-                                        )}
-                                      </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm">
-                                      {org.city && org.state ? `${org.city}, ${org.state}` : '-'}
-                                    </td>
-                                  </tr>
-                                ));
+                                return filteredOrgs.map((org) => {
+                                  const orgInvoices = invoices.filter(inv => inv.organization_id === org.id);
+                                  const hasPaidInvoice = orgInvoices.some(inv => inv.status === 'paid');
+                                  const paymentStatus = hasPaidInvoice ? 'paid' : 'unpaid';
+                                  
+                                  return (
+                                    <tr key={org.id} className="border-t hover:bg-muted/50">
+                                      <td className="px-4 py-3">
+                                        <div>
+                                          <p className="font-medium">{org.name}</p>
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-3 text-sm">{org.email || '-'}</td>
+                                      <td className="px-4 py-3 text-right font-medium">
+                                        ${org.annual_fee_amount?.toLocaleString() || '0'}
+                                      </td>
+                                      <td className="px-4 py-3">
+                                        <Badge className={paymentStatus === 'paid' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-amber-100 text-amber-800 border-amber-200'}>
+                                          {paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+                                        </Badge>
+                                      </td>
+                                    </tr>
+                                  );
+                                });
                               })()}
                             </tbody>
                           </table>
