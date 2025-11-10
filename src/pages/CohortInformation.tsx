@@ -48,6 +48,7 @@ const CohortInformation = () => {
   const { user, isAdmin, isViewingAsAdmin } = useAuth();
   const { toast } = useToast();
   const [cohortMembers, setCohortMembers] = useState<CohortMember[]>([]);
+  const [allMembers, setAllMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string>('member');
   const [searchTerm, setSearchTerm] = useState('');
@@ -155,6 +156,31 @@ const CohortInformation = () => {
             }) || [];
           
           setCohortMembers(cohortLeaders);
+
+          // If admin, also fetch all members with their cohorts
+          if (primaryRole === 'admin') {
+            const { data: allUserCohorts, error: cohortsError } = await supabase
+              .from('user_cohorts')
+              .select('user_id, cohort');
+
+            if (cohortsError) {
+              console.error('Error fetching user cohorts:', cohortsError);
+            } else {
+              // Combine users with their cohort data
+              const allMembersWithCohorts = usersData?.map(user => {
+                const userCohorts = allUserCohorts?.filter(uc => uc.user_id === user.user_id) || [];
+                const orgData = user.organization ? orgMap.get(user.organization) : null;
+                return {
+                  ...user,
+                  city: orgData?.city,
+                  state: orgData?.state,
+                  cohort: userCohorts.map(uc => uc.cohort).join(', ') || 'No cohort'
+                };
+              }) || [];
+              
+              setAllMembers(allMembersWithCohorts);
+            }
+          }
         }
       } catch (error) {
         console.error('Error in fetchCohortInformation:', error);
@@ -183,10 +209,22 @@ const CohortInformation = () => {
 
   // Excel download function for cohort members
   const downloadCohortMembersExcel = () => {
-    if (!cohortLeaderData?.cohortMembers) return;
+    // For admins, use allMembers; for cohort leaders, use cohortLeaderData
+    const membersData = userRole === 'admin' && allMembers.length > 0 
+      ? allMembers 
+      : cohortLeaderData?.cohortMembers;
+
+    if (!membersData || membersData.length === 0) {
+      toast({
+        title: 'No Data',
+        description: 'No member data available to export',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     // Sort members by organization
-    const sortedMembers = [...cohortLeaderData.cohortMembers]
+    const sortedMembers = [...membersData]
       .sort((a, b) => (a.organization || '').localeCompare(b.organization || ''));
 
     // Prepare data for Excel
