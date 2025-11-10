@@ -1376,15 +1376,12 @@ const handleOrganizationDialogClose = () => {
             {selectedCohort} - Member Organizations
           </DialogTitle>
           <DialogDescription>
-            Members in this cohort (excluding cohort leaders)
+            All members and organizations in this cohort
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
           {selectedCohort && allMembers
-            .filter(member => 
-              member.cohort?.includes(selectedCohort) && 
-              !member.user_roles?.some((r: any) => r.role === 'cohort_leader')
-            )
+            .filter(member => member.cohort?.includes(selectedCohort))
             .sort((a, b) => (a.organization || '').localeCompare(b.organization || ''))
             .map((member) => (
               <Card 
