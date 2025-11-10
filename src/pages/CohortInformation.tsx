@@ -1230,7 +1230,11 @@ const handleOrganizationDialogClose = () => {
                       return Object.entries(cohortGroups)
                         .sort(([a], [b]) => a.localeCompare(b))
                         .map(([cohort, members]: [string, Array<typeof allMembers[0]>]) => {
-                          const uniqueOrganizations = [...new Set(members.map(m => m.organization).filter(Boolean))];
+                          // Filter for cohort leaders in this cohort
+                          const cohortLeaders = members.filter(m => 
+                            m.user_roles?.some((r: any) => r.role === 'cohort_leader')
+                          );
+                          
                           return (
                             <Card 
                               key={cohort}
@@ -1249,7 +1253,7 @@ const handleOrganizationDialogClose = () => {
                                     </p>
                                   </div>
                                   
-                                  <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-3">
                                     <div className="text-center p-3 bg-muted/50 rounded-lg">
                                       <div className="text-2xl font-bold">
                                         {members.length}
@@ -1258,14 +1262,29 @@ const handleOrganizationDialogClose = () => {
                                         {members.length === 1 ? 'Member' : 'Members'}
                                       </div>
                                     </div>
-                                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                                      <div className="text-2xl font-bold">
-                                        {uniqueOrganizations.length}
+                                    
+                                    {cohortLeaders.length > 0 && (
+                                      <div className="space-y-2 pt-2 border-t">
+                                        <div className="text-sm font-medium text-muted-foreground">
+                                          Cohort Leaders:
+                                        </div>
+                                        {cohortLeaders.map((leader: any) => (
+                                          <div key={leader.id} className="text-sm">
+                                            <div className="font-medium">
+                                              {leader.first_name} {leader.last_name}
+                                            </div>
+                                            <a 
+                                              href={`mailto:${leader.email}`}
+                                              className="text-primary hover:underline flex items-center gap-1"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              <Mail className="h-3 w-3" />
+                                              {leader.email}
+                                            </a>
+                                          </div>
+                                        ))}
                                       </div>
-                                      <div className="text-xs text-muted-foreground">
-                                        {uniqueOrganizations.length === 1 ? 'Organization' : 'Organizations'}
-                                      </div>
-                                    </div>
+                                    )}
                                   </div>
                                   
                                   <div className="text-xs text-primary font-medium pt-2 border-t">
