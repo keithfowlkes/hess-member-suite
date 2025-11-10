@@ -55,6 +55,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 interface FeesStats {
   totalOrganizations: number;
@@ -134,6 +135,10 @@ export default function MembershipFees() {
   
   // Member view dashboard toggle
   const [showMemberViewItems, setShowMemberViewItems] = useState(false);
+
+  // Spreadsheet view states
+  const [spreadsheetStartDate, setSpreadsheetStartDate] = useState<Date>();
+  const [spreadsheetEndDate, setSpreadsheetEndDate] = useState<Date>();
 
   // Load member view toggle settings
   React.useEffect(() => {
@@ -1375,11 +1380,12 @@ export default function MembershipFees() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="invoices">Invoices</TabsTrigger>
                 <TabsTrigger value="management">Fee Management</TabsTrigger>
                 <TabsTrigger value="prorated">Prorated Fees</TabsTrigger>
+                <TabsTrigger value="spreadsheet">Spreadsheet</TabsTrigger>
                 <TabsTrigger value="testing">Testing</TabsTrigger>
               </TabsList>
 
@@ -2398,6 +2404,267 @@ export default function MembershipFees() {
                           <strong>Example:</strong> If an organization joins 6 months into the membership year, 
                           they would pay approximately 50% of the annual fee.
                         </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="spreadsheet">
+                <div className="space-y-6">
+                  {/* Date Range Controls */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CalendarIcon className="h-5 w-5" />
+                        Date Range Filter
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                          <Label>Start Date</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !spreadsheetStartDate && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {spreadsheetStartDate ? format(spreadsheetStartDate, "PPP") : "Select start date"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={spreadsheetStartDate}
+                                onSelect={setSpreadsheetStartDate}
+                                initialFocus
+                                className="pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <div className="flex-1">
+                          <Label>End Date</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !spreadsheetEndDate && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {spreadsheetEndDate ? format(spreadsheetEndDate, "PPP") : "Select end date"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={spreadsheetEndDate}
+                                onSelect={setSpreadsheetEndDate}
+                                initialFocus
+                                className="pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setSpreadsheetStartDate(undefined);
+                            setSpreadsheetEndDate(undefined);
+                          }}
+                          className="mt-6"
+                        >
+                          Clear Dates
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Spreadsheet View */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <FileText className="h-5 w-5" />
+                          Membership Fees Spreadsheet
+                        </CardTitle>
+                        <Button
+                          onClick={() => {
+                            // Filter organizations by date range
+                            const filteredOrgs = organizations.filter(org => {
+                              if (!spreadsheetStartDate && !spreadsheetEndDate) return true;
+                              
+                              const endDate = org.membership_end_date ? new Date(org.membership_end_date) : null;
+                              if (!endDate) return false;
+                              
+                              if (spreadsheetStartDate && endDate < spreadsheetStartDate) return false;
+                              if (spreadsheetEndDate && endDate > spreadsheetEndDate) return false;
+                              
+                              return true;
+                            });
+
+                            // Prepare data for Excel
+                            const excelData = filteredOrgs.map(org => ({
+                              'Organization Name': org.name,
+                              'Email': org.email || '',
+                              'Status': org.membership_status,
+                              'Annual Fee': org.annual_fee_amount || 0,
+                              'Membership End Date': org.membership_end_date ? format(new Date(org.membership_end_date), 'MM/dd/yyyy') : '',
+                              'Membership Start': org.membership_start_date ? format(new Date(org.membership_start_date), 'MM/dd/yyyy') : '',
+                              'Contact Name': org.profiles ? `${org.profiles.first_name} ${org.profiles.last_name}` : '',
+                              'Contact Phone': org.profiles?.phone || '',
+                              'City': org.city || '',
+                              'State': org.state || ''
+                            }));
+
+                            // Create workbook
+                            const ws = XLSX.utils.json_to_sheet(excelData);
+                            const wb = XLSX.utils.book_new();
+                            XLSX.utils.book_append_sheet(wb, ws, 'Membership Fees');
+
+                            // Set column widths
+                            const colWidths = [
+                              { wch: 30 }, // Organization Name
+                              { wch: 30 }, // Email
+                              { wch: 15 }, // Status
+                              { wch: 12 }, // Annual Fee
+                              { wch: 18 }, // Next Renewal Date
+                              { wch: 18 }, // Membership Start
+                              { wch: 25 }, // Contact Name
+                              { wch: 15 }, // Contact Phone
+                              { wch: 20 }, // City
+                              { wch: 10 }  // State
+                            ];
+                            ws['!cols'] = colWidths;
+
+                            // Generate filename with date range
+                            let filename = 'membership-fees';
+                            if (spreadsheetStartDate || spreadsheetEndDate) {
+                              filename += '_';
+                              if (spreadsheetStartDate) {
+                                filename += format(spreadsheetStartDate, 'yyyy-MM-dd');
+                              }
+                              filename += '_to_';
+                              if (spreadsheetEndDate) {
+                                filename += format(spreadsheetEndDate, 'yyyy-MM-dd');
+                              }
+                            }
+                            filename += '.xlsx';
+
+                            // Download
+                            XLSX.writeFile(wb, filename);
+
+                            toast({
+                              title: "Success",
+                              description: `Exported ${excelData.length} organizations to Excel.`
+                            });
+                          }}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download Excel
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="border rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead className="bg-muted">
+                              <tr>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Organization</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                                <th className="px-4 py-3 text-right text-sm font-medium">Annual Fee</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Membership End</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Contact</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Location</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(() => {
+                                // Filter organizations by date range
+                                const filteredOrgs = organizations.filter(org => {
+                                  if (!spreadsheetStartDate && !spreadsheetEndDate) return true;
+                                  
+                                  const endDate = org.membership_end_date ? new Date(org.membership_end_date) : null;
+                                  if (!endDate) return false;
+                                  
+                                  if (spreadsheetStartDate && endDate < spreadsheetStartDate) return false;
+                                  if (spreadsheetEndDate && endDate > spreadsheetEndDate) return false;
+                                  
+                                  return true;
+                                });
+
+                                if (filteredOrgs.length === 0) {
+                                  return (
+                                    <tr>
+                                      <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                                        No organizations found for the selected date range.
+                                      </td>
+                                    </tr>
+                                  );
+                                }
+
+                                return filteredOrgs.map((org) => (
+                                  <tr key={org.id} className="border-t hover:bg-muted/50">
+                                    <td className="px-4 py-3">
+                                      <div>
+                                        <p className="font-medium">{org.name}</p>
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm">{org.email || '-'}</td>
+                                    <td className="px-4 py-3">
+                                      <Badge className={getStatusColor(org.membership_status)}>
+                                        {org.membership_status}
+                                      </Badge>
+                                    </td>
+                                    <td className="px-4 py-3 text-right font-medium">
+                                      ${org.annual_fee_amount?.toLocaleString() || '0'}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm">
+                                      {org.membership_end_date 
+                                        ? format(new Date(org.membership_end_date), 'MMM dd, yyyy')
+                                        : '-'
+                                      }
+                                    </td>
+                                    <td className="px-4 py-3 text-sm">
+                                      <div>
+                                        <p>{org.profiles ? `${org.profiles.first_name} ${org.profiles.last_name}` : '-'}</p>
+                                        {org.profiles?.phone && (
+                                          <p className="text-xs text-muted-foreground">{org.profiles.phone}</p>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm">
+                                      {org.city && org.state ? `${org.city}, ${org.state}` : '-'}
+                                    </td>
+                                  </tr>
+                                ));
+                              })()}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div className="mt-4 text-sm text-muted-foreground">
+                        Showing {(() => {
+                          const filteredOrgs = organizations.filter(org => {
+                            if (!spreadsheetStartDate && !spreadsheetEndDate) return true;
+                            const endDate = org.membership_end_date ? new Date(org.membership_end_date) : null;
+                            if (!endDate) return false;
+                            if (spreadsheetStartDate && endDate < spreadsheetStartDate) return false;
+                            if (spreadsheetEndDate && endDate > spreadsheetEndDate) return false;
+                            return true;
+                          });
+                          return filteredOrgs.length;
+                        })()} of {organizations.length} organizations
                       </div>
                     </CardContent>
                   </Card>
