@@ -53,6 +53,8 @@ const CohortInformation = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string>('member');
   const [searchTerm, setSearchTerm] = useState('');
+  const [organizationFilter, setOrganizationFilter] = useState('');
+  const [contactFilter, setContactFilter] = useState('');
   const [selectedOrganizationName, setSelectedOrganizationName] = useState<string | null>(null);
   const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] = useState(false);
   const [isPieChartModalOpen, setIsPieChartModalOpen] = useState(false);
@@ -1207,10 +1209,36 @@ const handleOrganizationDialogClose = () => {
               </Card>
 
               <div className="grid gap-4">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5" />
-                  Cohort Leaders Directory
-                </h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5" />
+                    Cohort Leaders Directory
+                  </h2>
+                </div>
+                
+                {/* Filters for cohort leaders and members */}
+                {(userRole === 'cohort_leader' || userRole === 'member') && (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Filter by Organization</label>
+                      <Input
+                        placeholder="Search organizations..."
+                        value={organizationFilter}
+                        onChange={(e) => setOrganizationFilter(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Filter by Contact</label>
+                      <Input
+                        placeholder="Search contacts..."
+                        value={contactFilter}
+                        onChange={(e) => setContactFilter(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                )}
                 
                 {cohortMembers.length === 0 ? (
                   <Card>
@@ -1310,66 +1338,102 @@ const handleOrganizationDialogClose = () => {
                     })()}
                   </div>
                 ) : (
-                  // Non-admin view: Show simple cohort leaders list
+                  // Non-admin view: Show cohort leaders and members with filters
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {[...cohortMembers]
-                      .sort((a, b) => {
-                        // Define role priority
-                        const getRolePriority = (roles: {role: 'admin' | 'member' | 'cohort_leader'}[]) => {
-                          if (roles.some(r => r.role === 'admin')) return 1;
-                          if (roles.some(r => r.role === 'cohort_leader')) return 2;
-                          return 3; // member
-                        };
-                        
-                        const aPriority = getRolePriority(a.user_roles || []);
-                        const bPriority = getRolePriority(b.user_roles || []);
-                        
-                        // Sort by organization name (ascending)
-                        return (a.organization || '').localeCompare(b.organization || '');
-                      })
-                      .map((member) => (
-                      <Card key={member.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="space-y-2">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h3 className="font-medium">
-                                  {member.first_name} {member.last_name}
-                                </h3>
-                                <Badge variant="secondary" className="text-xs">
-                                  Cohort Leader
-                                </Badge>
-                              </div>
-                            </div>
+                    {(() => {
+                      // Get data from cohortLeaderData hook for cohort leaders
+                      const displayMembers = cohortLeaderData?.cohortMembers || cohortMembers;
+                      const isCohortLeader = userRole === 'cohort_leader';
+                      const isMember = userRole === 'member';
+                      
+                      return displayMembers
+                        .filter((member) => {
+                          // Apply organization filter
+                          if (organizationFilter && !member.organization?.toLowerCase().includes(organizationFilter.toLowerCase())) {
+                            return false;
+                          }
+                          
+                          // Apply contact filter
+                          if (contactFilter) {
+                            const fullName = `${member.first_name} ${member.last_name}`.toLowerCase();
+                            const email = member.email?.toLowerCase() || '';
+                            const filterLower = contactFilter.toLowerCase();
                             
-                            {member.primary_contact_title && (
-                              <p className="text-sm text-muted-foreground">
-                                {member.primary_contact_title}
-                              </p>
-                            )}
-
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm">
-                                <Building2 className="h-4 w-4 text-muted-foreground" />
-                                <span className="truncate">{member.organization || 'No organization'}</span>
+                            if (!fullName.includes(filterLower) && !email.includes(filterLower)) {
+                              return false;
+                            }
+                          }
+                          
+                          return true;
+                        })
+                        .sort((a, b) => {
+                          // Sort by organization name
+                          return (a.organization || '').localeCompare(b.organization || '');
+                        })
+                        .map((member) => (
+                        <Card 
+                          key={member.id} 
+                          className="hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => {
+                            if (member.organization) {
+                              handleMemberCardClick(member.organization);
+                            }
+                          }}
+                        >
+                          <CardContent className="p-4">
+                            <div className="space-y-2">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <h3 className="font-medium">
+                                    {member.first_name} {member.last_name}
+                                  </h3>
+                                  <Badge variant="secondary" className="text-xs mt-1">
+                                    {member.user_roles?.some(r => r.role === 'cohort_leader') ? 'Cohort Leader' : 'Member'}
+                                  </Badge>
+                                </div>
                               </div>
                               
-                              {(member.city || member.state) && (
+                              {member.primary_contact_title && (
+                                <p className="text-sm text-muted-foreground">
+                                  {member.primary_contact_title}
+                                </p>
+                              )}
+
+                              <div className="space-y-1">
                                 <div className="flex items-center gap-2 text-sm">
-                                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                                  <span>{member.city}{member.city && member.state && ', '}{member.state}</span>
+                                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                                  <span className="truncate">{member.organization || 'No organization'}</span>
+                                </div>
+                                
+                                {(member.city || member.state) && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                                    <span>{member.city}{member.city && member.state && ', '}{member.state}</span>
+                                  </div>
+                                )}
+                                
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Mail className="h-4 w-4 text-muted-foreground" />
+                                  <a 
+                                    href={`mailto:${member.email}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="truncate hover:underline text-primary"
+                                  >
+                                    {member.email}
+                                  </a>
+                                </div>
+                              </div>
+                              
+                              {member.organization && (
+                                <div className="text-xs text-primary font-medium pt-2 border-t">
+                                  Click to view organization →
                                 </div>
                               )}
-                              
-                              <div className="flex items-center gap-2 text-sm">
-                                <Mail className="h-4 w-4 text-muted-foreground" />
-                                <span className="truncate">{member.email}</span>
-                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      ));
+                    })()}
                   </div>
                 )}
               </div>
@@ -1391,60 +1455,119 @@ const handleOrganizationDialogClose = () => {
             All members and organizations in this cohort
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
+        
+        {/* Modal Filters */}
+        <div className="grid gap-3 md:grid-cols-2 mb-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Filter by Organization</label>
+            <Input
+              placeholder="Search organizations..."
+              value={organizationFilter}
+              onChange={(e) => setOrganizationFilter(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Filter by Contact</label>
+            <Input
+              placeholder="Search contacts..."
+              value={contactFilter}
+              onChange={(e) => setContactFilter(e.target.value)}
+              className="w-full"
+            />
+          </div>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {selectedCohort && allMembers
-            .filter(member => member.cohort?.includes(selectedCohort))
+            .filter(member => {
+              if (!member.cohort?.includes(selectedCohort)) return false;
+              
+              // Apply organization filter
+              if (organizationFilter && !member.organization?.toLowerCase().includes(organizationFilter.toLowerCase())) {
+                return false;
+              }
+              
+              // Apply contact filter
+              if (contactFilter) {
+                const fullName = `${member.first_name} ${member.last_name}`.toLowerCase();
+                const email = member.email?.toLowerCase() || '';
+                const filterLower = contactFilter.toLowerCase();
+                
+                if (!fullName.includes(filterLower) && !email.includes(filterLower)) {
+                  return false;
+                }
+              }
+              
+              return true;
+            })
             .sort((a, b) => (a.organization || '').localeCompare(b.organization || ''))
-            .map((member) => (
-              <Card 
-                key={member.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => {
-                  setIsCohortMembersModalOpen(false);
-                  handleMemberCardClick(member.organization || '');
-                }}
-              >
-                <CardContent className="p-4">
-                  <div className="space-y-2">
-                    <div>
-                      <h3 className="font-medium">
-                        {member.first_name} {member.last_name}
-                      </h3>
-                      {member.primary_contact_title && (
-                        <p className="text-sm text-muted-foreground">
-                          {member.primary_contact_title}
-                        </p>
-                      )}
-                    </div>
+            .map((member) => {
+              const isCohortLeaderView = userRole === 'cohort_leader' || userRole === 'admin';
+              const isMemberView = userRole === 'member';
+              
+              return (
+                <Card 
+                  key={member.id}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => {
+                    setIsCohortMembersModalOpen(false);
+                    handleMemberCardClick(member.organization || '');
+                  }}
+                >
+                  <CardContent className="p-4">
+                    <div className="space-y-2">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-medium">
+                            {member.first_name} {member.last_name}
+                          </h3>
+                          {member.user_roles?.some((r: any) => r.role === 'cohort_leader') && (
+                            <Badge variant="secondary" className="text-xs">Leader</Badge>
+                          )}
+                        </div>
+                        {member.primary_contact_title && (
+                          <p className="text-sm text-muted-foreground">
+                            {member.primary_contact_title}
+                          </p>
+                        )}
+                      </div>
 
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
-                        <span className="truncate">{member.organization || 'No organization'}</span>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <span className="truncate">{member.organization || 'No organization'}</span>
+                        </div>
+                        
+                        {(member.city || member.state) && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span>{member.city}{member.city && member.state && ', '}{member.state}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <a 
+                            href={`mailto:${member.email}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="truncate hover:underline text-primary"
+                          >
+                            {member.email}
+                          </a>
+                        </div>
                       </div>
                       
-                      {(member.city || member.state) && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span>{member.city}{member.city && member.state && ', '}{member.state}</span>
+                      {member.organization && member.organization !== 'No organization' && (
+                        <div className="text-xs text-primary font-medium mt-2 pt-2 border-t">
+                          Click to view organization →
                         </div>
                       )}
-                      
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="truncate">{member.email}</span>
-                      </div>
                     </div>
-                    
-                    {member.organization && member.organization !== 'No organization' && (
-                      <div className="text-xs text-primary font-medium mt-2 pt-2 border-t">
-                        Click to view organization →
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
         </div>
       </DialogContent>
     </Dialog>
