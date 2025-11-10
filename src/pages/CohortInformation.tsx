@@ -112,19 +112,27 @@ const CohortInformation = () => {
             return;
           }
 
-          // Fetch organization data for city and state
+          // Fetch organization data for city, state, and system fields
           const { data: organizationsData, error: orgsError } = await supabase
             .from('organizations')
-            .select('name, city, state')
+            .select('name, city, state, student_information_system, financial_system')
             .eq('membership_status', 'active');
 
           if (orgsError) {
             console.error('Error fetching organizations:', orgsError);
           }
 
-          // Create a map of organization name to city/state
+          // Create a map of organization name to city/state and system fields
           const orgMap = new Map(
-            organizationsData?.map(org => [org.name, { city: org.city, state: org.state }]) || []
+            organizationsData?.map(org => [
+              org.name, 
+              { 
+                city: org.city, 
+                state: org.state,
+                student_information_system: org.student_information_system,
+                financial_system: org.financial_system
+              }
+            ]) || []
           );
 
           // Fetch user roles for cohort leaders
@@ -181,11 +189,27 @@ const CohortInformation = () => {
                 const userCohorts = allUserCohorts?.filter(uc => uc.user_id === user.user_id) || [];
                 const orgData = user.organization ? orgMap.get(user.organization) : null;
                 const userRoles = allRolesData?.filter(r => r.user_id === user.user_id).map(r => ({ role: r.role })) || [];
+                
+                // Build cohort list from user_cohorts
+                let cohortList = userCohorts.map(uc => uc.cohort);
+                
+                // Check if organization has Campus Management in SIS or Financial System
+                if (orgData) {
+                  const hasCampusManagement = 
+                    orgData.student_information_system === 'Campus Management' ||
+                    orgData.financial_system === 'Campus Management';
+                  
+                  // Add Anthology cohort if Campus Management is detected and not already in cohorts
+                  if (hasCampusManagement && !cohortList.includes('Anthology')) {
+                    cohortList.push('Anthology');
+                  }
+                }
+                
                 return {
                   ...user,
                   city: orgData?.city,
                   state: orgData?.state,
-                  cohort: userCohorts.map(uc => uc.cohort).join(', ') || 'No cohort',
+                  cohort: cohortList.length > 0 ? cohortList.join(', ') : 'No cohort',
                   user_roles: userRoles
                 };
               }) || [];
