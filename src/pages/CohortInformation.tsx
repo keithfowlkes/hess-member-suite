@@ -619,13 +619,26 @@ const handleOrganizationDialogClose = () => {
                   {/* Overview Statistics */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <BarChart3 className="h-5 w-5" />
-                        Software System Cohort Overview
-                      </CardTitle>
-                      <CardDescription>
-                        Statistics showing organization membership by software systems
-                      </CardDescription>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            <BarChart3 className="h-5 w-5" />
+                            Software System Cohort Overview
+                          </CardTitle>
+                          <CardDescription>
+                            Statistics showing organization membership by software systems
+                          </CardDescription>
+                        </div>
+                        <Button
+                          onClick={downloadCohortMembersCSV}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download CSV
+                        </Button>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <div className="grid gap-4 md:grid-cols-4">
