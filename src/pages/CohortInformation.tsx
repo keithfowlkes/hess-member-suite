@@ -57,6 +57,8 @@ const CohortInformation = () => {
   const [isOrganizationDialogOpen, setIsOrganizationDialogOpen] = useState(false);
   const [isPieChartModalOpen, setIsPieChartModalOpen] = useState(false);
   const [isBarChartModalOpen, setIsBarChartModalOpen] = useState(false);
+  const [selectedCohort, setSelectedCohort] = useState<string | null>(null);
+  const [isCohortMembersModalOpen, setIsCohortMembersModalOpen] = useState(false);
   const { data: cohortStats, isLoading: statsLoading, error: statsError } = useCohortStatistics();
   const { data: cohortLeaderData, loading: cohortLeaderLoading, error: cohortLeaderError } = useCohortLeaderData();
   const { data: selectedOrganization, isLoading: organizationLoading } = useOrganizationByName(selectedOrganizationName);
@@ -1210,8 +1212,8 @@ const handleOrganizationDialogClose = () => {
                     </CardContent>
                   </Card>
                 ) : userRole === 'admin' && allMembers.length > 0 ? (
-                  // Admin view: Show cohorts with organization drill-down
-                  <div className="space-y-4">
+                  // Admin view: Show cohort groups with counts
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {(() => {
                       // Group members by cohort
                       const cohortGroups = allMembers.reduce((acc, member) => {
@@ -1230,81 +1232,48 @@ const handleOrganizationDialogClose = () => {
                         .map(([cohort, members]: [string, Array<typeof allMembers[0]>]) => {
                           const uniqueOrganizations = [...new Set(members.map(m => m.organization).filter(Boolean))];
                           return (
-                            <Collapsible key={cohort} className="border rounded-lg">
-                              <CollapsibleTrigger className="w-full">
-                                <Card className="border-0 shadow-none">
-                                  <CardHeader className="flex flex-row items-center justify-between p-4">
-                                    <div className="flex items-center gap-4 flex-1">
-                                      <div className="flex-1 text-left">
-                                        <CardTitle className="text-lg">{cohort}</CardTitle>
-                                        <CardDescription className="mt-1">
-                                          {members.length} {members.length === 1 ? 'member' : 'members'} • {uniqueOrganizations.length} {uniqueOrganizations.length === 1 ? 'organization' : 'organizations'}
-                                        </CardDescription>
+                            <Card 
+                              key={cohort}
+                              className="cursor-pointer hover:shadow-lg transition-all"
+                              onClick={() => {
+                                setSelectedCohort(cohort);
+                                setIsCohortMembersModalOpen(true);
+                              }}
+                            >
+                              <CardContent className="p-6">
+                                <div className="space-y-4">
+                                  <div>
+                                    <h3 className="text-lg font-semibold">{cohort}</h3>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      Click to view member organizations
+                                    </p>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                                      <div className="text-2xl font-bold">
+                                        {members.length}
                                       </div>
-                                      <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                                      <div className="text-xs text-muted-foreground">
+                                        {members.length === 1 ? 'Member' : 'Members'}
+                                      </div>
                                     </div>
-                                  </CardHeader>
-                                </Card>
-                              </CollapsibleTrigger>
-                              <CollapsibleContent>
-                                <div className="px-4 pb-4">
-                                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                    {[...members]
-                                      .sort((a, b) => (a.organization || '').localeCompare(b.organization || ''))
-                                      .map((member) => (
-                                        <Card 
-                                          key={member.id}
-                                          className="cursor-pointer hover:shadow-md transition-shadow"
-                                          onClick={() => handleMemberCardClick(member.organization || '')}
-                                        >
-                                          <CardContent className="p-4">
-                                            <div className="space-y-2">
-                                              <div className="flex items-start justify-between">
-                                                <div>
-                                                  <h3 className="font-medium">
-                                                    {member.first_name} {member.last_name}
-                                                  </h3>
-                                                </div>
-                                              </div>
-                                              
-                                              {member.primary_contact_title && (
-                                                <p className="text-sm text-muted-foreground">
-                                                  {member.primary_contact_title}
-                                                </p>
-                                              )}
-
-                                              <div className="space-y-1">
-                                                <div className="flex items-center gap-2 text-sm">
-                                                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                                                  <span className="truncate">{member.organization || 'No organization'}</span>
-                                                </div>
-                                                
-                                                {(member.city || member.state) && (
-                                                  <div className="flex items-center gap-2 text-sm">
-                                                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                                                    <span>{member.city}{member.city && member.state && ', '}{member.state}</span>
-                                                  </div>
-                                                )}
-                                                
-                                                <div className="flex items-center gap-2 text-sm">
-                                                  <Mail className="h-4 w-4 text-muted-foreground" />
-                                                  <span className="truncate">{member.email}</span>
-                                                </div>
-                                              </div>
-                                              
-                                              {member.organization && member.organization !== 'No organization' && (
-                                                <div className="text-xs text-primary font-medium mt-2">
-                                                  Click to view organization →
-                                                </div>
-                                              )}
-                                            </div>
-                                          </CardContent>
-                                        </Card>
-                                      ))}
+                                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                                      <div className="text-2xl font-bold">
+                                        {uniqueOrganizations.length}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground">
+                                        {uniqueOrganizations.length === 1 ? 'Organization' : 'Organizations'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="text-xs text-primary font-medium pt-2 border-t">
+                                    View details →
                                   </div>
                                 </div>
-                              </CollapsibleContent>
-                            </Collapsible>
+                              </CardContent>
+                            </Card>
                           );
                         });
                     })()}
@@ -1378,6 +1347,77 @@ const handleOrganizationDialogClose = () => {
         </div>
       </main>
     </div>
+
+    {/* Cohort Members Modal */}
+    <Dialog open={isCohortMembersModalOpen} onOpenChange={setIsCohortMembersModalOpen}>
+      <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            {selectedCohort} - Member Organizations
+          </DialogTitle>
+          <DialogDescription>
+            All member organizations and contacts in this cohort
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
+          {selectedCohort && allMembers
+            .filter(member => member.cohort?.includes(selectedCohort))
+            .sort((a, b) => (a.organization || '').localeCompare(b.organization || ''))
+            .map((member) => (
+              <Card 
+                key={member.id}
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => {
+                  setIsCohortMembersModalOpen(false);
+                  handleMemberCardClick(member.organization || '');
+                }}
+              >
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <div>
+                      <h3 className="font-medium">
+                        {member.first_name} {member.last_name}
+                      </h3>
+                      {member.primary_contact_title && (
+                        <p className="text-sm text-muted-foreground">
+                          {member.primary_contact_title}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <span className="truncate">{member.organization || 'No organization'}</span>
+                      </div>
+                      
+                      {(member.city || member.state) && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span>{member.city}{member.city && member.state && ', '}{member.state}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="truncate">{member.email}</span>
+                      </div>
+                    </div>
+                    
+                    {member.organization && member.organization !== 'No organization' && (
+                      <div className="text-xs text-primary font-medium mt-2 pt-2 border-t">
+                        Click to view organization →
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+
     </SidebarProvider>
   );
 };
