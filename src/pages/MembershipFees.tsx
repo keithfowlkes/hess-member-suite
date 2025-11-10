@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMembers } from '@/hooks/useMembers';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useAuth } from '@/hooks/useAuth';
@@ -139,6 +140,7 @@ export default function MembershipFees() {
   // Spreadsheet view states
   const [spreadsheetStartDate, setSpreadsheetStartDate] = useState<Date>();
   const [spreadsheetEndDate, setSpreadsheetEndDate] = useState<Date>();
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
 
   // Load member view toggle settings
   React.useEffect(() => {
@@ -2412,15 +2414,41 @@ export default function MembershipFees() {
 
               <TabsContent value="spreadsheet">
                 <div className="space-y-6">
-                  {/* Date Range Controls */}
+                  {/* Filters */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <CalendarIcon className="h-5 w-5" />
-                        Date Range Filter
+                        Filters
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="flex-1">
+                          <Label>Payment Status</Label>
+                          <Select value={paymentStatusFilter} onValueChange={(value: 'all' | 'paid' | 'unpaid') => setPaymentStatusFilter(value)}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="All Statuses" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Statuses</SelectItem>
+                              <SelectItem value="paid">Paid</SelectItem>
+                              <SelectItem value="unpaid">Unpaid</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setSpreadsheetStartDate(undefined);
+                            setSpreadsheetEndDate(undefined);
+                            setPaymentStatusFilter('all');
+                          }}
+                          className="mt-6"
+                        >
+                          Clear All Filters
+                        </Button>
+                      </div>
                       <div className="flex items-center gap-4">
                         <div className="flex-1">
                           <Label>Start Date</Label>
@@ -2474,16 +2502,6 @@ export default function MembershipFees() {
                             </PopoverContent>
                           </Popover>
                         </div>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setSpreadsheetStartDate(undefined);
-                            setSpreadsheetEndDate(undefined);
-                          }}
-                          className="mt-6"
-                        >
-                          Clear Dates
-                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -2498,15 +2516,25 @@ export default function MembershipFees() {
                         </CardTitle>
                         <Button
                           onClick={() => {
-                            // Filter organizations by date range
+                            // Filter organizations by date range and payment status
                             const filteredOrgs = organizations.filter(org => {
-                              if (!spreadsheetStartDate && !spreadsheetEndDate) return true;
+                              // Date filter
+                              if (spreadsheetStartDate || spreadsheetEndDate) {
+                                const endDate = org.membership_end_date ? new Date(org.membership_end_date) : null;
+                                if (!endDate) return false;
+                                if (spreadsheetStartDate && endDate < spreadsheetStartDate) return false;
+                                if (spreadsheetEndDate && endDate > spreadsheetEndDate) return false;
+                              }
                               
-                              const endDate = org.membership_end_date ? new Date(org.membership_end_date) : null;
-                              if (!endDate) return false;
-                              
-                              if (spreadsheetStartDate && endDate < spreadsheetStartDate) return false;
-                              if (spreadsheetEndDate && endDate > spreadsheetEndDate) return false;
+                              // Payment status filter
+                              if (paymentStatusFilter !== 'all') {
+                                const orgInvoices = invoices.filter(inv => inv.organization_id === org.id);
+                                const hasPaidInvoice = orgInvoices.some(inv => inv.status === 'paid');
+                                const isPaid = hasPaidInvoice;
+                                
+                                if (paymentStatusFilter === 'paid' && !isPaid) return false;
+                                if (paymentStatusFilter === 'unpaid' && isPaid) return false;
+                              }
                               
                               return true;
                             });
@@ -2581,15 +2609,25 @@ export default function MembershipFees() {
                             </thead>
                             <tbody>
                               {(() => {
-                                // Filter organizations by date range
+                                // Filter organizations by date range and payment status
                                 const filteredOrgs = organizations.filter(org => {
-                                  if (!spreadsheetStartDate && !spreadsheetEndDate) return true;
+                                  // Date filter
+                                  if (spreadsheetStartDate || spreadsheetEndDate) {
+                                    const endDate = org.membership_end_date ? new Date(org.membership_end_date) : null;
+                                    if (!endDate) return false;
+                                    if (spreadsheetStartDate && endDate < spreadsheetStartDate) return false;
+                                    if (spreadsheetEndDate && endDate > spreadsheetEndDate) return false;
+                                  }
                                   
-                                  const endDate = org.membership_end_date ? new Date(org.membership_end_date) : null;
-                                  if (!endDate) return false;
-                                  
-                                  if (spreadsheetStartDate && endDate < spreadsheetStartDate) return false;
-                                  if (spreadsheetEndDate && endDate > spreadsheetEndDate) return false;
+                                  // Payment status filter
+                                  if (paymentStatusFilter !== 'all') {
+                                    const orgInvoices = invoices.filter(inv => inv.organization_id === org.id);
+                                    const hasPaidInvoice = orgInvoices.some(inv => inv.status === 'paid');
+                                    const isPaid = hasPaidInvoice;
+                                    
+                                    if (paymentStatusFilter === 'paid' && !isPaid) return false;
+                                    if (paymentStatusFilter === 'unpaid' && isPaid) return false;
+                                  }
                                   
                                   return true;
                                 });
@@ -2636,11 +2674,24 @@ export default function MembershipFees() {
                       <div className="mt-4 text-sm text-muted-foreground">
                         Showing {(() => {
                           const filteredOrgs = organizations.filter(org => {
-                            if (!spreadsheetStartDate && !spreadsheetEndDate) return true;
-                            const endDate = org.membership_end_date ? new Date(org.membership_end_date) : null;
-                            if (!endDate) return false;
-                            if (spreadsheetStartDate && endDate < spreadsheetStartDate) return false;
-                            if (spreadsheetEndDate && endDate > spreadsheetEndDate) return false;
+                            // Date filter
+                            if (spreadsheetStartDate || spreadsheetEndDate) {
+                              const endDate = org.membership_end_date ? new Date(org.membership_end_date) : null;
+                              if (!endDate) return false;
+                              if (spreadsheetStartDate && endDate < spreadsheetStartDate) return false;
+                              if (spreadsheetEndDate && endDate > spreadsheetEndDate) return false;
+                            }
+                            
+                            // Payment status filter
+                            if (paymentStatusFilter !== 'all') {
+                              const orgInvoices = invoices.filter(inv => inv.organization_id === org.id);
+                              const hasPaidInvoice = orgInvoices.some(inv => inv.status === 'paid');
+                              const isPaid = hasPaidInvoice;
+                              
+                              if (paymentStatusFilter === 'paid' && !isPaid) return false;
+                              if (paymentStatusFilter === 'unpaid' && isPaid) return false;
+                            }
+                            
                             return true;
                           });
                           return filteredOrgs.length;
