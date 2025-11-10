@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, Pie, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import * as XLSX from 'xlsx';
 
 interface CohortMember {
   id: string;
@@ -180,46 +181,56 @@ const CohortInformation = () => {
     )
   })).filter(cohort => cohort.organizations.length > 0 || searchTerm === '') || [];
 
-  // CSV download function for cohort members
-  const downloadCohortMembersCSV = () => {
+  // Excel download function for cohort members
+  const downloadCohortMembersExcel = () => {
     if (!cohortLeaderData?.cohortMembers) return;
 
-    const headers = [
-      'First Name',
-      'Last Name', 
-      'Email',
-      'Organization',
-      'Title',
-      'City',
-      'State'
+    // Sort members by organization
+    const sortedMembers = [...cohortLeaderData.cohortMembers]
+      .sort((a, b) => (a.organization || '').localeCompare(b.organization || ''));
+
+    // Prepare data for Excel
+    const worksheetData = sortedMembers.map(member => ({
+      'First Name': member.first_name || '',
+      'Last Name': member.last_name || '',
+      'Email': member.email || '',
+      'Organization': member.organization || '',
+      'Title': member.primary_contact_title || '',
+      'City': member.city || '',
+      'State': member.state || '',
+      'Cohort': member.cohort || ''
+    }));
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(worksheetData);
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 15 },  // First Name
+      { wch: 15 },  // Last Name
+      { wch: 30 },  // Email
+      { wch: 35 },  // Organization
+      { wch: 30 },  // Title
+      { wch: 20 },  // City
+      { wch: 10 },  // State
+      { wch: 20 }   // Cohort
     ];
 
-    const csvData = [...cohortLeaderData.cohortMembers]
-      .sort((a, b) => (a.organization || '').localeCompare(b.organization || ''))
-      .map(member => [
-      member.first_name || '',
-      member.last_name || '',
-      member.email || '',
-      member.organization || '',
-      member.primary_contact_title || '',
-      member.city || '',
-      member.state || ''
-    ]);
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Cohort Members');
 
-    const csvContent = [headers, ...csvData]
-      .map(row => row.map(field => `"${field}"`).join(','))
-      .join('\n');
+    // Generate filename with current date
+    const filename = `cohort-members-${new Date().toISOString().split('T')[0]}.xlsx`;
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `cohort-members-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+    // Download file
+    XLSX.writeFile(wb, filename);
+
+    toast({
+      title: 'Success',
+      description: 'Cohort members exported to Excel successfully',
+    });
+  };
 
 // Handle member card click to show organization details
 const handleMemberCardClick = (organizationName: string) => {
@@ -446,13 +457,13 @@ const handleOrganizationDialogClose = () => {
                       </CardDescription>
                     </div>
                     <Button
-                      onClick={downloadCohortMembersCSV}
+                      onClick={downloadCohortMembersExcel}
                       variant="outline"
                       size="sm"
                       className="flex items-center gap-2"
                     >
                       <Download className="h-4 w-4" />
-                      Download CSV
+                      Download Excel
                     </Button>
                   </div>
                 </CardHeader>
@@ -493,11 +504,11 @@ const handleOrganizationDialogClose = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={downloadCohortMembersCSV}
+                        onClick={downloadCohortMembersExcel}
                         className="flex items-center gap-2"
                       >
                         <Download className="h-4 w-4" />
-                        Download CSV
+                        Download Excel
                       </Button>
                     )}
                   </CardTitle>
@@ -630,13 +641,13 @@ const handleOrganizationDialogClose = () => {
                           </CardDescription>
                         </div>
                         <Button
-                          onClick={downloadCohortMembersCSV}
+                          onClick={downloadCohortMembersExcel}
                           variant="outline"
                           size="sm"
                           className="flex items-center gap-2"
                         >
                           <Download className="h-4 w-4" />
-                          Download CSV
+                          Download Excel
                         </Button>
                       </div>
                     </CardHeader>
