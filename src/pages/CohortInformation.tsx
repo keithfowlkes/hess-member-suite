@@ -166,18 +166,25 @@ const CohortInformation = () => {
               .from('user_cohorts')
               .select('user_id, cohort');
 
+            // Fetch all user roles for all users
+            const { data: allRolesData, error: allRolesError } = await supabase
+              .from('user_roles')
+              .select('user_id, role');
+
             if (cohortsError) {
               console.error('Error fetching user cohorts:', cohortsError);
             } else {
-              // Combine users with their cohort data
+              // Combine users with their cohort data and roles
               const allMembersWithCohorts = usersData?.map(user => {
                 const userCohorts = allUserCohorts?.filter(uc => uc.user_id === user.user_id) || [];
                 const orgData = user.organization ? orgMap.get(user.organization) : null;
+                const userRoles = allRolesData?.filter(r => r.user_id === user.user_id).map(r => ({ role: r.role })) || [];
                 return {
                   ...user,
                   city: orgData?.city,
                   state: orgData?.state,
-                  cohort: userCohorts.map(uc => uc.cohort).join(', ') || 'No cohort'
+                  cohort: userCohorts.map(uc => uc.cohort).join(', ') || 'No cohort',
+                  user_roles: userRoles
                 };
               }) || [];
               
