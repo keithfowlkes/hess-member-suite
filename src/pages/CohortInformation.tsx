@@ -1313,20 +1313,20 @@ const handleOrganizationDialogClose = () => {
                             >
                               <CardContent className="p-6">
                                 <div className="space-y-4">
-                                  <div className="flex items-center gap-3">
-                                    <div className="flex-1">
-                                      <h3 className="text-lg font-semibold">{cohort}</h3>
-                                      <p className="text-sm text-muted-foreground mt-1">
-                                        Click to view member organizations
-                                      </p>
-                                    </div>
-                                    {cohort === 'Anthology' && (
+                                  {cohort === 'Anthology' && (
+                                    <div className="flex justify-center pb-3 border-b">
                                       <img 
                                         src={anthologyLogo} 
                                         alt="Anthology Logo" 
                                         className="h-8 w-auto object-contain"
                                       />
-                                    )}
+                                    </div>
+                                  )}
+                                  <div>
+                                    <h3 className="text-lg font-semibold">{cohort}</h3>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      Click to view member organizations
+                                    </p>
                                   </div>
                                   
                                   <div className="space-y-3">
