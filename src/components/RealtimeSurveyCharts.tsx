@@ -202,9 +202,6 @@ export function RealtimeSurveyCharts({ surveyId }: { surveyId: string }) {
                           
                           const color = CLOUD_COLORS[idx % CLOUD_COLORS.length];
                           
-                          // Truncate long text to prevent overflow
-                          const displayText = item.name.length > 30 ? item.name.substring(0, 27) + '...' : item.name;
-                          
                           return (
                             <text
                               key={idx}
@@ -221,7 +218,7 @@ export function RealtimeSurveyCharts({ surveyId }: { surveyId: string }) {
                                 animationDelay: `${idx * 0.05}s`,
                               }}
                             >
-                              {displayText}
+                              {item.name}
                               <title>{item.name}: {item.value} responses</title>
                             </text>
                           );

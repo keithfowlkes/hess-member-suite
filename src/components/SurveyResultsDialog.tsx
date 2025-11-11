@@ -400,30 +400,27 @@ export function SurveyResultsDialog({
                             const x = padding + (col * (usableWidth / cols)) + (usableWidth / (cols * 2)) + randomX;
                             const y = padding + (row * (usableHeight / rows)) + (usableHeight / (rows * 2)) + randomY;
                             
-                            const color = CLOUD_COLORS[idx % CLOUD_COLORS.length];
-                            
-                            // Truncate long text to prevent overflow
-                            const displayText = item.name.length > 30 ? item.name.substring(0, 27) + '...' : item.name;
-                            
-                            return (
-                              <text
-                                key={idx}
-                                x={x}
-                                y={y}
-                                fontSize={fontSize}
-                                fontWeight={fontWeight}
-                                fill={color}
-                                opacity={opacity}
-                                textAnchor="middle"
-                                dominantBaseline="middle"
-                                className="animate-fade-in transition-all duration-300 hover:opacity-100 cursor-default"
-                                style={{
-                                  animationDelay: `${idx * 0.05}s`,
-                                }}
-                              >
-                                {displayText}
-                                <title>{item.name}: {item.value} responses</title>
-                              </text>
+                                const color = CLOUD_COLORS[idx % CLOUD_COLORS.length];
+                                
+                                return (
+                                  <text
+                                    key={idx}
+                                    x={x}
+                                    y={y}
+                                    fontSize={fontSize}
+                                    fontWeight={fontWeight}
+                                    fill={color}
+                                    opacity={opacity}
+                                    textAnchor="middle"
+                                    dominantBaseline="middle"
+                                    className="animate-fade-in transition-all duration-300 hover:opacity-100 cursor-default"
+                                    style={{
+                                      animationDelay: `${idx * 0.05}s`,
+                                    }}
+                                  >
+                                    {item.name}
+                                    <title>{item.name}: {item.value} responses</title>
+                                  </text>
                             );
                           })}
                         </svg>
