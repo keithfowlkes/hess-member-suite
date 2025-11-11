@@ -12,6 +12,7 @@ import { Plus, Trash2, CheckSquare, ListOrdered, Cloud, FileText, MessageSquare,
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Question {
   question_text: string;
@@ -90,6 +91,7 @@ export function EditSurveyDialog({
 
   const updateSurvey = useUpdateSurveyWithQuestions();
   const { data: existingQuestions } = useSurveyQuestions(surveyId || '');
+  const { toast } = useToast();
 
   useEffect(() => {
     if (surveyId && open) {
@@ -139,7 +141,40 @@ export function EditSurveyDialog({
   };
 
   const handleSubmit = async () => {
-    if (!surveyId || !title.trim() || questions.some(q => !q.question_text.trim())) {
+    if (!surveyId) return;
+
+    if (!title.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter a survey title.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (questions.some(q => !q.question_text.trim())) {
+      toast({
+        title: 'Validation Error',
+        description: 'All questions must have text.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate that questions requiring options have options
+    const questionsMissingOptions = questions.filter(q => 
+      (q.question_type === 'single_choice' || 
+       q.question_type === 'multiple_choice' || 
+       q.question_type === 'ranking') && 
+      (!q.options || q.options.length === 0)
+    );
+
+    if (questionsMissingOptions.length > 0) {
+      toast({
+        title: 'Validation Error',
+        description: `Questions of type "${questionsMissingOptions[0].question_type.replace('_', ' ')}" must have at least one option. Please add options for all choice and ranking questions.`,
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -382,7 +417,17 @@ export function EditSurveyDialog({
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={!title.trim() || questions.some(q => !q.question_text.trim()) || loading}
+            disabled={
+              !title.trim() || 
+              questions.some(q => !q.question_text.trim()) || 
+              questions.some(q => 
+                (q.question_type === 'single_choice' || 
+                 q.question_type === 'multiple_choice' || 
+                 q.question_type === 'ranking') && 
+                (!q.options || q.options.length === 0)
+              ) ||
+              loading
+            }
           >
             Update Survey
           </Button>

@@ -11,6 +11,7 @@ import { useCreateSurvey } from '@/hooks/useSurveys';
 import { Plus, Trash2, CheckSquare, ListOrdered, Cloud, FileText, MessageSquare, Star } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 interface Question {
   question_text: string;
@@ -73,6 +74,7 @@ export function CreateSurveyDialog({ open, onOpenChange }: { open: boolean; onOp
   ]);
 
   const createSurvey = useCreateSurvey();
+  const { toast } = useToast();
 
   const addQuestion = () => {
     setQuestions([...questions, { question_text: '', question_type: 'multiple_choice', required: false, options: [] }]);
@@ -89,7 +91,38 @@ export function CreateSurveyDialog({ open, onOpenChange }: { open: boolean; onOp
   };
 
   const handleSubmit = async () => {
-    if (!title.trim() || questions.some(q => !q.question_text.trim())) {
+    if (!title.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter a survey title.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (questions.some(q => !q.question_text.trim())) {
+      toast({
+        title: 'Validation Error',
+        description: 'All questions must have text.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate that questions requiring options have options
+    const questionsMissingOptions = questions.filter(q => 
+      (q.question_type === 'single_choice' || 
+       q.question_type === 'multiple_choice' || 
+       q.question_type === 'ranking') && 
+      (!q.options || q.options.length === 0)
+    );
+
+    if (questionsMissingOptions.length > 0) {
+      toast({
+        title: 'Validation Error',
+        description: `Questions of type "${questionsMissingOptions[0].question_type.replace('_', ' ')}" must have at least one option. Please add options for all choice and ranking questions.`,
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -328,7 +361,19 @@ export function CreateSurveyDialog({ open, onOpenChange }: { open: boolean; onOp
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!title.trim() || questions.some(q => !q.question_text.trim())}>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={
+              !title.trim() || 
+              questions.some(q => !q.question_text.trim()) ||
+              questions.some(q => 
+                (q.question_type === 'single_choice' || 
+                 q.question_type === 'multiple_choice' || 
+                 q.question_type === 'ranking') && 
+                (!q.options || q.options.length === 0)
+              )
+            }
+          >
             Create Survey
           </Button>
         </div>
