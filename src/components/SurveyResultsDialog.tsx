@@ -370,33 +370,40 @@ export function SurveyResultsDialog({
                     )}
 
                     {stats.type === 'word_cloud' && (
-                      <div className="relative w-full bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl" style={{ minHeight: '400px' }}>
-                        <svg width="100%" height="400" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid meet">
+                      <div className="relative w-full bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl p-4" style={{ minHeight: '450px' }}>
+                        <svg width="100%" height="450" viewBox="0 0 1000 450" preserveAspectRatio="xMidYMid meet">
                           {stats.words.map((item: any, idx: number) => {
                             const maxValue = Math.max(...stats.words.map((d: any) => d.value));
                             const minValue = Math.min(...stats.words.map((d: any) => d.value));
                             const normalizedSize = maxValue === minValue ? 0.5 : (item.value - minValue) / (maxValue - minValue);
                             
                             // Calculate size and opacity based on frequency
-                            const fontSize = 16 + (normalizedSize * 48); // 16-64px range
-                            const opacity = 0.3 + (normalizedSize * 0.7); // 0.3-1.0 range
+                            const fontSize = 18 + (normalizedSize * 40); // 18-58px range (reduced max)
+                            const opacity = 0.4 + (normalizedSize * 0.6); // 0.4-1.0 range
                             const fontWeight = normalizedSize > 0.7 ? 700 : normalizedSize > 0.4 ? 600 : 500;
                             
-                            // Scatter positions in a cloud-like pattern
+                            // Scatter positions in a cloud-like pattern with padding
+                            const padding = 80; // Add padding to prevent cutoff
+                            const usableWidth = 1000 - (padding * 2);
+                            const usableHeight = 450 - (padding * 2);
+                            
                             const totalItems = stats.words.length;
                             const cols = Math.ceil(Math.sqrt(totalItems * 2));
                             const rows = Math.ceil(totalItems / cols);
                             const col = idx % cols;
                             const row = Math.floor(idx / cols);
                             
-                            // Add some randomness for organic feel
-                            const randomX = (Math.sin(idx * 12.345) * 40);
-                            const randomY = (Math.cos(idx * 23.456) * 30);
+                            // Add some randomness for organic feel (reduced range)
+                            const randomX = (Math.sin(idx * 12.345) * 30);
+                            const randomY = (Math.cos(idx * 23.456) * 20);
                             
-                            const x = (col * (1000 / cols)) + (1000 / (cols * 2)) + randomX;
-                            const y = (row * (400 / rows)) + (400 / (rows * 2)) + randomY;
+                            const x = padding + (col * (usableWidth / cols)) + (usableWidth / (cols * 2)) + randomX;
+                            const y = padding + (row * (usableHeight / rows)) + (usableHeight / (rows * 2)) + randomY;
                             
                             const color = CLOUD_COLORS[idx % CLOUD_COLORS.length];
+                            
+                            // Truncate long text to prevent overflow
+                            const displayText = item.name.length > 30 ? item.name.substring(0, 27) + '...' : item.name;
                             
                             return (
                               <text
@@ -414,7 +421,7 @@ export function SurveyResultsDialog({
                                   animationDelay: `${idx * 0.05}s`,
                                 }}
                               >
-                                {item.name}
+                                {displayText}
                                 <title>{item.name}: {item.value} responses</title>
                               </text>
                             );
