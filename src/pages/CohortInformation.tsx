@@ -16,6 +16,7 @@ import { useCohortLeaderData } from '@/hooks/useCohortLeaderData';
 import { useOrganizationByName } from '@/hooks/useOrganizationByName';
 import { OrganizationDetailsDialog } from '@/components/OrganizationDetailsDialog';
 import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart, Search, User, Download, Maximize2 } from 'lucide-react';
+import anthologyLogo from '@/assets/anthology-logo.png';
 import {
   Dialog,
   DialogContent,
@@ -1312,11 +1313,20 @@ const handleOrganizationDialogClose = () => {
                             >
                               <CardContent className="p-6">
                                 <div className="space-y-4">
-                                  <div>
-                                    <h3 className="text-lg font-semibold">{cohort}</h3>
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                      Click to view member organizations
-                                    </p>
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex-1">
+                                      <h3 className="text-lg font-semibold">{cohort}</h3>
+                                      <p className="text-sm text-muted-foreground mt-1">
+                                        Click to view member organizations
+                                      </p>
+                                    </div>
+                                    {cohort === 'Anthology' && (
+                                      <img 
+                                        src={anthologyLogo} 
+                                        alt="Anthology Logo" 
+                                        className="h-8 w-auto object-contain"
+                                      />
+                                    )}
                                   </div>
                                   
                                   <div className="space-y-3">
