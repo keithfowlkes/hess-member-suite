@@ -370,32 +370,32 @@ export function SurveyResultsDialog({
                     )}
 
                     {stats.type === 'word_cloud' && (
-                      <div className="relative w-full bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl p-4" style={{ minHeight: '450px' }}>
-                        <svg width="100%" height="450" viewBox="0 0 1000 450" preserveAspectRatio="xMidYMid meet">
+                      <div className="relative w-full bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl" style={{ height: '400px', overflow: 'hidden' }}>
+                        <svg width="100%" height="100%" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet">
                           {stats.words.map((item: any, idx: number) => {
                             const maxValue = Math.max(...stats.words.map((d: any) => d.value));
                             const minValue = Math.min(...stats.words.map((d: any) => d.value));
                             const normalizedSize = maxValue === minValue ? 0.5 : (item.value - minValue) / (maxValue - minValue);
                             
-                            // Calculate size and opacity based on frequency
-                            const fontSize = 18 + (normalizedSize * 40); // 18-58px range (reduced max)
-                            const opacity = 0.4 + (normalizedSize * 0.6); // 0.4-1.0 range
+                            // Smaller, more contained font sizes
+                            const fontSize = 14 + (normalizedSize * 28); // 14-42px range
+                            const opacity = 0.5 + (normalizedSize * 0.5); // 0.5-1.0 range
                             const fontWeight = normalizedSize > 0.7 ? 700 : normalizedSize > 0.4 ? 600 : 500;
                             
-                            // Scatter positions in a cloud-like pattern with padding
-                            const padding = 80; // Add padding to prevent cutoff
-                            const usableWidth = 1000 - (padding * 2);
-                            const usableHeight = 450 - (padding * 2);
+                            // Tighter grid with better padding
+                            const padding = 50;
+                            const usableWidth = 800 - (padding * 2);
+                            const usableHeight = 400 - (padding * 2);
                             
                             const totalItems = stats.words.length;
-                            const cols = Math.ceil(Math.sqrt(totalItems * 2));
+                            const cols = Math.ceil(Math.sqrt(totalItems * 1.8));
                             const rows = Math.ceil(totalItems / cols);
                             const col = idx % cols;
                             const row = Math.floor(idx / cols);
                             
-                            // Add some randomness for organic feel (reduced range)
-                            const randomX = (Math.sin(idx * 12.345) * 30);
-                            const randomY = (Math.cos(idx * 23.456) * 20);
+                            // Reduced randomness for better containment
+                            const randomX = (Math.sin(idx * 12.345) * 15);
+                            const randomY = (Math.cos(idx * 23.456) * 10);
                             
                             const x = padding + (col * (usableWidth / cols)) + (usableWidth / (cols * 2)) + randomX;
                             const y = padding + (row * (usableHeight / rows)) + (usableHeight / (rows * 2)) + randomY;
