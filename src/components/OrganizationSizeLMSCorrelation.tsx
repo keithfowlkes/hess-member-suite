@@ -151,6 +151,12 @@ export const OrganizationSizeLMSCorrelation = () => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      
+      // Check if date is November 9, 2025 or November 6, 2025
+      const updatedDate = new Date(data.updatedAt);
+      const dateStr = format(updatedDate, 'yyyy-MM-dd');
+      const isUnknownDate = dateStr === '2025-11-09' || dateStr === '2025-11-06';
+      
       return (
         <div className="bg-popover border-2 rounded-lg shadow-xl p-4 min-w-[220px]"
              style={{ borderColor: data.color }}>
@@ -164,7 +170,7 @@ export const OrganizationSizeLMSCorrelation = () => {
               <span className="font-semibold">Size:</span> {data.x.toLocaleString()} students
             </p>
             <p className="text-xs text-muted-foreground">
-              <span className="font-semibold">Last Updated:</span> {format(new Date(data.updatedAt), 'MMM d, yyyy')}
+              <span className="font-semibold">Last Updated:</span> {isUnknownDate ? 'Unknown' : format(updatedDate, 'MMM d, yyyy')}
             </p>
           </div>
         </div>
