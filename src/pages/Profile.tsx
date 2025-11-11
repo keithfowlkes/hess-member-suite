@@ -5,11 +5,32 @@ import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { UnifiedProfileEditor } from '@/components/UnifiedProfileEditor';
+import { MemberCohortSelector } from '@/components/MemberCohortSelector';
+import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const { user } = useAuth();
   const { data, loading, isAdmin, submitEditRequest, updateProfileDirect, canEditDirectly } = useUnifiedProfile();
   const [saving, setSaving] = useState(false);
+  const [isCohortLeader, setIsCohortLeader] = useState(false);
+
+  // Check if user is a cohort leader
+  useEffect(() => {
+    const checkCohortLeaderRole = async () => {
+      if (!user) return;
+      
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'cohort_leader')
+        .single();
+      
+      setIsCohortLeader(!!roleData);
+    };
+    
+    checkCohortLeaderRole();
+  }, [user]);
 
   // Scroll to top when profile page loads
   useEffect(() => {
@@ -76,12 +97,23 @@ const Profile = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 p-8">
-          <UnifiedProfileEditor
-            data={data}
-            canEditDirectly={canEditDirectly()}
-            onSave={handleSave}
-            saving={saving}
-          />
+          <div className="space-y-6">
+            <UnifiedProfileEditor
+              data={data}
+              canEditDirectly={canEditDirectly()}
+              onSave={handleSave}
+              saving={saving}
+            />
+            
+            {/* Show cohort selector for admins and cohort leaders */}
+            {(isAdmin || isCohortLeader) && (
+              <MemberCohortSelector 
+                userId={user?.id}
+                title="Your Cohort Memberships"
+                description="Manage which cohort groups you belong to"
+              />
+            )}
+          </div>
         </main>
       </div>
     </SidebarProvider>

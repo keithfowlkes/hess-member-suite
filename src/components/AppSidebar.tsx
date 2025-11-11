@@ -145,10 +145,12 @@ export function AppSidebar() {
   
   memberItems.push({ title: 'Organization Profile', url: '/profile', icon: User });
   
-  // Add cohort information for cohort leaders and admins
-  if (canAccessCohortInfo) {
-    console.log('Adding Cohort Information menu item for user with role:', userRole);
+  // Add cohort information for cohort leaders and admins viewing as members
+  if (!isViewingAsAdmin && canAccessCohortInfo) {
+    console.log('✅ AppSidebar: Adding "Your Cohort Information" menu item for user with role:', userRole);
     memberItems.push({ title: 'Your Cohort Information', url: '/cohort-information', icon: GraduationCap });
+  } else {
+    console.log('❌ AppSidebar: NOT adding cohort menu. isViewingAsAdmin:', isViewingAsAdmin, 'canAccessCohortInfo:', canAccessCohortInfo, 'userRole:', userRole);
   }
 
   const items = isViewingAsAdmin ? adminItems : memberItems;
