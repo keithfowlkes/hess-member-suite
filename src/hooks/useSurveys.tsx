@@ -325,6 +325,18 @@ export const useSubmitSurveyResponse = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Check if user has already submitted a response for this survey
+      const { data: existingResponse } = await supabase
+        .from('survey_responses')
+        .select('id')
+        .eq('survey_id', responseData.surveyId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingResponse) {
+        throw new Error('DUPLICATE_RESPONSE');
+      }
+
       const { data: response, error: responseError } = await supabase
         .from('survey_responses')
         .insert([{
@@ -360,9 +372,13 @@ export const useSubmitSurveyResponse = () => {
       });
     },
     onError: (error: any) => {
+      const isDuplicate = error.message === 'DUPLICATE_RESPONSE' || 
+                         error.message?.includes('duplicate') ||
+                         error.code === '23505';
+      
       toast({
         title: 'Error',
-        description: error.message,
+        description: isDuplicate ? 'You have already voted on this survey.' : error.message,
         variant: 'destructive',
       });
     },
