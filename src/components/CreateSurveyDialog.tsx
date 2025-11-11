@@ -161,16 +161,19 @@ export function CreateSurveyDialog({ open, onOpenChange }: { open: boolean; onOp
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="text">Short Answer</SelectItem>
-                          <SelectItem value="textarea">Long Answer</SelectItem>
-                          <SelectItem value="single_choice">Single Choice</SelectItem>
                           <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
+                          <SelectItem value="word_cloud">Word Cloud</SelectItem>
+                          <SelectItem value="ranking">Ranking</SelectItem>
+                          <SelectItem value="open_ended">Open Ended</SelectItem>
+                          <SelectItem value="single_choice">Single Choice</SelectItem>
                           <SelectItem value="rating">Rating (1-5)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    {(question.question_type === 'single_choice' || question.question_type === 'multiple_choice') && (
+                    {(question.question_type === 'single_choice' || 
+                      question.question_type === 'multiple_choice' || 
+                      question.question_type === 'ranking') && (
                       <div className="space-y-2">
                         <Label>Options (one per line)</Label>
                         <Textarea

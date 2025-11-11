@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { useSurveys, useUpdateSurvey } from '@/hooks/useSurveys';
 import { CreateSurveyDialog } from '@/components/CreateSurveyDialog';
 import { SurveyResultsDialog } from '@/components/SurveyResultsDialog';
-import { Plus, FileQuestion, Calendar, MoreVertical, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
+import { RealtimeSurveyCharts } from '@/components/RealtimeSurveyCharts';
+import { Plus, FileQuestion, Calendar, MoreVertical, Eye, ToggleLeft, ToggleRight, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   DropdownMenu,
@@ -21,6 +22,7 @@ export default function AdminSurveys() {
   const updateSurvey = useUpdateSurvey();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedSurveyId, setSelectedSurveyId] = useState<string | null>(null);
+  const [realtimeViewSurveyId, setRealtimeViewSurveyId] = useState<string | null>(null);
 
   const toggleSurveyStatus = (surveyId: string, currentStatus: boolean) => {
     updateSurvey.mutate({ id: surveyId, is_active: !currentStatus });
@@ -79,6 +81,10 @@ export default function AdminSurveys() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setRealtimeViewSurveyId(survey.id)}>
+                              <BarChart3 className="h-4 w-4 mr-2" />
+                              Live Results
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setSelectedSurveyId(survey.id)}>
                               <Eye className="h-4 w-4 mr-2" />
                               View Results
@@ -133,6 +139,15 @@ export default function AdminSurveys() {
                 surveyId={selectedSurveyId}
                 open={!!selectedSurveyId}
                 onOpenChange={(open) => !open && setSelectedSurveyId(null)}
+              />
+            )}
+
+            {realtimeViewSurveyId && (
+              <SurveyResultsDialog
+                surveyId={realtimeViewSurveyId}
+                open={!!realtimeViewSurveyId}
+                onOpenChange={(open) => !open && setRealtimeViewSurveyId(null)}
+                realtime
               />
             )}
           </div>

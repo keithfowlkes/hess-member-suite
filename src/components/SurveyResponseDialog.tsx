@@ -75,21 +75,22 @@ export function SurveyResponseDialog({
 
   const renderQuestion = (question: any) => {
     switch (question.question_type) {
-      case 'text':
-        return (
-          <Input
-            value={answers[question.id] || ''}
-            onChange={(e) => setAnswers({ ...answers, [question.id]: e.target.value })}
-            placeholder="Your answer"
-          />
-        );
-      
-      case 'textarea':
+      case 'open_ended':
         return (
           <Textarea
             value={answers[question.id] || ''}
             onChange={(e) => setAnswers({ ...answers, [question.id]: e.target.value })}
-            placeholder="Your answer"
+            placeholder="Share your thoughts..."
+            rows={6}
+          />
+        );
+      
+      case 'word_cloud':
+        return (
+          <Textarea
+            value={answers[question.id] || ''}
+            onChange={(e) => setAnswers({ ...answers, [question.id]: e.target.value })}
+            placeholder="Enter keywords or phrases (separated by spaces)"
             rows={4}
           />
         );
@@ -130,6 +131,35 @@ export function SurveyResponseDialog({
                 <Label htmlFor={`${question.id}-${option}`} className="font-normal cursor-pointer">
                   {option}
                 </Label>
+              </div>
+            ))}
+          </div>
+        );
+      
+      case 'ranking':
+        return (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Rank these options by dragging or numbering (1 = highest)</p>
+            {question.options?.choices?.map((option: string, idx: number) => (
+              <div key={option} className="flex items-center gap-3">
+                <Input
+                  type="number"
+                  min="1"
+                  max={question.options?.choices?.length}
+                  placeholder={`${idx + 1}`}
+                  className="w-20"
+                  value={(answers[question.id]?.rankings || {})[option] || ''}
+                  onChange={(e) => {
+                    const current = answers[question.id]?.rankings || {};
+                    setAnswers({ 
+                      ...answers, 
+                      [question.id]: { 
+                        rankings: { ...current, [option]: e.target.value } 
+                      } 
+                    });
+                  }}
+                />
+                <Label className="font-normal">{option}</Label>
               </div>
             ))}
           </div>

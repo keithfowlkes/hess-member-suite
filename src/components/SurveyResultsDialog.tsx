@@ -4,15 +4,18 @@ import { Badge } from '@/components/ui/badge';
 import { useSurveyResponses, useSurveyQuestions } from '@/hooks/useSurveys';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Users, BarChart3 } from 'lucide-react';
+import { RealtimeSurveyCharts } from './RealtimeSurveyCharts';
 
 export function SurveyResultsDialog({ 
   surveyId, 
   open, 
-  onOpenChange 
+  onOpenChange,
+  realtime = false
 }: { 
   surveyId: string; 
   open: boolean; 
   onOpenChange: (open: boolean) => void;
+  realtime?: boolean;
 }) {
   const { data: responses } = useSurveyResponses(surveyId);
   const { data: questions } = useSurveyQuestions(surveyId);
@@ -52,15 +55,19 @@ export function SurveyResultsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Survey Results</DialogTitle>
+          <DialogTitle>{realtime ? 'Live Survey Results' : 'Survey Results'}</DialogTitle>
           <DialogDescription className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             {responses?.length || 0} responses received
+            {realtime && <Badge variant="secondary" className="ml-2">Live Updates</Badge>}
           </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="max-h-[70vh] pr-4">
-          <div className="space-y-6">
+          {realtime ? (
+            <RealtimeSurveyCharts surveyId={surveyId} />
+          ) : (
+            <div className="space-y-6">
             {questions?.map((question, index) => {
               const stats = getQuestionStats(question.id);
               
@@ -121,7 +128,8 @@ export function SurveyResultsDialog({
                 </Card>
               );
             })}
-          </div>
+            </div>
+          )}
         </ScrollArea>
       </DialogContent>
     </Dialog>
