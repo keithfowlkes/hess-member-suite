@@ -33,16 +33,22 @@ export function SurveyResultsDialog({
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
   
   const CLOUD_COLORS = [
-    'rgb(59, 130, 246)', // blue
-    'rgb(168, 85, 247)', // purple
-    'rgb(236, 72, 153)', // pink
-    'rgb(249, 115, 22)', // orange
-    'rgb(34, 197, 94)', // green
-    'rgb(251, 146, 60)', // amber
-    'rgb(14, 165, 233)', // sky
-    'rgb(139, 92, 246)', // violet
+    'rgb(59, 130, 246)', // bright blue
+    'rgb(236, 72, 153)', // hot pink
+    'rgb(34, 197, 94)', // vivid green
+    'rgb(249, 115, 22)', // bright orange
+    'rgb(168, 85, 247)', // vibrant purple
+    'rgb(234, 179, 8)', // golden yellow
+    'rgb(239, 68, 68)', // bright red
+    'rgb(20, 184, 166)', // teal
     'rgb(244, 63, 94)', // rose
+    'rgb(14, 165, 233)', // sky blue
+    'rgb(139, 92, 246)', // violet
+    'rgb(251, 146, 60)', // amber
     'rgb(16, 185, 129)', // emerald
+    'rgb(217, 70, 239)', // fuchsia
+    'rgb(6, 182, 212)', // cyan
+    'rgb(132, 204, 22)', // lime
   ];
 
   useEffect(() => {
