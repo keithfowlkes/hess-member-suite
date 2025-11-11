@@ -1322,7 +1322,7 @@ const handleOrganizationDialogClose = () => {
                                       <img 
                                         src={anthologyLogo} 
                                         alt="Anthology Logo" 
-                                        className="h-8 w-auto object-contain"
+                                        className="h-7 w-auto object-contain"
                                       />
                                     </div>
                                   )}
