@@ -17,6 +17,7 @@ import { useOrganizationByName } from '@/hooks/useOrganizationByName';
 import { OrganizationDetailsDialog } from '@/components/OrganizationDetailsDialog';
 import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart, Search, User, Download, Maximize2 } from 'lucide-react';
 import anthologyLogo from '@/assets/anthology-logo.png';
+import ellucianLogo from '@/assets/ellucian-logo.jpg';
 import {
   Dialog,
   DialogContent,
@@ -1318,6 +1319,15 @@ const handleOrganizationDialogClose = () => {
                                       <img 
                                         src={anthologyLogo} 
                                         alt="Anthology Logo" 
+                                        className="h-8 w-auto object-contain"
+                                      />
+                                    </div>
+                                  )}
+                                  {(cohort === 'Ellucian Banner' || cohort === 'Ellucian Colleague') && (
+                                    <div className="flex justify-center pb-3 border-b">
+                                      <img 
+                                        src={ellucianLogo} 
+                                        alt="Ellucian Logo" 
                                         className="h-8 w-auto object-contain"
                                       />
                                     </div>
