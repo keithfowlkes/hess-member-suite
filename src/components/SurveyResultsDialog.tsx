@@ -31,6 +31,19 @@ export function SurveyResultsDialog({
   const { toast } = useToast();
 
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+  
+  const CLOUD_COLORS = [
+    'rgb(59, 130, 246)', // blue
+    'rgb(168, 85, 247)', // purple
+    'rgb(236, 72, 153)', // pink
+    'rgb(249, 115, 22)', // orange
+    'rgb(34, 197, 94)', // green
+    'rgb(251, 146, 60)', // amber
+    'rgb(14, 165, 233)', // sky
+    'rgb(139, 92, 246)', // violet
+    'rgb(244, 63, 94)', // rose
+    'rgb(16, 185, 129)', // emerald
+  ];
 
   useEffect(() => {
     if (surveyId) {
@@ -357,30 +370,34 @@ export function SurveyResultsDialog({
                     )}
 
                     {stats.type === 'word_cloud' && (
-                      <div className="flex flex-wrap gap-3 justify-center p-6 bg-muted/20 rounded-lg">
+                      <div className="flex flex-wrap gap-4 justify-center p-8 bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl">
                         {stats.words.map((item: any, idx: number) => {
                           const maxValue = Math.max(...stats.words.map((d: any) => d.value));
                           const minValue = Math.min(...stats.words.map((d: any) => d.value));
                           const normalizedSize = maxValue === minValue ? 1 : (item.value - minValue) / (maxValue - minValue);
-                          const fontSize = 0.875 + (normalizedSize * 1.5);
-                          const padding = 0.5 + (normalizedSize * 1);
+                          const fontSize = 1 + (normalizedSize * 1.8);
+                          const padding = 0.75 + (normalizedSize * 1.25);
+                          const color = CLOUD_COLORS[idx % CLOUD_COLORS.length];
                           
                           return (
-                            <Badge
+                            <div
                               key={idx}
-                              variant="secondary"
-                              className="animate-fade-in hover-scale transition-all duration-300 hover:shadow-lg border-2"
+                              className="animate-fade-in hover-scale transition-all duration-300 hover:shadow-2xl cursor-default"
                               style={{
                                 fontSize: `${fontSize}rem`,
-                                padding: `${padding * 0.5}rem ${padding}rem`,
-                                backgroundColor: `${COLORS[idx % COLORS.length]}15`,
-                                color: COLORS[idx % COLORS.length],
-                                borderColor: `${COLORS[idx % COLORS.length]}60`,
+                                padding: `${padding * 0.6}rem ${padding * 1.2}rem`,
+                                background: `linear-gradient(135deg, ${color}E6, ${color}CC)`,
+                                color: 'white',
+                                borderRadius: '50px',
+                                fontWeight: 600,
+                                boxShadow: `0 4px 15px ${color}40, 0 0 25px ${color}20`,
                                 animationDelay: `${idx * 0.05}s`,
+                                backdropFilter: 'blur(10px)',
+                                border: `2px solid ${color}`,
                               }}
                             >
-                              {item.name} ({item.value})
-                            </Badge>
+                              {item.name} <span style={{ opacity: 0.9, fontWeight: 500 }}>({item.value})</span>
+                            </div>
                           );
                         })}
                       </div>
