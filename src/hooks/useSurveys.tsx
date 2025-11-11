@@ -160,6 +160,80 @@ export const useUpdateSurvey = () => {
   });
 };
 
+export const useUpdateSurveyWithQuestions = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (surveyData: {
+      id: string;
+      survey: {
+        title: string;
+        description?: string | null;
+        expires_at?: string | null;
+        is_active?: boolean;
+        target_audience?: string;
+      };
+      questions: {
+        id?: string;
+        question_text: string;
+        question_type: string;
+        options?: any;
+        required?: boolean;
+      }[];
+    }) => {
+      // Update survey metadata
+      const { error: surveyError } = await supabase
+        .from('surveys')
+        .update(surveyData.survey)
+        .eq('id', surveyData.id);
+      
+      if (surveyError) throw surveyError;
+
+      // Delete existing questions
+      const { error: deleteError } = await supabase
+        .from('survey_questions')
+        .delete()
+        .eq('survey_id', surveyData.id);
+      
+      if (deleteError) throw deleteError;
+
+      // Insert updated questions
+      const questionsWithSurveyId = surveyData.questions.map((q, idx) => ({
+        question_text: q.question_text,
+        question_type: q.question_type,
+        options: q.options,
+        required: q.required ?? false,
+        survey_id: surveyData.id,
+        display_order: idx + 1,
+      }));
+
+      const { error: questionsError } = await supabase
+        .from('survey_questions')
+        .insert(questionsWithSurveyId);
+      
+      if (questionsError) throw questionsError;
+
+      return { id: surveyData.id };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['surveys'] });
+      queryClient.invalidateQueries({ queryKey: ['survey-questions'] });
+      toast({
+        title: 'Survey updated',
+        description: 'Your survey has been updated successfully.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
 export const useSurveyResponses = (surveyId?: string) => {
   return useQuery({
     queryKey: ['survey-responses', surveyId],

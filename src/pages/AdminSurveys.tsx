@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { useSurveys, useUpdateSurvey } from '@/hooks/useSurveys';
 import { CreateSurveyDialog } from '@/components/CreateSurveyDialog';
 import { SurveyResultsDialog } from '@/components/SurveyResultsDialog';
+import { EditSurveyDialog } from '@/components/EditSurveyDialog';
 import { RealtimeSurveyCharts } from '@/components/RealtimeSurveyCharts';
-import { Plus, FileQuestion, Calendar, MoreVertical, Eye, ToggleLeft, ToggleRight, BarChart3 } from 'lucide-react';
+import { Plus, FileQuestion, Calendar, MoreVertical, Eye, ToggleLeft, ToggleRight, BarChart3, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   DropdownMenu,
@@ -23,6 +24,7 @@ export default function AdminSurveys() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedSurveyId, setSelectedSurveyId] = useState<string | null>(null);
   const [realtimeViewSurveyId, setRealtimeViewSurveyId] = useState<string | null>(null);
+  const [editSurveyId, setEditSurveyId] = useState<string | null>(null);
 
   const toggleSurveyStatus = (surveyId: string, currentStatus: boolean) => {
     updateSurvey.mutate({ id: surveyId, is_active: !currentStatus });
@@ -81,6 +83,10 @@ export default function AdminSurveys() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setEditSurveyId(survey.id)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Survey
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setRealtimeViewSurveyId(survey.id)}>
                               <BarChart3 className="h-4 w-4 mr-2" />
                               Live Results
@@ -133,6 +139,12 @@ export default function AdminSurveys() {
             )}
 
             <CreateSurveyDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
+            
+            <EditSurveyDialog
+              surveyId={editSurveyId}
+              open={!!editSurveyId}
+              onOpenChange={(open) => !open && setEditSurveyId(null)}
+            />
             
             {selectedSurveyId && (
               <SurveyResultsDialog
