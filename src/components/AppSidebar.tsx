@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search, Map, MessageSquare, GraduationCap } from 'lucide-react';
+import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search, Map, MessageSquare, GraduationCap, FileQuestion } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { supabase } from '@/integrations/supabase/client';
@@ -114,6 +114,7 @@ export function AppSidebar() {
     { title: 'User Messages', url: '/user-messages', icon: MessageSquare, badge: unreadMessageCount },
     { title: 'Cohort Information', url: '/cohort-information', icon: GraduationCap },
     { title: 'Member Analytics', url: '/dashboards', icon: BarChart3 },
+    { title: 'Surveys', url: '/admin/surveys', icon: FileQuestion },
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
     { title: 'Organization Profile', url: '/profile', icon: User },
     { title: 'Settings', url: '/settings', icon: Settings },
@@ -124,6 +125,7 @@ export function AppSidebar() {
     { title: 'HESS Member Information', url: '/research-dashboard', icon: Search },
     { title: 'Member Analytics', url: '/member-analytics', icon: BarChart3 },
     { title: 'Member Map', url: '/public-map', icon: Map },
+    { title: 'Surveys', url: '/surveys', icon: FileQuestion },
     ...(showMemberFeeInfo ? [{ title: 'My Invoices', url: '/invoices', icon: FileText }] : []),
     { title: 'Organization Profile', url: '/profile', icon: User },
     ...(canAccessCohortInfo ? [{ title: 'Your Cohort Information', url: '/cohort-information', icon: GraduationCap }] : []),

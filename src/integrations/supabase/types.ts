@@ -1309,6 +1309,171 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_answers: {
+        Row: {
+          answer_options: Json | null
+          answer_text: string | null
+          created_at: string | null
+          id: string
+          question_id: string
+          response_id: string
+        }
+        Insert: {
+          answer_options?: Json | null
+          answer_text?: string | null
+          created_at?: string | null
+          id?: string
+          question_id: string
+          response_id: string
+        }
+        Update: {
+          answer_options?: Json | null
+          answer_text?: string | null
+          created_at?: string | null
+          id?: string
+          question_id?: string
+          response_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "survey_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_answers_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "survey_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_questions: {
+        Row: {
+          created_at: string | null
+          display_order: number
+          id: string
+          options: Json | null
+          question_text: string
+          question_type: string
+          required: boolean | null
+          survey_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order: number
+          id?: string
+          options?: Json | null
+          question_text: string
+          question_type: string
+          required?: boolean | null
+          survey_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          options?: Json | null
+          question_text?: string
+          question_type?: string
+          required?: boolean | null
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_questions_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_responses: {
+        Row: {
+          id: string
+          organization_id: string | null
+          submitted_at: string | null
+          survey_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          organization_id?: string | null
+          submitted_at?: string | null
+          survey_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string | null
+          submitted_at?: string | null
+          survey_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_responses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organization_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surveys: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          target_audience: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          target_audience?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          target_audience?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       system_analytics_datacube: {
         Row: {
           created_at: string | null
