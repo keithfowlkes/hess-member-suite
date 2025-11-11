@@ -19,6 +19,7 @@ import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, Tre
 import anthologyLogo from '@/assets/anthology-logo.png';
 import ellucianLogo from '@/assets/ellucian-logo.jpg';
 import jenzabarLogo from '@/assets/jenzabar-logo.avif';
+import oracleLogo from '@/assets/oracle-logo.png';
 import {
   Dialog,
   DialogContent,
@@ -1338,6 +1339,15 @@ const handleOrganizationDialogClose = () => {
                                       <img 
                                         src={jenzabarLogo} 
                                         alt="Jenzabar Logo" 
+                                        className="h-8 w-auto object-contain"
+                                      />
+                                    </div>
+                                  )}
+                                  {cohort === 'Oracle Cloud' && (
+                                    <div className="flex justify-center pb-3 border-b">
+                                      <img 
+                                        src={oracleLogo} 
+                                        alt="Oracle Logo" 
                                         className="h-8 w-auto object-contain"
                                       />
                                     </div>
