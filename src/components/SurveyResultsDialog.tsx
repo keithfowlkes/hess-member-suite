@@ -75,6 +75,26 @@ export function SurveyResultsDialog({
       return { type: 'choices', choices, total: answers.length };
     }
 
+    if (question?.question_type === 'word_cloud') {
+      const words: Record<string, number> = {};
+      answers.forEach((a: any) => {
+        const text = a.answer_text || '';
+        text.split(/\s+/).forEach((word: string) => {
+          const clean = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (clean.length > 3) {
+            words[clean] = (words[clean] || 0) + 1;
+          }
+        });
+      });
+      
+      const wordArray = Object.entries(words)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 20)
+        .map(([name, value]) => ({ name, value }));
+      
+      return { type: 'word_cloud', words: wordArray };
+    }
+
     return { type: 'text', responses: answers.map((a: any) => a.answer_text || '') };
   };
 
@@ -336,6 +356,35 @@ export function SurveyResultsDialog({
                             </RechartsPieChart>
                           </ResponsiveContainer>
                         )}
+                      </div>
+                    )}
+
+                    {stats.type === 'word_cloud' && (
+                      <div className="flex flex-wrap gap-3 justify-center p-6 bg-muted/20 rounded-lg">
+                        {stats.words.map((item: any, idx: number) => {
+                          const maxValue = Math.max(...stats.words.map((d: any) => d.value));
+                          const minValue = Math.min(...stats.words.map((d: any) => d.value));
+                          const normalizedSize = maxValue === minValue ? 1 : (item.value - minValue) / (maxValue - minValue);
+                          const fontSize = 0.875 + (normalizedSize * 1.5);
+                          const padding = 0.5 + (normalizedSize * 1);
+                          
+                          return (
+                            <Badge
+                              key={idx}
+                              variant="secondary"
+                              className="transition-all hover:scale-110"
+                              style={{
+                                fontSize: `${fontSize}rem`,
+                                padding: `${padding * 0.5}rem ${padding}rem`,
+                                backgroundColor: `${COLORS[idx % COLORS.length]}20`,
+                                color: COLORS[idx % COLORS.length],
+                                borderColor: COLORS[idx % COLORS.length],
+                              }}
+                            >
+                              {item.name} ({item.value})
+                            </Badge>
+                          );
+                        })}
                       </div>
                     )}
 

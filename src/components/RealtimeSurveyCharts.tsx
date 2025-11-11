@@ -159,50 +159,81 @@ export function RealtimeSurveyCharts({ surveyId }: { surveyId: string }) {
             <CardContent>
               {chartData.length > 0 ? (
                 <div className="space-y-4">
-                  <ResponsiveContainer width="100%" height={300}>
-                    {question.question_type === 'word_cloud' || question.question_type === 'rating' ? (
-                      <BarChart data={chartData}>
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                      </BarChart>
-                    ) : (
-                      <PieChart>
-                        <Pie
-                          data={chartData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={100}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {chartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    )}
-                  </ResponsiveContainer>
-                  
-                  <div className="space-y-2">
-                    {chartData.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-sm">
-                        <span className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: COLORS[idx % COLORS.length] }}
-                          />
-                          {item.name}
-                        </span>
-                        <Badge variant="secondary">{item.value}</Badge>
+                  {question.question_type === 'word_cloud' ? (
+                    <div className="flex flex-wrap gap-3 justify-center p-6">
+                      {chartData.map((item, idx) => {
+                        const maxValue = Math.max(...chartData.map(d => d.value));
+                        const minValue = Math.min(...chartData.map(d => d.value));
+                        const normalizedSize = maxValue === minValue ? 1 : (item.value - minValue) / (maxValue - minValue);
+                        const fontSize = 0.875 + (normalizedSize * 1.5);
+                        const padding = 0.5 + (normalizedSize * 1);
+                        
+                        return (
+                          <Badge
+                            key={idx}
+                            variant="secondary"
+                            className="transition-all hover:scale-110"
+                            style={{
+                              fontSize: `${fontSize}rem`,
+                              padding: `${padding * 0.5}rem ${padding}rem`,
+                              backgroundColor: `${COLORS[idx % COLORS.length]}20`,
+                              color: COLORS[idx % COLORS.length],
+                              borderColor: COLORS[idx % COLORS.length],
+                            }}
+                          >
+                            {item.name} ({item.value})
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <>
+                      <ResponsiveContainer width="100%" height={300}>
+                        {question.question_type === 'rating' ? (
+                          <BarChart data={chartData}>
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                          </BarChart>
+                        ) : (
+                          <PieChart>
+                            <Pie
+                              data={chartData}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                              outerRadius={100}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {chartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend />
+                          </PieChart>
+                        )}
+                      </ResponsiveContainer>
+                      
+                      <div className="space-y-2">
+                        {chartData.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-sm">
+                            <span className="flex items-center gap-2">
+                              <div 
+                                className="w-3 h-3 rounded-full" 
+                                style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+                              />
+                              {item.name}
+                            </span>
+                            <Badge variant="secondary">{item.value}</Badge>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-8">No responses yet</p>
