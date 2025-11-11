@@ -44,7 +44,8 @@ export function RealtimeSurveyCharts({ surveyId }: { surveyId: string }) {
     const question = questions?.find(q => q.id === questionId);
     
     if (question?.question_type === 'multiple_choice' || 
-        question?.question_type === 'single_choice') {
+        question?.question_type === 'single_choice' ||
+        question?.question_type === 'multiple_select') {
       const choices: Record<string, number> = {};
       answers.forEach((a: any) => {
         if (a.answer_text) {
@@ -141,7 +142,7 @@ export function RealtimeSurveyCharts({ surveyId }: { surveyId: string }) {
 
       {questions?.map((question, index) => {
         const chartData = getQuestionChartData(question.id);
-        const showChart = ['multiple_choice', 'single_choice', 'ranking', 'word_cloud', 'rating'].includes(question.question_type);
+        const showChart = ['multiple_choice', 'single_choice', 'multiple_select', 'ranking', 'word_cloud', 'rating'].includes(question.question_type);
         
         if (!showChart) return null;
 
