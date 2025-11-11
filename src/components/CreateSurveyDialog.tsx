@@ -25,7 +25,14 @@ const questionTypes = [
     value: 'multiple_choice', 
     label: 'Multiple Choice', 
     icon: CheckSquare, 
-    description: 'Select multiple options from a list',
+    description: 'Choose one answer from multiple options',
+    needsOptions: true 
+  },
+  { 
+    value: 'multiple_select', 
+    label: 'Multiple Select', 
+    icon: ListOrdered, 
+    description: 'Select multiple answers from options',
     needsOptions: true 
   },
   { 
@@ -113,6 +120,7 @@ export function CreateSurveyDialog({ open, onOpenChange }: { open: boolean; onOp
     const questionsMissingOptions = questions.filter(q => 
       (q.question_type === 'single_choice' || 
        q.question_type === 'multiple_choice' || 
+       q.question_type === 'multiple_select' ||
        q.question_type === 'ranking') && 
       (!q.options || q.options.length === 0)
     );
@@ -288,6 +296,7 @@ export function CreateSurveyDialog({ open, onOpenChange }: { open: boolean; onOp
 
                       {(question.question_type === 'single_choice' || 
                         question.question_type === 'multiple_choice' || 
+                        question.question_type === 'multiple_select' ||
                         question.question_type === 'ranking') && (
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
@@ -369,6 +378,7 @@ export function CreateSurveyDialog({ open, onOpenChange }: { open: boolean; onOp
               questions.some(q => 
                 (q.question_type === 'single_choice' || 
                  q.question_type === 'multiple_choice' || 
+                 q.question_type === 'multiple_select' ||
                  q.question_type === 'ranking') && 
                 (!q.options || q.options.length === 0)
               )

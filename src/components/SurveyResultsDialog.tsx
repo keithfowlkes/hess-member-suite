@@ -58,7 +58,9 @@ export function SurveyResultsDialog({
       return { type: 'rating', average: avg, count: ratings.length };
     }
 
-    if (question?.question_type === 'single_choice' || question?.question_type === 'multiple_choice') {
+    if (question?.question_type === 'single_choice' || 
+        question?.question_type === 'multiple_choice' || 
+        question?.question_type === 'multiple_select') {
       const choices: Record<string, number> = {};
       answers.forEach((a: any) => {
         if (a.answer_text) {

@@ -96,6 +96,7 @@ export function SurveyResponseDialog({
         );
       
       case 'single_choice':
+      case 'multiple_choice':
         return (
           <RadioGroup
             value={answers[question.id] || ''}
@@ -112,7 +113,7 @@ export function SurveyResponseDialog({
           </RadioGroup>
         );
       
-      case 'multiple_choice':
+      case 'multiple_select':
         return (
           <div className="space-y-2">
             {question.options?.choices?.map((option: string) => (
