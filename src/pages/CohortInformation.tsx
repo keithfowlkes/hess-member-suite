@@ -1349,7 +1349,7 @@ const handleOrganizationDialogClose = () => {
                                       <img 
                                         src={oracleLogo} 
                                         alt="Oracle Logo" 
-                                        className="h-7 w-auto object-contain"
+                                        className="h-6 w-auto object-contain"
                                       />
                                     </div>
                                   )}
