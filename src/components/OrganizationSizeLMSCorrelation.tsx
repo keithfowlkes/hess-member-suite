@@ -5,11 +5,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ZAxis } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { useMemo } from 'react';
+import { format } from 'date-fns';
 
 interface OrgLMSData {
   name: string;
   student_fte: number;
   learning_management: string;
+  updated_at: string;
 }
 
 // Vibrant color palette for different vendors
@@ -42,7 +44,7 @@ export const OrganizationSizeLMSCorrelation = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('organizations')
-        .select('name, student_fte, learning_management')
+        .select('name, student_fte, learning_management, updated_at')
         .eq('membership_status', 'active')
         .not('student_fte', 'is', null)
         .not('learning_management', 'is', null)
@@ -99,6 +101,7 @@ export const OrganizationSizeLMSCorrelation = () => {
           name: org.name,
           vendor,
           color: vendorColors[vendor],
+          updatedAt: org.updated_at,
         };
       });
   }, [organizations, vendorYPositions, vendorColors]);
@@ -159,6 +162,9 @@ export const OrganizationSizeLMSCorrelation = () => {
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="font-semibold">Size:</span> {data.x.toLocaleString()} students
+            </p>
+            <p className="text-xs text-muted-foreground">
+              <span className="font-semibold">Last Updated:</span> {format(new Date(data.updatedAt), 'MMM d, yyyy')}
             </p>
           </div>
         </div>

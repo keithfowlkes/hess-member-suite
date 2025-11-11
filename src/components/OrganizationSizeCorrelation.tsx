@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ZAxis } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { useState, useMemo } from 'react';
+import { format } from 'date-fns';
 
 interface OrgSystemData {
   name: string;
@@ -13,6 +14,7 @@ interface OrgSystemData {
   student_information_system: string;
   financial_system: string;
   hcm_hr: string;
+  updated_at: string;
 }
 
 // Vibrant color palette for different vendors
@@ -47,7 +49,7 @@ export const OrganizationSizeCorrelation = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('organizations')
-        .select('name, student_fte, student_information_system, financial_system, hcm_hr')
+        .select('name, student_fte, student_information_system, financial_system, hcm_hr, updated_at')
         .eq('membership_status', 'active')
         .not('student_fte', 'is', null)
         .order('student_fte', { ascending: true });
@@ -115,6 +117,7 @@ export const OrganizationSizeCorrelation = () => {
           name: org.name,
           vendor,
           color: vendorColors[vendor],
+          updatedAt: org.updated_at,
         };
       });
   }, [organizations, selectedSystemType, vendorYPositions, vendorColors]);
@@ -183,6 +186,9 @@ export const OrganizationSizeCorrelation = () => {
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="font-semibold">Size:</span> {data.x.toLocaleString()} students
+            </p>
+            <p className="text-xs text-muted-foreground">
+              <span className="font-semibold">Last Updated:</span> {format(new Date(data.updatedAt), 'MMM d, yyyy')}
             </p>
           </div>
         </div>
