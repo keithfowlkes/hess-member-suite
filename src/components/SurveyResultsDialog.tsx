@@ -4,12 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useSurveyResponses, useSurveyQuestions } from '@/hooks/useSurveys';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, BarChart3, Download } from 'lucide-react';
+import { Users, BarChart3, Download, PieChart } from 'lucide-react';
 import { RealtimeSurveyCharts } from './RealtimeSurveyCharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Legend } from 'recharts';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 export function SurveyResultsDialog({ 
   surveyId, 
@@ -25,7 +27,10 @@ export function SurveyResultsDialog({
   const { data: responses } = useSurveyResponses(surveyId);
   const { data: questions } = useSurveyQuestions(surveyId);
   const [surveyTitle, setSurveyTitle] = useState('');
+  const [chartType, setChartType] = useState<'bar' | 'pie'>('bar');
   const { toast } = useToast();
+
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
   useEffect(() => {
     if (surveyId) {
@@ -219,18 +224,30 @@ export function SurveyResultsDialog({
                 {realtime && <Badge variant="secondary" className="ml-2">Live Updates</Badge>}
               </DialogDescription>
             </div>
-            {!realtime && (
-              <Button
-                onClick={handleExportToExcel}
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                disabled={!responses || responses.length === 0}
-              >
-                <Download className="h-4 w-4" />
-                Export to Excel
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {!realtime && (
+                <>
+                  <ToggleGroup type="single" value={chartType} onValueChange={(value) => value && setChartType(value as 'bar' | 'pie')}>
+                    <ToggleGroupItem value="bar" aria-label="Bar chart">
+                      <BarChart3 className="h-4 w-4" />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="pie" aria-label="Pie chart">
+                      <PieChart className="h-4 w-4" />
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                  <Button
+                    onClick={handleExportToExcel}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    disabled={!responses || responses.length === 0}
+                  >
+                    <Download className="h-4 w-4" />
+                    Export to Excel
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </DialogHeader>
 
@@ -262,21 +279,55 @@ export function SurveyResultsDialog({
                     )}
 
                     {stats.type === 'choices' && (
-                      <div className="space-y-3">
-                        {Object.entries(stats.choices).map(([choice, count]) => (
-                          <div key={choice} className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span>{choice}</span>
-                              <Badge variant="secondary">{count} responses</Badge>
-                            </div>
-                            <div className="w-full bg-secondary rounded-full h-2">
-                              <div
-                                className="bg-primary h-2 rounded-full transition-all"
-                                style={{ width: `${((count as number) / (stats.total || 1)) * 100}%` }}
+                      <div className="space-y-4">
+                        {chartType === 'bar' ? (
+                          <ResponsiveContainer width="100%" height={Math.max(200, Object.keys(stats.choices).length * 40)}>
+                            <BarChart
+                              data={Object.entries(stats.choices).map(([name, value]) => ({ name, value }))}
+                              layout="vertical"
+                              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                              <XAxis type="number" className="text-xs" />
+                              <YAxis dataKey="name" type="category" width={150} className="text-xs" />
+                              <Tooltip 
+                                contentStyle={{ 
+                                  backgroundColor: 'hsl(var(--popover))', 
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '6px'
+                                }}
                               />
-                            </div>
-                          </div>
-                        ))}
+                              <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <ResponsiveContainer width="100%" height={300}>
+                            <RechartsPieChart>
+                              <Pie
+                                data={Object.entries(stats.choices).map(([name, value]) => ({ name, value }))}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                outerRadius={80}
+                                fill="hsl(var(--primary))"
+                                dataKey="value"
+                              >
+                                {Object.entries(stats.choices).map((_, index) => (
+                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                              </Pie>
+                              <Tooltip 
+                                contentStyle={{ 
+                                  backgroundColor: 'hsl(var(--popover))', 
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '6px'
+                                }}
+                              />
+                              <Legend />
+                            </RechartsPieChart>
+                          </ResponsiveContainer>
+                        )}
                       </div>
                     )}
 
