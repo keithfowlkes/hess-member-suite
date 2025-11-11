@@ -41,7 +41,10 @@ export function AppSidebar() {
   // Fetch user role
   useEffect(() => {
     const fetchUserRole = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log('AppSidebar: No user found, defaulting to member role');
+        return;
+      }
       
       try {
         const { data: roleData, error } = await supabase
@@ -49,28 +52,34 @@ export function AppSidebar() {
           .select('role')
           .eq('user_id', user.id);
           
-        console.log('User roles fetched:', roleData, 'for user:', user.id);
+        console.log('AppSidebar: User roles fetched:', roleData, 'for user:', user.email);
         
         if (error) {
-          console.error('Error fetching user roles:', error);
+          console.error('AppSidebar: Error fetching user roles:', error);
           return;
         }
         
         if (roleData && roleData.length > 0) {
           // Check if user has admin role first, then cohort_leader, then default to member
           const roles = roleData.map(r => r.role);
+          console.log('AppSidebar: Extracted roles array:', roles);
+          
           if (roles.includes('admin')) {
+            console.log('AppSidebar: Setting userRole to admin');
             setUserRole('admin');
           } else if (roles.includes('cohort_leader')) {
+            console.log('AppSidebar: Setting userRole to cohort_leader');
             setUserRole('cohort_leader');
           } else {
+            console.log('AppSidebar: No admin or cohort_leader role found, defaulting to member');
             setUserRole('member');
           }
         } else {
+          console.log('AppSidebar: No roles found in database, defaulting to member');
           setUserRole('member');
         }
       } catch (error) {
-        console.error('Error fetching user role:', error);
+        console.error('AppSidebar: Error fetching user role:', error);
         setUserRole('member');
       }
     };
@@ -84,8 +93,9 @@ export function AppSidebar() {
   // Check if member fee information should be shown in member view (controls both blocks and menu)
   const showMemberFeeInfo = systemSettings?.find(s => s.setting_key === 'show_member_view_items')?.setting_value === 'true';
   
-  console.log('Sidebar - userRole:', userRole, 'canAccessCohortInfo:', canAccessCohortInfo);
-  console.log('Sidebar - current user:', user?.email, 'isViewingAsAdmin:', isViewingAsAdmin);
+  console.log('AppSidebar: RENDER - userRole:', userRole, 'canAccessCohortInfo:', canAccessCohortInfo);
+  console.log('AppSidebar: RENDER - current user:', user?.email, 'isViewingAsAdmin:', isViewingAsAdmin);
+  console.log('AppSidebar: RENDER - will show cohort menu?', !isViewingAsAdmin && canAccessCohortInfo);
   
   // Fetch pending action counts for admin
   const { pendingOrganizations } = useOrganizationApprovals();
