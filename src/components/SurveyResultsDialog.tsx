@@ -76,20 +76,17 @@ export function SurveyResultsDialog({
     }
 
     if (question?.question_type === 'word_cloud') {
-      const words: Record<string, number> = {};
+      const phrases: Record<string, number> = {};
       answers.forEach((a: any) => {
-        const text = a.answer_text || '';
-        text.split(/\s+/).forEach((word: string) => {
-          const clean = word.toLowerCase().replace(/[^a-z0-9]/g, '');
-          if (clean.length > 3) {
-            words[clean] = (words[clean] || 0) + 1;
-          }
-        });
+        const text = (a.answer_text || '').trim();
+        if (text.length > 0) {
+          const clean = text.toLowerCase();
+          phrases[clean] = (phrases[clean] || 0) + 1;
+        }
       });
       
-      const wordArray = Object.entries(words)
+      const wordArray = Object.entries(phrases)
         .sort(([, a], [, b]) => b - a)
-        .slice(0, 20)
         .map(([name, value]) => ({ name, value }));
       
       return { type: 'word_cloud', words: wordArray };
@@ -372,13 +369,14 @@ export function SurveyResultsDialog({
                             <Badge
                               key={idx}
                               variant="secondary"
-                              className="transition-all hover:scale-110"
+                              className="animate-fade-in hover-scale transition-all duration-300 hover:shadow-lg border-2"
                               style={{
                                 fontSize: `${fontSize}rem`,
                                 padding: `${padding * 0.5}rem ${padding}rem`,
-                                backgroundColor: `${COLORS[idx % COLORS.length]}20`,
+                                backgroundColor: `${COLORS[idx % COLORS.length]}15`,
                                 color: COLORS[idx % COLORS.length],
-                                borderColor: COLORS[idx % COLORS.length],
+                                borderColor: `${COLORS[idx % COLORS.length]}60`,
+                                animationDelay: `${idx * 0.05}s`,
                               }}
                             >
                               {item.name} ({item.value})
