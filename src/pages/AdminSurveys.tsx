@@ -4,30 +4,57 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useSurveys, useUpdateSurvey } from '@/hooks/useSurveys';
+import { useSurveys, useUpdateSurvey, useDeleteSurvey } from '@/hooks/useSurveys';
 import { CreateSurveyDialog } from '@/components/CreateSurveyDialog';
 import { SurveyResultsDialog } from '@/components/SurveyResultsDialog';
 import { EditSurveyDialog } from '@/components/EditSurveyDialog';
 import { RealtimeSurveyCharts } from '@/components/RealtimeSurveyCharts';
-import { Plus, FileQuestion, Calendar, MoreVertical, Eye, ToggleLeft, ToggleRight, BarChart3, Edit } from 'lucide-react';
+import { Plus, FileQuestion, Calendar, MoreVertical, Eye, ToggleLeft, ToggleRight, BarChart3, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function AdminSurveys() {
   const { data: surveys, isLoading } = useSurveys();
   const updateSurvey = useUpdateSurvey();
+  const deleteSurvey = useDeleteSurvey();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedSurveyId, setSelectedSurveyId] = useState<string | null>(null);
   const [realtimeViewSurveyId, setRealtimeViewSurveyId] = useState<string | null>(null);
   const [editSurveyId, setEditSurveyId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [surveyToDelete, setSurveyToDelete] = useState<{ id: string; title: string } | null>(null);
 
   const toggleSurveyStatus = (surveyId: string, currentStatus: boolean) => {
     updateSurvey.mutate({ id: surveyId, is_active: !currentStatus });
+  };
+
+  const handleDeleteClick = (survey: { id: string; title: string }) => {
+    setSurveyToDelete(survey);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (surveyToDelete) {
+      deleteSurvey.mutate(surveyToDelete.id);
+      setDeleteDialogOpen(false);
+      setSurveyToDelete(null);
+    }
   };
 
   return (
@@ -108,6 +135,14 @@ export default function AdminSurveys() {
                                 </>
                               )}
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteClick({ id: survey.id, title: survey.title })}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Survey
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -162,6 +197,23 @@ export default function AdminSurveys() {
                 realtime
               />
             )}
+
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Survey</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete "{surveyToDelete?.title}"? This will permanently delete the survey and all its responses. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </main>
       </div>

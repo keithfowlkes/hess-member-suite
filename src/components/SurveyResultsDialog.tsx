@@ -227,7 +227,13 @@ export function SurveyResultsDialog({
             <div className="flex items-center gap-2">
               {!realtime && (
                 <>
-                  <ToggleGroup type="single" value={chartType} onValueChange={(value) => value && setChartType(value as 'bar' | 'pie')}>
+                  <ToggleGroup 
+                    type="single" 
+                    value={chartType} 
+                    onValueChange={(value) => {
+                      if (value) setChartType(value as 'bar' | 'pie');
+                    }}
+                  >
                     <ToggleGroupItem value="bar" aria-label="Bar chart">
                       <BarChart3 className="h-4 w-4" />
                     </ToggleGroupItem>

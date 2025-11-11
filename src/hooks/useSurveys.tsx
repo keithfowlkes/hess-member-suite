@@ -255,6 +255,63 @@ export const useSurveyResponses = (surveyId?: string) => {
   });
 };
 
+export const useDeleteSurvey = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (surveyId: string) => {
+      // Delete survey answers first
+      const { data: responses } = await supabase
+        .from('survey_responses')
+        .select('id')
+        .eq('survey_id', surveyId);
+      
+      if (responses && responses.length > 0) {
+        const responseIds = responses.map(r => r.id);
+        await supabase
+          .from('survey_answers')
+          .delete()
+          .in('response_id', responseIds);
+      }
+
+      // Delete survey responses
+      await supabase
+        .from('survey_responses')
+        .delete()
+        .eq('survey_id', surveyId);
+
+      // Delete survey questions
+      await supabase
+        .from('survey_questions')
+        .delete()
+        .eq('survey_id', surveyId);
+
+      // Delete survey
+      const { error } = await supabase
+        .from('surveys')
+        .delete()
+        .eq('id', surveyId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['surveys'] });
+      toast({
+        title: 'Survey deleted',
+        description: 'The survey has been deleted successfully.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
 export const useSubmitSurveyResponse = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
