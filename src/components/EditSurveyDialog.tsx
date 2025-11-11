@@ -269,19 +269,25 @@ export function EditSurveyDialog({
                               }
                             }}
                           >
-                            <SelectTrigger>
-                              <SelectValue />
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select question type" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="z-50 bg-popover">
                               {questionTypes.map((type) => {
                                 const Icon = type.icon;
                                 return (
-                                  <SelectItem key={type.value} value={type.value}>
-                                    <div className="flex items-center gap-2">
-                                      <Icon className="h-4 w-4" />
-                                      <div className="flex flex-col">
-                                        <span className="font-medium">{type.label}</span>
-                                        <span className="text-xs text-muted-foreground">{type.description}</span>
+                                  <SelectItem 
+                                    key={type.value} 
+                                    value={type.value}
+                                    className="cursor-pointer"
+                                  >
+                                    <div className="flex items-start gap-2 py-1">
+                                      <Icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                      <div className="flex flex-col gap-0.5">
+                                        <span className="font-medium text-sm">{type.label}</span>
+                                        <span className="text-xs text-muted-foreground leading-tight">
+                                          {type.description}
+                                        </span>
                                       </div>
                                     </div>
                                   </SelectItem>
@@ -290,9 +296,11 @@ export function EditSurveyDialog({
                             </SelectContent>
                           </Select>
                           {selectedType && (
-                            <p className="text-xs text-muted-foreground">
-                              {selectedType.description}
-                            </p>
+                            <div className="rounded-md bg-muted/50 p-3">
+                              <p className="text-xs text-muted-foreground">
+                                <strong>Selected:</strong> {selectedType.description}
+                              </p>
+                            </div>
                           )}
                         </div>
 

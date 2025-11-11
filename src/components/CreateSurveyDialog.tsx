@@ -206,44 +206,52 @@ export function CreateSurveyDialog({ open, onOpenChange }: { open: boolean; onOp
                         />
                       </div>
 
-                      <div className="space-y-3">
-                        <Label>Question Type</Label>
-                        <Select
-                          value={question.question_type}
-                          onValueChange={(value) => {
-                            updateQuestion(index, 'question_type', value);
-                            const newType = questionTypes.find(t => t.value === value);
-                            if (newType?.needsOptions && !question.options?.length) {
-                              updateQuestion(index, 'options', ['Option 1', 'Option 2', 'Option 3']);
-                            }
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {questionTypes.map((type) => {
-                              const Icon = type.icon;
-                              return (
-                                <SelectItem key={type.value} value={type.value}>
-                                  <div className="flex items-center gap-2">
-                                    <Icon className="h-4 w-4" />
-                                    <div className="flex flex-col">
-                                      <span className="font-medium">{type.label}</span>
-                                      <span className="text-xs text-muted-foreground">{type.description}</span>
+                        <div className="space-y-3">
+                          <Label>Question Type</Label>
+                          <Select
+                            value={question.question_type}
+                            onValueChange={(value) => {
+                              updateQuestion(index, 'question_type', value);
+                              const newType = questionTypes.find(t => t.value === value);
+                              if (newType?.needsOptions && !question.options?.length) {
+                                updateQuestion(index, 'options', ['Option 1', 'Option 2', 'Option 3']);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select question type" />
+                            </SelectTrigger>
+                            <SelectContent className="z-50 bg-popover">
+                              {questionTypes.map((type) => {
+                                const Icon = type.icon;
+                                return (
+                                  <SelectItem 
+                                    key={type.value} 
+                                    value={type.value}
+                                    className="cursor-pointer"
+                                  >
+                                    <div className="flex items-start gap-2 py-1">
+                                      <Icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                      <div className="flex flex-col gap-0.5">
+                                        <span className="font-medium text-sm">{type.label}</span>
+                                        <span className="text-xs text-muted-foreground leading-tight">
+                                          {type.description}
+                                        </span>
+                                      </div>
                                     </div>
-                                  </div>
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                        {selectedType && (
-                          <p className="text-xs text-muted-foreground">
-                            {selectedType.description}
-                          </p>
-                        )}
-                      </div>
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                          {selectedType && (
+                            <div className="rounded-md bg-muted/50 p-3">
+                              <p className="text-xs text-muted-foreground">
+                                <strong>Selected:</strong> {selectedType.description}
+                              </p>
+                            </div>
+                          )}
+                        </div>
 
                       {(question.question_type === 'single_choice' || 
                         question.question_type === 'multiple_choice' || 
