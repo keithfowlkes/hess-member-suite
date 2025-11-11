@@ -20,6 +20,7 @@ import anthologyLogo from '@/assets/anthology-logo.png';
 import ellucianLogo from '@/assets/ellucian-logo.jpg';
 import jenzabarLogo from '@/assets/jenzabar-logo.avif';
 import oracleLogo from '@/assets/oracle-logo.png';
+import workdayLogo from '@/assets/workday-logo.png';
 import {
   Dialog,
   DialogContent,
@@ -1348,6 +1349,15 @@ const handleOrganizationDialogClose = () => {
                                       <img 
                                         src={oracleLogo} 
                                         alt="Oracle Logo" 
+                                        className="h-8 w-auto object-contain"
+                                      />
+                                    </div>
+                                  )}
+                                  {cohort === 'Workday' && (
+                                    <div className="flex justify-center pb-3 border-b">
+                                      <img 
+                                        src={workdayLogo} 
+                                        alt="Workday Logo" 
                                         className="h-8 w-auto object-contain"
                                       />
                                     </div>
