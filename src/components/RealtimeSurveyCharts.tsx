@@ -170,36 +170,56 @@ export function RealtimeSurveyCharts({ surveyId }: { surveyId: string }) {
               {chartData.length > 0 ? (
                 <div className="space-y-4">
                   {question.question_type === 'word_cloud' ? (
-                    <div className="flex flex-wrap gap-4 justify-center p-8">
-                      {chartData.map((item, idx) => {
-                        const maxValue = Math.max(...chartData.map(d => d.value));
-                        const minValue = Math.min(...chartData.map(d => d.value));
-                        const normalizedSize = maxValue === minValue ? 1 : (item.value - minValue) / (maxValue - minValue);
-                        const fontSize = 1 + (normalizedSize * 1.8);
-                        const padding = 0.75 + (normalizedSize * 1.25);
-                        const color = CLOUD_COLORS[idx % CLOUD_COLORS.length];
-                        
-                        return (
-                          <div
-                            key={idx}
-                            className="animate-fade-in hover-scale transition-all duration-300 hover:shadow-2xl cursor-default"
-                            style={{
-                              fontSize: `${fontSize}rem`,
-                              padding: `${padding * 0.6}rem ${padding * 1.2}rem`,
-                              background: `linear-gradient(135deg, ${color}E6, ${color}CC)`,
-                              color: 'white',
-                              borderRadius: '50px',
-                              fontWeight: 600,
-                              boxShadow: `0 4px 15px ${color}40, 0 0 25px ${color}20`,
-                              animationDelay: `${idx * 0.05}s`,
-                              backdropFilter: 'blur(10px)',
-                              border: `2px solid ${color}`,
-                            }}
-                          >
-                            {item.name} <span style={{ opacity: 0.9, fontWeight: 500 }}>({item.value})</span>
-                          </div>
-                        );
-                      })}
+                    <div className="relative w-full" style={{ minHeight: '400px' }}>
+                      <svg width="100%" height="400" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid meet">
+                        {chartData.map((item, idx) => {
+                          const maxValue = Math.max(...chartData.map(d => d.value));
+                          const minValue = Math.min(...chartData.map(d => d.value));
+                          const normalizedSize = maxValue === minValue ? 0.5 : (item.value - minValue) / (maxValue - minValue);
+                          
+                          // Calculate size and opacity based on frequency
+                          const fontSize = 16 + (normalizedSize * 48); // 16-64px range
+                          const opacity = 0.3 + (normalizedSize * 0.7); // 0.3-1.0 range
+                          const fontWeight = normalizedSize > 0.7 ? 700 : normalizedSize > 0.4 ? 600 : 500;
+                          
+                          // Scatter positions in a cloud-like pattern
+                          const totalItems = chartData.length;
+                          const cols = Math.ceil(Math.sqrt(totalItems * 2));
+                          const rows = Math.ceil(totalItems / cols);
+                          const col = idx % cols;
+                          const row = Math.floor(idx / cols);
+                          
+                          // Add some randomness for organic feel
+                          const randomX = (Math.sin(idx * 12.345) * 40);
+                          const randomY = (Math.cos(idx * 23.456) * 30);
+                          
+                          const x = (col * (1000 / cols)) + (1000 / (cols * 2)) + randomX;
+                          const y = (row * (400 / rows)) + (400 / (rows * 2)) + randomY;
+                          
+                          const color = CLOUD_COLORS[idx % CLOUD_COLORS.length];
+                          
+                          return (
+                            <text
+                              key={idx}
+                              x={x}
+                              y={y}
+                              fontSize={fontSize}
+                              fontWeight={fontWeight}
+                              fill={color}
+                              opacity={opacity}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              className="animate-fade-in transition-all duration-300 hover:opacity-100 cursor-default"
+                              style={{
+                                animationDelay: `${idx * 0.05}s`,
+                              }}
+                            >
+                              {item.name}
+                              <title>{item.name}: {item.value} responses</title>
+                            </text>
+                          );
+                        })}
+                      </svg>
                     </div>
                   ) : (
                     <>
