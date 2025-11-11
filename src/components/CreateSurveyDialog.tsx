@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCreateSurvey } from '@/hooks/useSurveys';
-import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { Plus, Trash2, CheckSquare, ListOrdered, Cloud, FileText, MessageSquare, Star } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 interface Question {
   question_text: string;
@@ -18,18 +19,63 @@ interface Question {
   required: boolean;
 }
 
+const questionTypes = [
+  { 
+    value: 'multiple_choice', 
+    label: 'Multiple Choice', 
+    icon: CheckSquare, 
+    description: 'Select multiple options from a list',
+    needsOptions: true 
+  },
+  { 
+    value: 'single_choice', 
+    label: 'Single Choice', 
+    icon: ListOrdered, 
+    description: 'Select one option from a list',
+    needsOptions: true 
+  },
+  { 
+    value: 'ranking', 
+    label: 'Ranking', 
+    icon: ListOrdered, 
+    description: 'Rank options in order of preference',
+    needsOptions: true 
+  },
+  { 
+    value: 'word_cloud', 
+    label: 'Word Cloud', 
+    icon: Cloud, 
+    description: 'Free text that generates a word cloud',
+    needsOptions: false 
+  },
+  { 
+    value: 'open_ended', 
+    label: 'Open Ended', 
+    icon: MessageSquare, 
+    description: 'Long form text response',
+    needsOptions: false 
+  },
+  { 
+    value: 'rating', 
+    label: 'Rating', 
+    icon: Star, 
+    description: '1-5 star rating scale',
+    needsOptions: false 
+  },
+];
+
 export function CreateSurveyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
   const [questions, setQuestions] = useState<Question[]>([
-    { question_text: '', question_type: 'text', required: false }
+    { question_text: '', question_type: 'multiple_choice', required: false, options: [] }
   ]);
 
   const createSurvey = useCreateSurvey();
 
   const addQuestion = () => {
-    setQuestions([...questions, { question_text: '', question_type: 'text', required: false }]);
+    setQuestions([...questions, { question_text: '', question_type: 'multiple_choice', required: false, options: [] }]);
   };
 
   const removeQuestion = (index: number) => {
@@ -66,7 +112,7 @@ export function CreateSurveyDialog({ open, onOpenChange }: { open: boolean; onOp
     setTitle('');
     setDescription('');
     setExpiresAt('');
-    setQuestions([{ question_text: '', question_type: 'text', required: false }]);
+    setQuestions([{ question_text: '', question_type: 'multiple_choice', required: false, options: [] }]);
     onOpenChange(false);
   };
 
@@ -124,80 +170,148 @@ export function CreateSurveyDialog({ open, onOpenChange }: { open: boolean; onOp
                 </Button>
               </div>
 
-              {questions.map((question, index) => (
-                <Card key={index}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium">Question {index + 1}</CardTitle>
-                      {questions.length > 1 && (
-                        <Button
-                          onClick={() => removeQuestion(index)}
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Question Text *</Label>
-                      <Input
-                        value={question.question_text}
-                        onChange={(e) => updateQuestion(index, 'question_text', e.target.value)}
-                        placeholder="Enter your question"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Question Type</Label>
-                      <Select
-                        value={question.question_type}
-                        onValueChange={(value) => updateQuestion(index, 'question_type', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
-                          <SelectItem value="word_cloud">Word Cloud</SelectItem>
-                          <SelectItem value="ranking">Ranking</SelectItem>
-                          <SelectItem value="open_ended">Open Ended</SelectItem>
-                          <SelectItem value="single_choice">Single Choice</SelectItem>
-                          <SelectItem value="rating">Rating (1-5)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {(question.question_type === 'single_choice' || 
-                      question.question_type === 'multiple_choice' || 
-                      question.question_type === 'ranking') && (
+              {questions.map((question, index) => {
+                const selectedType = questionTypes.find(t => t.value === question.question_type);
+                const TypeIcon = selectedType?.icon || FileText;
+                
+                return (
+                  <Card key={index} className="border-2">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="gap-1">
+                            <TypeIcon className="h-3 w-3" />
+                            Question {index + 1}
+                          </Badge>
+                        </div>
+                        {questions.length > 1 && (
+                          <Button
+                            onClick={() => removeQuestion(index)}
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label>Options (one per line)</Label>
-                        <Textarea
-                          value={question.options?.join('\n') || ''}
-                          onChange={(e) => updateQuestion(index, 'options', e.target.value.split('\n').filter(o => o.trim()))}
-                          placeholder="Option 1&#10;Option 2&#10;Option 3"
-                          rows={4}
+                        <Label>Question Text *</Label>
+                        <Input
+                          value={question.question_text}
+                          onChange={(e) => updateQuestion(index, 'question_text', e.target.value)}
+                          placeholder="Enter your question"
                         />
                       </div>
-                    )}
 
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`required-${index}`}
-                        checked={question.required}
-                        onCheckedChange={(checked) => updateQuestion(index, 'required', checked)}
-                      />
-                      <Label htmlFor={`required-${index}`} className="font-normal cursor-pointer">
-                        Required question
-                      </Label>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className="space-y-3">
+                        <Label>Question Type</Label>
+                        <Select
+                          value={question.question_type}
+                          onValueChange={(value) => {
+                            updateQuestion(index, 'question_type', value);
+                            const newType = questionTypes.find(t => t.value === value);
+                            if (newType?.needsOptions && !question.options?.length) {
+                              updateQuestion(index, 'options', ['Option 1', 'Option 2', 'Option 3']);
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {questionTypes.map((type) => {
+                              const Icon = type.icon;
+                              return (
+                                <SelectItem key={type.value} value={type.value}>
+                                  <div className="flex items-center gap-2">
+                                    <Icon className="h-4 w-4" />
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{type.label}</span>
+                                      <span className="text-xs text-muted-foreground">{type.description}</span>
+                                    </div>
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                        {selectedType && (
+                          <p className="text-xs text-muted-foreground">
+                            {selectedType.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {(question.question_type === 'single_choice' || 
+                        question.question_type === 'multiple_choice' || 
+                        question.question_type === 'ranking') && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label>Answer Options *</Label>
+                            <Badge variant="secondary" className="text-xs">
+                              {question.options?.length || 0} options
+                            </Badge>
+                          </div>
+                          <Textarea
+                            value={question.options?.join('\n') || ''}
+                            onChange={(e) => updateQuestion(index, 'options', e.target.value.split('\n').filter(o => o.trim()))}
+                            placeholder="Option 1&#10;Option 2&#10;Option 3&#10;Option 4"
+                            rows={5}
+                            className="font-mono text-sm"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Enter one option per line. Members will see these as choices.
+                          </p>
+                        </div>
+                      )}
+
+                      {question.question_type === 'word_cloud' && (
+                        <Card className="bg-muted/50">
+                          <CardContent className="pt-4">
+                            <p className="text-sm text-muted-foreground">
+                              Members will enter keywords or phrases. Common words will appear larger in the word cloud visualization.
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {question.question_type === 'open_ended' && (
+                        <Card className="bg-muted/50">
+                          <CardContent className="pt-4">
+                            <p className="text-sm text-muted-foreground">
+                              Members can provide detailed text responses. Ideal for gathering in-depth feedback and opinions.
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {question.question_type === 'rating' && (
+                        <Card className="bg-muted/50">
+                          <CardContent className="pt-4">
+                            <p className="text-sm text-muted-foreground">
+                              Members will rate using a 1-5 star scale. Results will show average rating and distribution.
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      <div className="flex items-center space-x-2 pt-2">
+                        <Checkbox
+                          id={`required-${index}`}
+                          checked={question.required}
+                          onCheckedChange={(checked) => updateQuestion(index, 'required', checked)}
+                        />
+                        <Label htmlFor={`required-${index}`} className="font-normal cursor-pointer">
+                          Required question
+                        </Label>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         </ScrollArea>
