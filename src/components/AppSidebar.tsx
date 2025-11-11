@@ -126,10 +126,20 @@ export function AppSidebar() {
     { title: 'Member Analytics', url: '/member-analytics', icon: BarChart3 },
     { title: 'Member Map', url: '/public-map', icon: Map },
     { title: 'Surveys', url: '/surveys', icon: FileQuestion },
-    ...(showMemberFeeInfo ? [{ title: 'My Invoices', url: '/invoices', icon: FileText }] : []),
-    { title: 'Organization Profile', url: '/profile', icon: User },
-    ...(canAccessCohortInfo ? [{ title: 'Your Cohort Information', url: '/cohort-information', icon: GraduationCap }] : []),
   ];
+
+  // Add conditional menu items
+  if (showMemberFeeInfo) {
+    memberItems.push({ title: 'My Invoices', url: '/invoices', icon: FileText });
+  }
+  
+  memberItems.push({ title: 'Organization Profile', url: '/profile', icon: User });
+  
+  // Add cohort information for cohort leaders and admins
+  if (canAccessCohortInfo) {
+    console.log('Adding Cohort Information menu item for user with role:', userRole);
+    memberItems.push({ title: 'Your Cohort Information', url: '/cohort-information', icon: GraduationCap });
+  }
 
   const items = isViewingAsAdmin ? adminItems : memberItems;
   const isCollapsed = state === 'collapsed';
