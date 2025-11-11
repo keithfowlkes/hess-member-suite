@@ -1,10 +1,15 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useSurveyResponses, useSurveyQuestions } from '@/hooks/useSurveys';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, BarChart3 } from 'lucide-react';
+import { Users, BarChart3, Download } from 'lucide-react';
 import { RealtimeSurveyCharts } from './RealtimeSurveyCharts';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
+import * as XLSX from 'xlsx';
+import { useToast } from '@/hooks/use-toast';
 
 export function SurveyResultsDialog({ 
   surveyId, 
@@ -19,6 +24,21 @@ export function SurveyResultsDialog({
 }) {
   const { data: responses } = useSurveyResponses(surveyId);
   const { data: questions } = useSurveyQuestions(surveyId);
+  const [surveyTitle, setSurveyTitle] = useState('');
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (surveyId) {
+      supabase
+        .from('surveys')
+        .select('title')
+        .eq('id', surveyId)
+        .single()
+        .then(({ data }) => {
+          if (data) setSurveyTitle(data.title);
+        });
+    }
+  }, [surveyId]);
 
   const getQuestionStats = (questionId: string) => {
     const answers = responses?.flatMap(r => 
@@ -51,16 +71,167 @@ export function SurveyResultsDialog({
     return { type: 'text', responses: answers.map((a: any) => a.answer_text || '') };
   };
 
+  const handleExportToExcel = async () => {
+    if (!responses || !questions) return;
+
+    try {
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+
+      // Sheet 1: Summary Statistics
+      const summaryData: any[] = [
+        ['Survey Title', surveyTitle],
+        ['Total Responses', responses.length],
+        ['Export Date', new Date().toLocaleDateString()],
+        [],
+        ['Question', 'Question Type', 'Summary'],
+      ];
+
+      questions.forEach((question, idx) => {
+        const stats = getQuestionStats(question.id);
+        let summary = '';
+
+        if (stats.type === 'rating') {
+          summary = `Average: ${stats.average}/5.0 (${stats.count} responses)`;
+        } else if (stats.type === 'choices') {
+          const topChoice = Object.entries(stats.choices).sort(([, a], [, b]) => (b as number) - (a as number))[0];
+          summary = topChoice ? `Top: ${topChoice[0]} (${topChoice[1]} votes)` : 'No responses';
+        } else if (stats.type === 'text') {
+          summary = `${stats.responses.length} text responses`;
+        }
+
+        summaryData.push([
+          `Q${idx + 1}: ${question.question_text}`,
+          question.question_type,
+          summary,
+        ]);
+      });
+
+      const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+      summarySheet['!cols'] = [{ wch: 50 }, { wch: 20 }, { wch: 40 }];
+      XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
+
+      // Sheet 2: Detailed Responses
+      const detailedData: any[] = [
+        ['Response ID', 'Organization', 'Submitted At', ...questions.map((q, i) => `Q${i + 1}: ${q.question_text}`)],
+      ];
+
+      responses.forEach((response) => {
+        const row: any[] = [
+          response.id.substring(0, 8),
+          response.organizations?.name || 'N/A',
+          new Date(response.submitted_at).toLocaleString(),
+        ];
+
+        questions.forEach((question) => {
+          const answer = response.survey_answers?.find((a: any) => a.question_id === question.id);
+          
+          if (!answer) {
+            row.push('No response');
+          } else if (answer.answer_text) {
+            row.push(answer.answer_text);
+          } else if (answer.answer_options) {
+            const options = answer.answer_options as any;
+            if (options.selected) {
+              row.push(Array.isArray(options.selected) ? options.selected.join(', ') : options.selected);
+            } else if (options.rankings) {
+              const rankings = Object.entries(options.rankings)
+                .sort(([, a], [, b]) => (a as number) - (b as number))
+                .map(([opt, rank]) => `${opt} (${rank})`)
+                .join(', ');
+              row.push(rankings);
+            } else {
+              row.push('No response');
+            }
+          } else {
+            row.push('No response');
+          }
+        });
+
+        detailedData.push(row);
+      });
+
+      const detailedSheet = XLSX.utils.aoa_to_sheet(detailedData);
+      detailedSheet['!cols'] = [
+        { wch: 12 },
+        { wch: 25 },
+        { wch: 20 },
+        ...questions.map(() => ({ wch: 30 })),
+      ];
+      XLSX.utils.book_append_sheet(wb, detailedSheet, 'Responses');
+
+      // Sheet 3: Question Statistics
+      questions.forEach((question, qIdx) => {
+        const stats = getQuestionStats(question.id);
+        
+        if (stats.type === 'choices') {
+          const chartData: any[] = [
+            [`Question ${qIdx + 1}: ${question.question_text}`],
+            [],
+            ['Option', 'Count', 'Percentage'],
+          ];
+
+          const total = stats.total || 1;
+          Object.entries(stats.choices)
+            .sort(([, a], [, b]) => (b as number) - (a as number))
+            .forEach(([choice, count]) => {
+              chartData.push([
+                choice,
+                count,
+                `${(((count as number) / total) * 100).toFixed(1)}%`,
+              ]);
+            });
+
+          const chartSheet = XLSX.utils.aoa_to_sheet(chartData);
+          chartSheet['!cols'] = [{ wch: 30 }, { wch: 10 }, { wch: 12 }];
+          XLSX.utils.book_append_sheet(wb, chartSheet, `Q${qIdx + 1} Stats`);
+        }
+      });
+
+      // Generate file name and save
+      const fileName = `${surveyTitle.replace(/[^a-z0-9]/gi, '_')}_Results_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      toast({
+        title: 'Export successful',
+        description: 'Survey results have been downloaded as an Excel file.',
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: 'Export failed',
+        description: 'There was an error exporting the survey results.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>{realtime ? 'Live Survey Results' : 'Survey Results'}</DialogTitle>
-          <DialogDescription className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            {responses?.length || 0} responses received
-            {realtime && <Badge variant="secondary" className="ml-2">Live Updates</Badge>}
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle>{realtime ? 'Live Survey Results' : 'Survey Results'}</DialogTitle>
+              <DialogDescription className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                {responses?.length || 0} responses received
+                {realtime && <Badge variant="secondary" className="ml-2">Live Updates</Badge>}
+              </DialogDescription>
+            </div>
+            {!realtime && (
+              <Button
+                onClick={handleExportToExcel}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                disabled={!responses || responses.length === 0}
+              >
+                <Download className="h-4 w-4" />
+                Export to Excel
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         <ScrollArea className="max-h-[70vh] pr-4">
