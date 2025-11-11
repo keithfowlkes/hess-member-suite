@@ -55,7 +55,7 @@ const questionTypes = [
     value: 'word_cloud', 
     label: 'Word Cloud', 
     icon: Cloud, 
-    description: 'Free text that generates a word cloud',
+    description: 'Single word or phrase per response',
     needsOptions: false 
   },
   { 
@@ -366,7 +366,7 @@ export function EditSurveyDialog({
                           <Card className="bg-muted/50">
                             <CardContent className="pt-4">
                               <p className="text-sm text-muted-foreground">
-                                Members will enter keywords or phrases. Common words will appear larger in the word cloud visualization.
+                                Members will enter a single word or short phrase. Each response will be displayed in a word cloud visualization where frequently submitted words appear larger.
                               </p>
                             </CardContent>
                           </Card>

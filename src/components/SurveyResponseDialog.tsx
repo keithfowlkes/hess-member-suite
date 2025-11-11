@@ -87,11 +87,11 @@ export function SurveyResponseDialog({
       
       case 'word_cloud':
         return (
-          <Textarea
+          <Input
             value={answers[question.id] || ''}
             onChange={(e) => setAnswers({ ...answers, [question.id]: e.target.value })}
-            placeholder="Enter keywords or phrases (separated by spaces)"
-            rows={4}
+            placeholder="Enter a single word or short phrase"
+            maxLength={100}
           />
         );
       
