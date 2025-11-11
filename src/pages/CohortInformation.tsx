@@ -18,6 +18,7 @@ import { OrganizationDetailsDialog } from '@/components/OrganizationDetailsDialo
 import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart, Search, User, Download, Maximize2 } from 'lucide-react';
 import anthologyLogo from '@/assets/anthology-logo.png';
 import ellucianLogo from '@/assets/ellucian-logo.jpg';
+import jenzabarLogo from '@/assets/jenzabar-logo.avif';
 import {
   Dialog,
   DialogContent,
@@ -1328,6 +1329,15 @@ const handleOrganizationDialogClose = () => {
                                       <img 
                                         src={ellucianLogo} 
                                         alt="Ellucian Logo" 
+                                        className="h-8 w-auto object-contain"
+                                      />
+                                    </div>
+                                  )}
+                                  {cohort === 'Jenzabar ONE' && (
+                                    <div className="flex justify-center pb-3 border-b">
+                                      <img 
+                                        src={jenzabarLogo} 
+                                        alt="Jenzabar Logo" 
                                         className="h-8 w-auto object-contain"
                                       />
                                     </div>
