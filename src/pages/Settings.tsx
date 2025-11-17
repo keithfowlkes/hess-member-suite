@@ -575,7 +575,7 @@ export default function Settings() {
         <main className="flex-1 p-8">
           {/* Mobile menu button - always visible on mobile */}
           <div className="sticky top-0 z-50 flex items-center gap-2 -mx-8 -mt-8 mb-6 border-b bg-background p-4 lg:hidden">
-            <SidebarTrigger />
+            <SidebarTrigger className="h-10 w-10 rounded-md border-2 border-primary bg-primary/10 hover:bg-primary/20" />
             <h1 className="text-lg font-semibold">HESS Consortium</h1>
           </div>
           
