@@ -170,6 +170,11 @@ export function PublicUSMap() {
         }
       });
 
+      // Sort organizations alphabetically within each state
+      Object.keys(stats).forEach(state => {
+        stats[state].organizations.sort((a, b) => a.name.localeCompare(b.name));
+      });
+
       setStateStats(stats);
     } catch (error) {
       console.error('Error fetching member locations:', error);
