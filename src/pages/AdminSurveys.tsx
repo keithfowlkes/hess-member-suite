@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,6 +62,12 @@ export default function AdminSurveys() {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <main className="flex-1">
+          {/* Mobile menu button - always visible on mobile */}
+          <div className="sticky top-0 z-50 flex items-center gap-2 border-b bg-background p-4 lg:hidden">
+            <SidebarTrigger />
+            <h1 className="text-lg font-semibold">HESS Consortium</h1>
+          </div>
+          
           <div className="container mx-auto py-6 px-6">
             <div className="flex items-center justify-between mb-6">
               <div>

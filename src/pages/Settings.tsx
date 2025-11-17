@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
 import { AdminPasswordManager } from '@/components/AdminPasswordManager';
@@ -573,6 +573,12 @@ export default function Settings() {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 p-8">
+          {/* Mobile menu button - always visible on mobile */}
+          <div className="sticky top-0 z-50 flex items-center gap-2 -mx-8 -mt-8 mb-6 border-b bg-background p-4 lg:hidden">
+            <SidebarTrigger />
+            <h1 className="text-lg font-semibold">HESS Consortium</h1>
+          </div>
+          
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold text-foreground flex items-center">
