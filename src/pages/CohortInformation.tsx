@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -334,6 +334,12 @@ const handleOrganizationDialogClose = () => {
         <div className="min-h-screen flex w-full">
           <AppSidebar />
           <main className="flex-1 p-8">
+            {/* Mobile menu button - always visible on mobile */}
+            <div className="sticky top-0 z-50 flex items-center gap-2 -mx-8 -mt-8 mb-6 border-b bg-background p-4 lg:hidden">
+              <SidebarTrigger />
+              <h1 className="text-lg font-semibold">HESS Consortium</h1>
+            </div>
+            
             <div className="min-h-screen flex items-center justify-center">
               <Card className="w-full max-w-md">
                 <CardHeader>
@@ -1165,6 +1171,12 @@ const handleOrganizationDialogClose = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 p-8">
+          {/* Mobile menu button - always visible on mobile */}
+          <div className="sticky top-0 z-50 flex items-center gap-2 -mx-8 -mt-8 mb-6 border-b bg-background p-4 lg:hidden">
+            <SidebarTrigger />
+            <h1 className="text-lg font-semibold">HESS Consortium</h1>
+          </div>
+          
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>

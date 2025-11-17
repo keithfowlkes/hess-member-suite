@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -871,6 +871,12 @@ const MasterDashboard = () => {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 p-8 space-y-8">
+          {/* Mobile menu button - always visible on mobile */}
+          <div className="sticky top-0 z-50 flex items-center gap-2 -mx-8 -mt-8 mb-4 border-b bg-background p-4 lg:hidden">
+            <SidebarTrigger />
+            <h1 className="text-lg font-semibold">HESS Consortium</h1>
+          </div>
+          
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold">Master Dashboard</h1>

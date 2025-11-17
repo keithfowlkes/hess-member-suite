@@ -1,5 +1,5 @@
 import { Layout } from '@/components/Layout';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
@@ -106,9 +106,15 @@ const Index = () => {
         <AppSidebar />
         <main className="flex-1 flex flex-col">
           <div className="flex-1 overflow-y-auto">
+            {/* Mobile menu button - always visible on mobile */}
+            <div className="sticky top-0 z-50 flex items-center gap-2 border-b bg-background p-4 lg:hidden">
+              <SidebarTrigger />
+              <h1 className="text-lg font-semibold">HESS Consortium</h1>
+            </div>
+            
             <div className="p-8 pb-0">
-              <div className="flex justify-between items-start">
-                <div>
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex-1 min-w-0">
                   <h1 className="text-3xl font-bold text-foreground">
                     Member Dashboard
                   </h1>

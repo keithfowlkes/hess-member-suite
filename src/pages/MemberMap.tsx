@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { useState, useEffect } from 'react';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { PublicUSMap } from '@/components/PublicUSMap';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -20,6 +20,12 @@ export default function MemberMap() {
         <div className="min-h-screen flex w-full">
           <AppSidebar />
           <main className="flex-1 overflow-hidden">
+            {/* Mobile menu button - always visible on mobile */}
+            <div className="sticky top-0 z-50 flex items-center gap-2 border-b bg-background p-4 lg:hidden">
+              <SidebarTrigger />
+              <h1 className="text-lg font-semibold">HESS Consortium</h1>
+            </div>
+            
             <div className="container mx-auto px-4 py-8 h-full">
               <div 
                 onClick={handleCardClick}
