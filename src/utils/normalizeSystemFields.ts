@@ -187,6 +187,15 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     // Other systems can be added here as needed
   },
   
+  payroll_system: {
+    // Jenzabar variations
+    "Jenzabar": "Jenzabar ONE",
+    "Jenzabar ONE": "Jenzabar ONE",
+    "Jenzabar EX": "Jenzabar ONE",
+    
+    // Other systems can be added here as needed
+  },
+  
   alumni_advancement_crm: {
     // Blackbaud variations
     "Blackbaud Raiser's Edge": "Blackbaud",
@@ -364,6 +373,10 @@ export function normalizeFieldValue(fieldName: string, currentValue: string | nu
   }
   
   if (fieldName === 'purchasing_system') {
+    if (currentValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE';
+  }
+  
+  if (fieldName === 'payroll_system') {
     if (currentValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE';
   }
   
