@@ -32,6 +32,16 @@ export async function runAdmissionsCrmNormalization() {
       }
       
       console.log('Analytics datacube refreshed successfully:', data);
+      
+      // Force refresh of all analytics-related queries
+      const queryClient = (window as any).queryClient;
+      if (queryClient) {
+        console.log('Invalidating all analytics queries...');
+        await queryClient.invalidateQueries({ queryKey: ['system-analytics-datacube'] });
+        await queryClient.invalidateQueries({ queryKey: ['organization-size-correlation'] });
+        await queryClient.invalidateQueries({ queryKey: ['organization-size-lms-correlation'] });
+      }
+      
       return {
         ...result,
         datacubeRefreshed: true

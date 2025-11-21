@@ -32,6 +32,11 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Make queryClient globally accessible for normalization utilities
+if (typeof window !== 'undefined') {
+  (window as any).queryClient = queryClient;
+}
+
 // Dynamically determine basename when the app is hosted under a subpath (e.g., /new/join-the-hess-consortium)
 const baseName = (() => {
   try {
