@@ -1,10 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ZAxis } from 'recharts';
 import { TrendingUp } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { format } from 'date-fns';
 
 interface OrgLMSData {
@@ -39,6 +39,30 @@ const generateVendorColor = (vendorName: string): string => {
 };
 
 export const OrganizationSizeLMSCorrelation = () => {
+  const queryClient = useQueryClient();
+
+  // Set up real-time subscription for organizations changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('org-lms-correlation-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'organizations' 
+        }, 
+        () => {
+          console.log('Organizations changed, refreshing LMS correlation chart...');
+          queryClient.invalidateQueries({ queryKey: ['organization-size-lms-correlation'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [queryClient]);
+
   const { data: organizations, isLoading, error } = useQuery({
     queryKey: ['organization-size-lms-correlation'],
     queryFn: async () => {
