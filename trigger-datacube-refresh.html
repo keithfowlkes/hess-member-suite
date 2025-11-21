@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trigger Analytics Datacube Refresh</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 700px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    h1 {
+      color: #1f2937;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 600;
+      width: 100%;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .result {
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 8px;
+      display: none;
+      animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .success {
+      background: #d1fae5;
+      border-left: 4px solid #10b981;
+      color: #065f46;
+    }
+    .error {
+      background: #fee2e2;
+      border-left: 4px solid #ef4444;
+      color: #991b1b;
+    }
+    .loading {
+      background: #dbeafe;
+      border-left: 4px solid #3b82f6;
+      color: #1e40af;
+    }
+    .info-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .info-box strong {
+      color: #374151;
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .stat-item {
+      background: white;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 Analytics Datacube Refresh</h1>
+    <div class="subtitle">Update system statistics with the latest organization data</div>
+    
+    <div class="info-box">
+      <strong>What this does:</strong>
+      Refreshes all analytics data including system counts, hardware statistics, and organization totals. 
+      This will process all active member organizations and update the datacube used for charts and reports.
+    </div>
+
+    <button id="refreshBtn" onclick="refreshNow()">
+      <span id="btnText">▶ Start Refresh</span>
+    </button>
+    
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://tyovnvuluyosjnabrzjc.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b3ZudnVsdXlvc2puYWJyempjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjE0MzIsImV4cCI6MjA3MTc5NzQzMn0.G3HlqGeyLS_39jxbrKtttcsE93A9WvFSEByJow--470'
+    );
+
+    async function refreshNow() {
+      const btn = document.getElementById('refreshBtn');
+      const btnText = document.getElementById('btnText');
+      const resultDiv = document.getElementById('result');
+      
+      btn.disabled = true;
+      btnText.textContent = '⏳ Refreshing...';
+      
+      resultDiv.className = 'result loading';
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<strong>Processing...</strong><br>Analyzing organization data and updating statistics...';
+
+      try {
+        const startTime = Date.now();
+        
+        const { data, error } = await supabase.functions.invoke('refresh-analytics-datacube', {
+          body: { 
+            manual_refresh: true, 
+            triggered_at: new Date().toISOString() 
+          }
+        });
+
+        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+
+        if (error) {
+          throw error;
+        }
+
+        resultDiv.className = 'result success';
+        resultDiv.innerHTML = `
+          <strong>✅ Refresh Complete!</strong><br>
+          ${data.message}<br>
+          <div class="stats">
+            <div class="stat-item">
+              <div class="stat-label">Entries Processed</div>
+              <div class="stat-value">${data.entriesProcessed || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Duration</div>
+              <div class="stat-value">${duration}s</div>
+            </div>
+          </div>
+        `;
+        
+        btnText.textContent = '✓ Complete';
+        setTimeout(() => {
+          btn.disabled = false;
+          btnText.textContent = '▶ Start Refresh';
+        }, 3000);
+        
+      } catch (error) {
+        console.error('Refresh error:', error);
+        resultDiv.className = 'result error';
+        resultDiv.innerHTML = `
+          <strong>❌ Error</strong><br>
+          ${error.message || 'Failed to refresh datacube. Please check console for details.'}
+        `;
+        btn.disabled = false;
+        btnText.textContent = '▶ Start Refresh';
+      }
+    }
+  </script>
+</body>
+</html>
