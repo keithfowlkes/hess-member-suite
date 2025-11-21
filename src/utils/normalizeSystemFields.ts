@@ -180,9 +180,14 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
   
   alumni_advancement_crm: {
     // Blackbaud variations
-    "Blackbaud Raiser's Edge": "Blackbaud Raiser's Edge",
-    "Raiser's Edge": "Blackbaud Raiser's Edge",
-    "Blackbaud RaisersEdge": "Blackbaud Raiser's Edge",
+    "Blackbaud Raiser's Edge": "Blackbaud",
+    "Raiser's Edge": "Blackbaud",
+    "RaisersEdge": "Blackbaud",
+    "Raisers Edge": "Blackbaud",
+    "Blackbaud RaisersEdge": "Blackbaud",
+    "ReNXT": "Blackbaud",
+    "Blackbaud ReNXT": "Blackbaud",
+    "Blackbaud": "Blackbaud",
     
     // Ellucian variations
     "Ellucian Banner Advancement": "Ellucian Banner Advancement", 
@@ -350,7 +355,10 @@ export function normalizeFieldValue(fieldName: string, currentValue: string | nu
   }
   
   if (fieldName === 'alumni_advancement_crm') {
-    if (currentValue.toLowerCase().includes("raiser's edge") || currentValue.toLowerCase().includes('raisersedge')) return "Blackbaud Raiser's Edge";
+    if (currentValue.toLowerCase().includes("raiser's edge") || 
+        currentValue.toLowerCase().includes('raisersedge') || 
+        currentValue.toLowerCase().includes('raisers edge') ||
+        currentValue.toLowerCase().includes('renxt')) return "Blackbaud";
     if (currentValue.toLowerCase().includes('donorperfect')) return 'DonorPerfect';
     if (currentValue.toLowerCase().includes('banner') && currentValue.toLowerCase().includes('advancement')) return 'Ellucian Banner Advancement';
     if (currentValue.toLowerCase().includes('colleague') && currentValue.toLowerCase().includes('advancement')) return 'Ellucian Colleague Advancement';
