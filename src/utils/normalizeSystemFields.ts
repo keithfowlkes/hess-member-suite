@@ -178,6 +178,15 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "In-house Developed": "In-House Developed"
   },
   
+  purchasing_system: {
+    // Jenzabar variations
+    "Jenzabar": "Jenzabar ONE",
+    "Jenzabar ONE": "Jenzabar ONE",
+    "Jenzabar EX": "Jenzabar ONE",
+    
+    // Other systems can be added here as needed
+  },
+  
   alumni_advancement_crm: {
     // Blackbaud variations
     "Blackbaud Raiser's Edge": "Blackbaud",
@@ -352,6 +361,10 @@ export function normalizeFieldValue(fieldName: string, currentValue: string | nu
     if (currentValue.toLowerCase().includes('targetx') || currentValue.toLowerCase().includes('target x')) return 'TargetX';
     if (currentValue.toLowerCase().includes('crm recruit') || currentValue.toLowerCase().includes('recruit')) return 'Ellucian CRM Recruit';
     if (currentValue.toLowerCase().includes('salesforce')) return 'Salesforce';
+  }
+  
+  if (fieldName === 'purchasing_system') {
+    if (currentValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE';
   }
   
   if (fieldName === 'alumni_advancement_crm') {
