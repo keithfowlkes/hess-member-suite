@@ -322,16 +322,19 @@ export async function getSystemFieldOptions(): Promise<{[fieldName: string]: str
 export function normalizeFieldValue(fieldName: string, currentValue: string | null): string | null {
   if (!currentValue || currentValue.trim() === '') return null;
   
+  // Trim whitespace from the value for consistent matching
+  const trimmedValue = currentValue.trim();
+  
   const mappings = FIELD_MAPPINGS[fieldName];
-  if (!mappings) return currentValue;
+  if (!mappings) return trimmedValue;
   
   // Check for exact match first
-  if (mappings[currentValue]) {
-    return mappings[currentValue];
+  if (mappings[trimmedValue]) {
+    return mappings[trimmedValue];
   }
   
   // Check for case-insensitive match
-  const lowerValue = currentValue.toLowerCase();
+  const lowerValue = trimmedValue.toLowerCase();
   for (const [key, value] of Object.entries(mappings)) {
     if (key.toLowerCase() === lowerValue) {
       return value;
@@ -340,57 +343,57 @@ export function normalizeFieldValue(fieldName: string, currentValue: string | nu
   
   // Check for partial matches for common cases
   if (fieldName === 'student_information_system') {
-    if (currentValue.toLowerCase().includes('colleague')) return 'Ellucian Colleague';
-    if (currentValue.toLowerCase().includes('banner')) return 'Ellucian Banner';
-    if (currentValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE';
-    if (currentValue.toLowerCase().includes('workday')) return 'Workday Student';
-    if (currentValue.toLowerCase().includes('collegix')) return 'Aptron Collegix';
-    if (currentValue.toLowerCase().includes('powercampus')) return 'Ellucian PowerCampus';
-    if (currentValue.toLowerCase().includes('campus management') || currentValue.toLowerCase().includes('anthology')) {
+    if (trimmedValue.toLowerCase().includes('colleague')) return 'Ellucian Colleague';
+    if (trimmedValue.toLowerCase().includes('banner')) return 'Ellucian Banner';
+    if (trimmedValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE';
+    if (trimmedValue.toLowerCase().includes('workday')) return 'Workday Student';
+    if (trimmedValue.toLowerCase().includes('collegix')) return 'Aptron Collegix';
+    if (trimmedValue.toLowerCase().includes('powercampus')) return 'Ellucian PowerCampus';
+    if (trimmedValue.toLowerCase().includes('campus management') || trimmedValue.toLowerCase().includes('anthology')) {
       return 'Anthology/Campus Management';
     }
-    if (currentValue.toLowerCase().includes('cams') || currentValue.toLowerCase().includes('unit4') || currentValue.toLowerCase().includes('cam')) {
+    if (trimmedValue.toLowerCase().includes('cams') || trimmedValue.toLowerCase().includes('unit4') || trimmedValue.toLowerCase().includes('cam')) {
       return 'Unit4';
     }
   }
   
   if (fieldName === 'financial_system') {
-    if (currentValue.toLowerCase().includes('banner')) return 'Ellucian Banner Finance';
-    if (currentValue.toLowerCase().includes('colleague')) return 'Ellucian Colleague Finance';
-    if (currentValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE Finance';
-    if (currentValue.toLowerCase().includes('dynamics') || currentValue.toLowerCase().includes('great plains')) return 'Microsoft Dynamics GP';
-    if (currentValue.toLowerCase().includes('blackbaud')) return 'Blackbaud Financial Edge';
-    if (currentValue.toLowerCase().includes('peoplesoft')) return 'Oracle PeopleSoft';
-    if (currentValue.toLowerCase().includes('workday')) return 'Workday Financial Management';
-    if (currentValue.toLowerCase().includes('cams') || currentValue.toLowerCase().includes('unit4') || currentValue.toLowerCase().includes('cam')) return 'Unit4';
+    if (trimmedValue.toLowerCase().includes('banner')) return 'Ellucian Banner Finance';
+    if (trimmedValue.toLowerCase().includes('colleague')) return 'Ellucian Colleague Finance';
+    if (trimmedValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE Finance';
+    if (trimmedValue.toLowerCase().includes('dynamics') || trimmedValue.toLowerCase().includes('great plains')) return 'Microsoft Dynamics GP';
+    if (trimmedValue.toLowerCase().includes('blackbaud')) return 'Blackbaud Financial Edge';
+    if (trimmedValue.toLowerCase().includes('peoplesoft')) return 'Oracle PeopleSoft';
+    if (trimmedValue.toLowerCase().includes('workday')) return 'Workday Financial Management';
+    if (trimmedValue.toLowerCase().includes('cams') || trimmedValue.toLowerCase().includes('unit4') || trimmedValue.toLowerCase().includes('cam')) return 'Unit4';
   }
   
   if (fieldName === 'admissions_crm') {
-    if (currentValue.toLowerCase().includes('slate') || currentValue.toLowerCase().includes('technolutions')) return 'Slate for Admissions';
-    if (currentValue.toLowerCase().includes('targetx') || currentValue.toLowerCase().includes('target x')) return 'TargetX';
-    if (currentValue.toLowerCase().includes('crm recruit') || currentValue.toLowerCase().includes('recruit')) return 'Ellucian CRM Recruit';
-    if (currentValue.toLowerCase().includes('salesforce')) return 'Salesforce';
+    if (trimmedValue.toLowerCase().includes('slate') || trimmedValue.toLowerCase().includes('technolutions')) return 'Slate for Admissions';
+    if (trimmedValue.toLowerCase().includes('targetx') || trimmedValue.toLowerCase().includes('target x')) return 'TargetX';
+    if (trimmedValue.toLowerCase().includes('crm recruit') || trimmedValue.toLowerCase().includes('recruit')) return 'Ellucian CRM Recruit';
+    if (trimmedValue.toLowerCase().includes('salesforce')) return 'Salesforce';
   }
   
   if (fieldName === 'purchasing_system') {
-    if (currentValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE';
+    if (trimmedValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE';
   }
   
   if (fieldName === 'payroll_system') {
-    if (currentValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE';
+    if (trimmedValue.toLowerCase().includes('jenzabar')) return 'Jenzabar ONE';
   }
   
   if (fieldName === 'alumni_advancement_crm') {
-    if (currentValue.toLowerCase().includes("raiser's edge") || 
-        currentValue.toLowerCase().includes('raisersedge') || 
-        currentValue.toLowerCase().includes('raisers edge') ||
-        currentValue.toLowerCase().includes('renxt')) return "Blackbaud";
-    if (currentValue.toLowerCase().includes('donorperfect')) return 'DonorPerfect';
-    if (currentValue.toLowerCase().includes('banner') && currentValue.toLowerCase().includes('advancement')) return 'Ellucian Banner Advancement';
-    if (currentValue.toLowerCase().includes('colleague') && currentValue.toLowerCase().includes('advancement')) return 'Ellucian Colleague Advancement';
+    if (trimmedValue.toLowerCase().includes("raiser's edge") || 
+        trimmedValue.toLowerCase().includes('raisersedge') || 
+        trimmedValue.toLowerCase().includes('raisers edge') ||
+        trimmedValue.toLowerCase().includes('renxt')) return "Blackbaud";
+    if (trimmedValue.toLowerCase().includes('donorperfect')) return 'DonorPerfect';
+    if (trimmedValue.toLowerCase().includes('banner') && trimmedValue.toLowerCase().includes('advancement')) return 'Ellucian Banner Advancement';
+    if (trimmedValue.toLowerCase().includes('colleague') && trimmedValue.toLowerCase().includes('advancement')) return 'Ellucian Colleague Advancement';
   }
   
-  return currentValue; // Return original if no mapping found
+  return trimmedValue; // Return trimmed value if no mapping found
 }
 
 // Preview normalization changes
