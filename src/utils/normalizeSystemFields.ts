@@ -146,11 +146,11 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
   
   admissions_crm: {
     // Slate variations
-    "Slate": "Technolutions Slate",
-    "Technolutions Slate": "Technolutions Slate",
-    "SLATE from Technolutions": "Technolutions Slate",
-    "Technolutions-Slate": "Technolutions Slate",
-    "Slate for Admissions": "Technolutions Slate",
+    "Slate": "Slate for Admissions",
+    "Technolutions Slate": "Slate for Admissions",
+    "SLATE from Technolutions": "Slate for Admissions",
+    "Technolutions-Slate": "Slate for Admissions",
+    "Slate for Admissions": "Slate for Admissions",
     
     // TargetX variations
     "TargetX": "TargetX",
@@ -348,7 +348,7 @@ export function normalizeFieldValue(fieldName: string, currentValue: string | nu
   }
   
   if (fieldName === 'admissions_crm') {
-    if (currentValue.toLowerCase().includes('slate') || currentValue.toLowerCase().includes('technolutions')) return 'Technolutions Slate';
+    if (currentValue.toLowerCase().includes('slate') || currentValue.toLowerCase().includes('technolutions')) return 'Slate for Admissions';
     if (currentValue.toLowerCase().includes('targetx') || currentValue.toLowerCase().includes('target x')) return 'TargetX';
     if (currentValue.toLowerCase().includes('crm recruit') || currentValue.toLowerCase().includes('recruit')) return 'Ellucian CRM Recruit';
     if (currentValue.toLowerCase().includes('salesforce')) return 'Salesforce';
