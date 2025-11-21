@@ -6,8 +6,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { useSystemAnalytics, SystemUsage } from '@/hooks/useSystemAnalytics';
 import { InstitutionsModal } from '@/components/InstitutionsModal';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
-import { PieChart as PieChartIcon, BarChart3, Monitor, MessageSquare } from 'lucide-react';
+import { PieChart as PieChartIcon, BarChart3, Monitor, MessageSquare, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff'];
 
@@ -56,6 +58,7 @@ const SYSTEM_DATA_MAP = [
 
 export function SystemAnalyticsDashboard() {
   const { data: analytics, isLoading, error } = useSystemAnalytics();
+  const queryClient = useQueryClient();
   const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
   const [selectedSystem, setSelectedSystem] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
@@ -63,6 +66,24 @@ export function SystemAnalyticsDashboard() {
   const [selectedSystemName, setSelectedSystemName] = useState<string | null>(null);
   const [selectedSystemDisplayName, setSelectedSystemDisplayName] = useState<string | null>(null);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const { error } = await supabase.functions.invoke('refresh-analytics-datacube');
+      if (error) throw error;
+      
+      // Invalidate the query to force refetch
+      await queryClient.invalidateQueries({ queryKey: ['system-analytics-datacube'] });
+      toast.success('Analytics refreshed successfully');
+    } catch (error) {
+      console.error('Error refreshing analytics:', error);
+      toast.error('Failed to refresh analytics');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleSystemClick = (systemField: string, systemName: string, systemDisplayName: string) => {
     setSelectedSystemField(systemField);
@@ -308,6 +329,17 @@ export function SystemAnalyticsDashboard() {
               })}
             </SelectContent>
           </Select>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="gap-2 ml-auto"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </Button>
         </div>
       </CardHeader>
       
