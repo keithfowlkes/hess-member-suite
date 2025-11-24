@@ -13,7 +13,7 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.approve-pending-registration]
-verify_jwt = false
+verify_jwt = true
 
 [functions.approve-reassignment-request]
 verify_jwt = true

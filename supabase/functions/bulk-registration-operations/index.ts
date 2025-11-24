@@ -34,6 +34,25 @@ serve(async (req) => {
       );
     }
 
+    // Verify the requesting user is actually an admin
+    if (adminUserId) {
+      const { data: adminRole, error: roleError } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', adminUserId)
+        .eq('role', 'admin')
+        .single();
+
+      if (roleError || !adminRole) {
+        console.error(`Unauthorized access attempt by user: ${adminUserId}`);
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized: Admin access required' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      console.log(`Admin verification successful for user: ${adminUserId}`);
+    }
+
     console.log(`Processing bulk operation: ${operation} for ${registrationIds.length} registrations`);
 
     let results = [];
