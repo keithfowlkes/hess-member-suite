@@ -2210,7 +2210,7 @@ export default function Auth() {
                   <div>
                     <h2 className="text-xl font-semibold text-gray-800 mb-2">Current Member Updates</h2>
                     <p className="text-gray-600">
-                      Update information for your existing member institution. Note, these entries are subject to review and approval to eliminate spam entries.
+                      Update information for your existing member institution. Note, these entries are reviewed and verified and are subject to admin approval to eliminate unauthorized or spam entries.
                     </p>
                   </div>
                   <img 
