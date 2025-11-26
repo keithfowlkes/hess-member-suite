@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,15 +7,38 @@ import { Badge } from '@/components/ui/badge';
 import { useSurveys } from '@/hooks/useSurveys';
 import { SurveyResponseDialog } from '@/components/SurveyResponseDialog';
 import { SurveyResultsDialog } from '@/components/SurveyResultsDialog';
-import { FileQuestion, Calendar, Clock, BarChart3 } from 'lucide-react';
+import { FileQuestion, Calendar, Clock, BarChart3, Edit } from 'lucide-react';
 import { format } from 'date-fns';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Surveys() {
   const { data: surveys, isLoading } = useSurveys();
+  const { user } = useAuth();
   const [selectedSurvey, setSelectedSurvey] = useState<string | null>(null);
   const [viewResultsSurveyId, setViewResultsSurveyId] = useState<string | null>(null);
+  const [respondedSurveyIds, setRespondedSurveyIds] = useState<Set<string>>(new Set());
 
   const activeSurveys = surveys?.filter(s => s.is_active) || [];
+
+  // Check which surveys the user has already responded to
+  useEffect(() => {
+    const checkResponses = async () => {
+      if (!user?.id || !activeSurveys.length) return;
+
+      const { data } = await supabase
+        .from('survey_responses')
+        .select('survey_id')
+        .eq('user_id', user.id)
+        .in('survey_id', activeSurveys.map(s => s.id));
+
+      if (data) {
+        setRespondedSurveyIds(new Set(data.map(r => r.survey_id)));
+      }
+    };
+
+    checkResponses();
+  }, [user?.id, activeSurveys.length]);
 
   return (
     <SidebarProvider>
@@ -81,10 +104,12 @@ export default function Surveys() {
                       <div className="flex gap-2">
                         <Button 
                           onClick={() => setSelectedSurvey(survey.id)} 
-                          className="flex-1"
+                          className="flex-1 gap-2"
                           size="sm"
+                          variant={respondedSurveyIds.has(survey.id) ? "outline" : "default"}
                         >
-                          Take Survey
+                          {respondedSurveyIds.has(survey.id) && <Edit className="h-4 w-4" />}
+                          {respondedSurveyIds.has(survey.id) ? 'Edit Response' : 'Take Survey'}
                         </Button>
                         <Button 
                           onClick={() => setViewResultsSurveyId(survey.id)} 

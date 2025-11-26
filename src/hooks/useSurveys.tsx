@@ -312,6 +312,28 @@ export const useDeleteSurvey = () => {
   });
 };
 
+// Hook to fetch user's existing response for a survey
+export const useUserSurveyResponse = (surveyId: string) => {
+  return useQuery({
+    queryKey: ['user-survey-response', surveyId],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from('survey_responses')
+        .select('*, survey_answers(*)')
+        .eq('survey_id', surveyId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!surveyId,
+  });
+};
+
 export const useSubmitSurveyResponse = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -366,6 +388,7 @@ export const useSubmitSurveyResponse = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['survey-responses'] });
+      queryClient.invalidateQueries({ queryKey: ['user-survey-response'] });
       toast({
         title: 'Survey submitted',
         description: 'Thank you for completing the survey!',
@@ -379,6 +402,65 @@ export const useSubmitSurveyResponse = () => {
       toast({
         title: 'Error',
         description: isDuplicate ? 'You have already voted on this survey.' : error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+export const useUpdateSurveyResponse = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (responseData: {
+      responseId: string;
+      surveyId: string;
+      answers: { questionId: string; answerText?: string; answerOptions?: any }[];
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Delete existing answers
+      await supabase
+        .from('survey_answers')
+        .delete()
+        .eq('response_id', responseData.responseId);
+
+      // Insert updated answers
+      const answers = responseData.answers.map(a => ({
+        response_id: responseData.responseId,
+        question_id: a.questionId,
+        answer_text: a.answerText,
+        answer_options: a.answerOptions,
+      }));
+
+      const { error: answersError } = await supabase
+        .from('survey_answers')
+        .insert(answers);
+      
+      if (answersError) throw answersError;
+
+      // Update submitted_at timestamp
+      await supabase
+        .from('survey_responses')
+        .update({ submitted_at: new Date().toISOString() })
+        .eq('id', responseData.responseId);
+
+      return { id: responseData.responseId };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['survey-responses'] });
+      queryClient.invalidateQueries({ queryKey: ['user-survey-response'] });
+      toast({
+        title: 'Survey updated',
+        description: 'Your survey responses have been updated successfully!',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message,
         variant: 'destructive',
       });
     },
