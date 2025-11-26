@@ -607,7 +607,8 @@ export default function Auth() {
           primary_office_other: signUpForm.primaryOfficeOther,
           primary_office_other_details: signUpForm.primaryOfficeOtherDetails,
           other_software_comments: signUpForm.otherSoftwareComments,
-          approximate_date_joined_hess: signUpForm.approximateDateJoinedHess
+          approximate_date_joined_hess: signUpForm.approximateDateJoinedHess,
+          partner_program_interest: signUpForm.partnerProgramInterest
         };
 
         console.log('🔍 DEBUG: About to call createRegistrationUpdate with data:', {
@@ -3040,6 +3041,45 @@ export default function Auth() {
                           className="w-full min-h-[120px] p-4 bg-gray-50 border border-gray-300 rounded-lg resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                           rows={4}
                         />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Partner Program Interest */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Partner Program Interest</h3>
+                      <p className="text-gray-600 text-sm">Optional: Indicate if you're interested in learning more about HESS programs with our foundational enterprise systems partners.</p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <Label className="text-gray-700 font-medium text-sm">
+                        Are you interested in learning more about our HESS programs with any of our foundational enterprise systems partners?
+                      </Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {PARTNER_PROGRAMS.map((partner) => (
+                          <div key={partner} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <Checkbox
+                              id={`member-update-partner-${partner}`}
+                              checked={signUpForm.partnerProgramInterest.includes(partner)}
+                              onCheckedChange={(checked) => {
+                                setSignUpForm(prev => ({
+                                  ...prev,
+                                  partnerProgramInterest: checked
+                                    ? [...prev.partnerProgramInterest, partner]
+                                    : prev.partnerProgramInterest.filter(p => p !== partner)
+                                }));
+                              }}
+                              disabled={!isReassignment}
+                            />
+                            <Label
+                              htmlFor={`member-update-partner-${partner}`}
+                              className="text-sm font-medium cursor-pointer"
+                            >
+                              {partner}
+                            </Label>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
