@@ -1846,6 +1846,7 @@ export type Database = {
         Returns: boolean
       }
       refresh_analytics_datacube_sql: { Args: never; Returns: undefined }
+      refresh_public_views: { Args: never; Returns: undefined }
       setup_admin_user: { Args: never; Returns: undefined }
     }
     Enums: {
