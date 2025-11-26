@@ -640,6 +640,7 @@ serve(async (req) => {
               voip: pendingReg.voip,
               network_infrastructure: pendingReg.network_infrastructure,
               approximate_date_joined_hess: pendingReg.approximate_date_joined_hess ? new Date(pendingReg.approximate_date_joined_hess).toISOString().split('T')[0] : null,
+              partner_program_interest: pendingReg.partner_program_interest || [],
               updated_at: new Date().toISOString()
             })
             .eq('id', existingOrg.id)
@@ -766,6 +767,7 @@ serve(async (req) => {
                 voip: pendingReg.voip,
                 network_infrastructure: pendingReg.network_infrastructure,
                 approximate_date_joined_hess: pendingReg.approximate_date_joined_hess ? new Date(pendingReg.approximate_date_joined_hess).toISOString().split('T')[0] : null,
+                partner_program_interest: pendingReg.partner_program_interest || [],
                 updated_at: new Date().toISOString()
               })
               .eq('id', existingOrg.id)
@@ -829,6 +831,7 @@ serve(async (req) => {
                 voip: pendingReg.voip,
                 network_infrastructure: pendingReg.network_infrastructure,
                 approximate_date_joined_hess: pendingReg.approximate_date_joined_hess ? new Date(pendingReg.approximate_date_joined_hess).toISOString().split('T')[0] : null,
+                partner_program_interest: pendingReg.partner_program_interest || [],
                 membership_status: 'active',
                 membership_start_date: new Date().toISOString().split('T')[0],
                 country: 'United States',

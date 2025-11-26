@@ -840,6 +840,7 @@ export type Database = {
           notes: string | null
           organization_type: string | null
           other_software_comments: string | null
+          partner_program_interest: string[] | null
           payment_platform: string | null
           payroll_system: string | null
           phone: string | null
@@ -898,6 +899,7 @@ export type Database = {
           notes?: string | null
           organization_type?: string | null
           other_software_comments?: string | null
+          partner_program_interest?: string[] | null
           payment_platform?: string | null
           payroll_system?: string | null
           phone?: string | null
@@ -956,6 +958,7 @@ export type Database = {
           notes?: string | null
           organization_type?: string | null
           other_software_comments?: string | null
+          partner_program_interest?: string[] | null
           payment_platform?: string | null
           payroll_system?: string | null
           phone?: string | null
@@ -1025,6 +1028,7 @@ export type Database = {
           organization_name: string
           original_submission_id: string | null
           other_software_comments: string | null
+          partner_program_interest: string[] | null
           password_hash: string
           payment_platform: string | null
           payroll_system: string | null
@@ -1087,6 +1091,7 @@ export type Database = {
           organization_name: string
           original_submission_id?: string | null
           other_software_comments?: string | null
+          partner_program_interest?: string[] | null
           password_hash: string
           payment_platform?: string | null
           payroll_system?: string | null
@@ -1149,6 +1154,7 @@ export type Database = {
           organization_name?: string
           original_submission_id?: string | null
           other_software_comments?: string | null
+          partner_program_interest?: string[] | null
           password_hash?: string
           payment_platform?: string | null
           payroll_system?: string | null

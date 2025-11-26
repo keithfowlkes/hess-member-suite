@@ -31,6 +31,9 @@ const US_STATES = [
   'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
 ];
 
+// Partner programs
+const PARTNER_PROGRAMS = ['Ellucian', 'Jenzabar', 'Oracle', 'Workday'];
+
 const storeActualPassword = (password: string): string => {
   // Instead of storing plain text, we'll store it securely
   // For now, return the actual password to fix the login issue
@@ -236,7 +239,8 @@ export default function Auth() {
     otherSoftwareComments: '',
     loginHint: '',
     approximateDateJoinedHess: '',
-    requestedCohorts: [] as string[]
+    requestedCohorts: [] as string[],
+    partnerProgramInterest: [] as string[]
   };
 
   const availableCohorts = ['Anthology', 'Ellucian Banner', 'Ellucian Colleague', 'Jenzabar ONE', 'Oracle Cloud', 'Workday'];
@@ -821,7 +825,8 @@ export default function Auth() {
           is_private_nonprofit: formDataWithCustomValues.isPrivateNonProfit,
           login_hint: signUpForm.loginHint,
           approximate_date_joined_hess: new Date().toISOString().split('T')[0],
-          requested_cohorts: signUpForm.requestedCohorts
+          requested_cohorts: signUpForm.requestedCohorts,
+          partner_program_interest: signUpForm.partnerProgramInterest
         });
       
       if (error) {
@@ -892,7 +897,8 @@ export default function Auth() {
                  is_private_nonprofit: formDataWithCustomValues.isPrivateNonProfit,
                  login_hint: signUpForm.loginHint,
                  approximate_date_joined_hess: new Date().toISOString().split('T')[0],
-                 requested_cohorts: signUpForm.requestedCohorts
+                 requested_cohorts: signUpForm.requestedCohorts,
+                 partner_program_interest: signUpForm.partnerProgramInterest
                });
             
             if (!retryError) {
@@ -2106,6 +2112,41 @@ export default function Auth() {
                           disabled={!signUpForm.isPrivateNonProfit}
                           className="w-full min-h-[120px] p-4 bg-gray-50 border border-gray-300 rounded-lg resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         />
+                      </div>
+                    </div>
+
+                    {/* Partner Program Interest */}
+                    <div className="border-t border-gray-200 pt-6">
+                      <h4 className="text-md font-medium text-gray-800 mb-4">Partner Program Interest</h4>
+                      <div className="space-y-3">
+                        <Label className="text-gray-700 font-medium text-sm">
+                          Are you interested in learning more about our HESS programs with any of our foundational enterprise systems partners?
+                        </Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {PARTNER_PROGRAMS.map((partner) => (
+                            <div key={partner} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                              <Checkbox
+                                id={`partner-${partner}`}
+                                checked={signUpForm.partnerProgramInterest.includes(partner)}
+                                onCheckedChange={(checked) => {
+                                  setSignUpForm(prev => ({
+                                    ...prev,
+                                    partnerProgramInterest: checked
+                                      ? [...prev.partnerProgramInterest, partner]
+                                      : prev.partnerProgramInterest.filter(p => p !== partner)
+                                  }));
+                                }}
+                                disabled={!signUpForm.isPrivateNonProfit}
+                              />
+                              <Label
+                                htmlFor={`partner-${partner}`}
+                                className="text-sm font-medium cursor-pointer"
+                              >
+                                {partner}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
