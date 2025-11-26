@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useSurveyQuestions, useSubmitSurveyResponse } from '@/hooks/useSurveys';
+import { useSurveyQuestions, useSubmitSurveyResponse, useUserSurveyResponse, useUpdateSurveyResponse } from '@/hooks/useSurveys';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -23,10 +23,13 @@ export function SurveyResponseDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { data: questions } = useSurveyQuestions(surveyId);
+  const { data: existingResponse } = useUserSurveyResponse(surveyId);
   const submitResponse = useSubmitSurveyResponse();
+  const updateResponse = useUpdateSurveyResponse();
   const { user } = useAuth();
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [organizationId, setOrganizationId] = useState<string>('');
+  const isEditMode = !!existingResponse;
 
   useEffect(() => {
     const fetchOrganization = async () => {
@@ -54,8 +57,25 @@ export function SurveyResponseDialog({
     fetchOrganization();
   }, [user?.id]);
 
+  // Load existing answers when editing
+  useEffect(() => {
+    if (existingResponse && questions) {
+      const loadedAnswers: Record<string, any> = {};
+      
+      existingResponse.survey_answers?.forEach((answer: any) => {
+        if (answer.answer_text) {
+          loadedAnswers[answer.question_id] = answer.answer_text;
+        } else if (answer.answer_options) {
+          loadedAnswers[answer.question_id] = answer.answer_options;
+        }
+      });
+      
+      setAnswers(loadedAnswers);
+    }
+  }, [existingResponse, questions]);
+
   const handleSubmit = async () => {
-    if (!organizationId) return;
+    if (!organizationId && !isEditMode) return;
 
     const answersArray = questions?.map(q => ({
       questionId: q.id,
@@ -63,11 +83,19 @@ export function SurveyResponseDialog({
       answerOptions: typeof answers[q.id] === 'object' ? answers[q.id] : undefined,
     })) || [];
 
-    await submitResponse.mutateAsync({
-      surveyId,
-      organizationId,
-      answers: answersArray,
-    });
+    if (isEditMode && existingResponse) {
+      await updateResponse.mutateAsync({
+        responseId: existingResponse.id,
+        surveyId,
+        answers: answersArray,
+      });
+    } else {
+      await submitResponse.mutateAsync({
+        surveyId,
+        organizationId,
+        answers: answersArray,
+      });
+    }
 
     setAnswers({});
     onOpenChange(false);
@@ -197,9 +225,9 @@ export function SurveyResponseDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Complete Survey</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Survey Response' : 'Complete Survey'}</DialogTitle>
           <DialogDescription>
-            Please answer all required questions
+            {isEditMode ? 'Update your responses below' : 'Please answer all required questions'}
           </DialogDescription>
         </DialogHeader>
 
@@ -227,8 +255,8 @@ export function SurveyResponseDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!organizationId}>
-            Submit Survey
+          <Button onClick={handleSubmit} disabled={!organizationId && !isEditMode}>
+            {isEditMode ? 'Update Survey' : 'Submit Survey'}
           </Button>
         </div>
       </DialogContent>
