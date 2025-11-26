@@ -224,6 +224,7 @@ export function SideBySideComparisonModal({
     { key: 'document_management', label: 'Document Management', type: 'text' },
     { key: 'voip', label: 'VoIP', type: 'text' },
     { key: 'network_infrastructure', label: 'Network Infrastructure', type: 'text' },
+    { key: 'partner_program_interest', label: 'Partner Program Interest', type: 'array' },
   ];
 
   // Hardware fields

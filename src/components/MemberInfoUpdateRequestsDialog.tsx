@@ -96,14 +96,16 @@ export function MemberInfoUpdateRequestsDialog({ open, onOpenChange }: MemberInf
       ...orgData,
       // Explicitly ensure these fields are present
       voip: orgData.voip || null,
-      network_infrastructure: orgData.network_infrastructure || null
+      network_infrastructure: orgData.network_infrastructure || null,
+      partner_program_interest: orgData.partner_program_interest || []
     };
 
     const originalDataForModal = {
       ...originalOrgData,
       // Explicitly ensure these fields are present  
       voip: originalOrgData.voip || null,
-      network_infrastructure: originalOrgData.network_infrastructure || null
+      network_infrastructure: originalOrgData.network_infrastructure || null,
+      partner_program_interest: originalOrgData.partner_program_interest || []
     };
     
     console.log('============================================');
