@@ -22,6 +22,15 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 
 // Store the actual password for later use during approval
+// U.S. State abbreviations
+const US_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+];
+
 const storeActualPassword = (password: string): string => {
   // Instead of storing plain text, we'll store it securely
   // For now, return the actual password to fix the login issue
@@ -1350,16 +1359,23 @@ export default function Auth() {
                         <Label htmlFor="signup-state" className="text-gray-700 font-medium text-sm">
                           State <span className="text-red-500">*</span>
                         </Label>
-                        <Input
-                          id="signup-state"
-                          type="text"
-                          placeholder="State"
+                        <Select
                           value={signUpForm.state}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
+                          onValueChange={(value) => setSignUpForm(prev => ({ ...prev, state: value }))}
                           disabled={!signUpForm.isPrivateNonProfit}
                           required
-                        />
+                        >
+                          <SelectTrigger id="signup-state" className="h-11 bg-gray-50 border-gray-300">
+                            <SelectValue placeholder="Select state" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background z-50">
+                            {US_STATES.map((state) => (
+                              <SelectItem key={state} value={state}>
+                                {state}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="signup-zip" className="text-gray-700 font-medium text-sm">
@@ -2382,16 +2398,23 @@ export default function Auth() {
                         <Label htmlFor="member-update-state" className="text-gray-700 font-medium text-sm">
                           State <span className="text-red-500">*</span>
                         </Label>
-                        <Input
-                          id="member-update-state"
-                          type="text"
-                          placeholder="State"
+                        <Select
                           value={signUpForm.state}
-                          onChange={(e) => setSignUpForm(prev => ({ ...prev, state: e.target.value }))}
-                          className="h-11 bg-gray-50 border-gray-300"
+                          onValueChange={(value) => setSignUpForm(prev => ({ ...prev, state: value }))}
                           disabled={!isReassignment}
                           required
-                        />
+                        >
+                          <SelectTrigger id="member-update-state" className="h-11 bg-gray-50 border-gray-300">
+                            <SelectValue placeholder="Select state" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background z-50">
+                            {US_STATES.map((state) => (
+                              <SelectItem key={state} value={state}>
+                                {state}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="member-update-zip" className="text-gray-700 font-medium text-sm">
