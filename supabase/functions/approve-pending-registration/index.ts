@@ -521,7 +521,7 @@ serve(async (req) => {
     }
     
     // Ensure user role exists
-    const { error: roleError } = await supabaseAdmin
+    const { error: roleInsertError } = await supabaseAdmin
       .from('user_roles')
       .insert({
         user_id: authUser.user?.id,
@@ -530,8 +530,8 @@ serve(async (req) => {
       .select()
       .maybeSingle();
     
-    if (roleError && !roleError.message?.includes('duplicate')) {
-      console.error('Error creating user role:', roleError);
+    if (roleInsertError && !roleInsertError.message?.includes('duplicate')) {
+      console.error('Error creating user role:', roleInsertError);
     } else {
       console.log(`User role assigned: ${isAdminOrg ? 'admin' : 'member'}`);
     }
