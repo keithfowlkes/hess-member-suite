@@ -31,6 +31,7 @@ const Index = () => {
   const { invoices, loading: invoicesLoading } = useInvoices();
   const { data: surveys } = useSurveys();
   const [unansweredSurveys, setUnansweredSurveys] = useState<number>(0);
+  const [surveyAlertDismissed, setSurveyAlertDismissed] = useState(false);
 
   // Use organization data from unified profile
   const userOrganization = unifiedProfileData?.organization;
@@ -56,10 +57,44 @@ const Index = () => {
       const unanswered = activeSurveys.filter(s => !respondedSurveyIds.has(s.id));
       
       setUnansweredSurveys(unanswered.length);
+      
+      // Reset dismissed state if surveys have changed
+      const dismissedKey = `survey-alert-dismissed-${user.id}`;
+      const dismissedData = localStorage.getItem(dismissedKey);
+      if (dismissedData) {
+        const { surveyIds, timestamp } = JSON.parse(dismissedData);
+        const currentSurveyIds = activeSurveys.map(s => s.id).sort().join(',');
+        
+        // If surveys have changed or it's been more than 7 days, reset dismissed state
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        if (surveyIds !== currentSurveyIds || timestamp < sevenDaysAgo) {
+          localStorage.removeItem(dismissedKey);
+          setSurveyAlertDismissed(false);
+        } else {
+          setSurveyAlertDismissed(true);
+        }
+      } else {
+        setSurveyAlertDismissed(false);
+      }
     };
 
     checkUnansweredSurveys();
   }, [user, surveys]);
+
+  const handleDismissSurveyAlert = () => {
+    if (!user || !surveys) return;
+    
+    const activeSurveys = surveys.filter(s => s.is_active);
+    const surveyIds = activeSurveys.map(s => s.id).sort().join(',');
+    
+    const dismissedKey = `survey-alert-dismissed-${user.id}`;
+    localStorage.setItem(dismissedKey, JSON.stringify({
+      surveyIds,
+      timestamp: Date.now()
+    }));
+    
+    setSurveyAlertDismissed(true);
+  };
 
   // Redirect admin users to the Master Dashboard
   if (isViewingAsAdmin) {
@@ -186,23 +221,33 @@ const Index = () => {
             <MemberSystemMessages />
 
             {/* Survey Participation Alert */}
-            {unansweredSurveys > 0 && (
+            {unansweredSurveys > 0 && !surveyAlertDismissed && (
               <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
                 <ClipboardList className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <AlertDescription className="flex items-center justify-between">
-                  <div className="text-blue-800 dark:text-blue-200">
+                <AlertDescription className="flex items-center justify-between gap-4">
+                  <div className="text-blue-800 dark:text-blue-200 flex-1">
                     {unansweredSurveys === 1 
                       ? 'There is a new survey available! Your feedback helps improve our services.'
                       : `There are ${unansweredSurveys} new surveys available! Your feedback helps improve our services.`}
                   </div>
-                  <Button 
-                    variant="default" 
-                    size="sm"
-                    className="ml-4 bg-blue-600 hover:bg-blue-700"
-                    onClick={() => navigate('/surveys')}
-                  >
-                    Take Survey{unansweredSurveys > 1 ? 's' : ''}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-blue-800 border-blue-300 hover:bg-blue-100"
+                      onClick={handleDismissSurveyAlert}
+                    >
+                      Dismiss
+                    </Button>
+                    <Button 
+                      variant="default" 
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700"
+                      onClick={() => navigate('/surveys')}
+                    >
+                      Take Survey{unansweredSurveys > 1 ? 's' : ''}
+                    </Button>
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
