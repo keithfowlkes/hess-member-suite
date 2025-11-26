@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle, Edit3, Info, MessageSquare } from 'lucide-react';
+import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle, Edit3, Info, MessageSquare, ClipboardList } from 'lucide-react';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { useInvoices } from '@/hooks/useInvoices';
@@ -15,6 +15,8 @@ import MemberSystemMessages from '@/components/MemberSystemMessages';
 import { ProfileEditModal } from '@/components/ProfileEditModal';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useSurveys } from '@/hooks/useSurveys';
+import { supabase } from '@/integrations/supabase/client';
 
 import { useState, useEffect } from 'react';
 
@@ -27,9 +29,37 @@ const Index = () => {
   const { data: unifiedProfileData, loading: profileLoading } = useUnifiedProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
   const { invoices, loading: invoicesLoading } = useInvoices();
+  const { data: surveys } = useSurveys();
+  const [unansweredSurveys, setUnansweredSurveys] = useState<number>(0);
 
   // Use organization data from unified profile
   const userOrganization = unifiedProfileData?.organization;
+
+  // Check for unanswered active surveys
+  useEffect(() => {
+    const checkUnansweredSurveys = async () => {
+      if (!user || !surveys) return;
+
+      const activeSurveys = surveys.filter(s => s.is_active);
+      if (activeSurveys.length === 0) {
+        setUnansweredSurveys(0);
+        return;
+      }
+
+      // Check which surveys the user has already responded to
+      const { data: responses } = await supabase
+        .from('survey_responses')
+        .select('survey_id')
+        .eq('user_id', user.id);
+
+      const respondedSurveyIds = new Set(responses?.map(r => r.survey_id) || []);
+      const unanswered = activeSurveys.filter(s => !respondedSurveyIds.has(s.id));
+      
+      setUnansweredSurveys(unanswered.length);
+    };
+
+    checkUnansweredSurveys();
+  }, [user, surveys]);
 
   // Redirect admin users to the Master Dashboard
   if (isViewingAsAdmin) {
@@ -154,6 +184,28 @@ const Index = () => {
             <div className="p-8 space-y-6">
 
             <MemberSystemMessages />
+
+            {/* Survey Participation Alert */}
+            {unansweredSurveys > 0 && (
+              <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+                <ClipboardList className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <AlertDescription className="flex items-center justify-between">
+                  <div className="text-blue-800 dark:text-blue-200">
+                    {unansweredSurveys === 1 
+                      ? 'There is a new survey available! Your feedback helps improve our services.'
+                      : `There are ${unansweredSurveys} new surveys available! Your feedback helps improve our services.`}
+                  </div>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    className="ml-4 bg-blue-600 hover:bg-blue-700"
+                    onClick={() => navigate('/surveys')}
+                  >
+                    Take Survey{unansweredSurveys > 1 ? 's' : ''}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
 
             {/* Profile Completion Reminder */}
             {hasIncompleteProfile && (
