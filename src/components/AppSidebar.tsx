@@ -10,6 +10,7 @@ import { useOrganizationProfileEditRequests } from '@/hooks/useOrganizationProfi
 import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
 import { useMemberRegistrationUpdates } from '@/hooks/useMemberRegistrationUpdates';
 import { useUnreadMessageCount } from '@/hooks/useUserMessages';
+import { useSurveys } from '@/hooks/useSurveys';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -106,6 +107,48 @@ export function AppSidebar() {
   const { registrationUpdates } = useMemberRegistrationUpdates();
   const { data: unreadMessageCount = 0 } = useUnreadMessageCount();
   
+  // Fetch surveys and user's responses to calculate unanswered surveys count
+  const { data: surveys = [] } = useSurveys();
+  const [unansweredSurveysCount, setUnansweredSurveysCount] = useState(0);
+  
+  // Calculate unanswered surveys count for members
+  useEffect(() => {
+    const fetchUnansweredCount = async () => {
+      if (!user || isViewingAsAdmin) {
+        setUnansweredSurveysCount(0);
+        return;
+      }
+      
+      try {
+        const activeSurveys = surveys.filter(s => s.is_active);
+        
+        if (activeSurveys.length === 0) {
+          setUnansweredSurveysCount(0);
+          return;
+        }
+        
+        const { data: responses, error } = await supabase
+          .from('survey_responses')
+          .select('survey_id')
+          .eq('user_id', user.id);
+        
+        if (error) {
+          console.error('Error fetching survey responses:', error);
+          return;
+        }
+        
+        const answeredSurveyIds = new Set(responses?.map(r => r.survey_id) || []);
+        const unansweredCount = activeSurveys.filter(s => !answeredSurveyIds.has(s.id)).length;
+        
+        setUnansweredSurveysCount(unansweredCount);
+      } catch (error) {
+        console.error('Error calculating unanswered surveys:', error);
+      }
+    };
+    
+    fetchUnansweredCount();
+  }, [user, surveys, isViewingAsAdmin]);
+  
   // Calculate total pending actions including all types of pending requests
   const activeInvitations = invitations?.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()) || [];
   const pendingRegistrationUpdatesCount = registrationUpdates?.filter(r => r.status === 'pending').length || 0;
@@ -192,6 +235,7 @@ export function AppSidebar() {
                 const Icon = item.icon;
                 const showMasterDashboardBadge = isViewingAsAdmin && item.title === 'Master Dashboard' && totalPendingActions > 0;
                 const showUserMessagesBadge = isViewingAsAdmin && item.title === 'User Messages' && (item as any).badge > 0;
+                const showSurveysBadge = !isViewingAsAdmin && item.title === 'Surveys' && unansweredSurveysCount > 0;
                 
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -220,6 +264,14 @@ export function AppSidebar() {
                                 className="h-4 w-4 p-0 flex items-center justify-center text-xs ml-auto"
                               >
                                 {(item as any).badge}
+                              </Badge>
+                            )}
+                            {showSurveysBadge && (
+                              <Badge 
+                                variant="destructive" 
+                                className="h-4 w-4 p-0 flex items-center justify-center text-xs ml-auto"
+                              >
+                                {unansweredSurveysCount}
                               </Badge>
                             )}
                           </div>
