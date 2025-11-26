@@ -294,6 +294,23 @@ export function PendingRegistrationApprovalDialog({
             </div>
           )}
 
+          {/* Partner Program Interest */}
+          {registration.partner_program_interest && registration.partner_program_interest.length > 0 && (
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h3 className="font-semibold text-lg mb-3 text-blue-900">Partner Program Interest</h3>
+              <p className="text-sm text-blue-800 mb-2">
+                Interested in learning more about HESS programs with:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {registration.partner_program_interest.map((partner) => (
+                  <Badge key={partner} variant="default" className="bg-blue-600">
+                    {partner}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Registration Date */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-lg mb-3 text-gray-800">Registration Details</h3>

@@ -84,6 +84,7 @@ interface PublicOrganization {
   primary_office_other?: boolean;
   primary_office_other_details?: string;
   other_software_comments?: string;
+  partner_program_interest?: string[];
   // Profile contact info only
   profiles?: {
     first_name?: string;
@@ -636,6 +637,27 @@ export function OrganizationDetailsDialog({ organization, isOpen, onClose, canEd
                     ) : (
                       <p className="text-sm whitespace-pre-wrap">{organization?.other_software_comments}</p>
                     )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Partner Program Interest */}
+              {currentData.partner_program_interest && currentData.partner_program_interest.length > 0 && (
+                <Card className="border-blue-200 bg-blue-50">
+                  <CardHeader>
+                    <CardTitle className="text-blue-900">Partner Program Interest</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-blue-800 mb-3">
+                      Interested in learning more about HESS programs with:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {currentData.partner_program_interest.map((partner) => (
+                        <Badge key={partner} className="bg-blue-600">
+                          {partner}
+                        </Badge>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               )}
