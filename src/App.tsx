@@ -28,6 +28,7 @@ import UserMessages from "./pages/UserMessages";
 import CohortInformation from "./pages/CohortInformation";
 import Surveys from "./pages/Surveys";
 import AdminSurveys from "./pages/AdminSurveys";
+import ExternalApplications from "./pages/ExternalApplications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ const App = () => (
             <Route path="/cohort-information" element={<ProtectedRoute><CohortInformation /></ProtectedRoute>} />
             <Route path="/surveys" element={<ProtectedRoute><Surveys /></ProtectedRoute>} />
             <Route path="/admin/surveys" element={<ProtectedRoute><AdminSurveys /></ProtectedRoute>} />
+            <Route path="/admin/external-apps" element={<ProtectedRoute><ExternalApplications /></ProtectedRoute>} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
