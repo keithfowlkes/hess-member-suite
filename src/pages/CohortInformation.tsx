@@ -582,6 +582,31 @@ const handleOrganizationDialogClose = () => {
               {/* Cohort Members Directory */}
               <Card>
                 <CardHeader>
+                  {/* Cohort Logo Display */}
+                  {cohortLeaderData?.userCohorts && cohortLeaderData.userCohorts.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-6 pb-4 mb-4 border-b">
+                      {cohortLeaderData.userCohorts.map((cohort) => (
+                        <div key={cohort} className="flex flex-col items-center gap-2">
+                          {cohort === 'Anthology' && (
+                            <img src={anthologyLogo} alt="Anthology Logo" className="h-8 w-auto object-contain" />
+                          )}
+                          {(cohort === 'Ellucian Banner' || cohort === 'Ellucian Colleague') && (
+                            <img src={ellucianLogo} alt="Ellucian Logo" className="h-10 w-auto object-contain" />
+                          )}
+                          {cohort === 'Jenzabar ONE' && (
+                            <img src={jenzabarLogo} alt="Jenzabar Logo" className="h-10 w-auto object-contain" />
+                          )}
+                          {cohort === 'Oracle Cloud' && (
+                            <img src={oracleLogo} alt="Oracle Logo" className="h-6 w-auto object-contain" />
+                          )}
+                          {cohort === 'Workday' && (
+                            <img src={workdayLogo} alt="Workday Logo" className="h-10 w-auto object-contain" />
+                          )}
+                          <span className="text-xs text-muted-foreground font-medium">{cohort}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Users className="h-5 w-5" />
