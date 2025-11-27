@@ -110,3 +110,6 @@ verify_jwt = false
 
 [functions.normalize-google-classroom-lms]
 verify_jwt = false
+
+[functions.external-get-user-context]
+verify_jwt = true

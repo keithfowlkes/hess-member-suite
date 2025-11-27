@@ -307,6 +307,86 @@ export type Database = {
         }
         Relationships: []
       }
+      external_app_access_log: {
+        Row: {
+          action: string
+          app_id: string | null
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          scopes_requested: string[] | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          app_id?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          scopes_requested?: string[] | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          app_id?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          scopes_requested?: string[] | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_app_access_log_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "external_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      external_applications: {
+        Row: {
+          allowed_scopes: string[] | null
+          app_identifier: string
+          app_url: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_scopes?: string[] | null
+          app_identifier: string
+          app_url: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_scopes?: string[] | null
+          app_identifier?: string
+          app_url?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       form_field_configurations: {
         Row: {
           created_at: string
