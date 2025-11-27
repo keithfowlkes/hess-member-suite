@@ -174,7 +174,7 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
   const createOrganization = createOrganizationMutation.mutateAsync;
 
   const updateOrganizationMutation = useMutation({
-    mutationFn: async ({ id, orgData }: { id: string; orgData: Partial<Organization> }) => {
+    mutationFn: async ({ id, orgData, silent }: { id: string; orgData: Partial<Organization>; silent?: boolean }) => {
       const { data, error } = await supabase
         .from('organizations')
         .update(orgData)
@@ -183,7 +183,7 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
         .single();
 
       if (error) throw error;
-      return data;
+      return { data, silent };
     },
     onMutate: async ({ id, orgData }) => {
       // Cancel outgoing refetches
@@ -202,11 +202,14 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
 
       return { previousOrgs };
     },
-    onSuccess: () => {
-      toast({
-        title: 'Success',
-        description: 'Organization updated successfully'
-      });
+    onSuccess: (result) => {
+      // Only show toast if not in silent mode
+      if (!result.silent) {
+        toast({
+          title: 'Success',
+          description: 'Organization updated successfully'
+        });
+      }
     },
     onError: (error: any, _variables, context) => {
       // Rollback on error
@@ -225,8 +228,8 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
     }
   });
 
-  const updateOrganization = (id: string, orgData: Partial<Organization>) => 
-    updateOrganizationMutation.mutateAsync({ id, orgData });
+  const updateOrganization = (id: string, orgData: Partial<Organization>, silent?: boolean) => 
+    updateOrganizationMutation.mutateAsync({ id, orgData, silent });
 
   const markAllOrganizationsActiveMutation = useMutation({
     mutationFn: async () => {
