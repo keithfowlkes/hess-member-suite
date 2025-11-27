@@ -614,6 +614,13 @@ export default function MembershipFees() {
     }
 
     setIsUpdating(true);
+    
+    // Show working toast
+    const { dismiss } = toast({
+      title: "Updating Organizations",
+      description: `Processing ${organizations.length} organization${organizations.length !== 1 ? 's' : ''}...`,
+    });
+    
     try {
       const updates = [];
       
@@ -634,11 +641,14 @@ export default function MembershipFees() {
           }
         }
         
-        updates.push(updateOrganization(org.id, updateData));
+        // Use silent mode to prevent individual toasts
+        updates.push(updateOrganization(org.id, updateData, true));
       }
       
       await Promise.all(updates);
       
+      // Dismiss working toast and show success
+      dismiss();
       toast({
         title: "Success",
         description: `Updated ${organizations.length} organization${organizations.length !== 1 ? 's' : ''}.`
@@ -648,6 +658,7 @@ export default function MembershipFees() {
       setBulkRenewalDate(undefined);
     } catch (error) {
       console.error('Error updating organizations:', error);
+      dismiss();
       toast({
         title: "Error",
         description: "Failed to update organizations. Please try again.",
