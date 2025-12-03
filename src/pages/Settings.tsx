@@ -25,6 +25,7 @@ import { RegistrationNotificationsManager } from '@/components/RegistrationNotif
 import { PublicLogoManager } from '@/components/PublicLogoManager';
 import { HeaderGraphicManager } from '@/components/HeaderGraphicManager';
 import { AuthPageFieldsManager } from '@/components/AuthPageFieldsManager';
+import MemberAgreementEditor from '@/components/MemberAgreementEditor';
 
 import { USMap } from '@/components/USMap';
 import { MessageTextContent } from '@/components/MessageTextContent';
@@ -829,6 +830,10 @@ export default function Settings() {
                         Configure form fields and validation for sign-in, sign-up, and member update pages
                       </p>
                       <AuthPageFieldsManager />
+                    </div>
+                    
+                    <div className="pt-4">
+                      <MemberAgreementEditor />
                     </div>
                   </TabsContent>
                 </Tabs>
