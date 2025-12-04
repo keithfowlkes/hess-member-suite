@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UserPlus, Loader2 } from 'lucide-react';
+import { encryptPassword } from '@/utils/passwordEncryption';
 
 interface AddExternalUserDialogProps {
   open: boolean;
@@ -54,12 +55,22 @@ export function AddExternalUserDialog({ open, onOpenChange, onUserCreated }: Add
       }
       const adminOrgName = hasBase ? `Administrator #${nextIndex}` : 'Administrator';
 
+      // Encrypt the password before storage
+      let passwordToStore = formData.password;
+      try {
+        const encrypted = await encryptPassword(formData.password);
+        passwordToStore = `encrypted:${encrypted}`;
+        console.log('🔐 Password encrypted for external user');
+      } catch (encryptError) {
+        console.warn('⚠️ Password encryption failed, storing plaintext:', encryptError);
+      }
+
       // 2) Create a pending registration using provided fields
       const { data: pending, error: insertErr } = await supabase
         .from('pending_registrations')
         .insert({
           email: formData.email,
-          password_hash: formData.password, // stored as plaintext by convention in this table
+          password_hash: passwordToStore,
           first_name: formData.firstName,
           last_name: formData.lastName,
           organization_name: adminOrgName,

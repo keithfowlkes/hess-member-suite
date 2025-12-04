@@ -26,6 +26,7 @@ import { PublicLogoManager } from '@/components/PublicLogoManager';
 import { HeaderGraphicManager } from '@/components/HeaderGraphicManager';
 import { AuthPageFieldsManager } from '@/components/AuthPageFieldsManager';
 import MemberAgreementEditor from '@/components/MemberAgreementEditor';
+import { PasswordEncryptionSetup } from '@/components/PasswordEncryptionSetup';
 
 import { USMap } from '@/components/USMap';
 import { MessageTextContent } from '@/components/MessageTextContent';
@@ -897,6 +898,9 @@ export default function Settings() {
 
                 {/* Admin Password Management */}
                 <AdminPasswordManager />
+
+                {/* Password Encryption Setup */}
+                <PasswordEncryptionSetup />
 
                 {/* reCAPTCHA Configuration */}
                 <Card>

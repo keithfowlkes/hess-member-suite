@@ -21,7 +21,8 @@ import { useMemberRegistrationUpdates } from '@/hooks/useMemberRegistrationUpdat
 import { Eye, EyeOff } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 
-// Store the actual password for later use during approval
+import { encryptPassword } from '@/utils/passwordEncryption';
+
 // U.S. State abbreviations
 const US_STATES = [
   'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -34,11 +35,16 @@ const US_STATES = [
 // Partner programs
 const PARTNER_PROGRAMS = ['Ellucian', 'Jenzabar', 'Oracle', 'Workday'];
 
-const storeActualPassword = (password: string): string => {
-  // Instead of storing plain text, we'll store it securely
-  // For now, return the actual password to fix the login issue
-  console.log('📝 PASSWORD DEBUG: Storing password for approval process');
-  return password;
+// Encrypt password before storing - returns encrypted string or falls back to plaintext
+const encryptPasswordForStorage = async (password: string): Promise<string> => {
+  try {
+    const encrypted = await encryptPassword(password);
+    console.log('🔐 Password encrypted successfully for storage');
+    return `encrypted:${encrypted}`;
+  } catch (error) {
+    console.warn('⚠️ Password encryption failed, storing plaintext:', error);
+    return password;
+  }
 };
 
 export default function Auth() {
@@ -520,6 +526,10 @@ export default function Auth() {
     console.log('✅ REGISTRATION DEBUG: Validation passed, setting submitting state');
     setIsSubmitting(true);
 
+    // Encrypt password before storage
+    const encryptedPassword = await encryptPasswordForStorage(signUpForm.password);
+    console.log('🔐 PASSWORD DEBUG: Password encrypted for storage');
+
     // If this is a true member update request (only from member-update tab AND user is updating existing org), handle differently
     // This should NEVER run for new registrations - only for existing members updating their org info
     if (activeTab === 'member-update' && selectedOrganizationId && isReassignment && organizations.find(org => org.id === selectedOrganizationId)) {
@@ -623,7 +633,7 @@ export default function Auth() {
             submitted_email: signUpForm.email,
             registration_data: {
               email: signUpForm.email,
-              password: storeActualPassword(signUpForm.password),
+              password: encryptedPassword,
               first_name: signUpForm.firstName,
               last_name: signUpForm.lastName,
               address: signUpForm.address,
@@ -783,7 +793,7 @@ export default function Auth() {
         .from('pending_registrations')
         .insert({
           email: signUpForm.email,
-        password_hash: storeActualPassword(signUpForm.password),
+        password_hash: encryptedPassword,
           first_name: formDataWithCustomValues.firstName,
           last_name: formDataWithCustomValues.lastName,
           organization_name: formDataWithCustomValues.organization,
@@ -855,7 +865,7 @@ export default function Auth() {
               .from('pending_registrations')
               .insert({
                 email: signUpForm.email,
-                password_hash: storeActualPassword(signUpForm.password),
+                password_hash: encryptedPassword,
                 first_name: formDataWithCustomValues.firstName,
                 last_name: formDataWithCustomValues.lastName,
                 organization_name: formDataWithCustomValues.organization,
