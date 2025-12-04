@@ -12,9 +12,11 @@ import { PendingRegistration } from '@/hooks/usePendingRegistrations';
 import { useAuth } from '@/hooks/useAuth';
 import { useSendInvoice } from '@/hooks/useSendInvoice';
 import { useFeeTiers } from '@/hooks/useFeeTiers';
-import { Mail, DollarSign, Calendar, FileText, Eye } from 'lucide-react';
+import { Mail, DollarSign, Calendar, FileText, Eye, Search, Loader2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { InvoicePreviewModal } from '@/components/InvoicePreviewModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface PendingRegistrationApprovalDialogProps {
   open: boolean;
@@ -41,9 +43,47 @@ export function PendingRegistrationApprovalDialog({
   const [membershipStartDate, setMembershipStartDate] = useState('');
   const [invoiceNotes, setInvoiceNotes] = useState('');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<string | null>(null);
   const { user } = useAuth();
   const sendInvoiceMutation = useSendInvoice();
   const { feeTiers } = useFeeTiers();
+
+  const handleAIVerification = async () => {
+    if (!registration) return;
+    
+    setIsVerifying(true);
+    setVerificationResult(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-contact-ai', {
+        body: {
+          organizationName: registration.organization_name,
+          firstName: registration.first_name,
+          lastName: registration.last_name,
+          title: registration.primary_contact_title || null
+        }
+      });
+
+      if (error) {
+        console.error('AI verification error:', error);
+        toast.error('Failed to verify contact: ' + error.message);
+        return;
+      }
+
+      if (data?.success) {
+        setVerificationResult(data.result);
+        toast.success('Contact verification completed');
+      } else {
+        toast.error(data?.error || 'Verification failed');
+      }
+    } catch (err) {
+      console.error('Error during verification:', err);
+      toast.error('An error occurred during verification');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   // Reset form when dialog opens/closes or fee tiers change
   React.useEffect(() => {
@@ -53,6 +93,7 @@ export function PendingRegistrationApprovalDialog({
       setShowInvoiceOptions(false);
       setMembershipStartDate('');
       setInvoiceNotes('');
+      setVerificationResult(null);
     }
     
     // Set default invoice amount to full member fee
@@ -172,7 +213,28 @@ export function PendingRegistrationApprovalDialog({
         <div className="space-y-6">
           {/* Contact Information */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-lg mb-3 text-gray-800">Contact Information</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-lg text-gray-800">Contact Information</h3>
+              <Button
+                onClick={handleAIVerification}
+                disabled={isVerifying}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                {isVerifying ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4" />
+                    AI Verify Contact
+                  </>
+                )}
+              </Button>
+            </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="font-medium">Primary Contact:</span> {registration.first_name} {registration.last_name}
@@ -190,6 +252,46 @@ export function PendingRegistrationApprovalDialog({
                 </Badge>
               </div>
             </div>
+            
+            {/* AI Verification Result */}
+            {verificationResult && (
+              <div className="mt-4 p-4 bg-white border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-sm text-blue-800 mb-2 flex items-center gap-2">
+                  <Search className="h-4 w-4" />
+                  AI Verification Result
+                </h4>
+                <div className="text-sm text-gray-700 whitespace-pre-wrap prose prose-sm max-w-none">
+                  {verificationResult.split('\n').map((line, index) => {
+                    if (line.startsWith('**Verification Status:**')) {
+                      const status = line.replace('**Verification Status:**', '').trim().toLowerCase();
+                      return (
+                        <div key={index} className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold">Verification Status:</span>
+                          {status.includes('yes') ? (
+                            <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Verified</Badge>
+                          ) : status.includes('no') ? (
+                            <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Not Verified</Badge>
+                          ) : (
+                            <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" />Unable to Verify</Badge>
+                          )}
+                        </div>
+                      );
+                    }
+                    if (line.startsWith('**')) {
+                      const parts = line.split(':**');
+                      const label = parts[0].replace(/\*\*/g, '');
+                      const value = parts.slice(1).join(':**').trim();
+                      return (
+                        <div key={index} className="mb-1">
+                          <span className="font-semibold">{label}:</span> {value}
+                        </div>
+                      );
+                    }
+                    return line ? <p key={index} className="mb-1">{line}</p> : null;
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Organization Details */}
