@@ -78,7 +78,12 @@ export const useSimpleFieldOptions = (fieldName: SystemField) => {
   
   return allOptions?.filter(opt => opt.field_name === fieldName)
     .map(opt => opt.option_value)
-    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })) || [];
+    .sort((a, b) => {
+      // Always put "None" at the end
+      if (a.toLowerCase() === 'none') return 1;
+      if (b.toLowerCase() === 'none') return -1;
+      return a.localeCompare(b, undefined, { sensitivity: 'base' });
+    }) || [];
 };
 
 // Add new system field option
