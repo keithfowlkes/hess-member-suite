@@ -42,7 +42,9 @@ export const useSystemSetting = (settingKey: string) => {
       return data as SystemSetting | null;
     },
     staleTime: 0,
+    gcTime: 0,
     refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 };
 
