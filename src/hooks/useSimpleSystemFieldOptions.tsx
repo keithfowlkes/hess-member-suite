@@ -27,7 +27,9 @@ export const SYSTEM_FIELDS = [
   'door_access',
   'document_management',
   'voip',
-  'network_infrastructure'
+  'network_infrastructure',
+  'cohort_membership',
+  'partner_program_interest'
 ] as const;
 
 export type SystemField = typeof SYSTEM_FIELDS[number];
@@ -49,7 +51,9 @@ export const FIELD_LABELS: Record<SystemField, string> = {
   door_access: 'Door Access',
   document_management: 'Document Management',
   voip: 'VoIP',
-  network_infrastructure: 'Network Infrastructure'
+  network_infrastructure: 'Network Infrastructure',
+  cohort_membership: 'Cohort Membership',
+  partner_program_interest: 'Partner Program Interest'
 };
 
 // Get all system field options

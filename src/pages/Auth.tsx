@@ -33,7 +33,7 @@ const US_STATES = [
 ];
 
 // Partner programs
-const PARTNER_PROGRAMS = ['Ellucian', 'Jenzabar', 'Oracle', 'Workday'];
+const PARTNER_PROGRAMS = ['Ellucian', 'Jenzabar', 'Oracle', 'Workday', 'None'];
 
 // Encrypt password before storing - returns encrypted string or falls back to plaintext
 const encryptPasswordForStorage = async (password: string): Promise<string> => {
@@ -486,6 +486,42 @@ export default function Auth() {
       toast({
         title: "Passwords don't match",
         description: "Please ensure both password fields match.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Validate cohort membership (required)
+    if (signUpForm.requestedCohorts.length === 0) {
+      toast({
+        title: "Cohort selection required",
+        description: "Please select at least one system cohort to join.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Validate hardware selection (required - at least one)
+    const hasHardwareSelected = signUpForm.primaryOfficeApple || signUpForm.primaryOfficeLenovo || 
+      signUpForm.primaryOfficeDell || signUpForm.primaryOfficeHp || 
+      signUpForm.primaryOfficeMicrosoft || signUpForm.primaryOfficeOther;
+    if (!hasHardwareSelected) {
+      toast({
+        title: "Hardware selection required",
+        description: "Please select at least one primary office hardware brand.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Validate partner program interest (required - at least one, including "None")
+    if (signUpForm.partnerProgramInterest.length === 0) {
+      toast({
+        title: "Partner program interest required",
+        description: "Please indicate your partner program interest (select 'None' if not interested).",
         variant: "destructive"
       });
       setIsSubmitting(false);
@@ -1987,7 +2023,7 @@ export default function Auth() {
                 {/* Cohort Selection */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">System Cohort Membership</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">System Cohort Membership <span className="text-red-600">*</span></h3>
                     <p className="text-gray-600 text-sm">Select the system cohorts you wish to join to collaborate with other institutions using similar technology platforms.</p>
                   </div>
                   
@@ -2018,7 +2054,7 @@ export default function Auth() {
                       ))}
                     </div>
                     {signUpForm.requestedCohorts.length === 0 && (
-                      <p className="text-xs text-gray-500 italic">You can join cohorts later from your profile settings if you prefer.</p>
+                      <p className="text-xs text-red-500">At least one cohort selection is required.</p>
                     )}
                   </div>
                 </div>
@@ -2026,8 +2062,8 @@ export default function Auth() {
                 {/* Hardware & Additional Information */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Hardware & Additional Information</h3>
-                    <p className="text-gray-600 text-sm">Information about your computer hardware and any additional details.</p>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Hardware & Additional Information <span className="text-red-600">*</span></h3>
+                    <p className="text-gray-600 text-sm">Information about your computer hardware and any additional details. At least one hardware selection is required.</p>
                   </div>
                   
                   <div className="space-y-8">
@@ -2091,6 +2127,10 @@ export default function Auth() {
                         </div>
                       </div>
                       
+                      {!(signUpForm.primaryOfficeApple || signUpForm.primaryOfficeLenovo || signUpForm.primaryOfficeDell || signUpForm.primaryOfficeHp || signUpForm.primaryOfficeMicrosoft || signUpForm.primaryOfficeOther) && (
+                        <p className="text-xs text-red-500 mt-2">At least one hardware selection is required.</p>
+                      )}
+                      
                       {signUpForm.primaryOfficeOther && (
                         <div className="mt-4 space-y-2">
                           <Label htmlFor="other-computer-details" className="text-gray-700 font-medium text-sm">
@@ -2129,10 +2169,10 @@ export default function Auth() {
 
                     {/* Partner Program Interest */}
                     <div className="border-t border-gray-200 pt-6">
-                      <h4 className="text-md font-medium text-gray-800 mb-4">Partner Program Interest</h4>
+                      <h4 className="text-md font-medium text-gray-800 mb-4">Partner Program Interest <span className="text-red-600">*</span></h4>
                       <div className="space-y-3">
                         <Label className="text-gray-700 font-medium text-sm">
-                          Are you interested in learning more about our HESS programs with any of our foundational enterprise systems partners?
+                          Are you interested in learning more about our HESS programs with any of our foundational enterprise systems partners? Select "None" if not interested.
                         </Label>
                         <div className="grid grid-cols-2 gap-3">
                           {PARTNER_PROGRAMS.map((partner) => (
@@ -2159,6 +2199,9 @@ export default function Auth() {
                             </div>
                           ))}
                         </div>
+                        {signUpForm.partnerProgramInterest.length === 0 && (
+                          <p className="text-xs text-red-500">At least one selection is required (select "None" if not interested).</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2952,7 +2995,7 @@ export default function Auth() {
                   {/* Cohort Selection */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">System Cohort Membership</h3>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">System Cohort Membership <span className="text-red-600">*</span></h3>
                       <p className="text-gray-600 text-sm">Select the system cohorts you wish to join to collaborate with other institutions using similar technology platforms.</p>
                     </div>
                     
@@ -2983,7 +3026,7 @@ export default function Auth() {
                         ))}
                       </div>
                       {signUpForm.requestedCohorts.length === 0 && (
-                        <p className="text-xs text-gray-500 italic">You can join cohorts later from your profile settings if you prefer.</p>
+                        <p className="text-xs text-red-500">At least one cohort selection is required.</p>
                       )}
                     </div>
                   </div>
@@ -2991,8 +3034,8 @@ export default function Auth() {
                   {/* Hardware Section */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Primary Office Hardware</h3>
-                      <p className="text-gray-600 text-sm">Select the hardware brands used at your institution.</p>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Primary Office Hardware <span className="text-red-600">*</span></h3>
+                      <p className="text-gray-600 text-sm">Select the hardware brands used at your institution. At least one selection is required.</p>
                     </div>
                     
                     <div className="space-y-6">
@@ -3020,6 +3063,10 @@ export default function Auth() {
                           </div>
                         ))}
                       </div>
+                      
+                      {!(signUpForm.primaryOfficeApple || signUpForm.primaryOfficeLenovo || signUpForm.primaryOfficeDell || signUpForm.primaryOfficeHp || signUpForm.primaryOfficeMicrosoft || signUpForm.primaryOfficeOther) && (
+                        <p className="text-xs text-red-500 mt-2">At least one hardware selection is required.</p>
+                      )}
                       
                       {signUpForm.primaryOfficeOther && (
                         <div className="mt-4 space-y-2">
@@ -3068,8 +3115,8 @@ export default function Auth() {
                   {/* Partner Program Interest */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Partner Program Interest</h3>
-                      <p className="text-gray-600 text-sm">Optional: Indicate if you're interested in learning more about HESS programs with our foundational enterprise systems partners.</p>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Partner Program Interest <span className="text-red-600">*</span></h3>
+                      <p className="text-gray-600 text-sm">Indicate if you're interested in learning more about HESS programs with our foundational enterprise systems partners. Select "None" if not interested.</p>
                     </div>
                     
                     <div className="space-y-3">
@@ -3101,6 +3148,9 @@ export default function Auth() {
                           </div>
                         ))}
                       </div>
+                      {signUpForm.partnerProgramInterest.length === 0 && (
+                        <p className="text-xs text-red-500">At least one selection is required (select "None" if not interested).</p>
+                      )}
                     </div>
                   </div>
                   
