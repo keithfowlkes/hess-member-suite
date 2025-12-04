@@ -201,40 +201,53 @@ export function PendingRegistrationApprovalDialog({
     { key: 'primary_office_microsoft', label: 'Microsoft' },
   ].filter(item => registration[item.key as keyof PendingRegistration] === true);
 
+  // Extract verification status from result
+  const getVerificationStatus = () => {
+    if (!verificationResult) return null;
+    const statusLine = verificationResult.split('\n').find(line => line.startsWith('**Verification Status:**'));
+    if (!statusLine) return null;
+    const status = statusLine.replace('**Verification Status:**', '').trim().toLowerCase();
+    if (status.includes('yes')) return 'verified';
+    if (status.includes('no')) return 'not-verified';
+    return 'unable';
+  };
+
+  const verificationStatus = getVerificationStatus();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
-            Review Registration: {registration.organization_name}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl font-semibold">
+              Review Registration: {registration.organization_name}
+            </DialogTitle>
+            <Button
+              onClick={handleAIVerification}
+              disabled={isVerifying}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              {isVerifying ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4" />
+                  AI Verify Contact
+                </>
+              )}
+            </Button>
+          </div>
         </DialogHeader>
         
         <div className="space-y-6">
           {/* Contact Information */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-lg text-gray-800">Contact Information</h3>
-              <Button
-                onClick={handleAIVerification}
-                disabled={isVerifying}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                {isVerifying ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4" />
-                    AI Verify Contact
-                  </>
-                )}
-              </Button>
-            </div>
+            <h3 className="font-semibold text-lg mb-3 text-gray-800">Contact Information</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="font-medium">Primary Contact:</span> {registration.first_name} {registration.last_name}
@@ -296,7 +309,18 @@ export function PendingRegistrationApprovalDialog({
 
           {/* Organization Details */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-lg mb-3 text-gray-800">Organization Details</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-semibold text-lg text-gray-800">Organization Details</h3>
+              {verificationStatus === 'verified' && (
+                <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Verified</Badge>
+              )}
+              {verificationStatus === 'not-verified' && (
+                <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Not Verified</Badge>
+              )}
+              {verificationStatus === 'unable' && (
+                <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" />Unable to Verify</Badge>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="font-medium">Organization:</span> {registration.organization_name}

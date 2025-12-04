@@ -64,6 +64,18 @@ export function SideBySideComparisonModal({
   isVerifying = false,
   verificationResult
 }: SideBySideComparisonModalProps) {
+  // Extract verification status from result
+  const getVerificationStatus = () => {
+    if (!verificationResult) return null;
+    const statusLine = verificationResult.split('\n').find(line => line.startsWith('**Verification Status:**'));
+    if (!statusLine) return null;
+    const status = statusLine.replace('**Verification Status:**', '').trim().toLowerCase();
+    if (status.includes('yes')) return 'verified';
+    if (status.includes('no')) return 'not-verified';
+    return 'unable';
+  };
+
+  const verificationStatus = getVerificationStatus();
   const formatValue = (value: any, type = 'text', showUnchanged = false): string => {
     if (value === null || value === undefined || value === '') {
       return showUnchanged ? 'Unchanged' : 'Not set';
@@ -357,11 +369,53 @@ export function SideBySideComparisonModal({
           )}
 
           {/* Organization Details */}
-          {renderComparisonSection(
-            'Organization Details',
-            <Building2 className="h-4 w-4" />,
-            organizationFields
-          )}
+          <Card className="w-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Building2 className="h-4 w-4" />
+                Organization Details
+                {verificationStatus === 'verified' && (
+                  <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Verified</Badge>
+                )}
+                {verificationStatus === 'not-verified' && (
+                  <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Not Verified</Badge>
+                )}
+                {verificationStatus === 'unable' && (
+                  <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" />Unable to Verify</Badge>
+                )}
+                {organizationFields.some(field => data.originalData?.[field.key] !== data.updatedData?.[field.key]) && (
+                  <Badge variant="outline" className="text-xs bg-amber-50 text-amber-800">
+                    {organizationFields.filter(field => data.originalData?.[field.key] !== data.updatedData?.[field.key]).length} changes
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Header Row */}
+                <div className="grid grid-cols-3 gap-4 pb-2 border-b">
+                  <div className="text-sm font-medium text-muted-foreground">Field</div>
+                  <div className="text-sm font-medium text-muted-foreground">Current Value</div>
+                  <div className="text-sm font-medium text-muted-foreground">New Value</div>
+                </div>
+                
+                {/* Data Rows */}
+                {organizationFields.map((field) => {
+                  const currentValue = data.originalData?.[field.key];
+                  const newValue = data.updatedData?.[field.key];
+                  const isChanged = currentValue !== newValue;
+                  
+                  return (
+                    <div key={field.key} className="grid grid-cols-3 gap-4 items-center">
+                      <div className="text-sm font-medium">{field.label}</div>
+                      {renderValueCell(currentValue, field.type, false, isChanged, false)}
+                      {renderValueCell(newValue, field.type, true, isChanged, true, currentValue)}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Software Systems */}
           {renderComparisonSection(
