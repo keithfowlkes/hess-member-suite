@@ -8,6 +8,7 @@ import { CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react';
 import { MemberRegistrationUpdate } from '@/hooks/useMemberRegistrationUpdates';
 import { SideBySideComparisonModal } from '@/components/SideBySideComparisonModal';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface MemberRegistrationUpdateDialogProps {
   open: boolean;
@@ -32,6 +33,59 @@ export function MemberRegistrationUpdateDialog({
   const [existingOrganization, setExistingOrganization] = useState<any>(null);
   const [existingContactData, setExistingContactData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<string | null>(null);
+
+  // Reset verification result when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setVerificationResult(null);
+    }
+  }, [open]);
+
+  const handleAIVerification = async () => {
+    if (!registrationUpdate) return;
+    
+    setIsVerifying(true);
+    setVerificationResult(null);
+    
+    try {
+      const regData = registrationUpdate.registration_data as any;
+      const orgData = registrationUpdate.organization_data as any;
+      
+      const organizationName = orgData?.name || regData?.organization_name || registrationUpdate.existing_organization_name;
+      const firstName = regData?.first_name || '';
+      const lastName = regData?.last_name || '';
+      const title = orgData?.primary_contact_title || regData?.primary_contact_title || null;
+
+      const { data, error } = await supabase.functions.invoke('verify-contact-ai', {
+        body: {
+          organizationName,
+          firstName,
+          lastName,
+          title
+        }
+      });
+
+      if (error) {
+        console.error('AI verification error:', error);
+        toast.error('Failed to verify contact: ' + error.message);
+        return;
+      }
+
+      if (data?.success) {
+        setVerificationResult(data.result);
+        toast.success('Contact verification completed');
+      } else {
+        toast.error(data?.error || 'Verification failed');
+      }
+    } catch (err) {
+      console.error('Error during verification:', err);
+      toast.error('An error occurred during verification');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   // Fetch existing organization and contact data for comparison
   useEffect(() => {
@@ -256,6 +310,9 @@ export function MemberRegistrationUpdateDialog({
       onApprove={handleApprove}
       onReject={handleReject}
       isSubmitting={isProcessing}
+      onAIVerify={handleAIVerification}
+      isVerifying={isVerifying}
+      verificationResult={verificationResult}
     >
       {/* Additional submission info */}
       <div className="mb-4 p-4 bg-muted/30 rounded-lg space-y-2">
