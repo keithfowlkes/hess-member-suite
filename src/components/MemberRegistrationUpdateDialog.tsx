@@ -182,7 +182,10 @@ export function MemberRegistrationUpdateDialog({
       primary_office_microsoft: existingOrganization.primary_office_microsoft ?? false,
       primary_office_other: existingOrganization.primary_office_other ?? false,
       primary_office_other_details: existingOrganization.primary_office_other_details ?? '',
-      other_software_comments: existingOrganization.other_software_comments ?? ''
+      other_software_comments: existingOrganization.other_software_comments ?? '',
+      // Membership & Partner Interest
+      partner_program_interest: existingOrganization.partner_program_interest ?? [],
+      requested_cohorts: [] // Existing organizations don't have requested cohorts
     };
 
     // Map registration data to organization structure for comparison
@@ -229,7 +232,10 @@ export function MemberRegistrationUpdateDialog({
       primary_office_microsoft: regData.primary_office_microsoft !== undefined ? regData.primary_office_microsoft : false,
       primary_office_other: regData.primary_office_other !== undefined ? regData.primary_office_other : false,
       primary_office_other_details: orgData.primary_office_other_details || regData.primary_office_other_details || '',
-      other_software_comments: orgData.other_software_comments || regData.other_software_comments || ''
+      other_software_comments: orgData.other_software_comments || regData.other_software_comments || '',
+      // Membership & Partner Interest
+      partner_program_interest: orgData.partner_program_interest || regData.partner_program_interest || [],
+      requested_cohorts: regData.requested_cohorts || []
     };
 
     console.log('Original data (existing org):', enhancedExistingOrg);
