@@ -926,19 +926,22 @@ serve(async (req) => {
       );
     }
 
-    // Update the pending registration status
+    // Update the pending registration status and clear password for security
     const { error: updateError } = await supabaseAdmin
       .from('pending_registrations')
       .update({
         approval_status: 'approved',
         approved_by: adminUserId,
-        approved_at: new Date().toISOString()
+        approved_at: new Date().toISOString(),
+        password_hash: null // Clear password after successful user creation for security
       })
       .eq('id', registrationId);
 
     if (updateError) {
       console.error('Error updating pending registration status:', updateError);
       // Don't return error here as user is already created
+    } else {
+      console.log('✅ Password cleared from pending_registrations for security');
     }
 
     // User can now log in with the password they provided during registration
