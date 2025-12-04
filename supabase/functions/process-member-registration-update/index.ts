@@ -387,20 +387,16 @@ const handler = async (req: Request): Promise<Response> => {
       if (userPassword && userPassword.startsWith('encrypted:')) {
         console.log('🔐 Encrypted password detected, attempting decryption...');
         try {
-          // Get the encryption key from system_settings
-          const { data: keyData, error: keyError } = await supabase
-            .from('system_settings')
-            .select('setting_value')
-            .eq('setting_key', 'password_encryption_key')
-            .single();
+          // Get the encryption key from environment variable (consistent with approve-pending-registration)
+          const encryptionKey = Deno.env.get('PASSWORD_ENCRYPTION_KEY');
           
-          if (keyError || !keyData?.setting_value) {
-            console.error('Failed to get encryption key:', keyError);
+          if (!encryptionKey) {
+            console.error('PASSWORD_ENCRYPTION_KEY not configured in environment');
             throw new Error('Password encryption key not configured');
           }
           
           const encryptedPart = userPassword.replace('encrypted:', '');
-          userPassword = await decryptPassword(encryptedPart, keyData.setting_value);
+          userPassword = await decryptPassword(encryptedPart, encryptionKey);
           console.log('✅ Password decrypted successfully');
         } catch (decryptError) {
           console.error('❌ Failed to decrypt password:', decryptError);
@@ -555,19 +551,29 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Step 7: Mark registration update as approved
+    // Step 7: Mark registration update as approved and clear password from registration_data for security
+    // Create a sanitized copy of registration_data without the password
+    const sanitizedRegistrationData = { ...registrationData };
+    if (sanitizedRegistrationData.password) {
+      delete sanitizedRegistrationData.password;
+      console.log('🔐 Removing password from registration_data for security');
+    }
+
     const { error: updateError } = await supabase
       .from('member_registration_updates')
       .update({
         status: 'approved',
         reviewed_by: adminUserId,
         reviewed_at: new Date().toISOString(),
-        admin_notes: adminNotes
+        admin_notes: adminNotes,
+        registration_data: sanitizedRegistrationData // Store without password
       })
       .eq('id', registrationUpdateId);
 
     if (updateError) {
       console.error('Failed to mark registration update as approved:', updateError);
+    } else {
+      console.log('✅ Password cleared from registration_data for security');
     }
 
     // Step 8: Build update details for the email notification

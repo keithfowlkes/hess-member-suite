@@ -154,15 +154,11 @@ serve(async (req) => {
     if (passwordToUse.startsWith('encrypted:')) {
       console.log('🔐 Encrypted password detected, attempting decryption...');
       try {
-        // Get the encryption key from system_settings
-        const { data: keyData, error: keyError } = await supabaseAdmin
-          .from('system_settings')
-          .select('setting_value')
-          .eq('setting_key', 'password_encryption_key')
-          .single();
+        // Get the encryption key from environment variable (consistent with approve-pending-registration)
+        const encryptionKey = Deno.env.get('PASSWORD_ENCRYPTION_KEY');
         
-        if (keyError || !keyData?.setting_value) {
-          console.error('Failed to get encryption key:', keyError);
+        if (!encryptionKey) {
+          console.error('PASSWORD_ENCRYPTION_KEY not configured in environment');
           return new Response(
             JSON.stringify({ error: 'Password encryption key not configured' }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -170,7 +166,7 @@ serve(async (req) => {
         }
         
         const encryptedPart = passwordToUse.replace('encrypted:', '');
-        passwordToUse = await decryptPassword(encryptedPart, keyData.setting_value);
+        passwordToUse = await decryptPassword(encryptedPart, encryptionKey);
         console.log('✅ Password decrypted successfully');
       } catch (decryptError) {
         console.error('❌ Failed to decrypt password:', decryptError);
