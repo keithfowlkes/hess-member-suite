@@ -51,6 +51,7 @@ export interface PendingRegistration {
   created_at: string;
   rejection_reason?: string | null;
   partner_program_interest?: string[] | null;
+  requested_cohorts?: any | null;
   // New fields
   priority_level?: 'low' | 'normal' | 'high' | 'urgent';
   admin_notes?: string | null;

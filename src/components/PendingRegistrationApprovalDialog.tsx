@@ -420,6 +420,36 @@ export function PendingRegistrationApprovalDialog({
             </div>
           )}
 
+          {/* Requested Cohort Membership */}
+          {registration.requested_cohorts && (
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <h3 className="font-semibold text-lg mb-3 text-purple-900">Requested Cohort Membership</h3>
+              <p className="text-sm text-purple-800 mb-2">
+                Requested to join the following cohorts:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {(() => {
+                  const cohorts = registration.requested_cohorts as any;
+                  if (Array.isArray(cohorts)) {
+                    return cohorts.map((cohort: string, index: number) => (
+                      <Badge key={index} variant="default" className="bg-purple-600">
+                        {cohort}
+                      </Badge>
+                    ));
+                  }
+                  if (typeof cohorts === 'object' && cohorts !== null) {
+                    return Object.entries(cohorts).map(([key, value]) => (
+                      <Badge key={key} variant="default" className="bg-purple-600">
+                        {String(value) || key}
+                      </Badge>
+                    ));
+                  }
+                  return <span className="text-sm text-purple-700">{String(cohorts)}</span>;
+                })()}
+              </div>
+            </div>
+          )}
+
           {/* Partner Program Interest */}
           {registration.partner_program_interest && registration.partner_program_interest.length > 0 && (
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">

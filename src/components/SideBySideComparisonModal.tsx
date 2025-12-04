@@ -246,6 +246,11 @@ export function SideBySideComparisonModal({
     { key: 'document_management', label: 'Document Management', type: 'text' },
     { key: 'voip', label: 'VoIP', type: 'text' },
     { key: 'network_infrastructure', label: 'Network Infrastructure', type: 'text' },
+  ];
+
+  // Membership and interest fields
+  const membershipFields = [
+    { key: 'requested_cohorts', label: 'Requested Cohort Membership', type: 'array' },
     { key: 'partner_program_interest', label: 'Partner Program Interest', type: 'array' },
   ];
 
@@ -429,6 +434,13 @@ export function SideBySideComparisonModal({
             'Hardware Preferences',
             <Monitor className="h-4 w-4" />,
             hardwareFields
+          )}
+
+          {/* Cohort Membership & Partner Interest */}
+          {renderComparisonSection(
+            'Cohort Membership & Partner Interest',
+            <User className="h-4 w-4" />,
+            membershipFields
           )}
 
           {children}
