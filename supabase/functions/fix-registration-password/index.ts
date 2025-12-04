@@ -6,6 +6,42 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Decrypt password using AES-256-GCM
+async function decryptPassword(encryptedData: string, keyBase64: string): Promise<string> {
+  try {
+    // Decode base64 key
+    const keyBytes = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
+    
+    // Decode base64 encrypted data  
+    const combined = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+    
+    // Extract IV (first 12 bytes) and ciphertext
+    const iv = combined.slice(0, 12);
+    const ciphertext = combined.slice(12);
+    
+    // Import key
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyBytes,
+      { name: 'AES-GCM' },
+      false,
+      ['decrypt']
+    );
+    
+    // Decrypt
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      cryptoKey,
+      ciphertext
+    );
+    
+    return new TextDecoder().decode(decrypted);
+  } catch (error) {
+    console.error('Decryption error:', error);
+    throw new Error('Failed to decrypt password');
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -113,9 +149,41 @@ serve(async (req) => {
 
     console.log('✅ User found, updating password...');
 
-    // Update user password using admin client (password_hash contains plaintext password)
+    // Decrypt password if encrypted
+    let passwordToUse = pendingReg.password_hash;
+    if (passwordToUse.startsWith('encrypted:')) {
+      console.log('🔐 Encrypted password detected, attempting decryption...');
+      try {
+        // Get the encryption key from system_settings
+        const { data: keyData, error: keyError } = await supabaseAdmin
+          .from('system_settings')
+          .select('setting_value')
+          .eq('setting_key', 'password_encryption_key')
+          .single();
+        
+        if (keyError || !keyData?.setting_value) {
+          console.error('Failed to get encryption key:', keyError);
+          return new Response(
+            JSON.stringify({ error: 'Password encryption key not configured' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+          );
+        }
+        
+        const encryptedPart = passwordToUse.replace('encrypted:', '');
+        passwordToUse = await decryptPassword(encryptedPart, keyData.setting_value);
+        console.log('✅ Password decrypted successfully');
+      } catch (decryptError) {
+        console.error('❌ Failed to decrypt password:', decryptError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to decrypt password. Please contact administrator.' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+    }
+
+    // Update user password using admin client
     const { data, error } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
-      password: pendingReg.password_hash
+      password: passwordToUse
     });
 
     if (error) {
