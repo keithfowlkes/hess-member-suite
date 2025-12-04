@@ -41,6 +41,8 @@ export const useSystemSetting = (settingKey: string) => {
       }
       return data as SystemSetting | null;
     },
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 };
 
