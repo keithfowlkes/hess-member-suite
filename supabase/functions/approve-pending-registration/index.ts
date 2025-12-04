@@ -1,11 +1,61 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { decode as base64Decode, encode as base64Encode } from 'https://deno.land/std@0.168.0/encoding/base64.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+// Decrypt password if it's encrypted (starts with "encrypted:")
+async function decryptPassword(passwordHash: string): Promise<string> {
+  if (!passwordHash.startsWith('encrypted:')) {
+    console.log('Password is not encrypted, using as plaintext');
+    return passwordHash;
+  }
+
+  const encryptedData = passwordHash.slice('encrypted:'.length);
+  const encryptionKey = Deno.env.get('PASSWORD_ENCRYPTION_KEY');
+  
+  if (!encryptionKey) {
+    console.warn('PASSWORD_ENCRYPTION_KEY not set, cannot decrypt password');
+    throw new Error('Encryption key not configured');
+  }
+
+  try {
+    // Decode the combined IV + ciphertext
+    const combined = base64Decode(encryptedData);
+    
+    // Extract IV (first 12 bytes) and ciphertext
+    const iv = combined.slice(0, 12);
+    const ciphertext = combined.slice(12);
+    
+    // Import the key
+    const keyBuffer = base64Decode(encryptionKey);
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyBuffer,
+      { name: 'AES-GCM' },
+      false,
+      ['decrypt']
+    );
+    
+    // Decrypt
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      cryptoKey,
+      ciphertext
+    );
+    
+    const decoder = new TextDecoder();
+    console.log('✅ Password decrypted successfully');
+    return decoder.decode(decrypted);
+  } catch (error) {
+    console.error('Failed to decrypt password:', error);
+    throw new Error('Password decryption failed');
+  }
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -74,6 +124,18 @@ serve(async (req) => {
     }
 
     console.log(`Found pending registration for: ${pendingReg.email}`);
+
+    // Decrypt the password if it was encrypted
+    let decryptedPassword: string;
+    try {
+      decryptedPassword = await decryptPassword(pendingReg.password_hash);
+    } catch (decryptError) {
+      console.error('Failed to decrypt password:', decryptError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to process password. Please try again or contact support.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Check for and clean up any corresponding member registration updates to prevent double approval
     try {
@@ -187,12 +249,12 @@ serve(async (req) => {
         );
       }
 
-      // Set the user's password directly using admin API (password_hash contains plaintext password)
+      // Set the user's password directly using admin API
       console.log('Setting user password...');
       try {
         const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
           existingUser.id,
-          { password: pendingReg.password_hash }
+          { password: decryptedPassword }
         );
 
         if (passwordError) {
@@ -398,7 +460,7 @@ serve(async (req) => {
             try {
               const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
                 existingUserRetry.id,
-                { password: pendingReg.password_hash }
+                { password: decryptedPassword }
               );
 
               if (passwordError) {
@@ -443,12 +505,12 @@ serve(async (req) => {
         // User creation was successful - this is a genuinely new user
         authUser = { user: newUser.user };
         
-        // Set the password for the new user (password_hash contains plaintext password)
+        // Set the password for the new user
         console.log('Setting password for new user...');
         try {
           const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
             authUser.user.id,
-            { password: pendingReg.password_hash }
+            { password: decryptedPassword }
           );
 
           if (passwordError) {
