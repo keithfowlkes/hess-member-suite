@@ -57,6 +57,18 @@ export default function Auth() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Load external iframe script for HESS Consortium
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://www.hessconsortium.org/new/wp-content/plugins/advanced-iframe/js/ai_external.js';
+    script.async = true;
+    document.head.appendChild(script);
+    
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
   const { data: organizations = [] } = useOrganizations();
   const { createRegistrationUpdate } = useMemberRegistrationUpdates();
   const { data: recaptchaSetting, isLoading: isLoadingRecaptcha } = useSystemSetting('recaptcha_site_key');
