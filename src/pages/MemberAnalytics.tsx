@@ -10,18 +10,10 @@ import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { BarChart3, ChartScatter, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 const MemberAnalytics = () => {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
-
-  return (
-    <SidebarProvider>
+  return <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 p-8">
@@ -63,12 +55,7 @@ const MemberAnalytics = () => {
                       Explore correlations and trends in member data
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setFeedbackDialogOpen(true)}
-                    className="gap-2"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setFeedbackDialogOpen(true)} className="gap-2">
                     <MessageSquare className="h-4 w-4" />
                     What would you like to see?
                   </Button>
@@ -80,7 +67,7 @@ const MemberAnalytics = () => {
                     <AccordionTrigger className="text-lg font-semibold hover:no-underline">
                       <div className="flex items-center gap-2">
                         <ChartScatter className="h-5 w-5 text-primary" />
-                        <span>Organization Size vs System Choice</span>
+                        <span>Organization Size vs ERP System Choice</span>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
@@ -120,11 +107,7 @@ const MemberAnalytics = () => {
           
           {/* Footer */}
           <div className="flex flex-col items-center justify-center py-8 mt-12 border-t border-border">
-            <img 
-              src="/lovable-uploads/95b9e225-2202-4407-bdb2-f95edf683d93.png" 
-              alt="DeusLogic Logo" 
-              className="h-8 w-auto mb-2 opacity-70"
-            />
+            <img src="/lovable-uploads/95b9e225-2202-4407-bdb2-f95edf683d93.png" alt="DeusLogic Logo" className="h-8 w-auto mb-2 opacity-70" />
             <p className="text-xs text-muted-foreground">
               Copyright 2025 DeusLogic, LLC.
             </p>
@@ -135,12 +118,7 @@ const MemberAnalytics = () => {
         </main>
       </div>
       
-      <AnalyticsFeedbackDialog
-        open={feedbackDialogOpen}
-        onOpenChange={setFeedbackDialogOpen}
-      />
-    </SidebarProvider>
-  );
+      <AnalyticsFeedbackDialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen} />
+    </SidebarProvider>;
 };
-
 export default MemberAnalytics;
