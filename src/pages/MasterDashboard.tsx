@@ -82,6 +82,7 @@ import { DebugRequestsComponent } from '@/components/DebugRequestsComponent';
 import { MemberRegistrationUpdateDialog } from '@/components/MemberRegistrationUpdateDialog';
 import { MultiRoleSelector } from '@/components/MultiRoleSelector';
 import { AdminCustomEntriesNotification } from '@/components/AdminCustomEntriesNotification';
+import { RecentMemberSubmissionsTab } from '@/components/RecentMemberSubmissionsTab';
 import type { PendingRegistration } from '@/hooks/usePendingRegistrations';
 
 // Icons
@@ -896,7 +897,7 @@ const MasterDashboard = () => {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="organizations" className="relative">
                 Approvals
@@ -909,6 +910,7 @@ const MasterDashboard = () => {
                   </Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="recent-submissions">Recent Submissions</TabsTrigger>
               <TabsTrigger value="users">Users</TabsTrigger>
               <TabsTrigger value="backup">Backup/Restore</TabsTrigger>
             </TabsList>
@@ -1760,6 +1762,11 @@ const MasterDashboard = () => {
             {/* Backup/Restore Tab */}
             <TabsContent value="backup" className="space-y-6">
               <DatabaseBackupRestore />
+            </TabsContent>
+
+            {/* Recent Member Submissions Tab */}
+            <TabsContent value="recent-submissions" className="space-y-6">
+              <RecentMemberSubmissionsTab />
             </TabsContent>
           </Tabs>
         </main>
