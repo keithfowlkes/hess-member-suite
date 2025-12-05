@@ -35,11 +35,15 @@ export function MemberRegistrationUpdateDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<string | null>(null);
+  const [structuredVerification, setStructuredVerification] = useState<any>(null);
+  const [searchedFor, setSearchedFor] = useState<any>(null);
 
   // Reset verification result when dialog closes
   useEffect(() => {
     if (!open) {
       setVerificationResult(null);
+      setStructuredVerification(null);
+      setSearchedFor(null);
     }
   }, [open]);
 
@@ -48,6 +52,8 @@ export function MemberRegistrationUpdateDialog({
     
     setIsVerifying(true);
     setVerificationResult(null);
+    setStructuredVerification(null);
+    setSearchedFor(null);
     
     try {
       const regData = registrationUpdate.registration_data as any;
@@ -57,13 +63,15 @@ export function MemberRegistrationUpdateDialog({
       const firstName = regData?.first_name || '';
       const lastName = regData?.last_name || '';
       const title = orgData?.primary_contact_title || regData?.primary_contact_title || null;
+      const website = orgData?.website || existingOrganization?.website || null;
 
       const { data, error } = await supabase.functions.invoke('verify-contact-ai', {
         body: {
           organizationName,
           firstName,
           lastName,
-          title
+          title,
+          organizationWebsite: website
         }
       });
 
@@ -75,6 +83,8 @@ export function MemberRegistrationUpdateDialog({
 
       if (data?.success) {
         setVerificationResult(data.result);
+        setStructuredVerification(data.structured || null);
+        setSearchedFor(data.searchedFor || null);
         toast.success('Contact verification completed');
       } else {
         toast.error(data?.error || 'Verification failed');
@@ -319,6 +329,8 @@ export function MemberRegistrationUpdateDialog({
       onAIVerify={handleAIVerification}
       isVerifying={isVerifying}
       verificationResult={verificationResult}
+      structuredVerification={structuredVerification}
+      searchedFor={searchedFor}
     >
       {/* Additional submission info */}
       <div className="mb-4 p-4 bg-muted/30 rounded-lg space-y-2">

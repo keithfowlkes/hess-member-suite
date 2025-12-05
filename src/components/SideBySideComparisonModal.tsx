@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AIVerificationResult } from '@/components/AIVerificationResult';
 import { 
   User, 
   Building2, 
@@ -46,6 +47,8 @@ interface SideBySideComparisonModalProps {
   onAIVerify?: () => void;
   isVerifying?: boolean;
   verificationResult?: string | null;
+  structuredVerification?: any;
+  searchedFor?: any;
 }
 
 export function SideBySideComparisonModal({
@@ -62,7 +65,9 @@ export function SideBySideComparisonModal({
   children,
   onAIVerify,
   isVerifying = false,
-  verificationResult
+  verificationResult,
+  structuredVerification,
+  searchedFor
 }: SideBySideComparisonModalProps) {
   // Extract verification status from result
   const getVerificationStatus = () => {
@@ -304,42 +309,11 @@ export function SideBySideComparisonModal({
 
         {/* AI Verification Result */}
         {verificationResult && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-semibold text-sm text-blue-800 mb-2 flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              AI Verification Result
-            </h4>
-            <div className="text-sm text-gray-700 whitespace-pre-wrap prose prose-sm max-w-none">
-              {verificationResult.split('\n').map((line, index) => {
-                if (line.startsWith('**Verification Status:**')) {
-                  const status = line.replace('**Verification Status:**', '').trim().toLowerCase();
-                  return (
-                    <div key={index} className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold">Verification Status:</span>
-                      {status.includes('yes') ? (
-                        <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Verified</Badge>
-                      ) : status.includes('no') ? (
-                        <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Not Verified</Badge>
-                      ) : (
-                        <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" />Unable to Verify</Badge>
-                      )}
-                    </div>
-                  );
-                }
-                if (line.startsWith('**')) {
-                  const parts = line.split(':**');
-                  const label = parts[0].replace(/\*\*/g, '');
-                  const value = parts.slice(1).join(':**').trim();
-                  return (
-                    <div key={index} className="mb-1">
-                      <span className="font-semibold">{label}:</span> {value}
-                    </div>
-                  );
-                }
-                return line ? <p key={index} className="mb-1">{line}</p> : null;
-              })}
-            </div>
-          </div>
+          <AIVerificationResult 
+            result={verificationResult} 
+            structured={structuredVerification}
+            searchedFor={searchedFor}
+          />
         )}
 
         <div className="space-y-6">
