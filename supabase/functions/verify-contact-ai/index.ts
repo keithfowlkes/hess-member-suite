@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { organizationName, firstName, lastName, title } = await req.json();
+    const { organizationName, firstName, lastName, title, organizationWebsite } = await req.json();
     
     if (!organizationName || !firstName || !lastName) {
       return new Response(
@@ -28,25 +28,40 @@ serve(async (req) => {
     }
 
     const fullName = `${firstName} ${lastName}`;
-    const titleInfo = title ? ` with the title "${title}"` : '';
+    const titleInfo = title ? ` (claimed title: "${title}")` : '';
+    const websiteInfo = organizationWebsite ? `\nOrganization website: ${organizationWebsite}` : '';
     
-    const prompt = `Search for and verify information about ${fullName}${titleInfo} at ${organizationName}. 
+    const prompt = `You are verifying a contact for the HESS Consortium, a group of private colleges and universities that share IT systems information.
 
-This is for a higher education consortium membership verification. Please provide:
-1. Whether this person appears to work at this organization (Yes/No/Unable to verify)
-2. Their verified title/position if found
-3. A brief professional bio (2-3 sentences) if available
-4. Any LinkedIn or official institutional page where they are listed
-5. Confidence level in this verification (High/Medium/Low)
+PERSON TO VERIFY:
+- Name: ${fullName}${titleInfo}
+- Organization: ${organizationName}${websiteInfo}
 
-If you cannot find information, please state that clearly. Do not make up information.
+VERIFICATION TASK:
+Search for publicly available information to verify this person works at this institution. Focus on:
+1. The institution's official staff directory or "About" pages
+2. LinkedIn profiles matching this person at this organization
+3. Conference speaker listings, publications, or press releases
+4. IT/Technology department pages (since HESS focuses on higher education IT)
 
-Format your response as:
-**Verification Status:** [Yes/No/Unable to verify]
-**Confidence Level:** [High/Medium/Low]
-**Verified Title:** [Title if found, or "Not found"]
-**Bio:** [Brief bio or "No public information available"]
-**Sources:** [Any relevant URLs or "No sources found"]`;
+RESPOND WITH EXACTLY THIS FORMAT:
+VERIFICATION_STATUS: [VERIFIED/LIKELY/UNVERIFIED/NOT_FOUND]
+CONFIDENCE: [HIGH/MEDIUM/LOW]
+FOUND_TITLE: [The actual title found, or "Not found"]
+FOUND_DEPARTMENT: [Department if found, or "Not found"]
+SUMMARY: [2-3 sentence summary of what you found]
+LINKEDIN_URL: [LinkedIn profile URL if found, or "Not found"]
+INSTITUTIONAL_URL: [URL where person is listed on institution site, or "Not found"]
+NOTES: [Any additional relevant information or discrepancies between claimed and found information]
+
+IMPORTANT GUIDELINES:
+- VERIFIED = Found on official institutional sources with matching name and role
+- LIKELY = Found on LinkedIn or other sources, appears legitimate but not on official site
+- UNVERIFIED = Found some information but cannot confirm employment
+- NOT_FOUND = No information found about this person at this organization
+- Be specific about WHERE you found information
+- If the claimed title differs from what you found, note the discrepancy
+- Do NOT fabricate information - if unsure, say so`;
 
     console.log(`Verifying contact: ${fullName} at ${organizationName}`);
 
@@ -61,7 +76,7 @@ Format your response as:
         messages: [
           { 
             role: "system", 
-            content: "You are a research assistant that helps verify professional contacts at educational institutions. You search for publicly available information about individuals and their roles at organizations. Be accurate and honest - if you cannot find information, say so clearly. Do not fabricate details." 
+            content: "You are an expert research assistant specializing in verifying professional contacts at higher education institutions. You have access to search the web for information. Be thorough but accurate - never fabricate information. When you find information, cite your sources with URLs when possible." 
           },
           { role: "user", content: prompt }
         ],
@@ -89,18 +104,50 @@ Format your response as:
     }
 
     const data = await response.json();
-    const verificationResult = data.choices?.[0]?.message?.content || "Unable to process verification request.";
+    const rawResult = data.choices?.[0]?.message?.content || "";
+    
+    console.log("Raw AI response:", rawResult);
 
-    console.log("Verification completed successfully");
+    // Parse the structured response
+    const parseField = (text: string, field: string): string => {
+      const regex = new RegExp(`${field}:\\s*(.+?)(?=\\n[A-Z_]+:|$)`, 's');
+      const match = text.match(regex);
+      return match ? match[1].trim() : '';
+    };
+
+    const verificationStatus = parseField(rawResult, 'VERIFICATION_STATUS') || 'UNKNOWN';
+    const confidence = parseField(rawResult, 'CONFIDENCE') || 'LOW';
+    const foundTitle = parseField(rawResult, 'FOUND_TITLE') || 'Not found';
+    const foundDepartment = parseField(rawResult, 'FOUND_DEPARTMENT') || 'Not found';
+    const summary = parseField(rawResult, 'SUMMARY') || 'No summary available';
+    const linkedinUrl = parseField(rawResult, 'LINKEDIN_URL');
+    const institutionalUrl = parseField(rawResult, 'INSTITUTIONAL_URL');
+    const notes = parseField(rawResult, 'NOTES');
+
+    const structuredResult = {
+      verificationStatus,
+      confidence,
+      foundTitle,
+      foundDepartment,
+      summary,
+      linkedinUrl: linkedinUrl && linkedinUrl !== 'Not found' ? linkedinUrl : null,
+      institutionalUrl: institutionalUrl && institutionalUrl !== 'Not found' ? institutionalUrl : null,
+      notes: notes && notes !== 'Not found' ? notes : null,
+      rawResponse: rawResult
+    };
+
+    console.log("Verification completed successfully:", structuredResult);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        result: verificationResult,
+        result: rawResult,
+        structured: structuredResult,
         searchedFor: {
           name: fullName,
           title: title || null,
-          organization: organizationName
+          organization: organizationName,
+          website: organizationWebsite || null
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

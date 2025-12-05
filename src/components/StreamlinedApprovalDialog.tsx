@@ -16,6 +16,7 @@ import { useSendInvoice } from '@/hooks/useSendInvoice';
 import { useFeeTiers } from '@/hooks/useFeeTiers';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { AIVerificationResult } from '@/components/AIVerificationResult';
 import { 
   CheckCircle, 
   XCircle, 
@@ -67,6 +68,8 @@ export function StreamlinedApprovalDialog({
   // AI Verification state
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<string | null>(null);
+  const [structuredVerification, setStructuredVerification] = useState<any>(null);
+  const [searchedFor, setSearchedFor] = useState<any>(null);
   
   const { user } = useAuth();
   const sendInvoiceMutation = useSendInvoice();
@@ -84,6 +87,8 @@ export function StreamlinedApprovalDialog({
       setMembershipStartDate('');
       setInvoiceNotes('');
       setVerificationResult(null);
+      setStructuredVerification(null);
+      setSearchedFor(null);
       // Set default invoice amount to full member fee when dialog opens
       const fullTier = feeTiers.find(t => t.id === 'full');
       if (fullTier) {
@@ -98,6 +103,8 @@ export function StreamlinedApprovalDialog({
     
     setIsVerifying(true);
     setVerificationResult(null);
+    setStructuredVerification(null);
+    setSearchedFor(null);
     
     try {
       const { data, error } = await supabase.functions.invoke('verify-contact-ai', {
@@ -117,6 +124,8 @@ export function StreamlinedApprovalDialog({
 
       if (data?.success) {
         setVerificationResult(data.result);
+        setStructuredVerification(data.structured || null);
+        setSearchedFor(data.searchedFor || null);
         toast.success('Contact verification completed');
       } else {
         toast.error(data?.error || 'Verification failed');
@@ -244,42 +253,11 @@ export function StreamlinedApprovalDialog({
 
         {/* AI Verification Result */}
         {verificationResult && (
-          <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <h4 className="font-semibold text-sm text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              AI Verification Result
-            </h4>
-            <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap prose prose-sm max-w-none">
-              {verificationResult.split('\n').map((line, index) => {
-                if (line.startsWith('**Verification Status:**')) {
-                  const status = line.replace('**Verification Status:**', '').trim().toLowerCase();
-                  return (
-                    <div key={index} className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold">Verification Status:</span>
-                      {status.includes('yes') ? (
-                        <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Verified</Badge>
-                      ) : status.includes('no') ? (
-                        <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Not Verified</Badge>
-                      ) : (
-                        <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" />Unable to Verify</Badge>
-                      )}
-                    </div>
-                  );
-                }
-                if (line.startsWith('**')) {
-                  const parts = line.split(':**');
-                  const label = parts[0].replace(/\*\*/g, '');
-                  const value = parts.slice(1).join(':**').trim();
-                  return (
-                    <div key={index} className="mb-1">
-                      <span className="font-semibold">{label}:</span> {value}
-                    </div>
-                  );
-                }
-                return line ? <p key={index} className="mb-1">{line}</p> : null;
-              })}
-            </div>
-          </div>
+          <AIVerificationResult 
+            result={verificationResult} 
+            structured={structuredVerification}
+            searchedFor={searchedFor}
+          />
         )}
         
         <Tabs defaultValue="overview" className="w-full">
