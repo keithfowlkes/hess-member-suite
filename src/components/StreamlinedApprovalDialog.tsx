@@ -14,6 +14,8 @@ import { PendingRegistration } from '@/hooks/usePendingRegistrations';
 import { useAuth } from '@/hooks/useAuth';
 import { useSendInvoice } from '@/hooks/useSendInvoice';
 import { useFeeTiers } from '@/hooks/useFeeTiers';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { 
   CheckCircle, 
   XCircle, 
@@ -27,7 +29,9 @@ import {
   Building,
   MapPin,
   Phone,
-  Loader2
+  Loader2,
+  Search,
+  AlertCircle
 } from 'lucide-react';
 
 interface StreamlinedApprovalDialogProps {
@@ -59,6 +63,10 @@ export function StreamlinedApprovalDialog({
   const [invoiceAmount, setInvoiceAmount] = useState('1000');
   const [membershipStartDate, setMembershipStartDate] = useState('');
   const [invoiceNotes, setInvoiceNotes] = useState('');
+
+  // AI Verification state
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<string | null>(null);
   
   const { user } = useAuth();
   const sendInvoiceMutation = useSendInvoice();
@@ -75,6 +83,7 @@ export function StreamlinedApprovalDialog({
       setSelectedFeeTier('full');
       setMembershipStartDate('');
       setInvoiceNotes('');
+      setVerificationResult(null);
       // Set default invoice amount to full member fee when dialog opens
       const fullTier = feeTiers.find(t => t.id === 'full');
       if (fullTier) {
@@ -82,6 +91,43 @@ export function StreamlinedApprovalDialog({
       }
     }
   }, [open, feeTiers]);
+
+  // AI Verification handler
+  const handleAIVerification = async () => {
+    if (!registration) return;
+    
+    setIsVerifying(true);
+    setVerificationResult(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-contact-ai', {
+        body: {
+          organizationName: registration.organization_name,
+          firstName: registration.first_name,
+          lastName: registration.last_name,
+          title: registration.primary_contact_title || null
+        }
+      });
+
+      if (error) {
+        console.error('AI verification error:', error);
+        toast.error('Failed to verify contact: ' + error.message);
+        return;
+      }
+
+      if (data?.success) {
+        setVerificationResult(data.result);
+        toast.success('Contact verification completed');
+      } else {
+        toast.error(data?.error || 'Verification failed');
+      }
+    } catch (err) {
+      console.error('Error during verification:', err);
+      toast.error('An error occurred during verification');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   const calculateProratedAmount = () => {
     if (!membershipStartDate || !invoiceAmount) return null;
@@ -166,6 +212,25 @@ export function StreamlinedApprovalDialog({
               {registration.organization_name}
             </DialogTitle>
             <div className="flex items-center gap-2">
+              <Button
+                onClick={handleAIVerification}
+                disabled={isVerifying}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                {isVerifying ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4" />
+                    AI Verify Contact
+                  </>
+                )}
+              </Button>
               <Badge variant="outline" className="flex items-center gap-1">
                 <div className={`w-2 h-2 rounded-full ${getPriorityColor(currentPriority)}`} />
                 {currentPriority} priority
@@ -176,6 +241,46 @@ export function StreamlinedApprovalDialog({
             </div>
           </div>
         </DialogHeader>
+
+        {/* AI Verification Result */}
+        {verificationResult && (
+          <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <h4 className="font-semibold text-sm text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              AI Verification Result
+            </h4>
+            <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap prose prose-sm max-w-none">
+              {verificationResult.split('\n').map((line, index) => {
+                if (line.startsWith('**Verification Status:**')) {
+                  const status = line.replace('**Verification Status:**', '').trim().toLowerCase();
+                  return (
+                    <div key={index} className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold">Verification Status:</span>
+                      {status.includes('yes') ? (
+                        <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Verified</Badge>
+                      ) : status.includes('no') ? (
+                        <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Not Verified</Badge>
+                      ) : (
+                        <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" />Unable to Verify</Badge>
+                      )}
+                    </div>
+                  );
+                }
+                if (line.startsWith('**')) {
+                  const parts = line.split(':**');
+                  const label = parts[0].replace(/\*\*/g, '');
+                  const value = parts.slice(1).join(':**').trim();
+                  return (
+                    <div key={index} className="mb-1">
+                      <span className="font-semibold">{label}:</span> {value}
+                    </div>
+                  );
+                }
+                return line ? <p key={index} className="mb-1">{line}</p> : null;
+              })}
+            </div>
+          </div>
+        )}
         
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
