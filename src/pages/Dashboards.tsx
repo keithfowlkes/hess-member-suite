@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
 import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrelation';
 import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMSCorrelation';
+import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationSizeFinancialCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { BarChart3, ChartScatter, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -95,6 +96,18 @@ export default function Dashboards() {
                     </AccordionTrigger>
                     <AccordionContent>
                       <OrganizationSizeLMSCorrelation />
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="org-size-financial-correlation">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      <div className="flex items-center gap-2">
+                        <ChartScatter className="h-5 w-5 text-primary" />
+                        <span>Organization Size vs Financial System Choice</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <OrganizationSizeFinancialCorrelation />
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
