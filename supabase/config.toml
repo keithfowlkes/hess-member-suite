@@ -34,7 +34,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.create-external-user]
-verify_jwt = false
+verify_jwt = true
 
 [functions.delete-organization]
 verify_jwt = true
