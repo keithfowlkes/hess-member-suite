@@ -42,17 +42,21 @@ const MemberAnalytics = () => {
               </div>
             </div>
             
-            <Tabs defaultValue="trends" className="w-full">
+            <Tabs defaultValue="usage" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="trends" className="gap-2">
-                  <ChartScatter className="h-4 w-4" />
-                  Trend Analytics
-                </TabsTrigger>
                 <TabsTrigger value="usage" className="gap-2">
                   <PieChart className="h-4 w-4" />
                   System Usage Analytics
                 </TabsTrigger>
+                <TabsTrigger value="trends" className="gap-2">
+                  <ChartScatter className="h-4 w-4" />
+                  Trend Analytics
+                </TabsTrigger>
               </TabsList>
+              
+              <TabsContent value="usage">
+                <SystemAnalyticsDashboard />
+              </TabsContent>
               
               <TabsContent value="trends">
                 <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
@@ -115,10 +119,6 @@ const MemberAnalytics = () => {
                     </Accordion>
                   </CardContent>
                 </Card>
-              </TabsContent>
-              
-              <TabsContent value="usage">
-                <SystemAnalyticsDashboard />
               </TabsContent>
             </Tabs>
           </div>
