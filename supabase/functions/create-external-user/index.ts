@@ -25,6 +25,42 @@ serve(async (req) => {
       }
     )
 
+    // Verify the calling user is authenticated and has admin role
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user: callingUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !callingUser) {
+      console.error('❌ Authentication failed:', authError);
+      throw new Error('Invalid authentication token');
+    }
+
+    console.log(`🔐 Authenticated user: ${callingUser.email}`);
+
+    // Check if the calling user has admin role
+    const { data: adminRole, error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', callingUser.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (roleError) {
+      console.error('❌ Role check error:', roleError);
+      throw new Error('Failed to verify admin privileges');
+    }
+
+    if (!adminRole) {
+      console.error('❌ User is not an admin:', callingUser.email);
+      throw new Error('Unauthorized: Admin privileges required');
+    }
+
+    console.log(`✅ Admin role verified for: ${callingUser.email}`);
+
     const { firstName, lastName, email, password, role } = await req.json();
 
     console.log(`👤 Creating external user: ${firstName} ${lastName} (${email}) with role: ${role}`);
