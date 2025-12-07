@@ -9,7 +9,12 @@ import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { BarChart3, ChartScatter, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function Dashboards() {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
@@ -69,34 +74,43 @@ export default function Dashboards() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="erp" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 mb-4">
-                    <TabsTrigger value="erp" className="flex items-center gap-2">
-                      <ChartScatter className="h-4 w-4" />
-                      <span className="hidden sm:inline">ERP System</span>
-                      <span className="sm:hidden">ERP</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="lms" className="flex items-center gap-2">
-                      <ChartScatter className="h-4 w-4" />
-                      <span className="hidden sm:inline">LMS</span>
-                      <span className="sm:hidden">LMS</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="financial" className="flex items-center gap-2">
-                      <ChartScatter className="h-4 w-4" />
-                      <span className="hidden sm:inline">Financial System</span>
-                      <span className="sm:hidden">Financial</span>
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="erp">
-                    <OrganizationSizeCorrelation />
-                  </TabsContent>
-                  <TabsContent value="lms">
-                    <OrganizationSizeLMSCorrelation />
-                  </TabsContent>
-                  <TabsContent value="financial">
-                    <OrganizationSizeFinancialCorrelation />
-                  </TabsContent>
-                </Tabs>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="org-size-correlation">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      <div className="flex items-center gap-2">
+                        <ChartScatter className="h-5 w-5 text-primary" />
+                        <span>Organization Size vs System Choice</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <OrganizationSizeCorrelation />
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="org-size-lms-correlation">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      <div className="flex items-center gap-2">
+                        <ChartScatter className="h-5 w-5 text-primary" />
+                        <span>Organization Size vs LMS Choice</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <OrganizationSizeLMSCorrelation />
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="org-size-financial-correlation">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      <div className="flex items-center gap-2">
+                        <ChartScatter className="h-5 w-5 text-primary" />
+                        <span>Organization Size vs Financial System Choice</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <OrganizationSizeFinancialCorrelation />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </CardContent>
             </Card>
             
