@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Layout } from '@/components/Layout';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SystemAnalyticsDashboard } from '@/components/SystemAnalyticsDashboard';
@@ -7,10 +6,12 @@ import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrel
 import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMSCorrelation';
 import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationSizeFinancialCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
-import { BarChart3, ChartScatter, MessageSquare } from 'lucide-react';
+import { BarChart3, ChartScatter, MessageSquare, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 const MemberAnalytics = () => {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   return <SidebarProvider>
@@ -41,68 +42,85 @@ const MemberAnalytics = () => {
               </div>
             </div>
             
-            <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-3 text-xl">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <ChartScatter className="h-6 w-6 text-primary" />
+            <Tabs defaultValue="trends" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="trends" className="gap-2">
+                  <ChartScatter className="h-4 w-4" />
+                  Trend Analytics
+                </TabsTrigger>
+                <TabsTrigger value="usage" className="gap-2">
+                  <PieChart className="h-4 w-4" />
+                  System Usage Analytics
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="trends">
+                <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-3 text-xl">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            <ChartScatter className="h-6 w-6 text-primary" />
+                          </div>
+                          Trend Analytics
+                        </CardTitle>
+                        <p className="text-muted-foreground mt-1">
+                          Explore correlations and trends in member data
+                        </p>
                       </div>
-                      Trend Analytics
-                    </CardTitle>
-                    <p className="text-muted-foreground mt-1">
-                      Explore correlations and trends in member data
-                    </p>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => setFeedbackDialogOpen(true)} className="gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    What would you like to see?
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="org-size-correlation">
-                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                      <div className="flex items-center gap-2">
-                        <ChartScatter className="h-5 w-5 text-primary" />
-                        <span>Organization Size vs ERP System Choice</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <OrganizationSizeCorrelation />
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="org-size-lms-correlation">
-                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                      <div className="flex items-center gap-2">
-                        <ChartScatter className="h-5 w-5 text-primary" />
-                        <span>Organization Size vs LMS Choice</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <OrganizationSizeLMSCorrelation />
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="org-size-financial-correlation">
-                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                      <div className="flex items-center gap-2">
-                        <ChartScatter className="h-5 w-5 text-primary" />
-                        <span>Organization Size vs Financial System Choice</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <OrganizationSizeFinancialCorrelation />
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </CardContent>
-            </Card>
-            
-            <SystemAnalyticsDashboard />
+                      <Button variant="outline" size="sm" onClick={() => setFeedbackDialogOpen(true)} className="gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        What would you like to see?
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="org-size-correlation">
+                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <ChartScatter className="h-5 w-5 text-primary" />
+                            <span>Organization Size vs ERP System Choice</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <OrganizationSizeCorrelation />
+                        </AccordionContent>
+                      </AccordionItem>
+                      
+                      <AccordionItem value="org-size-lms-correlation">
+                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <ChartScatter className="h-5 w-5 text-primary" />
+                            <span>Organization Size vs LMS Choice</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <OrganizationSizeLMSCorrelation />
+                        </AccordionContent>
+                      </AccordionItem>
+                      
+                      <AccordionItem value="org-size-financial-correlation">
+                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <ChartScatter className="h-5 w-5 text-primary" />
+                            <span>Organization Size vs Financial System Choice</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <OrganizationSizeFinancialCorrelation />
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="usage">
+                <SystemAnalyticsDashboard />
+              </TabsContent>
+            </Tabs>
           </div>
           
           {/* Footer */}
