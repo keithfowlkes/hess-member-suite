@@ -67,7 +67,7 @@ export function useMemberRegistrationUpdates() {
     }) => {
       console.log('🚀 DEBUG: createRegistrationUpdate called with:', updateData);
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('member_registration_updates')
         .insert({
           submitted_email: updateData.submitted_email,
@@ -77,14 +77,16 @@ export function useMemberRegistrationUpdates() {
           existing_organization_name: updateData.existing_organization_name,
           submission_type: updateData.submission_type || 'member_update',
           status: 'pending'
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
         console.error('Failed to create registration update:', error);
         throw error;
       }
+
+      // Note: We don't use .select().single() because anonymous users cannot read back
+      // the inserted row due to SELECT RLS policies
+      const data = { submitted_email: updateData.submitted_email };
 
       console.log('✅ Registration update created successfully:', data);
 
