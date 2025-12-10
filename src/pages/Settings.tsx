@@ -1066,6 +1066,55 @@ export default function Settings() {
                     </Button>
                   </CardContent>
                 </Card>
+
+                {/* Firecrawl Web Search Configuration */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" />
+                      AI Contact Verification - Web Search
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
+                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-green-900">Firecrawl API Configured</p>
+                        <p className="text-sm text-green-700">
+                          Real-time web search is enabled for AI contact verification during registration approvals.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
+                      <h4 className="font-medium text-blue-900 mb-2">How It Works:</h4>
+                      <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                        <li>When you click "Verify with AI" during registration approval, the system searches the web in real-time</li>
+                        <li>Firecrawl performs targeted searches for the contact person at their organization</li>
+                        <li>Search results are analyzed by AI to verify the contact's position and credentials</li>
+                        <li>Results include found titles, departments, and source URLs when available</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-amber-50 p-4 rounded-md border-l-4 border-amber-400">
+                      <h4 className="font-medium text-amber-900 mb-2">API Key Management:</h4>
+                      <p className="text-sm text-amber-800">
+                        The Firecrawl API key is managed through Supabase Edge Function secrets.
+                        To update the key, go to your Supabase project dashboard → Settings → Edge Functions → Secrets.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Active
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        Web search integration is active and ready to use
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
                   </div>
                 )}
 
