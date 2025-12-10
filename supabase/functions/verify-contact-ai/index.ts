@@ -6,6 +6,55 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Search the web using Firecrawl
+async function searchWeb(query: string, apiKey: string): Promise<string[]> {
+  console.log(`Searching web for: ${query}`);
+  
+  try {
+    const response = await fetch('https://api.firecrawl.dev/v1/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        limit: 5,
+        scrapeOptions: {
+          formats: ['markdown']
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Firecrawl search error:', response.status, errorText);
+      return [];
+    }
+
+    const data = await response.json();
+    console.log(`Firecrawl returned ${data.data?.length || 0} results`);
+    
+    // Extract markdown content from search results
+    const results: string[] = [];
+    if (data.data && Array.isArray(data.data)) {
+      for (const result of data.data) {
+        const content = [
+          `URL: ${result.url}`,
+          `Title: ${result.title || 'N/A'}`,
+          result.markdown ? `Content: ${result.markdown.substring(0, 2000)}` : ''
+        ].filter(Boolean).join('\n');
+        results.push(content);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('Firecrawl search failed:', error);
+    return [];
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -23,26 +72,64 @@ serve(async (req) => {
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+    
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     const fullName = `${firstName} ${lastName}`;
-    const titleInfo = title ? ` (claimed title: "${title}")` : '';
+    const titleInfo = title ? ` ${title}` : '';
+    
+    console.log(`Verifying contact: ${fullName} at ${organizationName}`);
+    
+    // Build search queries for real web search
+    const searchQueries = [
+      `"${fullName}" "${organizationName}" ${titleInfo}`.trim(),
+      `"${fullName}" "${organizationName}" IT technology director`,
+      `${organizationName} IT department staff directory`
+    ];
+    
+    let webSearchResults: string[] = [];
+    
+    // Use Firecrawl for real web search if API key is available
+    if (FIRECRAWL_API_KEY) {
+      console.log('Using Firecrawl for real-time web search...');
+      
+      for (const query of searchQueries) {
+        const results = await searchWeb(query, FIRECRAWL_API_KEY);
+        webSearchResults.push(...results);
+        
+        // Rate limit between searches
+        if (results.length > 0) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+      
+      console.log(`Total web search results: ${webSearchResults.length}`);
+    } else {
+      console.log('FIRECRAWL_API_KEY not configured - falling back to AI training data only');
+    }
+
+    // Build the prompt with real web search results
     const websiteInfo = organizationWebsite ? `\nOrganization website: ${organizationWebsite}` : '';
+    const searchResultsSection = webSearchResults.length > 0 
+      ? `\n\nREAL-TIME WEB SEARCH RESULTS:\n${webSearchResults.map((r, i) => `--- Result ${i + 1} ---\n${r}`).join('\n\n')}`
+      : '\n\n(No web search results available - using training data only)';
     
     const prompt = `You are verifying a contact for the HESS Consortium, a group of private colleges and universities that share IT systems information.
 
 PERSON TO VERIFY:
-- Name: ${fullName}${titleInfo}
+- Name: ${fullName}${title ? ` (claimed title: "${title}")` : ''}
 - Organization: ${organizationName}${websiteInfo}
+${searchResultsSection}
 
 VERIFICATION TASK:
-Search for publicly available information to verify this person works at this institution. Focus on:
-1. The institution's official staff directory or "About" pages
-2. LinkedIn profiles matching this person at this organization
-3. Conference speaker listings, publications, or press releases
-4. IT/Technology department pages (since HESS focuses on higher education IT)
+Based on the web search results above (if available) and your knowledge, verify this person works at this institution. Look for:
+1. Direct mentions of this person in the search results
+2. Staff directory entries or "About" pages mentioning them
+3. LinkedIn profiles matching this person at this organization
+4. IT/Technology department mentions (since HESS focuses on higher education IT)
 
 RESPOND WITH EXACTLY THIS FORMAT:
 VERIFICATION_STATUS: [VERIFIED/LIKELY/UNVERIFIED/NOT_FOUND]
@@ -50,20 +137,19 @@ CONFIDENCE: [HIGH/MEDIUM/LOW]
 FOUND_TITLE: [The actual title found, or "Not found"]
 FOUND_DEPARTMENT: [Department if found, or "Not found"]
 SUMMARY: [2-3 sentence summary of what you found]
-LINKEDIN_URL: [LinkedIn profile URL if found, or "Not found"]
+LINKEDIN_URL: [LinkedIn profile URL if found in results, or "Not found"]
 INSTITUTIONAL_URL: [URL where person is listed on institution site, or "Not found"]
 NOTES: [Any additional relevant information or discrepancies between claimed and found information]
 
 IMPORTANT GUIDELINES:
-- VERIFIED = Found on official institutional sources with matching name and role
-- LIKELY = Found on LinkedIn or other sources, appears legitimate but not on official site
+- VERIFIED = Found concrete evidence in search results with matching name and organization
+- LIKELY = Found indirect evidence suggesting they work there
 - UNVERIFIED = Found some information but cannot confirm employment
 - NOT_FOUND = No information found about this person at this organization
-- Be specific about WHERE you found information
+- Be specific about WHERE you found information (cite URLs from search results)
 - If the claimed title differs from what you found, note the discrepancy
-- Do NOT fabricate information - if unsure, say so`;
-
-    console.log(`Verifying contact: ${fullName} at ${organizationName}`);
+- Do NOT fabricate information - if unsure, say so
+- PRIORITIZE information from the web search results over your training data`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -76,7 +162,7 @@ IMPORTANT GUIDELINES:
         messages: [
           { 
             role: "system", 
-            content: "You are an expert research assistant specializing in verifying professional contacts at higher education institutions. You have access to search the web for information. Be thorough but accurate - never fabricate information. When you find information, cite your sources with URLs when possible." 
+            content: "You are an expert research assistant specializing in verifying professional contacts at higher education institutions. Analyze the provided web search results carefully to verify contacts. Be thorough but accurate - never fabricate information. When you find information, cite your sources with URLs." 
           },
           { role: "user", content: prompt }
         ],
@@ -133,7 +219,9 @@ IMPORTANT GUIDELINES:
       linkedinUrl: linkedinUrl && linkedinUrl !== 'Not found' ? linkedinUrl : null,
       institutionalUrl: institutionalUrl && institutionalUrl !== 'Not found' ? institutionalUrl : null,
       notes: notes && notes !== 'Not found' ? notes : null,
-      rawResponse: rawResult
+      rawResponse: rawResult,
+      webSearchUsed: !!FIRECRAWL_API_KEY && webSearchResults.length > 0,
+      searchResultsCount: webSearchResults.length
     };
 
     console.log("Verification completed successfully:", structuredResult);
