@@ -226,19 +226,43 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      // Step 2: Get existing profile
-      const { data: existingProfile, error: profileFetchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', existingOrganization.contact_person_id)
-        .single();
-
-      if (profileFetchError || !existingProfile) {
-        console.error('Failed to fetch existing profile:', profileFetchError);
-        return new Response(
-          JSON.stringify({ error: "Existing profile not found" }),
-          { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
+      // Step 2: Get existing profile - handle case where contact_person_id might be null
+      let existingProfile: any = null;
+      
+      if (existingOrganization.contact_person_id) {
+        const { data: profileData, error: profileFetchError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', existingOrganization.contact_person_id)
+          .single();
+        
+        if (profileFetchError) {
+          console.warn('Failed to fetch existing profile by contact_person_id:', profileFetchError);
+        } else {
+          existingProfile = profileData;
+        }
+      }
+      
+      // If no profile found by contact_person_id, try to find by email
+      if (!existingProfile && registrationData.email) {
+        console.log('Attempting to find profile by email:', registrationData.email);
+        const { data: profileByEmail, error: emailProfileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', registrationData.email)
+          .single();
+        
+        if (!emailProfileError && profileByEmail) {
+          existingProfile = profileByEmail;
+          console.log('Found profile by email:', existingProfile.id);
+        } else {
+          console.warn('Could not find profile by email either:', emailProfileError);
+        }
+      }
+      
+      // If still no profile, we'll need to create one or skip profile update
+      if (!existingProfile) {
+        console.warn('No existing profile found for organization - will skip profile update');
       }
 
       // Step 3: Update existing organization with new data
@@ -302,39 +326,44 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      // Step 4: Update existing profile with contact person data only
+      // Step 4: Update existing profile with contact person data only (if profile exists)
       // Note: All system fields are stored in organizations table, not profiles
-      const { error: profileUpdateError } = await supabase
-        .from('profiles')
-        .update({
-          first_name: registrationData.first_name,
-          last_name: registrationData.last_name,
-          email: registrationData.email,
-          phone: registrationData.phone,
-          organization: organizationName,
-          primary_contact_title: registrationData.primary_contact_title,
-          secondary_first_name: registrationData.secondary_first_name,
-          secondary_last_name: registrationData.secondary_last_name,
-          secondary_contact_title: registrationData.secondary_contact_title,
-          secondary_contact_email: registrationData.secondary_contact_email,
-          secondary_contact_phone: registrationData.secondary_contact_phone || registrationUpdate.secondary_contact_phone,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingOrganization.contact_person_id);
+      if (existingProfile) {
+        const { error: profileUpdateError } = await supabase
+          .from('profiles')
+          .update({
+            first_name: registrationData.first_name,
+            last_name: registrationData.last_name,
+            email: registrationData.email,
+            phone: registrationData.phone,
+            organization: organizationName,
+            primary_contact_title: registrationData.primary_contact_title,
+            secondary_first_name: registrationData.secondary_first_name,
+            secondary_last_name: registrationData.secondary_last_name,
+            secondary_contact_title: registrationData.secondary_contact_title,
+            secondary_contact_email: registrationData.secondary_contact_email,
+            secondary_contact_phone: registrationData.secondary_contact_phone || registrationUpdate.secondary_contact_phone,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingProfile.id);
 
-      if (profileUpdateError) {
-        console.error('Failed to update profile:', profileUpdateError);
-        return new Response(
-          JSON.stringify({ error: `Failed to update profile: ${profileUpdateError.message}` }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
+        if (profileUpdateError) {
+          console.error('Failed to update profile:', profileUpdateError);
+          return new Response(
+            JSON.stringify({ error: `Failed to update profile: ${profileUpdateError.message}` }),
+            { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          );
+        }
+        console.log('Profile updated successfully');
+      } else {
+        console.log('Skipping profile update - no existing profile found');
       }
 
-      console.log('Organization and profile updated successfully');
+      console.log('Organization update completed successfully');
 
       // Use existing organization and profile IDs for logging
       newOrganization = { id: registrationUpdate.existing_organization_id };
-      newUser = { user: { id: existingProfile.user_id } };
+      newUser = existingProfile ? { user: { id: existingProfile.user_id } } : null;
 
     } else {
       console.log('Processing as new registration - creating new organization and user');
