@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Search the web using Firecrawl
-async function searchWeb(query: string, apiKey: string): Promise<string[]> {
+async function searchWeb(query: string, apiKey: string): Promise<{ results: string[], authError: boolean }> {
   console.log(`Searching web for: ${query}`);
   
   try {
@@ -29,7 +29,14 @@ async function searchWeb(query: string, apiKey: string): Promise<string[]> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Firecrawl search error:', response.status, errorText);
-      return [];
+      
+      // Check for authentication errors specifically
+      if (response.status === 401 || response.status === 403) {
+        console.warn('Firecrawl API key is invalid or unauthorized - will fall back to AI-only verification');
+        return { results: [], authError: true };
+      }
+      
+      return { results: [], authError: false };
     }
 
     const data = await response.json();
@@ -48,10 +55,10 @@ async function searchWeb(query: string, apiKey: string): Promise<string[]> {
       }
     }
     
-    return results;
+    return { results, authError: false };
   } catch (error) {
     console.error('Firecrawl search failed:', error);
-    return [];
+    return { results: [], authError: false };
   }
 }
 
@@ -91,13 +98,21 @@ serve(async (req) => {
     ];
     
     let webSearchResults: string[] = [];
+    let firecrawlAuthError = false;
     
     // Use Firecrawl for real web search if API key is available
     if (FIRECRAWL_API_KEY) {
       console.log('Using Firecrawl for real-time web search...');
       
       for (const query of searchQueries) {
-        const results = await searchWeb(query, FIRECRAWL_API_KEY);
+        const { results, authError } = await searchWeb(query, FIRECRAWL_API_KEY);
+        
+        if (authError) {
+          firecrawlAuthError = true;
+          console.warn('Firecrawl authentication failed - stopping web search attempts');
+          break; // Stop trying if auth fails
+        }
+        
         webSearchResults.push(...results);
         
         // Rate limit between searches
@@ -106,7 +121,11 @@ serve(async (req) => {
         }
       }
       
-      console.log(`Total web search results: ${webSearchResults.length}`);
+      if (firecrawlAuthError) {
+        console.log('Continuing with AI-only verification due to Firecrawl auth error');
+      } else {
+        console.log(`Total web search results: ${webSearchResults.length}`);
+      }
     } else {
       console.log('FIRECRAWL_API_KEY not configured - falling back to AI training data only');
     }
@@ -220,8 +239,9 @@ IMPORTANT GUIDELINES:
       institutionalUrl: institutionalUrl && institutionalUrl !== 'Not found' ? institutionalUrl : null,
       notes: notes && notes !== 'Not found' ? notes : null,
       rawResponse: rawResult,
-      webSearchUsed: !!FIRECRAWL_API_KEY && webSearchResults.length > 0,
-      searchResultsCount: webSearchResults.length
+      webSearchUsed: !!FIRECRAWL_API_KEY && webSearchResults.length > 0 && !firecrawlAuthError,
+      searchResultsCount: webSearchResults.length,
+      firecrawlAuthError
     };
 
     console.log("Verification completed successfully:", structuredResult);
