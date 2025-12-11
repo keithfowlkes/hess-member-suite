@@ -144,31 +144,39 @@ PERSON TO VERIFY:
 ${searchResultsSection}
 
 VERIFICATION TASK:
-Based on the web search results above (if available) and your knowledge, verify this person works at this institution. Look for:
-1. Direct mentions of this person in the search results
-2. Staff directory entries or "About" pages mentioning them
-3. LinkedIn profiles matching this person at this organization
-4. IT/Technology department mentions (since HESS focuses on higher education IT)
+Verify this person currently works at this institution in an IT/technology leadership role. 
+
+SOURCE RELIABILITY (MOST to LEAST trustworthy):
+1. OFFICIAL INSTITUTIONAL SOURCES (.edu domains, official university websites) - HIGHEST trust
+2. LinkedIn profiles showing CURRENT employment - HIGH trust
+3. Recent news articles or press releases from the institution - HIGH trust
+4. Professional directories listing current employment - MEDIUM trust
+5. Data aggregators like Equilar, RocketReach, ZoomInfo - LOW trust (often outdated, may show "former" incorrectly)
+6. Generic people search sites - VERY LOW trust
+
+CRITICAL: Sites like Equilar often show outdated "former" designations even for current employees because they haven't updated their records. If Equilar says "Former" but there's no other evidence of departure (no new CIO announcement, person not found at another organization), treat it as UNCONFIRMED rather than UNVERIFIED.
 
 RESPOND WITH EXACTLY THIS FORMAT:
 VERIFICATION_STATUS: [VERIFIED/LIKELY/UNVERIFIED/NOT_FOUND]
 CONFIDENCE: [HIGH/MEDIUM/LOW]
-FOUND_TITLE: [The actual title found, or "Not found"]
+FOUND_TITLE: [The actual title found from reliable sources, or "Not found"]
 FOUND_DEPARTMENT: [Department if found, or "Not found"]
-SUMMARY: [2-3 sentence summary of what you found]
+SUMMARY: [2-3 sentence summary of what you found, noting source reliability]
 LINKEDIN_URL: [LinkedIn profile URL if found in results, or "Not found"]
 INSTITUTIONAL_URL: [URL where person is listed on institution site, or "Not found"]
-NOTES: [Any additional relevant information or discrepancies between claimed and found information]
+NOTES: [Any additional relevant information or discrepancies. Note if data comes from potentially outdated aggregators]
 
-IMPORTANT GUIDELINES:
-- VERIFIED = Found concrete evidence in search results with matching name and organization
-- LIKELY = Found indirect evidence suggesting they work there
-- UNVERIFIED = Found some information but cannot confirm employment
+VERIFICATION CRITERIA:
+- VERIFIED = Found on official institutional website (.edu) OR current LinkedIn + no contradicting info
+- LIKELY = Not on institutional site, but LinkedIn shows current employment OR person is well-known at institution
+- UNVERIFIED = Conflicting information OR only found on low-trust aggregators showing outdated info
 - NOT_FOUND = No information found about this person at this organization
-- Be specific about WHERE you found information (cite URLs from search results)
-- If the claimed title differs from what you found, note the discrepancy
-- Do NOT fabricate information - if unsure, say so
-- PRIORITIZE information from the web search results over your training data`;
+
+IMPORTANT:
+- Higher education IT staff often aren't listed on public directories - don't penalize for this
+- Prioritize absence of evidence that they LEFT over presence of "former" tags from aggregators
+- If the person is submitting a member update for HESS, they likely still work there
+- Be specific about WHERE you found information and its reliability`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
