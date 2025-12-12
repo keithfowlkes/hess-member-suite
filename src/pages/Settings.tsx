@@ -113,6 +113,10 @@ export default function Settings() {
   const [tinymceApiKey, setTinymceApiKey] = useState('');
   const [tinymceKeyLoading, setTinymceKeyLoading] = useState(false);
   
+  // Tavily API Key state
+  const [tavilyApiKey, setTavilyApiKey] = useState('');
+  const [tavilyKeyLoading, setTavilyKeyLoading] = useState(false);
+  
   // reCaptcha enable/disable state
   const { data: recaptchaEnabledSetting } = useSystemSetting('recaptcha_enabled');
   const [recaptchaEnabled, setRecaptchaEnabled] = useState(true);
@@ -360,6 +364,66 @@ export default function Settings() {
       });
     } finally {
       setTinymceKeyLoading(false);
+    }
+  };
+
+  // Tavily API key management
+  const handleUpdateTavilyApiKey = async () => {
+    if (!tavilyApiKey.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid Tavily API key.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Validate Tavily key format
+    if (!tavilyApiKey.startsWith('tvly-')) {
+      toast({
+        title: 'Error',
+        description: 'Invalid Tavily API key format. Keys should start with "tvly-"',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setTavilyKeyLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('update-tavily-key', {
+        body: {
+          apiKey: tavilyApiKey.trim()
+        }
+      });
+
+      if (error) {
+        console.error('Tavily API key update error:', error);
+        toast({
+          title: 'Tavily Key Update Failed',
+          description: error.message || 'Failed to update Tavily API key',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      if (data.success) {
+        toast({
+          title: 'Tavily Key Updated',
+          description: 'Tavily API key has been updated successfully. AI verification will now use Tavily for web search.',
+        });
+        setTavilyApiKey(''); // Clear for security
+      } else {
+        throw new Error(data.message || 'Update failed');
+      }
+    } catch (error: any) {
+      console.error('Tavily API key update error:', error);
+      toast({
+        title: 'Configuration Error',
+        description: error.message || 'Failed to update Tavily API key',
+        variant: 'destructive'
+      });
+    } finally {
+      setTavilyKeyLoading(false);
     }
   };
 
@@ -1067,52 +1131,74 @@ export default function Settings() {
                   </CardContent>
                 </Card>
 
-                {/* Firecrawl Web Search Configuration */}
+                {/* Tavily Web Search Configuration */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <BarChart3 className="w-4 h-4" />
-                      AI Contact Verification - Web Search
+                      AI Contact Verification - Web Search (Tavily)
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium text-green-900">Firecrawl API Configured</p>
-                        <p className="text-sm text-green-700">
-                          Real-time web search is enabled for AI contact verification during registration approvals.
-                        </p>
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tavily-key">Tavily API Key</Label>
+                      <Input
+                        id="tavily-key"
+                        type="password"
+                        placeholder="tvly-xxxxxxxxxxxxxxxxxx"
+                        value={tavilyApiKey}
+                        onChange={(e) => setTavilyApiKey(e.target.value)}
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Get your Tavily API key from{' '}
+                        <a 
+                          href="https://app.tavily.com/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          Tavily Dashboard
+                        </a>
+                      </p>
                     </div>
 
                     <div className="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
-                      <h4 className="font-medium text-blue-900 mb-2">How It Works:</h4>
-                      <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                      <h4 className="font-medium text-blue-900 mb-2">Setup Instructions:</h4>
+                      <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                        <li>Visit the <a href="https://app.tavily.com/" target="_blank" rel="noopener noreferrer" className="underline">Tavily Dashboard</a> and sign up/log in</li>
+                        <li>Copy your API key from the dashboard (starts with "tvly-")</li>
+                        <li>Paste it in the field above and save</li>
+                        <li>AI verification will now search the web in real-time</li>
+                      </ol>
+                    </div>
+
+                    <div className="bg-green-50 p-4 rounded-md border-l-4 border-green-400">
+                      <h4 className="font-medium text-green-900 mb-2">How It Works:</h4>
+                      <ul className="text-sm text-green-800 space-y-1 list-disc list-inside">
                         <li>When you click "Verify with AI" during registration approval, the system searches the web in real-time</li>
-                        <li>Firecrawl performs targeted searches for the contact person at their organization</li>
+                        <li>Tavily performs targeted searches for the contact person at their organization</li>
                         <li>Search results are analyzed by AI to verify the contact's position and credentials</li>
                         <li>Results include found titles, departments, and source URLs when available</li>
                       </ul>
                     </div>
 
-                    <div className="bg-amber-50 p-4 rounded-md border-l-4 border-amber-400">
-                      <h4 className="font-medium text-amber-900 mb-2">API Key Management:</h4>
-                      <p className="text-sm text-amber-800">
-                        The Firecrawl API key is managed through Supabase Edge Function secrets.
-                        To update the key, go to your Supabase project dashboard → Settings → Edge Functions → Secrets.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Active
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        Web search integration is active and ready to use
-                      </span>
-                    </div>
+                    <Button 
+                      onClick={handleUpdateTavilyApiKey}
+                      disabled={tavilyKeyLoading || !tavilyApiKey.trim()}
+                      className="w-full sm:w-auto"
+                    >
+                      {tavilyKeyLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Save Tavily API Key
+                        </>
+                      )}
+                    </Button>
                   </CardContent>
                 </Card>
                   </div>
