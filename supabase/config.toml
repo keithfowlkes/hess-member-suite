@@ -119,3 +119,6 @@ verify_jwt = true
 
 [functions.verify-contact-ai]
 verify_jwt = true
+
+[functions.update-tavily-key]
+verify_jwt = true

@@ -6,33 +6,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Search the web using Firecrawl
+// Search the web using Tavily
 async function searchWeb(query: string, apiKey: string): Promise<{ results: string[], authError: boolean }> {
-  console.log(`Searching web for: ${query}`);
+  console.log(`Searching web with Tavily for: ${query}`);
   
   try {
-    const response = await fetch('https://api.firecrawl.dev/v1/search', {
+    const response = await fetch('https://api.tavily.com/search', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        api_key: apiKey,
         query,
-        limit: 5,
-        scrapeOptions: {
-          formats: ['markdown']
-        }
+        search_depth: "basic",
+        include_raw_content: false,
+        max_results: 5
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Firecrawl search error:', response.status, errorText);
+      console.error('Tavily search error:', response.status, errorText);
       
       // Check for authentication errors specifically
       if (response.status === 401 || response.status === 403) {
-        console.warn('Firecrawl API key is invalid or unauthorized - will fall back to AI-only verification');
+        console.warn('Tavily API key is invalid or unauthorized - will fall back to AI-only verification');
         return { results: [], authError: true };
       }
       
@@ -40,16 +39,16 @@ async function searchWeb(query: string, apiKey: string): Promise<{ results: stri
     }
 
     const data = await response.json();
-    console.log(`Firecrawl returned ${data.data?.length || 0} results`);
+    console.log(`Tavily returned ${data.results?.length || 0} results`);
     
-    // Extract markdown content from search results
+    // Extract content from Tavily search results
     const results: string[] = [];
-    if (data.data && Array.isArray(data.data)) {
-      for (const result of data.data) {
+    if (data.results && Array.isArray(data.results)) {
+      for (const result of data.results) {
         const content = [
           `URL: ${result.url}`,
           `Title: ${result.title || 'N/A'}`,
-          result.markdown ? `Content: ${result.markdown.substring(0, 2000)}` : ''
+          result.content ? `Content: ${result.content.substring(0, 2000)}` : ''
         ].filter(Boolean).join('\n');
         results.push(content);
       }
@@ -57,7 +56,7 @@ async function searchWeb(query: string, apiKey: string): Promise<{ results: stri
     
     return { results, authError: false };
   } catch (error) {
-    console.error('Firecrawl search failed:', error);
+    console.error('Tavily search failed:', error);
     return { results: [], authError: false };
   }
 }
@@ -79,7 +78,7 @@ serve(async (req) => {
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+    const TAVILY_API_KEY = Deno.env.get("TAVILY_API_KEY");
     
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
@@ -98,18 +97,18 @@ serve(async (req) => {
     ];
     
     let webSearchResults: string[] = [];
-    let firecrawlAuthError = false;
+    let tavilyAuthError = false;
     
-    // Use Firecrawl for real web search if API key is available
-    if (FIRECRAWL_API_KEY) {
-      console.log('Using Firecrawl for real-time web search...');
+    // Use Tavily for real web search if API key is available
+    if (TAVILY_API_KEY) {
+      console.log('Using Tavily for real-time web search...');
       
       for (const query of searchQueries) {
-        const { results, authError } = await searchWeb(query, FIRECRAWL_API_KEY);
+        const { results, authError } = await searchWeb(query, TAVILY_API_KEY);
         
         if (authError) {
-          firecrawlAuthError = true;
-          console.warn('Firecrawl authentication failed - stopping web search attempts');
+          tavilyAuthError = true;
+          console.warn('Tavily authentication failed - stopping web search attempts');
           break; // Stop trying if auth fails
         }
         
@@ -121,13 +120,13 @@ serve(async (req) => {
         }
       }
       
-      if (firecrawlAuthError) {
-        console.log('Continuing with AI-only verification due to Firecrawl auth error');
+      if (tavilyAuthError) {
+        console.log('Continuing with AI-only verification due to Tavily auth error');
       } else {
         console.log(`Total web search results: ${webSearchResults.length}`);
       }
     } else {
-      console.log('FIRECRAWL_API_KEY not configured - falling back to AI training data only');
+      console.log('TAVILY_API_KEY not configured - falling back to AI training data only');
     }
 
     // Build the prompt with real web search results
@@ -247,9 +246,9 @@ IMPORTANT:
       institutionalUrl: institutionalUrl && institutionalUrl !== 'Not found' ? institutionalUrl : null,
       notes: notes && notes !== 'Not found' ? notes : null,
       rawResponse: rawResult,
-      webSearchUsed: !!FIRECRAWL_API_KEY && webSearchResults.length > 0 && !firecrawlAuthError,
+      webSearchUsed: !!TAVILY_API_KEY && webSearchResults.length > 0 && !tavilyAuthError,
       searchResultsCount: webSearchResults.length,
-      firecrawlAuthError
+      tavilyAuthError
     };
 
     console.log("Verification completed successfully:", structuredResult);
