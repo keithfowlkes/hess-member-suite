@@ -11,6 +11,7 @@ import { UnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
 import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
 import { MemberCohortSelector } from '@/components/MemberCohortSelector';
+import { PrimaryContactTransferSection } from '@/components/PrimaryContactTransferSection';
 import { useAuth } from '@/hooks/useAuth';
 
 interface UnifiedProfileEditorProps {
@@ -460,6 +461,17 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Primary Contact Transfer - Only show for primary contacts */}
+      {editedData.organization && 
+       editedData.organization.contact_person_id === editedData.profile.id && (
+        <PrimaryContactTransferSection
+          organizationId={editedData.organization.id}
+          organizationName={editedData.organization.name}
+          currentContactEmail={editedData.profile.email}
+          isEditing={isEditing}
+        />
+      )}
 
       {/* Cohort Memberships */}
       <MemberCohortSelector 
