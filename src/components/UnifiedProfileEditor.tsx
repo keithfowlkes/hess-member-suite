@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Edit, Save, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, Edit, Save, X, UserCog } from 'lucide-react';
 import { UnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
 import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
@@ -32,6 +33,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
 }) => {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
   
   // Initialize editedData
   const initializeEditedData = (data: UnifiedProfile): UnifiedProfile => {
@@ -208,6 +210,18 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         <div className="flex gap-2">
           {isEditing ? (
             <>
+              {/* Transfer Primary Contact Button - only for primary contacts */}
+              {editedData.organization && 
+               editedData.organization.contact_person_id === editedData.profile.id && (
+                <Button
+                  variant="outline"
+                  onClick={() => setTransferModalOpen(true)}
+                  disabled={saving}
+                >
+                  <UserCog className="h-4 w-4 mr-2" />
+                  Transfer Contact
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={handleCancel}
@@ -462,15 +476,22 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         </CardContent>
       </Card>
 
-      {/* Primary Contact Transfer - Only show for primary contacts */}
+      {/* Transfer Primary Contact Modal */}
       {editedData.organization && 
        editedData.organization.contact_person_id === editedData.profile.id && (
-        <PrimaryContactTransferSection
-          organizationId={editedData.organization.id}
-          organizationName={editedData.organization.name}
-          currentContactEmail={editedData.profile.email}
-          isEditing={isEditing}
-        />
+        <Dialog open={transferModalOpen} onOpenChange={setTransferModalOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Transfer Primary Contact</DialogTitle>
+            </DialogHeader>
+            <PrimaryContactTransferSection
+              organizationId={editedData.organization.id}
+              organizationName={editedData.organization.name}
+              currentContactEmail={editedData.profile.email}
+              isEditing={true}
+            />
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Cohort Memberships */}
