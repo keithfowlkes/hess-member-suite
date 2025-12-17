@@ -45,6 +45,9 @@ verify_jwt = true
 [functions.fix-registration-password]
 verify_jwt = true
 
+[functions.fix-orphaned-profile]
+verify_jwt = true
+
 [functions.import-members]
 verify_jwt = true
 
