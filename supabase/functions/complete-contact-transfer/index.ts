@@ -13,7 +13,6 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
     const { transfer_token } = await req.json();
 
@@ -24,7 +23,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`[complete-contact-transfer] Processing transfer with token`);
+    console.log(`[complete-contact-transfer] Processing transfer acceptance with token`);
 
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -72,121 +71,58 @@ Deno.serve(async (req) => {
     }
 
     // Check if new contact already has a profile
-    let newContactProfile = await adminClient
+    const { data: newContactProfile } = await adminClient
       .from('profiles')
       .select('*')
       .eq('email', transferRequest.new_contact_email.toLowerCase())
       .maybeSingle();
 
-    let newProfileId = newContactProfile.data?.id;
-
-    // If no profile exists, we need to create one (user will need to register/accept)
-    if (!newContactProfile.data) {
-      console.log(`[complete-contact-transfer] No existing profile for ${transferRequest.new_contact_email}`);
-      
-      // We'll handle this by directing the user to register
-      // For now, return a message indicating they need to register
-      return new Response(JSON.stringify({ 
-        error: 'new_user_required',
-        message: 'The new contact needs to register an account first',
-        email: transferRequest.new_contact_email,
-        organization_name: organization.name
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Get old contact info for notifications
-    const { data: oldContactProfile } = await adminClient
-      .from('profiles')
-      .select('email, first_name, last_name')
-      .eq('id', transferRequest.current_contact_id)
-      .single();
-
-    // Update organization with new contact
-    const { error: updateError } = await adminClient
-      .from('organizations')
-      .update({ 
-        contact_person_id: newProfileId,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', transferRequest.organization_id);
-
-    if (updateError) {
-      console.error('[complete-contact-transfer] Update error:', updateError);
-      return new Response(JSON.stringify({ error: 'Failed to update organization' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Update the new contact's profile to reference this organization
-    await adminClient
-      .from('profiles')
-      .update({ organization: organization.name })
-      .eq('id', newProfileId);
-
-    // Mark transfer as completed
+    // Mark transfer as "accepted" - awaiting admin approval
+    // Do NOT complete the transfer yet - admin must approve
     await adminClient
       .from('organization_transfer_requests')
       .update({ 
-        status: 'completed',
-        completed_at: new Date().toISOString()
+        status: 'accepted',
+        new_contact_id: newContactProfile?.id || null,
+        updated_at: new Date().toISOString()
       })
       .eq('id', transferRequest.id);
 
-    console.log(`[complete-contact-transfer] Transfer completed for org ${organization.name}`);
+    console.log(`[complete-contact-transfer] Transfer marked as accepted, awaiting admin approval`);
 
-    // Send confirmation emails
+    // Send notification to admin about pending approval
     try {
-      // Email to new contact
-      await adminClient.functions.invoke('centralized-email-delivery', {
+      await adminClient.functions.invoke('send-admin-notification', {
         body: {
-          type: 'contact_transfer_complete',
-          recipient: transferRequest.new_contact_email,
-          data: {
+          type: 'contact_transfer_accepted',
+          updateData: {
             organization_name: organization.name,
-            is_new_contact: true
+            new_contact_email: transferRequest.new_contact_email,
+            has_account: !!newContactProfile
           }
         }
       });
-
-      // Email to old contact
-      if (oldContactProfile?.email) {
-        await adminClient.functions.invoke('centralized-email-delivery', {
-          body: {
-            type: 'contact_transfer_complete',
-            recipient: oldContactProfile.email,
-            data: {
-              organization_name: organization.name,
-              new_contact_email: transferRequest.new_contact_email,
-              is_new_contact: false
-            }
-          }
-        });
-      }
-    } catch (emailError) {
-      console.error('[complete-contact-transfer] Email error:', emailError);
+    } catch (notifyError) {
+      console.error('[complete-contact-transfer] Admin notification error:', notifyError);
     }
 
     // Log to audit
     await adminClient.from('audit_log').insert({
-      action: 'contact_transfer_completed',
+      action: 'contact_transfer_accepted',
       entity_type: 'organization',
       entity_id: transferRequest.organization_id,
       details: {
-        old_contact_id: transferRequest.current_contact_id,
-        new_contact_id: newProfileId,
         new_contact_email: transferRequest.new_contact_email,
-        transfer_request_id: transferRequest.id
+        transfer_request_id: transferRequest.id,
+        has_existing_account: !!newContactProfile
       }
     });
 
     return new Response(JSON.stringify({ 
       success: true,
       organization_name: organization.name,
-      message: 'Transfer completed successfully'
+      requires_admin_approval: true,
+      message: 'Transfer accepted! An administrator will review and complete the transfer shortly.'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

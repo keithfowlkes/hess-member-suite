@@ -131,3 +131,6 @@ verify_jwt = true
 
 [functions.complete-contact-transfer]
 verify_jwt = false
+
+[functions.approve-contact-transfer]
+verify_jwt = true
