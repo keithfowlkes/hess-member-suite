@@ -68,6 +68,7 @@ import { useReassignmentRequests, useApproveReassignmentRequest, useRejectReassi
 import { useOrganizationProfileEditRequests, useApproveOrganizationProfileEditRequest, useRejectOrganizationProfileEditRequest } from '@/hooks/useOrganizationProfileEditRequests';
 import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
 import { useMemberRegistrationUpdates } from '@/hooks/useMemberRegistrationUpdates';
+import { useTransferRequests, useApproveTransferRequest, useRejectTransferRequest } from '@/hooks/useTransferRequests';
 import { useInvoices } from '@/hooks/useInvoices';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -146,10 +147,14 @@ const MasterDashboard = () => {
   const { pendingRegistrations, loading: pendingRegistrationsLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
   const { registrationUpdates, isLoading: registrationUpdatesLoading, processRegistrationUpdate, isProcessing: isProcessingRegistrationUpdate } = useMemberRegistrationUpdates();
   const { invoices, loading: invoicesLoading } = useInvoices();
+  const { data: transferRequests = [], isLoading: transferRequestsLoading } = useTransferRequests();
+  const approveTransfer = useApproveTransferRequest();
+  const rejectTransfer = useRejectTransferRequest();
   
   // Calculate pending counts
   const pendingRegistrationUpdatesCount = registrationUpdates?.filter(r => r.status === 'pending').length || 0;
-  const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length + pendingRegistrationUpdatesCount;
+  const pendingTransfersCount = transferRequests.length;
+  const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length + pendingRegistrationUpdatesCount + pendingTransfersCount;
   const activeInvitationsCount = invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length;
   const totalOrganizationActions = pendingApprovalsCount + activeInvitationsCount;
   const approveMemberInfoUpdate = useApproveReassignmentRequest();
@@ -161,6 +166,7 @@ const MasterDashboard = () => {
   const [selectedPendingRegistration, setSelectedPendingRegistration] = useState<PendingRegistration | null>(null);
   const [selectedMemberInfoUpdate, setSelectedMemberInfoUpdate] = useState(null);
   const [selectedRegistrationUpdate, setSelectedRegistrationUpdate] = useState(null);
+  const [selectedTransferRequest, setSelectedTransferRequest] = useState<any>(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showRegistrationApprovalDialog, setShowRegistrationApprovalDialog] = useState(false);
   const [showInvitationDialog, setShowInvitationDialog] = useState(false);
@@ -168,6 +174,7 @@ const MasterDashboard = () => {
   const [showMemberInfoUpdateComparisonDialog, setShowMemberInfoUpdateComparisonDialog] = useState(false);
   const [selectedProfileEditRequest, setSelectedProfileEditRequest] = useState(null);
   const [showProfileEditComparisonDialog, setShowProfileEditComparisonDialog] = useState(false);
+  const [showTransferApprovalDialog, setShowTransferApprovalDialog] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
 
   // Organization updates state
@@ -1415,6 +1422,65 @@ const MasterDashboard = () => {
                       </div>
                     )}
 
+                    {/* Primary Contact Transfer Requests */}
+                    {transferRequests.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-indigo-600 flex items-center gap-2">
+                          <UserPlus className="h-5 w-5" />
+                          Primary Contact Transfers ({transferRequests.length})
+                        </h3>
+                        {transferRequests.map((transfer) => (
+                          <Card key={`transfer-${transfer.id}`} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="space-y-2 min-w-0 flex-1 mr-4">
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-semibold truncate">
+                                      {transfer.organization?.name || 'Organization'}
+                                    </h3>
+                                    <Badge variant="outline" className={`text-xs flex-shrink-0 ${
+                                      transfer.status === 'accepted' 
+                                        ? 'bg-green-50 text-green-700 border-green-200' 
+                                        : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                    }`}>
+                                      {transfer.status === 'accepted' ? 'Accepted - Awaiting Approval' : 'Pending'}
+                                    </Badge>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground space-y-1">
+                                    <p className="truncate">
+                                      <strong>From:</strong> {transfer.current_contact?.first_name} {transfer.current_contact?.last_name} ({transfer.current_contact?.email})
+                                    </p>
+                                    <p className="truncate">
+                                      <strong>To:</strong> {transfer.new_contact_email}
+                                      {transfer.new_contact_profile && (
+                                        <span className="ml-1">({transfer.new_contact_profile.first_name} {transfer.new_contact_profile.last_name})</span>
+                                      )}
+                                    </p>
+                                    <p><strong>Requested:</strong> {format(new Date(transfer.created_at), 'PP')}</p>
+                                    <p><strong>Expires:</strong> {format(new Date(transfer.expires_at), 'PP')}</p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2 flex-shrink-0">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedTransferRequest(transfer);
+                                      setShowTransferApprovalDialog(true);
+                                    }}
+                                    className="text-xs"
+                                  >
+                                    <Eye className="h-3 w-3 mr-1" />
+                                    Review
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+
                     {pendingApprovalsCount === 0 && (
                       <div className="text-center py-12">
                         <CheckCircle className="h-16 w-16 mx-auto text-green-500 mb-4" />
@@ -2295,6 +2361,82 @@ const MasterDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Transfer Approval Dialog */}
+      <AlertDialog open={showTransferApprovalDialog} onOpenChange={setShowTransferApprovalDialog}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-indigo-600" />
+              Approve Primary Contact Transfer
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                {selectedTransferRequest && (
+                  <>
+                    <p>
+                      Transfer primary contact for <strong>{selectedTransferRequest.organization?.name}</strong>
+                    </p>
+                    <div className="bg-muted p-3 rounded-lg space-y-2 text-sm">
+                      <div>
+                        <strong>Current Contact:</strong>{' '}
+                        {selectedTransferRequest.current_contact?.first_name} {selectedTransferRequest.current_contact?.last_name}
+                        <br />
+                        <span className="text-muted-foreground">{selectedTransferRequest.current_contact?.email}</span>
+                      </div>
+                      <div className="border-t pt-2">
+                        <strong>New Contact:</strong>{' '}
+                        {selectedTransferRequest.new_contact_profile 
+                          ? `${selectedTransferRequest.new_contact_profile.first_name} ${selectedTransferRequest.new_contact_profile.last_name}`
+                          : 'Account Not Created'
+                        }
+                        <br />
+                        <span className="text-muted-foreground">{selectedTransferRequest.new_contact_email}</span>
+                      </div>
+                      {!selectedTransferRequest.new_contact_profile && (
+                        <div className="text-amber-600 text-xs mt-2">
+                          ⚠️ The new contact hasn't created an account yet. They must register before the transfer can be completed.
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (selectedTransferRequest) {
+                  rejectTransfer.mutate({ id: selectedTransferRequest.id });
+                  setShowTransferApprovalDialog(false);
+                  setSelectedTransferRequest(null);
+                }
+              }}
+              disabled={rejectTransfer.isPending}
+            >
+              {rejectTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
+              Reject
+            </Button>
+            <AlertDialogAction
+              onClick={() => {
+                if (selectedTransferRequest) {
+                  approveTransfer.mutate({ id: selectedTransferRequest.id });
+                  setShowTransferApprovalDialog(false);
+                  setSelectedTransferRequest(null);
+                }
+              }}
+              disabled={approveTransfer.isPending || !selectedTransferRequest?.new_contact_profile}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {approveTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+              Approve Transfer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 };
