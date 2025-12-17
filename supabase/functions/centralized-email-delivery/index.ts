@@ -26,6 +26,8 @@ interface EmailRequest {
     | 'overdue_reminder'
     | 'overdue-reminder'
     | 'organization_update_alert'
+    | 'contact_transfer'
+    | 'contact_transfer_complete'
     | 'custom';
   to: string | string[];
   subject?: string;
@@ -186,6 +188,53 @@ const handler = async (req: Request): Promise<Response> => {
     if (emailRequest.type === 'custom' && emailRequest.template) {
       // For custom emails with template provided
       finalHtml = replaceTemplateVariables(emailRequest.template, templateData);
+    } else if (emailRequest.type === 'contact_transfer') {
+      // Contact transfer request email
+      finalSubject = `Primary Contact Transfer Request - ${templateData.organization_name}`;
+      const designSettings = await getEmailDesignSettings();
+      let transferTemplate = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
+          <h2 style="color: {{primary_color}};">Primary Contact Transfer Request</h2>
+          <p>You have been invited to become the primary contact for <strong>${templateData.organization_name}</strong> in the HESS Consortium Member Portal.</p>
+          <p><strong>${templateData.current_contact_name}</strong> (${templateData.current_contact_email}) has initiated this transfer.</p>
+          <div style="margin: 30px 0; text-align: center;">
+            <a href="${templateData.transfer_link}" style="background-color: {{primary_color}}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Accept Transfer</a>
+          </div>
+          <p style="color: #666; font-size: 14px;">This transfer request will expire on ${templateData.expires_at}.</p>
+          <p>If you did not expect this transfer request or have questions, please contact the HESS Consortium.</p>
+          <p>Best regards,<br><span style="color: {{primary_color}};">HESS Consortium Team</span></p>
+        </div>
+      `;
+      finalHtml = replaceColorVariables(transferTemplate, designSettings);
+    } else if (emailRequest.type === 'contact_transfer_complete') {
+      // Contact transfer completion email
+      const isNewContact = templateData.is_new_contact === 'true' || templateData.is_new_contact === true;
+      finalSubject = `Primary Contact Transfer ${isNewContact ? 'Accepted' : 'Completed'} - ${templateData.organization_name}`;
+      const designSettings = await getEmailDesignSettings();
+      let completeTemplate = isNewContact ? `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
+          <h2 style="color: {{primary_color}};">You Are Now the Primary Contact</h2>
+          <p>Congratulations! You are now the primary contact for <strong>${templateData.organization_name}</strong> in the HESS Consortium Member Portal.</p>
+          <p>As the primary contact, you can:</p>
+          <ul>
+            <li>Update your organization's profile information</li>
+            <li>Manage software system information</li>
+            <li>Transfer primary contact to another person if needed</li>
+          </ul>
+          <div style="margin: 30px 0; text-align: center;">
+            <a href="https://members.hessconsortium.app/profile" style="background-color: {{primary_color}}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">View Your Profile</a>
+          </div>
+          <p>Best regards,<br><span style="color: {{primary_color}};">HESS Consortium Team</span></p>
+        </div>
+      ` : `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
+          <h2 style="color: {{primary_color}};">Primary Contact Transfer Complete</h2>
+          <p>The primary contact role for <strong>${templateData.organization_name}</strong> has been successfully transferred to ${templateData.new_contact_email}.</p>
+          <p>You are no longer the primary contact for this organization. If you believe this was done in error, please contact the HESS Consortium.</p>
+          <p>Best regards,<br><span style="color: {{primary_color}};">HESS Consortium Team</span></p>
+        </div>
+      `;
+      finalHtml = replaceColorVariables(completeTemplate, designSettings);
     } else {
       // Get template from database
       const emailType = emailRequest.type?.replace(/-/g, '_') || 'test';
