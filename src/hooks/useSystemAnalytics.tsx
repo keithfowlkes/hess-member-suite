@@ -77,9 +77,18 @@ const processDatacubeData = (datacubeEntries: Array<{system_field: string, syste
 export const useSystemAnalytics = () => {
   const queryClient = useQueryClient();
 
-  // Debounced real-time subscription to prevent cascading refetches
+  // Debounced real-time subscription for both datacube and organizations changes
   useEffect(() => {
     let invalidateTimeout: NodeJS.Timeout;
+    
+    const handleChange = (source: string) => {
+      console.log(`Analytics: ${source} changed, scheduling refresh...`);
+      clearTimeout(invalidateTimeout);
+      invalidateTimeout = setTimeout(() => {
+        console.log('Analytics: Invalidating query cache');
+        queryClient.invalidateQueries({ queryKey: ['system-analytics-datacube'] });
+      }, 1500); // Slightly longer delay to allow datacube refresh to complete
+    };
     
     const channelName = `system_analytics_${Math.random().toString(36).substr(2, 9)}`;
     const subscription = supabase
@@ -90,13 +99,15 @@ export const useSystemAnalytics = () => {
           schema: 'public', 
           table: 'system_analytics_datacube' 
         }, 
-        () => {
-          console.log('Analytics datacube changed (debounced)');
-          clearTimeout(invalidateTimeout);
-          invalidateTimeout = setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey: ['system-analytics-datacube'] });
-          }, 1000);
-        }
+        () => handleChange('datacube')
+      )
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'organizations' 
+        }, 
+        () => handleChange('organizations')
       )
       .subscribe();
 
@@ -140,9 +151,10 @@ export const useSystemAnalytics = () => {
 
       return analytics;
     },
-    staleTime: 1000 * 60 * 30, // Consider data stale after 30 minutes
-    gcTime: 1000 * 60 * 60, // Keep in cache for 1 hour
+    staleTime: 1000 * 60 * 5, // Consider data stale after 5 minutes (reduced from 30)
+    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
     retry: 3, // Retry failed requests up to 3 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    refetchOnWindowFocus: true, // Refetch when user returns to the tab
   });
 };
