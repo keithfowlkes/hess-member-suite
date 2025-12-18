@@ -207,7 +207,15 @@ const Index = () => {
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      onClick={() => window.open(`https://members.hessconsortium.app${window.location.pathname}${window.location.search}`, '_blank')}
+                      onClick={() => {
+                        const productionDomain = 'https://members.hessconsortium.app';
+                        const currentPath = `${window.location.pathname}${window.location.search}`;
+                        // If already on production domain, use current origin to maintain session
+                        const targetOrigin = window.location.origin.includes('hessconsortium.app') 
+                          ? window.location.origin 
+                          : productionDomain;
+                        window.open(`${targetOrigin}${currentPath}`, '_blank');
+                      }}
                       className="flex items-center gap-2"
                       title="Open in new window"
                     >
