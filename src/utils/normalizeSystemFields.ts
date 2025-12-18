@@ -107,8 +107,9 @@ const FIELD_MAPPINGS: SystemFieldMappings = {
     "Cam": "Unit4",
     
     // Other common systems
-    "Workday": "Workday Financial Management",
-    "Workday Financial Management": "Workday Financial Management",
+    "Workday": "Workday Finance",
+    "Workday Finance": "Workday Finance",
+    "Workday Financial Management": "Workday Finance",
     "Populi": "Populi",
     "QuickBooks": "QuickBooks"
   },
