@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle, Edit3, Info, MessageSquare, ClipboardList } from 'lucide-react';
+import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle, Edit3, Info, MessageSquare, ClipboardList, ExternalLink } from 'lucide-react';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { useInvoices } from '@/hooks/useInvoices';
@@ -204,14 +204,25 @@ const Index = () => {
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={signOut}
-                    className="flex items-center gap-2"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sign Out
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => window.open(window.location.origin, '_blank')}
+                      className="flex items-center gap-2"
+                      title="Open in new window"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      New Window
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={signOut}
+                      className="flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
