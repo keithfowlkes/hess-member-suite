@@ -134,3 +134,6 @@ verify_jwt = false
 
 [functions.approve-contact-transfer]
 verify_jwt = true
+
+[functions.repair-email-mismatches]
+verify_jwt = false
