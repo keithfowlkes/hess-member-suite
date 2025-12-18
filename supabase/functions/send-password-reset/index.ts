@@ -27,23 +27,12 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { email, redirectUrl }: PasswordResetRequest = await req.json();
 
-    // Get user's profile including login hint
-    const { data: userProfile, error: profileError } = await supabase
+    // Get user's profile including login hint (may not exist)
+    const { data: userProfile } = await supabase
       .from('profiles')
       .select('login_hint, first_name, last_name')
       .eq('email', email)
       .single();
-
-    if (profileError) {
-      console.error('Error fetching user profile:', profileError);
-      return new Response(
-        JSON.stringify({ error: 'User not found' }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
 
     // Get the password reset redirect URL from system settings
     const { data: settingData } = await supabase
@@ -63,12 +52,18 @@ const handler = async (req: Request): Promise<Response> => {
       }
     });
 
+    // SECURITY: Don't reveal if the email exists or not
+    // Return success message regardless to prevent email enumeration
     if (resetError) {
-      console.error('Error generating reset link:', resetError);
+      console.log('Password reset requested for non-existent or invalid email:', email);
+      // Return success anyway - don't reveal that the user doesn't exist
       return new Response(
-        JSON.stringify({ error: 'Failed to generate reset link' }),
+        JSON.stringify({ 
+          success: true, 
+          message: 'If an account exists with this email, a password reset link will be sent.' 
+        }),
         {
-          status: 500,
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
