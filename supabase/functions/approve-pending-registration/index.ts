@@ -194,8 +194,10 @@ serve(async (req) => {
       const { data: updatedUser, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
         existingUser.id,
         {
+          email: pendingReg.email, // Ensure auth email matches registration email
           user_metadata: {
             ...existingUser.user_metadata,
+            email: pendingReg.email, // Include email in metadata for consistency
             first_name: pendingReg.first_name,
             last_name: pendingReg.last_name,
             organization: pendingReg.organization_name,
@@ -283,6 +285,7 @@ serve(async (req) => {
         email: pendingReg.email,
         email_confirm: true, // Skip email confirmation
         user_metadata: {
+          email: pendingReg.email, // Include email in metadata for consistency
           first_name: pendingReg.first_name,
           last_name: pendingReg.last_name,
           organization: pendingReg.organization_name,
