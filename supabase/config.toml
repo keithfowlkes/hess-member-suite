@@ -137,3 +137,6 @@ verify_jwt = true
 
 [functions.repair-email-mismatches]
 verify_jwt = false
+
+[functions.fix-user-metadata]
+verify_jwt = false
