@@ -140,3 +140,6 @@ verify_jwt = false
 
 [functions.fix-user-metadata]
 verify_jwt = false
+
+[functions.normalize-workday-finance]
+verify_jwt = false
