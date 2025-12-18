@@ -207,7 +207,7 @@ const Index = () => {
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      onClick={() => window.open(window.location.origin, '_blank')}
+                      onClick={() => window.open('https://members.hessconsortium.app', '_blank')}
                       className="flex items-center gap-2"
                       title="Open in new window"
                     >
