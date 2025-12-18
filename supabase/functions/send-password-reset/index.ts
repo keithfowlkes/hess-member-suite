@@ -28,11 +28,15 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, redirectUrl }: PasswordResetRequest = await req.json();
 
     // Get user's profile including login hint (may not exist)
-    const { data: userProfile } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('profiles')
       .select('login_hint, first_name, last_name')
       .eq('email', email)
-      .single();
+      .maybeSingle();
+
+    if (profileError) {
+      console.log('No profile found for password reset request (continuing):', email);
+    }
 
     // Get the password reset redirect URL from system settings
     const { data: settingData } = await supabase
@@ -110,7 +114,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Create login hint section for template with design system colors
     let loginHintSection = '';
-    if (userProfile.login_hint) {
+    if (userProfile?.login_hint) {
       const designSettings = await getEmailDesignSettings();
       loginHintSection = `
         <div style="background: {{accent_color}}20; border: 1px solid {{accent_color}}; border-radius: 8px; padding: 20px; margin: 20px 0;">
@@ -128,7 +132,7 @@ const handler = async (req: Request): Promise<Response> => {
         type: 'password_reset',
         to: [email],
         data: {
-          user_name: userProfile.first_name || 'Member',
+          user_name: userProfile?.first_name || 'Member',
           reset_link: customResetUrl,
           expiry_time: '1 hour',
           login_hint_section: loginHintSection || ''

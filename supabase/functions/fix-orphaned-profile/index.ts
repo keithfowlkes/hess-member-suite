@@ -34,9 +34,86 @@ serve(async (req) => {
 
     console.log(`🔧 Fixing orphaned profile for: ${email}, profile ID: ${profileId}`);
 
-    // Check if auth user already exists for this email
+    // Prefer fixing via the profile's current user_id when present (handles email mismatch cases)
+    const { data: profileRow, error: profileFetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('user_id, email')
+      .eq('id', profileId)
+      .maybeSingle();
+
+    if (profileFetchError) {
+      console.error('Error fetching profile:', profileFetchError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch profile', details: profileFetchError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (profileRow?.user_id) {
+      console.log(`🔎 Profile has user_id: ${profileRow.user_id}. Checking auth user...`);
+
+      const { data: authUserData, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(profileRow.user_id);
+
+      if (!authUserError && authUserData?.user) {
+        const currentAuthEmail = authUserData.user.email;
+
+        // If the auth user exists but the email differs from the profile/requested email,
+        // fix by updating the auth user's email to match.
+        if (currentAuthEmail && currentAuthEmail.toLowerCase() !== email.toLowerCase()) {
+          console.log(`✉️ Updating auth email from ${currentAuthEmail} -> ${email}`);
+          const { error: updateAuthEmailError } = await supabaseAdmin.auth.admin.updateUserById(profileRow.user_id, {
+            email,
+            email_confirm: true,
+          });
+
+          if (updateAuthEmailError) {
+            console.error('Error updating auth user email:', updateAuthEmailError);
+            return new Response(
+              JSON.stringify({ error: 'Failed to update auth user email', details: updateAuthEmailError.message }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+        }
+
+        // Ensure the profile's email matches the requested email
+        if (profileRow.email?.toLowerCase() !== email.toLowerCase()) {
+          await supabaseAdmin.from('profiles').update({ email }).eq('id', profileId);
+        }
+
+        // Remove any duplicate profile rows for this auth user (trigger-created)
+        const { data: dupProfiles } = await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .eq('user_id', profileRow.user_id)
+          .neq('id', profileId);
+
+        if (dupProfiles?.length) {
+          const ids = dupProfiles.map((p: any) => p.id);
+          console.log(`🗑️ Deleting duplicate profiles: ${ids.join(', ')}`);
+          await supabaseAdmin.from('profiles').delete().in('id', ids);
+        }
+
+        // Ensure user has member role
+        await supabaseAdmin
+          .from('user_roles')
+          .upsert({ user_id: profileRow.user_id, role: 'member' }, { onConflict: 'user_id,role' });
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'Profile is linked; auth email verified/updated successfully',
+            authUserId: profileRow.user_id,
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log(`⚠️ Profile user_id exists but auth user not found by id: ${profileRow.user_id}`);
+    }
+
+    // Fallback: Check if auth user already exists for this email
     const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-    
+
     if (listError) {
       console.error('Error listing users:', listError);
       return new Response(
@@ -45,11 +122,11 @@ serve(async (req) => {
       );
     }
 
-    const existingUser = existingUsers.users.find(u => u.email === email);
-    
+    const existingUser = existingUsers.users.find(u => (u.email || '').toLowerCase() === email.toLowerCase());
+
     if (existingUser) {
       console.log(`⚠️ Auth user already exists for ${email} with ID: ${existingUser.id}`);
-      
+
       // Check if there's a duplicate profile created by the trigger
       const { data: duplicateProfile } = await supabaseAdmin
         .from('profiles')
@@ -87,10 +164,10 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           message: 'Profile linked to existing auth user',
-          authUserId: existingUser.id 
+          authUserId: existingUser.id,
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -117,6 +194,19 @@ serve(async (req) => {
     }
 
     console.log(`✅ Auth user created with ID: ${newUser.user.id}`);
+
+    // Delete any duplicate profile created by the auth trigger for this newly created user
+    const { data: createdDupProfiles } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('user_id', newUser.user.id)
+      .neq('id', profileId);
+
+    if (createdDupProfiles?.length) {
+      const ids = createdDupProfiles.map((p: any) => p.id);
+      console.log(`🗑️ Deleting trigger-created duplicate profiles: ${ids.join(', ')}`);
+      await supabaseAdmin.from('profiles').delete().in('id', ids);
+    }
 
     // Update the profile's user_id to point to the new auth user
     const { error: updateProfileError } = await supabaseAdmin
