@@ -209,36 +209,11 @@ const Index = () => {
                       variant="outline"
                       onClick={() => {
                         const productionOrigin = 'https://members.hessconsortium.app';
-
-                        // If already on production domain, use current origin to maintain session.
+                        // If already on production domain, use current origin to maintain session
                         const targetOrigin = window.location.origin.includes('hessconsortium.app')
                           ? window.location.origin
                           : productionOrigin;
-
-                        const popup = window.open(`${targetOrigin}/`, '_blank');
-
-                        // If launching production from a different origin (Lovable preview), hand off the current session
-                        // so the new window doesn't prompt for login again.
-                        if (
-                          popup &&
-                          targetOrigin === productionOrigin &&
-                          session?.access_token &&
-                          session?.refresh_token
-                        ) {
-                          const payload = {
-                            type: 'HESS_AUTH_HANDOFF',
-                            access_token: session.access_token,
-                            refresh_token: session.refresh_token,
-                            redirectTo: '/',
-                          };
-
-                          let attempts = 0;
-                          const intervalId = window.setInterval(() => {
-                            attempts += 1;
-                            popup.postMessage(payload, productionOrigin);
-                            if (attempts >= 10) window.clearInterval(intervalId);
-                          }, 400);
-                        }
+                        window.open(`${targetOrigin}/`, '_blank');
                       }}
                       className="flex items-center gap-2"
                       title="Open in new window"
