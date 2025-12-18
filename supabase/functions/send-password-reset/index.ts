@@ -30,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Get user's profile including login hint (may not exist)
     const { data: userProfile, error: profileError } = await supabase
       .from('profiles')
-      .select('login_hint, first_name, last_name')
+      .select('user_id, login_hint, first_name, last_name')
       .eq('email', email)
       .maybeSingle();
 
@@ -39,32 +39,58 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Get the password reset redirect URL from system settings
-    const { data: settingData } = await supabase
+    const { data: settingData, error: settingError } = await supabase
       .from('system_settings')
       .select('setting_value')
       .eq('setting_key', 'password_reset_redirect_url')
-      .single();
+      .maybeSingle();
+
+    if (settingError) {
+      console.error('Error fetching password reset redirect URL (falling back to default):', settingError);
+    }
 
     const baseResetUrl = settingData?.setting_value || 'https://members.hessconsortium.app';
 
+    const redirectTo = redirectUrl || `${baseResetUrl}/password-reset`;
+
     // Generate a password reset link using Supabase Auth
-    const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
+    let resetData: any | null = null;
+    let resetError: any | null = null;
+
+    ({ data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
-      email: email,
-      options: {
-        redirectTo: redirectUrl || `${baseResetUrl}/password-reset`
+      email,
+      options: { redirectTo }
+    }));
+
+    // If email doesn't exist in auth.users but the profile is linked to an auth user,
+    // retry using the auth user's current email (handles email-mismatch cases).
+    if (resetError && userProfile?.user_id) {
+      console.log('Primary generateLink failed; trying via profile.user_id:', userProfile.user_id);
+      const { data: authUserData, error: authUserError } = await supabase.auth.admin.getUserById(userProfile.user_id);
+
+      if (!authUserError && authUserData?.user?.email) {
+        const authEmail = authUserData.user.email;
+        console.log('Retrying generateLink with auth email:', authEmail);
+
+        ({ data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
+          type: 'recovery',
+          email: authEmail,
+          options: { redirectTo }
+        }));
+      } else {
+        console.log('Could not load auth user by profile.user_id; skipping retry');
       }
-    });
+    }
 
     // SECURITY: Don't reveal if the email exists or not
     // Return success message regardless to prevent email enumeration
-    if (resetError) {
+    if (resetError || !resetData) {
       console.log('Password reset requested for non-existent or invalid email:', email);
-      // Return success anyway - don't reveal that the user doesn't exist
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'If an account exists with this email, a password reset link will be sent.' 
+        JSON.stringify({
+          success: true,
+          message: 'If an account exists with this email, a password reset link will be sent.'
         }),
         {
           status: 200,
@@ -73,7 +99,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Extract token parameters from the Supabase reset link for our custom page
     console.log('Reset data structure:', JSON.stringify(resetData, null, 2));
     
     const resetUrl = new URL(resetData.properties.action_link);
