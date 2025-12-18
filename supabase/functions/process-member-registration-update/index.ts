@@ -355,6 +355,32 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
         console.log('Profile updated successfully');
+
+        // CRITICAL: Sync email and metadata to auth.users to prevent mismatches
+        if (existingProfile.user_id) {
+          console.log('Syncing auth.users email and metadata for user:', existingProfile.user_id);
+          const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
+            existingProfile.user_id,
+            {
+              email: registrationData.email,
+              user_metadata: {
+                email: registrationData.email,
+                first_name: registrationData.first_name,
+                last_name: registrationData.last_name,
+                organization: organizationName,
+                primary_contact_title: registrationData.primary_contact_title,
+              }
+            }
+          );
+
+          if (authUpdateError) {
+            console.error('Failed to sync auth.users email/metadata:', authUpdateError);
+            // Don't fail the whole operation, but log the error
+            // The repair functions can fix this later if needed
+          } else {
+            console.log('Auth user email and metadata synced successfully');
+          }
+        }
       } else {
         console.log('Skipping profile update - no existing profile found');
       }
