@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { usePartnerProgramInterests, PartnerProgramInterest } from '@/hooks/usePartnerProgramInterests';
-import { Users, Building2, MapPin, Mail, Phone, Globe, Calendar, GraduationCap, Shield, Reply, Forward } from 'lucide-react';
+import { Users, Building2, MapPin, Mail, Phone, Globe, Calendar, GraduationCap, Shield, Reply, Forward, X } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const EMAIL_SUBJECT = "HESS Cohort Program Interest Response";
@@ -66,6 +67,7 @@ function EmailActions({ interest }: { interest: PartnerProgramInterest }) {
 }
 
 export function AdminPartnerProgramInterests() {
+  const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   // Pass true to get ALL partner program interests
   const { interests, loading, error, count } = usePartnerProgramInterests(true);
 
@@ -97,6 +99,11 @@ export function AdminPartnerProgramInterests() {
     });
   });
 
+  // Filter interests based on selected program
+  const filteredInterests = selectedProgram
+    ? interests.filter(interest => interest.partnerProgramInterest.includes(selectedProgram))
+    : interests;
+
   return (
     <Accordion type="single" collapsible className="mb-6">
       <AccordionItem value="admin-interests" className="border border-amber-500/30 rounded-lg bg-gradient-to-r from-amber-500/5 to-amber-500/10 shadow-md">
@@ -122,17 +129,42 @@ export function AdminPartnerProgramInterests() {
           </div>
         </AccordionTrigger>
         <AccordionContent className="px-6 pb-4">
-          {/* Summary by Program */}
+          {/* Summary by Program - Clickable Filters */}
           <div className="flex flex-wrap gap-2 mb-4 p-3 bg-background/60 rounded-lg border">
+            {selectedProgram && (
+              <Badge 
+                variant="outline" 
+                className="text-sm cursor-pointer hover:bg-destructive/10 border-destructive text-destructive"
+                onClick={() => setSelectedProgram(null)}
+              >
+                <X className="h-3 w-3 mr-1" />
+                Clear Filter
+              </Badge>
+            )}
             {Object.entries(groupedByProgram).map(([program, orgs]) => (
-              <Badge key={program} variant="secondary" className="text-sm">
+              <Badge 
+                key={program} 
+                variant={selectedProgram === program ? "default" : "secondary"} 
+                className={`text-sm cursor-pointer transition-all ${
+                  selectedProgram === program 
+                    ? 'ring-2 ring-primary ring-offset-1' 
+                    : 'hover:bg-primary/20'
+                }`}
+                onClick={() => setSelectedProgram(selectedProgram === program ? null : program)}
+              >
                 {program}: {orgs.length} {orgs.length === 1 ? 'member' : 'members'}
               </Badge>
             ))}
           </div>
 
+          {selectedProgram && (
+            <p className="text-sm text-muted-foreground mb-3">
+              Showing {filteredInterests.length} {filteredInterests.length === 1 ? 'member' : 'members'} interested in <strong>{selectedProgram}</strong>
+            </p>
+          )}
+
           <Accordion type="single" collapsible className="w-full space-y-2">
-            {interests.map((interest, index) => (
+            {filteredInterests.map((interest, index) => (
               <AccordionItem 
                 key={interest.organizationId} 
                 value={`item-${index}`}
