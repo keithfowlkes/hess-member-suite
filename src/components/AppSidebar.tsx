@@ -11,6 +11,7 @@ import { usePendingRegistrations } from '@/hooks/usePendingRegistrations';
 import { useMemberRegistrationUpdates } from '@/hooks/useMemberRegistrationUpdates';
 import { useUnreadMessageCount } from '@/hooks/useUserMessages';
 import { useSurveys } from '@/hooks/useSurveys';
+import { usePartnerProgramInterests } from '@/hooks/usePartnerProgramInterests';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -106,6 +107,9 @@ export function AppSidebar() {
   const { pendingRegistrations } = usePendingRegistrations();
   const { registrationUpdates } = useMemberRegistrationUpdates();
   const { data: unreadMessageCount = 0 } = useUnreadMessageCount();
+  
+  // Fetch partner program interests count for cohort leaders
+  const { count: partnerInterestCount } = usePartnerProgramInterests();
   
   // Fetch surveys and user's responses to calculate unanswered surveys count
   const { data: surveys = [] } = useSurveys();
@@ -237,6 +241,7 @@ export function AppSidebar() {
                 const showMasterDashboardBadge = isViewingAsAdmin && item.title === 'Master Dashboard' && totalPendingActions > 0;
                 const showUserMessagesBadge = isViewingAsAdmin && item.title === 'User Messages' && (item as any).badge > 0;
                 const showSurveysBadge = !isViewingAsAdmin && item.title === 'Surveys' && unansweredSurveysCount > 0;
+                const showCohortBadge = !isViewingAsAdmin && item.title === 'Your Cohort Information' && partnerInterestCount > 0;
                 
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -273,6 +278,14 @@ export function AppSidebar() {
                                 className="h-4 w-4 p-0 flex items-center justify-center text-xs ml-auto"
                               >
                                 {unansweredSurveysCount}
+                              </Badge>
+                            )}
+                            {showCohortBadge && (
+                              <Badge 
+                                variant="destructive" 
+                                className="h-4 w-4 p-0 flex items-center justify-center text-xs ml-auto"
+                              >
+                                {partnerInterestCount}
                               </Badge>
                             )}
                           </div>
