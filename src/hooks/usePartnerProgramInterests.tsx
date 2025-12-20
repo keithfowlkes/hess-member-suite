@@ -36,11 +36,12 @@ const cohortToPartnerMap: Record<string, string> = {
   'Anthology': 'Anthology',
 };
 
-export function usePartnerProgramInterests() {
+export function usePartnerProgramInterests(forceShowAll: boolean = false) {
   const { user } = useAuth();
   const [interests, setInterests] = useState<PartnerProgramInterest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const fetchPartnerInterests = async () => {
@@ -50,7 +51,106 @@ export function usePartnerProgramInterests() {
       }
 
       try {
-        // First, get the cohorts this user leads
+        // Check if user is admin
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+
+        if (roleError) {
+          console.error('Error fetching user role:', roleError);
+        }
+
+        const userIsAdmin = roleData?.some(r => r.role === 'admin') || false;
+        setIsAdmin(userIsAdmin);
+
+        // If admin and forceShowAll is true, fetch all interests
+        if (userIsAdmin && forceShowAll) {
+          // Fetch all organizations with partner program interests
+          const { data: organizationsData, error: orgsError } = await supabase
+            .from('organizations')
+            .select(`
+              id,
+              name,
+              city,
+              state,
+              student_fte,
+              partner_program_interest,
+              website,
+              phone,
+              membership_start_date,
+              contact_person_id
+            `)
+            .eq('membership_status', 'active')
+            .not('partner_program_interest', 'is', null);
+
+          if (orgsError) {
+            throw new Error('Failed to fetch organizations');
+          }
+
+          // Filter organizations that have any partner program interests (excluding 'None')
+          const matchingOrgs = organizationsData?.filter(org => {
+            if (!org.partner_program_interest || !Array.isArray(org.partner_program_interest)) {
+              return false;
+            }
+            return org.partner_program_interest.some(
+              (interest: string) => interest && interest !== 'None' && interest !== ''
+            );
+          }) || [];
+
+          if (matchingOrgs.length === 0) {
+            setInterests([]);
+            setLoading(false);
+            return;
+          }
+
+          // Get contact person details
+          const contactIds = matchingOrgs
+            .map(org => org.contact_person_id)
+            .filter(Boolean);
+
+          let contactsMap: Map<string, any> = new Map();
+          if (contactIds.length > 0) {
+            const { data: contactsData, error: contactsError } = await supabase
+              .from('profiles')
+              .select('id, first_name, last_name, email, primary_contact_title')
+              .in('id', contactIds);
+
+            if (!contactsError && contactsData) {
+              contactsMap = new Map(contactsData.map(c => [c.id, c]));
+            }
+          }
+
+          // Build the result with all interests
+          const result: PartnerProgramInterest[] = matchingOrgs.map(org => {
+            const contact = org.contact_person_id ? contactsMap.get(org.contact_person_id) : null;
+            
+            const allInterests = (org.partner_program_interest || []).filter(
+              (interest: string) => interest && interest !== 'None' && interest !== ''
+            );
+
+            return {
+              organizationId: org.id,
+              organizationName: org.name,
+              contactName: contact ? `${contact.first_name} ${contact.last_name}` : 'Unknown',
+              contactEmail: contact?.email || '',
+              contactTitle: contact?.primary_contact_title || '',
+              city: org.city || '',
+              state: org.state || '',
+              studentFte: org.student_fte,
+              partnerProgramInterest: allInterests,
+              website: org.website || '',
+              phone: org.phone || '',
+              membershipStartDate: org.membership_start_date,
+            };
+          }).filter(item => item.partnerProgramInterest.length > 0);
+
+          setInterests(result);
+          setLoading(false);
+          return;
+        }
+
+        // Normal cohort leader flow - get the cohorts this user leads
         const { data: userCohortsData, error: cohortsError } = await supabase
           .from('user_cohorts')
           .select('cohort')
@@ -170,7 +270,7 @@ export function usePartnerProgramInterests() {
     };
 
     fetchPartnerInterests();
-  }, [user]);
+  }, [user, forceShowAll]);
 
-  return { interests, loading, error, count: interests.length };
+  return { interests, loading, error, count: interests.length, isAdmin };
 }
