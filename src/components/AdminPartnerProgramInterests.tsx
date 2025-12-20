@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -9,6 +9,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+const STORAGE_KEY = 'admin_partner_interests_viewed';
 
 const EMAIL_SUBJECT = "HESS Cohort Program Interest Response";
 
@@ -230,8 +232,19 @@ function InterestEditor({ interest, onUpdate }: InterestEditorProps) {
 export function AdminPartnerProgramInterests() {
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [accordionValue, setAccordionValue] = useState<string>('');
   // Pass true to get ALL partner program interests
   const { interests, loading, error, count } = usePartnerProgramInterests(true);
+
+  // Mark as viewed when accordion is opened
+  useEffect(() => {
+    if (accordionValue === 'admin-interests' && count > 0) {
+      // Store the current count as viewed
+      localStorage.setItem(STORAGE_KEY, String(count));
+      // Dispatch custom event to notify sidebar to update badge
+      window.dispatchEvent(new CustomEvent('partnerInterestsViewed'));
+    }
+  }, [accordionValue, count]);
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
@@ -273,7 +286,7 @@ export function AdminPartnerProgramInterests() {
     : interests;
 
   return (
-    <Accordion type="single" collapsible className="mb-6">
+    <Accordion type="single" collapsible className="mb-6" value={accordionValue} onValueChange={setAccordionValue}>
       <AccordionItem value="admin-interests" className="border border-amber-500/30 rounded-lg bg-gradient-to-r from-amber-500/5 to-amber-500/10 shadow-md">
         <AccordionTrigger className="px-6 py-4 hover:no-underline">
           <div className="flex items-center gap-3">

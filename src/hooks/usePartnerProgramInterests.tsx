@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
+const STORAGE_KEY = 'admin_partner_interests_viewed';
+
 export interface PartnerProgramInterest {
   organizationId: string;
   organizationName: string;
@@ -42,6 +44,21 @@ export function usePartnerProgramInterests(forceShowAll: boolean = false) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [viewedCount, setViewedCount] = useState<number>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? parseInt(stored, 10) : 0;
+  });
+
+  // Listen for the "viewed" event from the accordion
+  useEffect(() => {
+    const handleViewed = () => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      setViewedCount(stored ? parseInt(stored, 10) : 0);
+    };
+
+    window.addEventListener('partnerInterestsViewed', handleViewed);
+    return () => window.removeEventListener('partnerInterestsViewed', handleViewed);
+  }, []);
 
   useEffect(() => {
     const fetchPartnerInterests = async () => {
@@ -272,5 +289,11 @@ export function usePartnerProgramInterests(forceShowAll: boolean = false) {
     fetchPartnerInterests();
   }, [user, forceShowAll]);
 
-  return { interests, loading, error, count: interests.length, isAdmin };
+  // Calculate unviewed count - if current count is greater than what was viewed, show the difference
+  const unviewedCount = interests.length > viewedCount ? interests.length - viewedCount : 0;
+  
+  // For badge display: show count only if there are unviewed interests
+  const badgeCount = forceShowAll ? unviewedCount : interests.length;
+  
+  return { interests, loading, error, count: interests.length, isAdmin, unviewedCount, badgeCount };
 }

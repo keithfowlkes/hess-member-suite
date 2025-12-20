@@ -108,8 +108,8 @@ export function AppSidebar() {
   const { registrationUpdates } = useMemberRegistrationUpdates();
   const { data: unreadMessageCount = 0 } = useUnreadMessageCount();
   
-  // Fetch partner program interests count for cohort leaders
-  const { count: partnerInterestCount } = usePartnerProgramInterests();
+  // Fetch partner program interests count for admin badge (uses unviewedCount for admin view)
+  const { badgeCount: partnerInterestCount } = usePartnerProgramInterests(true);
   
   // Fetch surveys and user's responses to calculate unanswered surveys count
   const { data: surveys = [] } = useSurveys();
@@ -241,7 +241,8 @@ export function AppSidebar() {
                 const showMasterDashboardBadge = isViewingAsAdmin && item.title === 'Master Dashboard' && totalPendingActions > 0;
                 const showUserMessagesBadge = isViewingAsAdmin && item.title === 'User Messages' && (item as any).badge > 0;
                 const showSurveysBadge = !isViewingAsAdmin && item.title === 'Surveys' && unansweredSurveysCount > 0;
-                const showCohortBadge = !isViewingAsAdmin && item.title === 'Your Cohort Information' && partnerInterestCount > 0;
+                // Show cohort badge on Admin Panel -> Cohort Information (not member view)
+                const showCohortBadge = isViewingAsAdmin && item.title === 'Cohort Information' && partnerInterestCount > 0;
                 
                 return (
                   <SidebarMenuItem key={item.title}>
