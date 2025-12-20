@@ -15,6 +15,7 @@ import { useCohortStatistics } from '@/hooks/useCohortStatistics';
 import { useCohortLeaderData } from '@/hooks/useCohortLeaderData';
 import { useOrganizationByName } from '@/hooks/useOrganizationByName';
 import { OrganizationDetailsDialog } from '@/components/OrganizationDetailsDialog';
+import { PartnerProgramInterestNotifications } from '@/components/PartnerProgramInterestNotifications';
 import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart, Search, User, Download, Maximize2 } from 'lucide-react';
 import anthologyLogo from '@/assets/anthology-logo.png';
 import ellucianLogo from '@/assets/ellucian-logo.jpg';
@@ -518,6 +519,9 @@ const handleOrganizationDialogClose = () => {
           <AppSidebar />
           <main className="flex-1 p-8">
             <div className="space-y-6">
+              {/* Partner Program Interest Notifications - At Top */}
+              <PartnerProgramInterestNotifications />
+              
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div>
