@@ -3,10 +3,23 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { usePartnerProgramInterests, PartnerProgramInterest } from '@/hooks/usePartnerProgramInterests';
-import { Users, Building2, MapPin, Mail, Phone, Globe, Calendar, GraduationCap, Shield, Reply, Forward, X } from 'lucide-react';
+import { Users, Building2, MapPin, Mail, Phone, Globe, Calendar, GraduationCap, Shield, Reply, Forward, X, Plus, Trash2, Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const EMAIL_SUBJECT = "HESS Cohort Program Interest Response";
+
+// Available partner programs
+const AVAILABLE_PROGRAMS = [
+  'Anthology',
+  'Ellucian',
+  'Jenzabar',
+  'Oracle',
+  'Workday'
+];
 
 function generateEmailBody(interest: PartnerProgramInterest, isForward: boolean = false): string {
   const intro = isForward 
@@ -66,10 +79,165 @@ function EmailActions({ interest }: { interest: PartnerProgramInterest }) {
   );
 }
 
+interface InterestEditorProps {
+  interest: PartnerProgramInterest;
+  onUpdate: () => void;
+}
+
+function InterestEditor({ interest, onUpdate }: InterestEditorProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedPrograms, setSelectedPrograms] = useState<string[]>(interest.partnerProgramInterest);
+  const [saving, setSaving] = useState(false);
+
+  const handleToggleProgram = (program: string) => {
+    setSelectedPrograms(prev => 
+      prev.includes(program) 
+        ? prev.filter(p => p !== program)
+        : [...prev, program]
+    );
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({ 
+          partner_program_interest: selectedPrograms.length > 0 ? selectedPrograms : null 
+        })
+        .eq('id', interest.organizationId);
+
+      if (error) throw error;
+      
+      toast.success('Partner program interests updated');
+      setIsEditing(false);
+      onUpdate();
+    } catch (err) {
+      console.error('Error updating interests:', err);
+      toast.error('Failed to update interests');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteInterest = async (program: string) => {
+    const newInterests = interest.partnerProgramInterest.filter(p => p !== program);
+    
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({ 
+          partner_program_interest: newInterests.length > 0 ? newInterests : null 
+        })
+        .eq('id', interest.organizationId);
+
+      if (error) throw error;
+      
+      toast.success(`Removed ${program} interest`);
+      onUpdate();
+    } catch (err) {
+      console.error('Error removing interest:', err);
+      toast.error('Failed to remove interest');
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+          Interest Details
+        </h4>
+        <Popover open={isEditing} onOpenChange={setIsEditing}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 px-2">
+              <Pencil className="h-3.5 w-3.5 mr-1" />
+              Edit
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64" align="end">
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm">Edit Program Interests</h4>
+              <div className="space-y-2">
+                {AVAILABLE_PROGRAMS.map(program => (
+                  <div key={program} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`program-${interest.organizationId}-${program}`}
+                      checked={selectedPrograms.includes(program)}
+                      onCheckedChange={() => handleToggleProgram(program)}
+                    />
+                    <label 
+                      htmlFor={`program-${interest.organizationId}-${program}`}
+                      className="text-sm cursor-pointer"
+                    >
+                      {program}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 pt-2 border-t">
+                <Button 
+                  size="sm" 
+                  onClick={handleSave} 
+                  disabled={saving}
+                  className="flex-1"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => {
+                    setSelectedPrograms(interest.partnerProgramInterest);
+                    setIsEditing(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2">
+          {interest.partnerProgramInterest.map(program => (
+            <Badge 
+              key={program} 
+              className="bg-amber-100 text-amber-800 border-amber-300 pr-1 flex items-center gap-1"
+            >
+              Interested in {program}
+              <button
+                onClick={() => handleDeleteInterest(program)}
+                className="ml-1 p-0.5 hover:bg-amber-200 rounded transition-colors"
+                title={`Remove ${program} interest`}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+        {interest.membershipStartDate && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+            <Calendar className="h-4 w-4" />
+            <span>Member since {new Date(interest.membershipStartDate).toLocaleDateString()}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function AdminPartnerProgramInterests() {
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   // Pass true to get ALL partner program interests
   const { interests, loading, error, count } = usePartnerProgramInterests(true);
+
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+    // Force a re-render by updating state - the hook will refetch
+    window.location.reload();
+  };
 
   if (loading) {
     return (
@@ -266,27 +434,8 @@ export function AdminPartnerProgramInterests() {
                       </div>
                     </div>
 
-                    {/* Program Interest */}
-                    <div className="space-y-3">
-                      <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                        Interest Details
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-2">
-                          {interest.partnerProgramInterest.map(program => (
-                            <Badge key={program} className="bg-amber-100 text-amber-800 border-amber-300">
-                              Interested in {program}
-                            </Badge>
-                          ))}
-                        </div>
-                        {interest.membershipStartDate && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>Member since {new Date(interest.membershipStartDate).toLocaleDateString()}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    {/* Program Interest - Now with Editor */}
+                    <InterestEditor interest={interest} onUpdate={handleRefresh} />
                   </div>
 
                   {/* Email Actions */}
