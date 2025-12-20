@@ -1,9 +1,70 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { usePartnerProgramInterests } from '@/hooks/usePartnerProgramInterests';
-import { Users, Building2, MapPin, Mail, Phone, Globe, Calendar, GraduationCap, Sparkles } from 'lucide-react';
+import { usePartnerProgramInterests, PartnerProgramInterest } from '@/hooks/usePartnerProgramInterests';
+import { Users, Building2, MapPin, Mail, Phone, Globe, Calendar, GraduationCap, Sparkles, Reply, Forward } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+
+const EMAIL_SUBJECT = "HESS Cohort Program Interest Response";
+
+function generateEmailBody(interest: PartnerProgramInterest, isForward: boolean = false): string {
+  const intro = isForward 
+    ? `I'm forwarding information about a HESS member who has expressed interest in our partner program.\n\n`
+    : `Thank you for your interest in learning more about our partner program.\n\n`;
+  
+  const orgInfo = `Organization: ${interest.organizationName}
+Location: ${interest.city}, ${interest.state}
+${interest.studentFte ? `Student FTE: ${interest.studentFte.toLocaleString()}` : ''}
+${interest.website ? `Website: ${interest.website}` : ''}
+
+Contact: ${interest.contactName}
+${interest.contactTitle ? `Title: ${interest.contactTitle}` : ''}
+Email: ${interest.contactEmail}
+${interest.phone ? `Phone: ${interest.phone}` : ''}
+
+Partner Program Interest: ${interest.partnerProgramInterest.join(', ')}
+${interest.membershipStartDate ? `Member Since: ${new Date(interest.membershipStartDate).toLocaleDateString()}` : ''}`;
+
+  return encodeURIComponent(intro + orgInfo);
+}
+
+function EmailActions({ interest }: { interest: PartnerProgramInterest }) {
+  const handleReply = () => {
+    const body = generateEmailBody(interest, false);
+    const mailtoUrl = `mailto:${interest.contactEmail}?subject=${encodeURIComponent(EMAIL_SUBJECT)}&body=${body}`;
+    window.open(mailtoUrl, '_blank');
+  };
+
+  const handleForward = () => {
+    const body = generateEmailBody(interest, true);
+    const mailtoUrl = `mailto:?subject=${encodeURIComponent(`Fwd: ${EMAIL_SUBJECT}`)}&body=${body}`;
+    window.open(mailtoUrl, '_blank');
+  };
+
+  return (
+    <div className="flex gap-2 mt-4 pt-4 border-t">
+      <Button 
+        variant="default" 
+        size="sm" 
+        onClick={handleReply}
+        className="flex items-center gap-2"
+      >
+        <Reply className="h-4 w-4" />
+        Reply to Contact
+      </Button>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={handleForward}
+        className="flex items-center gap-2"
+      >
+        <Forward className="h-4 w-4" />
+        Forward Details
+      </Button>
+    </div>
+  );
+}
 
 export function PartnerProgramInterestNotifications() {
   const { interests, loading, error, count } = usePartnerProgramInterests();
@@ -172,6 +233,9 @@ export function PartnerProgramInterestNotifications() {
                     </div>
                   </div>
                 </div>
+
+                {/* Email Actions */}
+                <EmailActions interest={interest} />
               </AccordionContent>
             </AccordionItem>
           ))}
