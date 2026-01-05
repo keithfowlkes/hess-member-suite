@@ -70,6 +70,7 @@ export function useCommunications(organizationId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communications', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['follow-up-communications'] });
       toast({
         title: "Communication Added",
         description: "Communication entry has been successfully recorded.",
@@ -99,6 +100,7 @@ export function useCommunications(organizationId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communications', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['follow-up-communications'] });
       toast({
         title: "Communication Updated",
         description: "Communication entry has been successfully updated.",
@@ -125,6 +127,7 @@ export function useCommunications(organizationId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communications', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['follow-up-communications'] });
       toast({
         title: "Communication Deleted",
         description: "Communication entry has been successfully deleted.",
