@@ -6,14 +6,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2, Edit, Save, X, UserCog } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Loader2, Edit, Save, X, UserCog, KeyRound } from 'lucide-react';
 import { UnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useSimpleFieldOptions, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
 import { EnhancedSystemFieldSelect } from '@/components/EnhancedSystemFieldSelect';
 import { MemberCohortSelector } from '@/components/MemberCohortSelector';
 import { PrimaryContactTransferSection } from '@/components/PrimaryContactTransferSection';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface UnifiedProfileEditorProps {
   data: UnifiedProfile;
@@ -32,8 +34,13 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
   saving = false
 }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
   
   // Initialize editedData
   const initializeEditedData = (data: UnifiedProfile): UnifiedProfile => {
@@ -210,6 +217,15 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         <div className="flex gap-2">
           {isEditing ? (
             <>
+              {/* Change Password Button */}
+              <Button
+                variant="outline"
+                onClick={() => setPasswordModalOpen(true)}
+                disabled={saving}
+              >
+                <KeyRound className="h-4 w-4 mr-2" />
+                Change Password
+              </Button>
               {/* Transfer Primary Contact Button - only for primary contacts */}
               {editedData.organization && 
                editedData.organization.contact_person_id === editedData.profile.id && (
@@ -493,6 +509,122 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Change Password Modal */}
+      <Dialog open={passwordModalOpen} onOpenChange={(open) => {
+        setPasswordModalOpen(open);
+        if (!open) {
+          setNewPassword('');
+          setConfirmPassword('');
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Enter a new password for your account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+            </div>
+            {newPassword && confirmPassword && newPassword !== confirmPassword && (
+              <p className="text-sm text-destructive">Passwords do not match</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPasswordModalOpen(false);
+                setNewPassword('');
+                setConfirmPassword('');
+              }}
+              disabled={changingPassword}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!newPassword || newPassword !== confirmPassword) {
+                  toast({
+                    title: "Error",
+                    description: "Passwords do not match",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
+                if (newPassword.length < 6) {
+                  toast({
+                    title: "Error",
+                    description: "Password must be at least 6 characters",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
+                setChangingPassword(true);
+                try {
+                  const { error: changeError } = await supabase.functions.invoke('change-user-password', {
+                    body: {
+                      userId: editedData.profile?.user_id || user?.id,
+                      newPassword
+                    }
+                  });
+                  
+                  if (changeError) throw changeError;
+                  
+                  toast({
+                    title: "Success",
+                    description: "Password changed successfully"
+                  });
+                  setPasswordModalOpen(false);
+                  setNewPassword('');
+                  setConfirmPassword('');
+                } catch (error: any) {
+                  console.error('Password change error:', error);
+                  toast({
+                    title: "Error",
+                    description: error.message || "Failed to change password",
+                    variant: "destructive"
+                  });
+                } finally {
+                  setChangingPassword(false);
+                }
+              }}
+              disabled={changingPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+            >
+              {changingPassword ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Changing...
+                </>
+              ) : (
+                'Change Password'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Cohort Memberships */}
       <MemberCohortSelector 
