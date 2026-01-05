@@ -28,7 +28,8 @@ import {
   Clock,
   Edit3,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
 import { useCommunications, type Communication, type CreateCommunicationData } from '@/hooks/useCommunications';
 import { cn } from '@/lib/utils';
@@ -106,6 +107,19 @@ export function OrganizationCRMTab({ organizationId, organizationName }: Organiz
     if (confirm('Are you sure you want to delete this communication record?')) {
       await deleteCommunication.mutateAsync(id);
     }
+  };
+
+  const handleMarkCompleted = async (communication: Communication) => {
+    await updateCommunication.mutateAsync({
+      id: communication.id,
+      data: {
+        organization_id: communication.organization_id,
+        communication_type: communication.communication_type,
+        notes: communication.notes,
+        communication_date: communication.communication_date,
+        follow_up_required: false,
+      }
+    });
   };
 
   const getCommunicationTypeIcon = (type: string) => {
@@ -395,6 +409,17 @@ export function OrganizationCRMTab({ organizationId, organizationName }: Organiz
                   </div>
                   
                   <div className="flex items-center space-x-1 ml-4">
+                    {communication.follow_up_required && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleMarkCompleted(communication)}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      >
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Completed
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"
