@@ -9,9 +9,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Mail, Building2, Calendar, Search } from 'lucide-react';
+import { Loader2, Mail, Building2, Calendar, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { OrganizationViewModal } from '@/components/OrganizationViewModal';
 import { Organization } from '@/hooks/useMembers';
@@ -33,20 +34,27 @@ interface RecentSubmission {
   } | null;
 }
 
+const ITEMS_PER_PAGE = 15;
+
 export function RecentMemberSubmissionsTab() {
-  const [submissions, setSubmissions] = useState<RecentSubmission[]>([]);
+  const [allSubmissions, setAllSubmissions] = useState<RecentSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [showOrgModal, setShowOrgModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedOrg, setSelectedOrg] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    fetchRecentSubmissions();
+    fetchAllSubmissions();
   }, []);
 
-  const fetchRecentSubmissions = async () => {
+  // Reset to page 1 when search or sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy]);
+
+  const fetchAllSubmissions = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -112,20 +120,18 @@ export function RecentMemberSubmissionsTab() {
         `)
         .eq('membership_status', 'active')
         .or('organization_type.eq.member,organization_type.is.null')
-        .order('created_at', { ascending: false })
-        .limit(15);
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSubmissions(data || []);
+      setAllSubmissions(data || []);
     } catch (error) {
-      console.error('Error fetching recent submissions:', error);
+      console.error('Error fetching submissions:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleRowClick = async (submission: RecentSubmission) => {
-    // Fetch full organization data for the modal
     const { data, error } = await supabase
       .from('organizations')
       .select(`
@@ -164,14 +170,9 @@ export function RecentMemberSubmissionsTab() {
     return submission.profiles?.email || submission.email || null;
   };
 
-  // Get unique organization names for the filter dropdown
-  const uniqueOrganizations = useMemo(() => {
-    return Array.from(new Set(submissions.map(s => s.name))).sort();
-  }, [submissions]);
-
-  // Filter and sort submissions
+  // Filter and sort ALL submissions (search works across everything)
   const filteredSubmissions = useMemo(() => {
-    return submissions
+    return allSubmissions
       .filter(submission => {
         const contactName = getContactName(submission);
         const contactEmail = getContactEmail(submission);
@@ -182,16 +183,28 @@ export function RecentMemberSubmissionsTab() {
           (submission.city && submission.city.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (submission.state && submission.state.toLowerCase().includes(searchTerm.toLowerCase()));
         
-        const matchesOrg = selectedOrg === 'all' || submission.name === selectedOrg;
-        
-        return matchesSearch && matchesOrg;
+        return matchesSearch;
       })
       .sort((a, b) => {
         const dateA = new Date(a.created_at).getTime();
         const dateB = new Date(b.created_at).getTime();
         return sortBy === 'newest' ? dateB - dateA : dateA - dateB;
       });
-  }, [submissions, searchTerm, selectedOrg, sortBy]);
+  }, [allSubmissions, searchTerm, sortBy]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredSubmissions.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedSubmissions = filteredSubmissions.slice(startIndex, endIndex);
+
+  const handlePrevPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(totalPages, prev + 1));
+  };
 
   if (loading) {
     return (
@@ -211,10 +224,10 @@ export function RecentMemberSubmissionsTab() {
             <Badge variant="secondary" className="ml-2">{filteredSubmissions.length}</Badge>
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            The 15 most recently approved organizations through registration or member updates
+            Browse member organizations by submission date
           </p>
           
-          {/* Search and Filter Controls */}
+          {/* Search and Sort Controls */}
           <div className="flex flex-col sm:flex-row gap-3 mt-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -225,24 +238,11 @@ export function RecentMemberSubmissionsTab() {
                 className="pl-10"
               />
             </div>
-            <Select value={selectedOrg} onValueChange={setSelectedOrg}>
-              <SelectTrigger className="w-full sm:w-56">
-                <SelectValue placeholder="Filter by organization" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Organizations</SelectItem>
-                {uniqueOrganizations.map((org) => (
-                  <SelectItem key={org} value={org}>
-                    {org}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
               <SelectTrigger className="w-full sm:w-44">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background">
                 <SelectItem value="newest">Newest First</SelectItem>
                 <SelectItem value="oldest">Oldest First</SelectItem>
               </SelectContent>
@@ -252,63 +252,97 @@ export function RecentMemberSubmissionsTab() {
         <CardContent>
           {filteredSubmissions.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
-              {submissions.length === 0 ? 'No recent submissions found.' : 'No submissions match your search criteria.'}
+              {allSubmissions.length === 0 ? 'No submissions found.' : 'No submissions match your search criteria.'}
             </p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Organization</TableHead>
-                  <TableHead>Primary Contact</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Joined</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSubmissions.map((submission) => {
-                  const contactEmail = getContactEmail(submission);
-                  return (
-                    <TableRow 
-                      key={submission.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleRowClick(submission)}
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Organization</TableHead>
+                    <TableHead>Primary Contact</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Joined</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedSubmissions.map((submission) => {
+                    const contactEmail = getContactEmail(submission);
+                    return (
+                      <TableRow 
+                        key={submission.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleRowClick(submission)}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                            {submission.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>{getContactName(submission)}</TableCell>
+                        <TableCell>
+                          {contactEmail ? (
+                            <a
+                              href={`mailto:${contactEmail}`}
+                              className="flex items-center gap-1 text-primary hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Mail className="h-3 w-3" />
+                              {contactEmail}
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {[submission.city, submission.state].filter(Boolean).join(', ') || '—'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            {format(new Date(submission.created_at), 'MMM d, yyyy')}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1}-{Math.min(endIndex, filteredSubmissions.length)} of {filteredSubmissions.length} organizations
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 1}
                     >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          {submission.name}
-                        </div>
-                      </TableCell>
-                      <TableCell>{getContactName(submission)}</TableCell>
-                      <TableCell>
-                        {contactEmail ? (
-                          <a
-                            href={`mailto:${contactEmail}`}
-                            className="flex items-center gap-1 text-primary hover:underline"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Mail className="h-3 w-3" />
-                            {contactEmail}
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {[submission.city, submission.state].filter(Boolean).join(', ') || '—'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          {format(new Date(submission.created_at), 'MMM d, yyyy')}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground px-2">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
