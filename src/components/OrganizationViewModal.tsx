@@ -34,7 +34,8 @@ import {
   Award,
   Trash2,
   AlertTriangle,
-  MessageSquare
+  MessageSquare,
+  Heart
 } from 'lucide-react';
 import { useMembers, Organization } from '@/hooks/useMembers';
 import { useAuth } from '@/hooks/useAuth';
@@ -225,11 +226,12 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="systems">Systems</TabsTrigger>
             <TabsTrigger value="hardware">Hardware</TabsTrigger>
+            <TabsTrigger value="programs">Program Interest</TabsTrigger>
             <TabsTrigger value="crm">CRM</TabsTrigger>
           </TabsList>
 
@@ -775,6 +777,37 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                     <p className="text-sm text-muted-foreground">{currentData.primary_office_other_details || 'No additional details'}</p>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="programs" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="h-4 w-4" />
+                  Partner Program Interest
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {currentData.partner_program_interest && currentData.partner_program_interest.length > 0 ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      This organization has expressed interest in the following partner programs:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {currentData.partner_program_interest.map((program, index) => (
+                        <Badge key={index} variant="secondary" className="text-sm py-1 px-3">
+                          {program}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No partner program interests have been submitted for this organization.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

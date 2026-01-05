@@ -51,6 +51,7 @@ export interface Organization {
   primary_office_other?: boolean;
   primary_office_other_details?: string;
   other_software_comments?: string;
+  partner_program_interest?: string[];
   profiles?: {
     id?: string;
     user_id?: string;
