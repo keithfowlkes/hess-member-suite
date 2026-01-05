@@ -2,17 +2,26 @@ import { useState, useEffect } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Key } from 'lucide-react';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { UnifiedProfileEditor } from '@/components/UnifiedProfileEditor';
 import { MemberCohortSelector } from '@/components/MemberCohortSelector';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/hooks/use-toast';
 
 const Profile = () => {
   const { user } = useAuth();
   const { data, loading, isAdmin, submitEditRequest, updateProfileDirect, canEditDirectly } = useUnifiedProfile();
   const [saving, setSaving] = useState(false);
   const [isCohortLeader, setIsCohortLeader] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
 
   // Check if user is a cohort leader
   useEffect(() => {
@@ -61,6 +70,69 @@ const Profile = () => {
     }
   };
 
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in both password fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Passwords Don't Match",
+        description: "Please make sure both passwords match.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      // Use the auth user_id, not the profile id
+      const authUserId = user?.id;
+      
+      if (!authUserId) {
+        throw new Error("User ID not found");
+      }
+
+      const { data: result, error } = await supabase.functions.invoke('change-user-password', {
+        body: { userId: authUserId, newPassword }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password Changed",
+        description: "Your password has been updated successfully."
+      });
+      
+      setShowPasswordDialog(false);
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to change password.",
+        variant: "destructive"
+      });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   if (loading) {
     return (
       <SidebarProvider>
@@ -104,6 +176,18 @@ const Profile = () => {
           </div>
           
           <div className="space-y-6">
+            {/* Change Password Button - Always visible */}
+            <div className="flex justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowPasswordDialog(true)}
+                className="gap-2"
+              >
+                <Key className="h-4 w-4" />
+                Change Password
+              </Button>
+            </div>
+
             <UnifiedProfileEditor
               data={data}
               canEditDirectly={canEditDirectly()}
@@ -122,6 +206,55 @@ const Profile = () => {
           </div>
         </main>
       </div>
+
+      {/* Change Password Dialog */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Your Password</DialogTitle>
+            <DialogDescription>
+              Enter your new password below. Password must be at least 6 characters.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPasswordDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleChangePassword} disabled={changingPassword}>
+              {changingPassword ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Changing...
+                </>
+              ) : (
+                'Change Password'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
