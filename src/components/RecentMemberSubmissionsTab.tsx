@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -9,7 +9,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Mail, Building2, Calendar } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Mail, Building2, Calendar, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { OrganizationViewModal } from '@/components/OrganizationViewModal';
 import { Organization } from '@/hooks/useMembers';
@@ -36,6 +38,9 @@ export function RecentMemberSubmissionsTab() {
   const [loading, setLoading] = useState(true);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [showOrgModal, setShowOrgModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOrg, setSelectedOrg] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
 
   useEffect(() => {
     fetchRecentSubmissions();
@@ -159,6 +164,35 @@ export function RecentMemberSubmissionsTab() {
     return submission.profiles?.email || submission.email || null;
   };
 
+  // Get unique organization names for the filter dropdown
+  const uniqueOrganizations = useMemo(() => {
+    return Array.from(new Set(submissions.map(s => s.name))).sort();
+  }, [submissions]);
+
+  // Filter and sort submissions
+  const filteredSubmissions = useMemo(() => {
+    return submissions
+      .filter(submission => {
+        const contactName = getContactName(submission);
+        const contactEmail = getContactEmail(submission);
+        const matchesSearch = 
+          submission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (contactEmail && contactEmail.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (submission.city && submission.city.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (submission.state && submission.state.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        const matchesOrg = selectedOrg === 'all' || submission.name === selectedOrg;
+        
+        return matchesSearch && matchesOrg;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        return sortBy === 'newest' ? dateB - dateA : dateA - dateB;
+      });
+  }, [submissions, searchTerm, selectedOrg, sortBy]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -174,15 +208,52 @@ export function RecentMemberSubmissionsTab() {
           <CardTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
             Most Recent Member Submissions
-            <Badge variant="secondary" className="ml-2">{submissions.length}</Badge>
+            <Badge variant="secondary" className="ml-2">{filteredSubmissions.length}</Badge>
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             The 15 most recently approved organizations through registration or member updates
           </p>
+          
+          {/* Search and Filter Controls */}
+          <div className="flex flex-col sm:flex-row gap-3 mt-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search by name, contact, email, location..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={selectedOrg} onValueChange={setSelectedOrg}>
+              <SelectTrigger className="w-full sm:w-56">
+                <SelectValue placeholder="Filter by organization" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Organizations</SelectItem>
+                {uniqueOrganizations.map((org) => (
+                  <SelectItem key={org} value={org}>
+                    {org}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
-          {submissions.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No recent submissions found.</p>
+          {filteredSubmissions.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">
+              {submissions.length === 0 ? 'No recent submissions found.' : 'No submissions match your search criteria.'}
+            </p>
           ) : (
             <Table>
               <TableHeader>
@@ -195,7 +266,7 @@ export function RecentMemberSubmissionsTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {submissions.map((submission) => {
+                {filteredSubmissions.map((submission) => {
                   const contactEmail = getContactEmail(submission);
                   return (
                     <TableRow 
