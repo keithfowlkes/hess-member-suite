@@ -34,18 +34,28 @@ export default function Members() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [updateTrackerOpen, setUpdateTrackerOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'name' | 'date_joined'>('name');
 
-  const filteredOrganizations = organizations.filter(org => {
-    const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      org.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (org.profiles?.email && org.profiles.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (org.profiles?.first_name && org.profiles.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (org.profiles?.last_name && org.profiles.last_name.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesState = selectedState === 'all' || selectedState === '' || org.state === selectedState;
-    
-    return matchesSearch && matchesState;
-  });
+  const filteredOrganizations = organizations
+    .filter(org => {
+      const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        org.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (org.profiles?.email && org.profiles.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (org.profiles?.first_name && org.profiles.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (org.profiles?.last_name && org.profiles.last_name.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesState = selectedState === 'all' || selectedState === '' || org.state === selectedState;
+      
+      return matchesSearch && matchesState;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'date_joined') {
+        const dateA = a.approximate_date_joined_hess ? new Date(a.approximate_date_joined_hess).getTime() : 0;
+        const dateB = b.approximate_date_joined_hess ? new Date(b.approximate_date_joined_hess).getTime() : 0;
+        return dateB - dateA; // Most recent first
+      }
+      return a.name.localeCompare(b.name);
+    });
 
   const uniqueStates = Array.from(new Set(organizations.map(org => org.state).filter(Boolean))).sort();
 
@@ -322,6 +332,15 @@ export default function Members() {
                             {state}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name">Sort by Name</SelectItem>
+                        <SelectItem value="date_joined">Sort by Date Joined</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
