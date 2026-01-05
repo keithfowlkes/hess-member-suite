@@ -1795,7 +1795,7 @@ const MasterDashboard = () => {
                                     <KeyRound className="h-4 w-4 mr-2" />
                                     Reset Password
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleOpenChangePassword(user.id, user.email)}>
+                                  <DropdownMenuItem onClick={() => handleOpenChangePassword(user.user_id, user.email)}>
                                     <Lock className="h-4 w-4 mr-2" />
                                     Change Password
                                   </DropdownMenuItem>
