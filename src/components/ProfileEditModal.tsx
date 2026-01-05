@@ -152,17 +152,6 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
             </div>
           ) : (
             <div className="mt-4">
-              {/* Change Password Button - Always visible */}
-              <div className="flex justify-end mb-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowPasswordDialog(true)}
-                  className="gap-2"
-                >
-                  <Key className="h-4 w-4" />
-                  Change Password
-                </Button>
-              </div>
 
               <UnifiedProfileEditor
                 data={data}

@@ -259,10 +259,19 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
               </Button>
             </>
           ) : (
-            <Button onClick={() => setIsEditing(true)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Profile
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setPasswordModalOpen(true)}
+              >
+                <KeyRound className="h-4 w-4 mr-2" />
+                Change Password
+              </Button>
+              <Button onClick={() => setIsEditing(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Profile
+              </Button>
+            </>
           )}
         </div>
       </div>
