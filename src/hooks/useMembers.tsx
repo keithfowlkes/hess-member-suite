@@ -94,47 +94,62 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
   const query = useQuery({
     queryKey: ['organizations', statusFilter],
     queryFn: async () => {
-      console.log('🔍 Fetching organizations with filter:', statusFilter);
+      console.log('🔍 Fetching all organizations with filter:', statusFilter);
       const startTime = performance.now();
       
-      // Build query with pagination - fetch in chunks for better performance
-      let dbQuery = supabase
-        .from('organizations')
-        .select(`
-          *,
-          profiles:contact_person_id (
-            id, user_id, first_name, last_name, email, phone, organization,
-            primary_contact_title,
-            secondary_first_name, secondary_last_name, secondary_contact_title,
-            secondary_contact_email, secondary_contact_phone
-          )
-        `, { count: 'exact' })
-        .eq('organization_type', 'member')
-        .not('name', 'ilike', '%Administrator%');
+      // Fetch all organizations in batches to avoid the 1000 row limit
+      const PAGE_SIZE = 1000;
+      let allData: any[] = [];
+      let from = 0;
+      let hasMore = true;
 
-      // Apply status filter if not 'all'
-      if (statusFilter !== 'all') {
-        dbQuery = dbQuery.eq('membership_status', statusFilter);
+      while (hasMore) {
+        let dbQuery = supabase
+          .from('organizations')
+          .select(`
+            *,
+            profiles:contact_person_id (
+              id, user_id, first_name, last_name, email, phone, organization,
+              primary_contact_title,
+              secondary_first_name, secondary_last_name, secondary_contact_title,
+              secondary_contact_email, secondary_contact_phone
+            )
+          `)
+          .eq('organization_type', 'member')
+          .not('name', 'ilike', '%Administrator%')
+          .order('name')
+          .range(from, from + PAGE_SIZE - 1);
+
+        // Apply status filter if not 'all'
+        if (statusFilter !== 'all') {
+          dbQuery = dbQuery.eq('membership_status', statusFilter);
+        }
+
+        const { data, error } = await dbQuery;
+
+        if (error) {
+          console.error('❌ Organizations fetch error:', error);
+          throw error;
+        }
+
+        if (data && data.length > 0) {
+          allData = [...allData, ...data];
+          from += PAGE_SIZE;
+          hasMore = data.length === PAGE_SIZE;
+        } else {
+          hasMore = false;
+        }
       }
-
-      const { data, error, count } = await dbQuery.order('name').limit(500);
 
       const endTime = performance.now();
       console.log('📊 Organizations query result:', { 
-        count: data?.length,
-        totalCount: count,
-        error: error?.message,
-        hasData: !!data,
+        totalCount: allData.length,
+        hasData: allData.length > 0,
         statusFilter,
         queryTime: `${(endTime - startTime).toFixed(2)}ms`
       });
-
-      if (error) {
-        console.error('❌ Organizations fetch error:', error);
-        throw error;
-      }
       
-      return data || [];
+      return allData;
     },
     refetchOnWindowFocus: false,
     staleTime: 60 * 1000, // Cache for 1 minute
