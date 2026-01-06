@@ -83,6 +83,7 @@ export default function MembershipFees() {
   const [selectedOrganizations, setSelectedOrganizations] = useState<Set<string>>(new Set());
   const [isSendingInvoices, setIsSendingInvoices] = useState(false);
   const [isUpdatingFeeTiers, setIsUpdatingFeeTiers] = useState(false);
+  const [feeTierUpdateProgress, setFeeTierUpdateProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
   const [feeTierUpdateResults, setFeeTierUpdateResults] = useState<{ successCount: number; failures: string[] } | null>(null);
   
   // Invoice management states
@@ -1938,17 +1939,23 @@ export default function MembershipFees() {
                             setIsUpdatingFeeTiers(true);
                             const results: { successCount: number; failures: string[] } = { successCount: 0, failures: [] };
                             
-                            for (const orgId of selectedOrganizations) {
-                              if (organizationFeeTiers[orgId]) {
-                                try {
-                                  const feeAmount = getFeeAmountForTier(organizationFeeTiers[orgId]);
-                                  await updateOrganization(orgId, { annual_fee_amount: feeAmount });
-                                  results.successCount++;
-                                } catch (error) {
-                                  const orgName = organizations.find(o => o.id === orgId)?.name || orgId;
-                                  results.failures.push(orgName);
-                                }
+                            // Count how many orgs have assigned tiers
+                            const orgsToUpdate = Array.from(selectedOrganizations).filter(orgId => organizationFeeTiers[orgId]);
+                            const total = orgsToUpdate.length;
+                            setFeeTierUpdateProgress({ current: 0, total });
+                            
+                            let current = 0;
+                            for (const orgId of orgsToUpdate) {
+                              try {
+                                const feeAmount = getFeeAmountForTier(organizationFeeTiers[orgId]);
+                                await updateOrganization(orgId, { annual_fee_amount: feeAmount });
+                                results.successCount++;
+                              } catch (error) {
+                                const orgName = organizations.find(o => o.id === orgId)?.name || orgId;
+                                results.failures.push(orgName);
                               }
+                              current++;
+                              setFeeTierUpdateProgress({ current, total });
                             }
                             
                             const clearedTiers = { ...organizationFeeTiers };
@@ -1966,7 +1973,9 @@ export default function MembershipFees() {
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
-                              Processing...
+                              {feeTierUpdateProgress.total > 0 
+                                ? `${Math.round((feeTierUpdateProgress.current / feeTierUpdateProgress.total) * 100)}%`
+                                : 'Processing...'}
                             </>
                           ) : (
                             <>
