@@ -64,7 +64,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Cleared existing datacube data');
 
-    // Get all active MEMBER organizations with their system data (matching SQL function logic)
+    // Get all active MEMBER organizations with their system data (excluding Administrator accounts)
     const { data: organizations, error: orgError } = await supabase
       .from('organizations')
       .select(`
@@ -94,7 +94,8 @@ const handler = async (req: Request): Promise<Response> => {
         primary_office_other
       `)
       .eq('membership_status', 'active')
-      .or('organization_type.eq.member,organization_type.is.null');
+      .eq('organization_type', 'member')
+      .not('name', 'ilike', '%Administrator%');
 
     if (orgError) {
       console.error('Error fetching organizations:', orgError);
