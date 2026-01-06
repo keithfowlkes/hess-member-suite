@@ -82,6 +82,8 @@ export default function MembershipFees() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedOrganizations, setSelectedOrganizations] = useState<Set<string>>(new Set());
   const [isSendingInvoices, setIsSendingInvoices] = useState(false);
+  const [isUpdatingFeeTiers, setIsUpdatingFeeTiers] = useState(false);
+  const [feeTierUpdateResults, setFeeTierUpdateResults] = useState<{ successCount: number; failures: string[] } | null>(null);
   
   // Invoice management states
   const [searchTerm, setSearchTerm] = useState('');
@@ -1931,37 +1933,47 @@ export default function MembershipFees() {
                         <Button 
                           variant="default" 
                           size="sm" 
-                          disabled={selectedOrganizations.size === 0 || !Object.keys(organizationFeeTiers).some(orgId => selectedOrganizations.has(orgId))}
+                          disabled={selectedOrganizations.size === 0 || !Object.keys(organizationFeeTiers).some(orgId => selectedOrganizations.has(orgId)) || isUpdatingFeeTiers}
                           onClick={async () => {
-                            try {
-                              const updates = [];
-                              for (const orgId of selectedOrganizations) {
-                                if (organizationFeeTiers[orgId]) {
+                            setIsUpdatingFeeTiers(true);
+                            const results: { successCount: number; failures: string[] } = { successCount: 0, failures: [] };
+                            
+                            for (const orgId of selectedOrganizations) {
+                              if (organizationFeeTiers[orgId]) {
+                                try {
                                   const feeAmount = getFeeAmountForTier(organizationFeeTiers[orgId]);
-                                  updates.push(updateOrganization(orgId, { annual_fee_amount: feeAmount }));
+                                  await updateOrganization(orgId, { annual_fee_amount: feeAmount });
+                                  results.successCount++;
+                                } catch (error) {
+                                  const orgName = organizations.find(o => o.id === orgId)?.name || orgId;
+                                  results.failures.push(orgName);
                                 }
                               }
-                              await Promise.all(updates);
-                              const clearedTiers = { ...organizationFeeTiers };
-                              selectedOrganizations.forEach(orgId => {
-                                delete clearedTiers[orgId];
-                              });
-                              setOrganizationFeeTiers(clearedTiers);
-                              toast({
-                                title: "Success",
-                                description: `Updated fees for ${selectedOrganizations.size} organization${selectedOrganizations.size !== 1 ? 's' : ''}.`
-                              });
-                            } catch (error) {
-                              toast({
-                                title: "Error",
-                                description: "Failed to save fee changes.",
-                                variant: "destructive"
-                              });
                             }
+                            
+                            const clearedTiers = { ...organizationFeeTiers };
+                            selectedOrganizations.forEach(orgId => {
+                              delete clearedTiers[orgId];
+                            });
+                            setOrganizationFeeTiers(clearedTiers);
+                            setIsUpdatingFeeTiers(false);
+                            setFeeTierUpdateResults(results);
                           }}
                         >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Save
+                          {isUpdatingFeeTiers ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Save
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -2992,6 +3004,46 @@ export default function MembershipFees() {
                   <Button onClick={handleAddFeeTier}>
                     Add Tier
                   </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Fee Tier Update Results Dialog */}
+          <Dialog open={feeTierUpdateResults !== null} onOpenChange={(open) => !open && setFeeTierUpdateResults(null)}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  {feeTierUpdateResults?.failures.length === 0 ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-yellow-500" />
+                  )}
+                  Fee Tier Update Complete
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-lg">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span><strong>{feeTierUpdateResults?.successCount || 0}</strong> institution{(feeTierUpdateResults?.successCount || 0) !== 1 ? 's' : ''} updated successfully</span>
+                </div>
+                
+                {feeTierUpdateResults?.failures && feeTierUpdateResults.failures.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-destructive">
+                      <X className="h-5 w-5" />
+                      <span><strong>{feeTierUpdateResults.failures.length}</strong> failed:</span>
+                    </div>
+                    <ul className="list-disc list-inside pl-4 text-sm text-muted-foreground max-h-40 overflow-y-auto">
+                      {feeTierUpdateResults.failures.map((name, index) => (
+                        <li key={index}>{name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                <div className="flex justify-end pt-2">
+                  <Button onClick={() => setFeeTierUpdateResults(null)}>Close</Button>
                 </div>
               </div>
             </DialogContent>
