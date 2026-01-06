@@ -217,10 +217,12 @@ export function useSettings() {
 
   const fetchStats = async () => {
     try {
-      // Get organization stats
+      // Get organization stats - filter by member type and exclude Administrator accounts
       const { data: orgs, error: orgError } = await supabase
         .from('organizations')
-        .select('membership_status, annual_fee_amount');
+        .select('membership_status, annual_fee_amount')
+        .eq('organization_type', 'member')
+        .not('name', 'ilike', '%Administrator%');
 
       if (orgError) throw orgError;
 
