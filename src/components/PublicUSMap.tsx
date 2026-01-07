@@ -348,18 +348,18 @@ export function PublicUSMap() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
                   Member Organization Locations
                 </CardTitle>
-                <div className="relative flex-1 max-w-xs">
+                <div className="relative w-full sm:w-auto sm:max-w-xs">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search institutions..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 h-9"
+                    className="pl-8 h-9 sm:w-64"
                   />
                 </div>
               </div>
