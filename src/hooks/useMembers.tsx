@@ -152,6 +152,8 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
       return allData;
     },
     refetchOnWindowFocus: false,
+    refetchOnMount: 'always',
+    refetchOnReconnect: true,
     staleTime: 60 * 1000, // Cache for 1 minute
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
