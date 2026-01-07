@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MapPin, Building2, Users } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { MapPin, Building2, Users, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { OrganizationInfoModal } from '@/components/OrganizationInfoModal';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
-
 interface MemberLocation {
   id: string;
   name: string;
@@ -88,8 +88,35 @@ export function PublicUSMap() {
   const [loading, setLoading] = useState(true);
   const [selectedOrganization, setSelectedOrganization] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const { data: organizationTotals } = useOrganizationTotals();
 
+  // Filter state stats based on search term
+  const filteredStateStats = useMemo(() => {
+    if (!searchTerm.trim()) return stateStats;
+    
+    const lowerSearch = searchTerm.toLowerCase();
+    const filtered: { [key: string]: StateData } = {};
+    
+    Object.entries(stateStats).forEach(([state, data]) => {
+      const matchingOrgs = data.organizations.filter(org => 
+        org.name.toLowerCase().includes(lowerSearch) ||
+        org.city?.toLowerCase().includes(lowerSearch) ||
+        state.toLowerCase().includes(lowerSearch)
+      );
+      
+      if (matchingOrgs.length > 0) {
+        filtered[state] = {
+          ...data,
+          count: matchingOrgs.length,
+          organizations: matchingOrgs,
+          totalFTE: matchingOrgs.reduce((sum, org) => sum + (org.student_fte || 0), 0)
+        };
+      }
+    });
+    
+    return filtered;
+  }, [stateStats, searchTerm]);
   useEffect(() => {
     fetchMemberLocations();
     
@@ -321,10 +348,21 @@ export function PublicUSMap() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Member Organization Locations
-              </CardTitle>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Member Organization Locations
+                </CardTitle>
+                <div className="relative flex-1 max-w-xs">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search institutions..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8 h-9"
+                  />
+                </div>
+              </div>
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <p className="text-sm text-muted-foreground">
                   Click on a state marker to see organizations in that area
@@ -336,9 +374,9 @@ export function PublicUSMap() {
                       <SelectValue placeholder="Choose..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.keys(stateStats).sort().map((state) => (
+                      {Object.keys(filteredStateStats).sort().map((state) => (
                         <SelectItem key={state} value={state}>
-                          {state} ({stateStats[state].count})
+                          {state} ({filteredStateStats[state].count})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -367,7 +405,7 @@ export function PublicUSMap() {
                   />
                   
                   {/* State markers */}
-                  {Object.entries(stateStats).map(([state, data]) => {
+                  {Object.entries(filteredStateStats).map(([state, data]) => {
                     const coords = displayCoordinates[state];
                     if (!coords) return null;
                     
@@ -415,19 +453,19 @@ export function PublicUSMap() {
               <CardTitle>State Details</CardTitle>
             </CardHeader>
             <CardContent>
-              {selectedState && stateStats[selectedState] ? (
+              {selectedState && filteredStateStats[selectedState] ? (
                 <div className="space-y-4">
                   <div>
                     <h3 className="font-semibold text-lg">{selectedState}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {stateStats[selectedState].count} organization(s)
+                      {filteredStateStats[selectedState].count} organization(s)
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4">
                     <div className="text-center p-2 bg-primary/5 rounded">
                       <div className="text-lg font-bold text-primary">
-                        {stateStats[selectedState].count}
+                        {filteredStateStats[selectedState].count}
                       </div>
                       <div className="text-xs text-muted-foreground">Organizations</div>
                     </div>
@@ -436,7 +474,7 @@ export function PublicUSMap() {
                   <div className="space-y-2">
                     <h4 className="font-medium">Organizations:</h4>
                     <ScrollArea className="h-[400px] pr-4">
-                      {stateStats[selectedState].organizations.map((org) => (
+                      {filteredStateStats[selectedState].organizations.map((org) => (
                         <div key={org.id} className="p-2 bg-muted/50 rounded text-sm mb-2">
                           <Button
                             variant="link"
