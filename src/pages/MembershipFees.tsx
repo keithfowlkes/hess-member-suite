@@ -1944,18 +1944,31 @@ export default function MembershipFees() {
                             const total = orgsToUpdate.length;
                             setFeeTierUpdateProgress({ current: 0, total });
                             
-                            let current = 0;
-                            for (const orgId of orgsToUpdate) {
-                              try {
-                                const feeAmount = getFeeAmountForTier(organizationFeeTiers[orgId]);
-                                await updateOrganization(orgId, { annual_fee_amount: feeAmount });
-                                results.successCount++;
-                              } catch (error) {
-                                const orgName = organizations.find(o => o.id === orgId)?.name || orgId;
-                                results.failures.push(orgName);
-                              }
-                              current++;
-                              setFeeTierUpdateProgress({ current, total });
+                            // Process in batches for better performance
+                            const BATCH_SIZE = 10;
+                            for (let i = 0; i < orgsToUpdate.length; i += BATCH_SIZE) {
+                              const batch = orgsToUpdate.slice(i, i + BATCH_SIZE);
+                              
+                              // Process batch in parallel
+                              const batchResults = await Promise.allSettled(
+                                batch.map(async (orgId) => {
+                                  const feeAmount = getFeeAmountForTier(organizationFeeTiers[orgId]);
+                                  await updateOrganization(orgId, { annual_fee_amount: feeAmount }, true); // silent mode
+                                  return orgId;
+                                })
+                              );
+                              
+                              // Count results
+                              batchResults.forEach((result, idx) => {
+                                if (result.status === 'fulfilled') {
+                                  results.successCount++;
+                                } else {
+                                  const orgName = organizations.find(o => o.id === batch[idx])?.name || batch[idx];
+                                  results.failures.push(orgName);
+                                }
+                              });
+                              
+                              setFeeTierUpdateProgress({ current: Math.min(i + BATCH_SIZE, total), total });
                             }
                             
                             const clearedTiers = { ...organizationFeeTiers };

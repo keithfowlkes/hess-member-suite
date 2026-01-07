@@ -240,9 +240,11 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
         variant: 'destructive'
       });
     },
-    onSettled: () => {
-      // Refetch in background to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ['organizations', statusFilter] });
+    onSettled: (_data, _error, variables) => {
+      // Skip invalidation in silent mode for batch operations
+      if (!variables.silent) {
+        queryClient.invalidateQueries({ queryKey: ['organizations', statusFilter] });
+      }
     }
   });
 
