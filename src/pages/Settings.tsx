@@ -27,6 +27,7 @@ import { HeaderGraphicManager } from '@/components/HeaderGraphicManager';
 import { AuthPageFieldsManager } from '@/components/AuthPageFieldsManager';
 import MemberAgreementEditor from '@/components/MemberAgreementEditor';
 import { PasswordEncryptionSetup } from '@/components/PasswordEncryptionSetup';
+import { DataIntegrityCheck } from '@/components/DataIntegrityCheck';
 
 import { USMap } from '@/components/USMap';
 import { MessageTextContent } from '@/components/MessageTextContent';
@@ -866,6 +867,7 @@ export default function Settings() {
                       <h3 className="text-xl font-semibold text-foreground mb-4">Organization Directory</h3>
                       <PublicOrganizationDirectory />
                     </div>
+                    <DataIntegrityCheck />
                   </TabsContent>
 
                   <TabsContent value="map" className="space-y-6">
