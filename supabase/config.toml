@@ -94,7 +94,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.populate-organization-websites]
-verify_jwt = true
+verify_jwt = false
 
 [functions.update-workday-financial-systems]
 verify_jwt = false
