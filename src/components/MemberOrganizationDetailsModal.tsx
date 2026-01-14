@@ -71,6 +71,7 @@ interface Organization {
   primary_office_other?: boolean;
   primary_office_other_details?: string;
   other_software_comments?: string;
+  partner_program_interest?: string[];
   profiles?: {
     first_name?: string;
     last_name?: string;
@@ -267,6 +268,26 @@ export function MemberOrganizationDetailsModal({ organization, isOpen, onClose }
                     </CardContent>
                   </Card>
                 </div>
+
+                {organization.partner_program_interest && organization.partner_program_interest.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Award className="h-4 w-4" />
+                        Partner Program Interests
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {organization.partner_program_interest.map((interest, index) => (
+                          <Badge key={index} variant="secondary" className="text-sm">
+                            {interest}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {organization.notes && (
                   <Card>
