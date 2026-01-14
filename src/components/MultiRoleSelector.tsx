@@ -19,7 +19,7 @@ interface MultiRoleSelectorProps {
   onCohortsChange: (userId: string, cohorts: string[]) => void;
 }
 
-const availableRoles = ['admin', 'member', 'cohort_leader'];
+const availableRoles = ['admin', 'member', 'cohort_leader', 'board_member'];
 const availableCohorts = ['Anthology', 'Ellucian Banner', 'Ellucian Colleague', 'Jenzabar ONE', 'Oracle Cloud', 'Workday'];
 
 // This component is for ADMIN use only - it allows admins to assign roles and override cohort memberships
@@ -61,7 +61,7 @@ export function MultiRoleSelector({
       {/* Display current roles as badges */}
       {currentRoles.map(role => (
         <Badge key={role} variant="secondary" className="text-xs">
-          {role === 'cohort_leader' ? 'Cohort Leader' : role}
+          {role === 'cohort_leader' ? 'Cohort Leader' : role === 'board_member' ? 'Board Member' : role}
         </Badge>
       ))}
       
@@ -92,7 +92,7 @@ export function MultiRoleSelector({
           {availableRoles.map(role => (
             <DropdownMenuItem key={role} onClick={() => toggleRole(role)}>
               <div className="flex items-center w-full">
-                {role === 'cohort_leader' ? 'Cohort Leader' : role}
+                {role === 'cohort_leader' ? 'Cohort Leader' : role === 'board_member' ? 'Board Member' : role}
                 {currentRoles.includes(role) && (
                   <Check className="ml-auto h-4 w-4" />
                 )}
