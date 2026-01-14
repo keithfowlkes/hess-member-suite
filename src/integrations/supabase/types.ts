@@ -1930,7 +1930,7 @@ export type Database = {
       setup_admin_user: { Args: never; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "member" | "cohort_leader"
+      app_role: "admin" | "member" | "cohort_leader" | "board_member"
       invoice_status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
       membership_status: "active" | "pending" | "expired" | "cancelled"
     }
@@ -2060,7 +2060,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "member", "cohort_leader"],
+      app_role: ["admin", "member", "cohort_leader", "board_member"],
       invoice_status: ["draft", "sent", "paid", "overdue", "cancelled"],
       membership_status: ["active", "pending", "expired", "cancelled"],
     },

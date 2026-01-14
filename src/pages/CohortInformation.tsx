@@ -48,7 +48,7 @@ interface CohortMember {
   state?: string;
   primary_contact_title?: string;
   user_roles: {
-    role: 'admin' | 'member' | 'cohort_leader';
+    role: 'admin' | 'member' | 'cohort_leader' | 'board_member';
   }[];
 }
 

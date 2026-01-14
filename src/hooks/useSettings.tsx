@@ -12,7 +12,7 @@ export interface UserProfile {
   organization?: string;
   created_at: string;
   user_roles?: {
-    role: 'admin' | 'member' | 'cohort_leader';
+    role: 'admin' | 'member' | 'cohort_leader' | 'board_member';
   }[];
   user_cohorts?: {
     cohort: string;
