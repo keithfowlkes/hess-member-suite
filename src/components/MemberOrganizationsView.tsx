@@ -6,12 +6,25 @@ import { useMembers } from '@/hooks/useMembers';
 import { Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MemberOrganizationDetailsModal } from './MemberOrganizationDetailsModal';
 
 export function MemberOrganizationsView() {
   const { organizations, loading } = useMembers();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedOrganization, setSelectedOrganization] = useState<typeof organizations[0] | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCardClick = (organization: typeof organizations[0]) => {
+    setSelectedOrganization(organization);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedOrganization(null);
+  };
 
   const filteredOrganizations = organizations.filter(org => {
     const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -98,7 +111,8 @@ export function MemberOrganizationsView() {
           {filteredOrganizations.map((organization) => (
             <Card 
               key={organization.id} 
-              className="transition-shadow hover:shadow-md overflow-hidden bg-[#f1f2e4]"
+              className="transition-shadow hover:shadow-md overflow-hidden bg-[#f1f2e4] cursor-pointer hover:ring-2 hover:ring-primary/20"
+              onClick={() => handleCardClick(organization)}
             >
               <CardHeader className="pb-3">
                 <div className="space-y-2">
@@ -182,7 +196,8 @@ export function MemberOrganizationsView() {
             {filteredOrganizations.map((organization) => (
               <div 
                 key={organization.id}
-                className="px-6 py-4 hover:bg-muted/30 transition-colors"
+                className="px-6 py-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                onClick={() => handleCardClick(organization)}
               >
                 <div className="grid grid-cols-12 gap-4 items-center">
                   <div className="col-span-2 min-w-0">
@@ -260,6 +275,12 @@ export function MemberOrganizationsView() {
           <p className="text-muted-foreground">Try adjusting your search criteria.</p>
         </div>
       )}
+
+      <MemberOrganizationDetailsModal
+        organization={selectedOrganization}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }
