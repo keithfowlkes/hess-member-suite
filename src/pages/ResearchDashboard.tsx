@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useMembers } from '@/hooks/useMembers';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, RefreshCw } from 'lucide-react';
+import { MemberOrganizationDetailsModal } from '@/components/MemberOrganizationDetailsModal';
 
 
 export default function ResearchDashboard() {
@@ -24,6 +25,18 @@ export default function ResearchDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedOrganization, setSelectedOrganization] = useState<typeof organizations[0] | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCardClick = (organization: typeof organizations[0]) => {
+    setSelectedOrganization(organization);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedOrganization(null);
+  };
 
   // Local filtering for loaded organizations
   const filteredOrganizations = organizations.filter(org => {
@@ -269,7 +282,8 @@ export default function ResearchDashboard() {
                 {filteredOrganizations.map((organization) => (
                   <Card 
                     key={organization.id} 
-                    className="hover:shadow-md transition-shadow bg-[#f1f2e4]"
+                    className="hover:shadow-md transition-shadow bg-[#f1f2e4] cursor-pointer hover:ring-2 hover:ring-primary/20"
+                    onClick={() => handleCardClick(organization)}
                   >
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -344,7 +358,8 @@ export default function ResearchDashboard() {
                   {filteredOrganizations.map((organization) => (
                     <div 
                       key={organization.id}
-                      className="px-6 py-4 hover:bg-muted/30 transition-colors"
+                      className="px-6 py-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => handleCardClick(organization)}
                     >
                        <div className="grid grid-cols-11 gap-4 items-center">
                           <div className="col-span-2">
@@ -417,6 +432,12 @@ export default function ResearchDashboard() {
               </div>
             )}
           </div>
+
+          <MemberOrganizationDetailsModal
+            organization={selectedOrganization}
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+          />
         </main>
       </div>
     </SidebarProvider>
