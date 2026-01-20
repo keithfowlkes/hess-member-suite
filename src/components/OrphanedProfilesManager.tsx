@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, RefreshCw, Wrench, AlertTriangle, CheckCircle, Users, Mail } from 'lucide-react';
+import { Search, RefreshCw, Wrench, AlertTriangle, CheckCircle, Users, Mail, Zap } from 'lucide-react';
 
 interface OrphanedProfile {
   profileId: string;
@@ -60,6 +60,7 @@ export function OrphanedProfilesManager() {
   const [result, setResult] = useState<DetectionResult | null>(null);
   const [selectedProfiles, setSelectedProfiles] = useState<Set<string>>(new Set());
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showFixAllDialog, setShowFixAllDialog] = useState(false);
   const [fixResults, setFixResults] = useState<FixResult[] | null>(null);
   const { toast } = useToast();
 
@@ -120,17 +121,18 @@ export function OrphanedProfilesManager() {
     setSelectedProfiles(newSelected);
   };
 
-  const fixSelectedProfiles = async () => {
-    if (selectedProfiles.size === 0) return;
+  const fixProfiles = async (profileIds: string[]) => {
+    if (profileIds.length === 0) return;
     
     setFixing(true);
     setShowConfirmDialog(false);
+    setShowFixAllDialog(false);
 
     try {
       const { data, error } = await supabase.functions.invoke('detect-orphaned-profiles', {
         body: { 
           action: 'fix',
-          profileIds: Array.from(selectedProfiles)
+          profileIds
         }
       });
 
@@ -168,6 +170,14 @@ export function OrphanedProfilesManager() {
     }
   };
 
+  const fixSelectedProfiles = () => fixProfiles(Array.from(selectedProfiles));
+  
+  const fixAllProfiles = () => {
+    if (result) {
+      fixProfiles(result.orphanedProfiles.map(p => p.profileId));
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -180,7 +190,7 @@ export function OrphanedProfilesManager() {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button onClick={detectOrphanedProfiles} disabled={loading || fixing}>
             {loading ? (
               <>
@@ -195,15 +205,29 @@ export function OrphanedProfilesManager() {
             )}
           </Button>
 
-          {selectedProfiles.size > 0 && (
-            <Button 
-              variant="default" 
-              onClick={() => setShowConfirmDialog(true)}
-              disabled={fixing}
-            >
-              <Wrench className="h-4 w-4 mr-2" />
-              Fix Selected ({selectedProfiles.size})
-            </Button>
+          {result && result.orphanedCount > 0 && (
+            <>
+              <Button 
+                variant="default" 
+                onClick={() => setShowFixAllDialog(true)}
+                disabled={fixing}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                Fix All ({result.orphanedCount})
+              </Button>
+
+              {selectedProfiles.size > 0 && selectedProfiles.size < result.orphanedCount && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowConfirmDialog(true)}
+                  disabled={fixing}
+                >
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Fix Selected ({selectedProfiles.size})
+                </Button>
+              )}
+            </>
           )}
         </div>
 
@@ -219,9 +243,9 @@ export function OrphanedProfilesManager() {
               </span>
             </div>
 
-            <div className="border rounded-lg overflow-hidden">
+            <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-background">
                   <TableRow>
                     <TableHead className="w-12">
                       <Checkbox
@@ -284,12 +308,12 @@ export function OrphanedProfilesManager() {
         {fixResults && fixResults.length > 0 && (
           <div className="space-y-2">
             <h4 className="font-medium">Fix Results:</h4>
-            <div className="space-y-1 text-sm">
+            <div className="space-y-1 text-sm max-h-48 overflow-y-auto">
               {fixResults.map((r, i) => (
                 <div key={i} className={`flex items-center gap-2 p-2 rounded ${r.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                  {r.success ? <CheckCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
-                  <span>{r.email}: {r.success ? r.action : r.error}</span>
-                  {r.note && <span className="text-muted-foreground">({r.note})</span>}
+                  {r.success ? <CheckCircle className="h-4 w-4 flex-shrink-0" /> : <AlertTriangle className="h-4 w-4 flex-shrink-0" />}
+                  <span className="truncate">{r.email}: {r.success ? r.action : r.error}</span>
+                  {r.note && <span className="text-muted-foreground text-xs">({r.note})</span>}
                 </div>
               ))}
             </div>
@@ -302,8 +326,16 @@ export function OrphanedProfilesManager() {
             <li><strong>No Auth User:</strong> Creates a new auth user for the profile and assigns the member role. User must use "Forgot Password" to set their password.</li>
             <li><strong>Email Mismatch:</strong> Updates the auth user's email to match the profile email.</li>
           </ul>
+          <div className="mt-3 pt-3 border-t border-blue-200">
+            <h4 className="font-medium text-blue-800 mb-1">Root Cause:</h4>
+            <p className="text-blue-700">
+              Orphaned profiles typically occur from legacy data imports or manual database entries before the current registration approval system was implemented. 
+              The current approval processes correctly create auth users for all new registrations.
+            </p>
+          </div>
         </div>
 
+        {/* Fix Selected Dialog */}
         <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -316,6 +348,24 @@ export function OrphanedProfilesManager() {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={fixSelectedProfiles}>
                 Fix Profiles
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Fix All Dialog */}
+        <AlertDialog open={showFixAllDialog} onOpenChange={setShowFixAllDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Fix ALL {result?.orphanedCount || 0} Orphaned Profiles?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will create missing auth users for all detected orphaned profiles. Each user will need to use "Forgot Password" on the login page to set their credentials before they can log in.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={fixAllProfiles} className="bg-green-600 hover:bg-green-700">
+                Fix All Profiles
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
