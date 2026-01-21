@@ -17,7 +17,8 @@ import { useOrganizationByName } from '@/hooks/useOrganizationByName';
 import { OrganizationDetailsDialog } from '@/components/OrganizationDetailsDialog';
 import { PartnerProgramInterestNotifications } from '@/components/PartnerProgramInterestNotifications';
 import { AdminPartnerProgramInterests } from '@/components/AdminPartnerProgramInterests';
-import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart, Search, User, Download, Maximize2 } from 'lucide-react';
+import { CohortLeaderPreviewModal } from '@/components/CohortLeaderPreviewModal';
+import { Users, GraduationCap, Building2, MapPin, Calendar, Mail, BarChart3, TrendingUp, ChevronDown, ChevronUp, PieChart, Search, User, Download, Maximize2, Eye } from 'lucide-react';
 import anthologyLogo from '@/assets/anthology-logo.png';
 import ellucianLogo from '@/assets/ellucian-logo.jpg';
 import jenzabarLogo from '@/assets/jenzabar-logo.avif';
@@ -68,6 +69,7 @@ const CohortInformation = () => {
   const [isBarChartModalOpen, setIsBarChartModalOpen] = useState(false);
   const [selectedCohort, setSelectedCohort] = useState<string | null>(null);
   const [isCohortMembersModalOpen, setIsCohortMembersModalOpen] = useState(false);
+  const [isCohortLeaderPreviewOpen, setIsCohortLeaderPreviewOpen] = useState(false);
   const { data: cohortStats, isLoading: statsLoading, error: statsError } = useCohortStatistics();
   const { data: cohortLeaderData, loading: cohortLeaderLoading, error: cohortLeaderError } = useCohortLeaderData();
   const { data: selectedOrganization, isLoading: organizationLoading } = useOrganizationByName(selectedOrganizationName);
@@ -713,6 +715,14 @@ const handleOrganizationDialogClose = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCohortLeaderPreviewOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Preview Cohort Leader View
+                  </Button>
                   <div className="relative w-80">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
@@ -726,6 +736,12 @@ const handleOrganizationDialogClose = () => {
                   <Badge variant="default">Admin View</Badge>
                 </div>
               </div>
+
+              {/* Cohort Leader Preview Modal */}
+              <CohortLeaderPreviewModal 
+                isOpen={isCohortLeaderPreviewOpen} 
+                onClose={() => setIsCohortLeaderPreviewOpen(false)} 
+              />
 
               {statsLoading ? (
                 <div className="grid gap-4">
