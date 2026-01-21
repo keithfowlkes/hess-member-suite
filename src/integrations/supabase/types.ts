@@ -1075,6 +1075,51 @@ export type Database = {
           },
         ]
       }
+      partner_interest_contacts: {
+        Row: {
+          cohort_leader_id: string
+          contacted_at: string
+          created_at: string
+          id: string
+          notes: string | null
+          organization_id: string
+          partner_program: string
+        }
+        Insert: {
+          cohort_leader_id: string
+          contacted_at?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          partner_program: string
+        }
+        Update: {
+          cohort_leader_id?: string
+          contacted_at?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          partner_program?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_interest_contacts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_interest_contacts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organization_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pending_registrations: {
         Row: {
           address: string | null
