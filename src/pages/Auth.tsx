@@ -1038,11 +1038,28 @@ export default function Auth() {
         <div className="w-full max-w-4xl mx-auto">
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-16 md:mb-6 bg-white gap-3 md:gap-0 h-auto md:h-10">
-            <TabsTrigger value="signin" className="text-sm md:text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Sign In</TabsTrigger>
-            <TabsTrigger value="signup" className="text-sm md:text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">New Member Registration</TabsTrigger>
-            <TabsTrigger value="member-update" className="text-sm md:text-base py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Current Member Updates</TabsTrigger>
-          </TabsList>
+          <div className="relative mb-0">
+            <TabsList className="flex w-full bg-transparent gap-0 h-auto items-end border-b-2 border-border rounded-none p-0">
+              <TabsTrigger 
+                value="signin" 
+                className="text-sm md:text-base py-2.5 px-5 rounded-t-lg rounded-b-none border border-border border-b-0 relative -mb-[2px] bg-muted text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:z-10 transition-all"
+              >
+                Sign In
+              </TabsTrigger>
+              <TabsTrigger 
+                value="signup" 
+                className="text-sm md:text-base py-2.5 px-5 rounded-t-lg rounded-b-none border border-border border-b-0 relative -mb-[2px] bg-muted text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:z-10 transition-all"
+              >
+                New Member Registration
+              </TabsTrigger>
+              <TabsTrigger 
+                value="member-update" 
+                className="text-sm md:text-base py-2.5 px-5 rounded-t-lg rounded-b-none border border-border border-b-0 relative -mb-[2px] bg-muted text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:z-10 transition-all"
+              >
+                Current Member Updates
+              </TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="signin" className="mt-8 md:mt-2">
             <div className="bg-auth-form rounded-lg shadow-sm p-8">
