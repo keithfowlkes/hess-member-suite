@@ -1038,28 +1038,11 @@ export default function Auth() {
         <div className="w-full max-w-4xl mx-auto">
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="relative mb-0">
-            <TabsList className="flex w-full bg-transparent gap-0 h-auto items-end border-b-2 border-border rounded-none p-0">
-              <TabsTrigger 
-                value="signin" 
-                className="text-sm md:text-base py-2.5 px-5 rounded-t-lg rounded-b-none border border-border border-b-0 relative -mb-[2px] bg-muted text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:z-10 transition-all"
-              >
-                Sign In
-              </TabsTrigger>
-              <TabsTrigger 
-                value="signup" 
-                className="text-sm md:text-base py-2.5 px-5 rounded-t-lg rounded-b-none border border-border border-b-0 relative -mb-[2px] bg-muted text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:z-10 transition-all"
-              >
-                New Member Registration
-              </TabsTrigger>
-              <TabsTrigger 
-                value="member-update" 
-                className="text-sm md:text-base py-2.5 px-5 rounded-t-lg rounded-b-none border border-border border-b-0 relative -mb-[2px] bg-muted text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:z-10 transition-all"
-              >
-                Current Member Updates
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="mb-0">
+            <TabsTrigger value="signin" className="text-sm md:text-base py-2.5 px-5">Sign In</TabsTrigger>
+            <TabsTrigger value="signup" className="text-sm md:text-base py-2.5 px-5">New Member Registration</TabsTrigger>
+            <TabsTrigger value="member-update" className="text-sm md:text-base py-2.5 px-5">Current Member Updates</TabsTrigger>
+          </TabsList>
           
           <TabsContent value="signin" className="mt-8 md:mt-2">
             <div className="bg-auth-form rounded-lg shadow-sm p-8">
