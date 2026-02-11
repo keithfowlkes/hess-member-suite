@@ -707,16 +707,18 @@ const handleOrganizationDialogClose = () => {
               {/* Admin Partner Program Interests - All interests for admin */}
               <AdminPartnerProgramInterests />
               
-              <div className="flex items-center justify-between mb-4">
-                <div>
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
                   <h1 className="text-3xl font-bold tracking-tight">Software System Cohorts</h1>
-                  <p className="text-muted-foreground">
-                    View organization membership statistics by software systems (Ellucian Banner, Ellucian Colleague, Jenzabar, Oracle Cloud, etc.)
-                  </p>
+                  <Badge variant="default">Admin View</Badge>
                 </div>
-                <div className="flex items-center gap-4">
+                <p className="text-muted-foreground mb-4">
+                  View organization membership statistics by software systems (Ellucian Banner, Ellucian Colleague, Jenzabar, Oracle Cloud, etc.)
+                </p>
+                <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => setIsCohortLeaderPreviewOpen(true)}
                     className="flex items-center gap-2"
                   >
@@ -733,7 +735,6 @@ const handleOrganizationDialogClose = () => {
                       className="pl-10"
                     />
                   </div>
-                  <Badge variant="default">Admin View</Badge>
                 </div>
               </div>
 
