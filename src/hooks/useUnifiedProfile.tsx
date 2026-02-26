@@ -70,6 +70,7 @@ export interface UnifiedProfile {
     primary_office_other?: boolean;
     primary_office_other_details?: string;
     other_software_comments?: string;
+    show_systems_to_members?: boolean;
   };
 }
 
