@@ -643,6 +643,30 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         description="Join cohort groups to connect with peers using the same software systems"
       />
 
+      {/* Systems Visibility Toggle */}
+      {editedData.organization && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="show_systems_to_members"
+                checked={editedData.organization?.show_systems_to_members !== false}
+                onCheckedChange={(checked) => updateOrganizationField('show_systems_to_members', !!checked)}
+                disabled={!isEditing}
+              />
+              <div>
+                <Label htmlFor="show_systems_to_members" className="text-sm font-medium">
+                  Share Software & Hardware Systems with other HESS members
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  When enabled, authenticated HESS members can view your organization's software and hardware system entries in the Member Information directory.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Software Systems */}
       <Card>
         <CardHeader>

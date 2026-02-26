@@ -938,6 +938,7 @@ export type Database = {
           secondary_contact_title: string | null
           secondary_first_name: string | null
           secondary_last_name: string | null
+          show_systems_to_members: boolean
           state: string | null
           state_association: string | null
           student_fte: number | null
@@ -997,6 +998,7 @@ export type Database = {
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
           secondary_last_name?: string | null
+          show_systems_to_members?: boolean
           state?: string | null
           state_association?: string | null
           student_fte?: number | null
@@ -1056,6 +1058,7 @@ export type Database = {
           secondary_contact_title?: string | null
           secondary_first_name?: string | null
           secondary_last_name?: string | null
+          show_systems_to_members?: boolean
           state?: string | null
           state_association?: string | null
           student_fte?: number | null

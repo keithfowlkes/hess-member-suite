@@ -71,6 +71,7 @@ interface Organization {
   primary_office_other?: boolean;
   primary_office_other_details?: string;
   other_software_comments?: string;
+  show_systems_to_members?: boolean;
   partner_program_interest?: string[];
   profiles?: {
     first_name?: string;
@@ -200,11 +201,15 @@ export function MemberOrganizationDetailsModal({ organization, isOpen, onClose }
         ) : (
           <div className="flex-1 overflow-y-auto">
             <Tabs defaultValue="overview" className="w-full h-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className={`grid w-full ${organization.show_systems_to_members !== false ? 'grid-cols-4' : 'grid-cols-2'}`}>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="contact">Contact</TabsTrigger>
-                <TabsTrigger value="systems">Systems</TabsTrigger>
-                <TabsTrigger value="hardware">Hardware</TabsTrigger>
+                {organization.show_systems_to_members !== false && (
+                  <>
+                    <TabsTrigger value="systems">Systems</TabsTrigger>
+                    <TabsTrigger value="hardware">Hardware</TabsTrigger>
+                  </>
+                )}
               </TabsList>
 
               <TabsContent value="overview" className="space-y-4">
@@ -395,72 +400,76 @@ export function MemberOrganizationDetailsModal({ organization, isOpen, onClose }
                 </div>
               </TabsContent>
 
-              <TabsContent value="systems" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Database className="h-4 w-4" />
-                      Software Systems
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {systemFields.map((field) => {
-                        const IconComponent = field.icon;
-                        return (
-                          <div key={field.key} className="flex items-start gap-3 p-2 rounded-lg bg-muted/30">
-                            <IconComponent className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                            <div className="flex-1 min-w-0">
-                              <Label className="text-xs text-muted-foreground">{field.label}</Label>
-                              <p className="text-sm font-medium truncate">
-                                {field.value || '—'}
-                              </p>
-                            </div>
+              {organization.show_systems_to_members !== false && (
+                <>
+                  <TabsContent value="systems" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Database className="h-4 w-4" />
+                          Software Systems
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {systemFields.map((field) => {
+                            const IconComponent = field.icon;
+                            return (
+                              <div key={field.key} className="flex items-start gap-3 p-2 rounded-lg bg-muted/30">
+                                <IconComponent className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                                <div className="flex-1 min-w-0">
+                                  <Label className="text-xs text-muted-foreground">{field.label}</Label>
+                                  <p className="text-sm font-medium truncate">
+                                    {field.value || '—'}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {organization.other_software_comments && (
+                          <div className="mt-4 p-3 rounded-lg bg-muted/30">
+                            <Label className="text-xs text-muted-foreground">Other Software Comments</Label>
+                            <p className="text-sm mt-1">{organization.other_software_comments}</p>
                           </div>
-                        );
-                      })}
-                    </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
 
-                    {organization.other_software_comments && (
-                      <div className="mt-4 p-3 rounded-lg bg-muted/30">
-                        <Label className="text-xs text-muted-foreground">Other Software Comments</Label>
-                        <p className="text-sm mt-1">{organization.other_software_comments}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="hardware" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Monitor className="h-4 w-4" />
-                      Primary Office Hardware
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedHardware.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {selectedHardware.map(item => (
-                          <Badge key={item.key} variant="secondary" className="text-sm">
-                            {item.label}
-                          </Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No hardware information available</p>
-                    )}
-                    
-                    {organization.primary_office_other && organization.primary_office_other_details && (
-                      <div className="mt-4 p-3 rounded-lg bg-muted/30">
-                        <Label className="text-xs text-muted-foreground">Other Hardware Details</Label>
-                        <p className="text-sm mt-1">{organization.primary_office_other_details}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                  <TabsContent value="hardware" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Monitor className="h-4 w-4" />
+                          Primary Office Hardware
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {selectedHardware.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {selectedHardware.map(item => (
+                              <Badge key={item.key} variant="secondary" className="text-sm">
+                                {item.label}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">No hardware information available</p>
+                        )}
+                        
+                        {organization.primary_office_other && organization.primary_office_other_details && (
+                          <div className="mt-4 p-3 rounded-lg bg-muted/30">
+                            <Label className="text-xs text-muted-foreground">Other Hardware Details</Label>
+                            <p className="text-sm mt-1">{organization.primary_office_other_details}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </>
+              )}
             </Tabs>
           </div>
         )}

@@ -1,0 +1,1 @@
+ALTER TABLE public.organizations ADD COLUMN show_systems_to_members boolean NOT NULL DEFAULT true;
