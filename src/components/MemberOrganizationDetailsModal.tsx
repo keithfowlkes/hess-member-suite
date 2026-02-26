@@ -97,24 +97,29 @@ interface MemberOrganizationDetailsModalProps {
 export function MemberOrganizationDetailsModal({ organization, isOpen, onClose }: MemberOrganizationDetailsModalProps) {
   const { user, isAdmin } = useAuth();
   const [hasAccess, setHasAccess] = useState(false);
+  const [isPrivileged, setIsPrivileged] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
 
   useEffect(() => {
     const checkAccess = async () => {
       if (!user) {
         setHasAccess(false);
+        setIsPrivileged(false);
         setCheckingAccess(false);
         return;
       }
 
-      // Admins always have access
+      // All authenticated users have access
+      setHasAccess(true);
+
+      // Admins are always privileged (can always see systems)
       if (isAdmin) {
-        setHasAccess(true);
+        setIsPrivileged(true);
         setCheckingAccess(false);
         return;
       }
 
-      // Check if user has board_member role
+      // Check if user has board_member role (also privileged)
       try {
         const { data: roles } = await supabase
           .from('user_roles')
@@ -122,10 +127,10 @@ export function MemberOrganizationDetailsModal({ organization, isOpen, onClose }
           .eq('user_id', user.id);
 
         const hasBoardMemberRole = roles?.some(r => r.role === 'board_member');
-        setHasAccess(hasBoardMemberRole || false);
+        setIsPrivileged(hasBoardMemberRole || false);
       } catch (error) {
         console.error('Error checking board member role:', error);
-        setHasAccess(false);
+        setIsPrivileged(false);
       }
       
       setCheckingAccess(false);
@@ -172,6 +177,8 @@ export function MemberOrganizationDetailsModal({ organization, isOpen, onClose }
     { key: 'voip', label: 'VoIP', icon: Phone, value: organization.voip },
     { key: 'network_infrastructure', label: 'Network Infrastructure', icon: Monitor, value: organization.network_infrastructure },
   ];
+  // Admins/board members always see systems; members only if org allows it
+  const showSystemsTabs = isPrivileged || organization.show_systems_to_members !== false;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -195,17 +202,17 @@ export function MemberOrganizationDetailsModal({ organization, isOpen, onClose }
             <Lock className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">Access Restricted</h3>
             <p className="text-muted-foreground">
-              This detailed view is only available to Board Members and Administrators.
+              You must be logged in to view organization details.
             </p>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto">
             <Tabs defaultValue="overview" className="w-full h-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className={`grid w-full ${showSystemsTabs ? 'grid-cols-4' : 'grid-cols-2'}`}>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="contact">Contact</TabsTrigger>
-                <TabsTrigger value="systems">Systems</TabsTrigger>
-                <TabsTrigger value="hardware">Hardware</TabsTrigger>
+                {showSystemsTabs && <TabsTrigger value="systems">Systems</TabsTrigger>}
+                {showSystemsTabs && <TabsTrigger value="hardware">Hardware</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="overview" className="space-y-4">
@@ -396,72 +403,76 @@ export function MemberOrganizationDetailsModal({ organization, isOpen, onClose }
                 </div>
               </TabsContent>
 
-              <TabsContent value="systems" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Database className="h-4 w-4" />
-                      Software Systems
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {systemFields.map((field) => {
-                        const IconComponent = field.icon;
-                        return (
-                          <div key={field.key} className="flex items-start gap-3 p-2 rounded-lg bg-muted/30">
-                            <IconComponent className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                            <div className="flex-1 min-w-0">
-                              <Label className="text-xs text-muted-foreground">{field.label}</Label>
-                              <p className="text-sm font-medium truncate">
-                                {field.value || '—'}
-                              </p>
+              {showSystemsTabs && (
+                <TabsContent value="systems" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Database className="h-4 w-4" />
+                        Software Systems
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {systemFields.map((field) => {
+                          const IconComponent = field.icon;
+                          return (
+                            <div key={field.key} className="flex items-start gap-3 p-2 rounded-lg bg-muted/30">
+                              <IconComponent className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                              <div className="flex-1 min-w-0">
+                                <Label className="text-xs text-muted-foreground">{field.label}</Label>
+                                <p className="text-sm font-medium truncate">
+                                  {field.value || '—'}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
 
-                    {organization.other_software_comments && (
-                      <div className="mt-4 p-3 rounded-lg bg-muted/30">
-                        <Label className="text-xs text-muted-foreground">Other Software Comments</Label>
-                        <p className="text-sm mt-1">{organization.other_software_comments}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                      {organization.other_software_comments && (
+                        <div className="mt-4 p-3 rounded-lg bg-muted/30">
+                          <Label className="text-xs text-muted-foreground">Other Software Comments</Label>
+                          <p className="text-sm mt-1">{organization.other_software_comments}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              )}
 
-              <TabsContent value="hardware" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Monitor className="h-4 w-4" />
-                      Primary Office Hardware
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedHardware.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {selectedHardware.map(item => (
-                          <Badge key={item.key} variant="secondary" className="text-sm">
-                            {item.label}
-                          </Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No hardware information available</p>
-                    )}
-                    
-                    {organization.primary_office_other && organization.primary_office_other_details && (
-                      <div className="mt-4 p-3 rounded-lg bg-muted/30">
-                        <Label className="text-xs text-muted-foreground">Other Hardware Details</Label>
-                        <p className="text-sm mt-1">{organization.primary_office_other_details}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+              {showSystemsTabs && (
+                <TabsContent value="hardware" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Monitor className="h-4 w-4" />
+                        Primary Office Hardware
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {selectedHardware.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {selectedHardware.map(item => (
+                            <Badge key={item.key} variant="secondary" className="text-sm">
+                              {item.label}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No hardware information available</p>
+                      )}
+                      
+                      {organization.primary_office_other && organization.primary_office_other_details && (
+                        <div className="mt-4 p-3 rounded-lg bg-muted/30">
+                          <Label className="text-xs text-muted-foreground">Other Hardware Details</Label>
+                          <p className="text-sm mt-1">{organization.primary_office_other_details}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              )}
             </Tabs>
           </div>
         )}
