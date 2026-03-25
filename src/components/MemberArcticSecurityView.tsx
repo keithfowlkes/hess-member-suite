@@ -316,75 +316,50 @@ export function MemberArcticSecurityView() {
         </CardContent>
       </Card>
 
-      {/* General Overview — RIGHT, visible to all members */}
+      {/* Consortium-Wide Risk Level Distribution — RIGHT */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Shield className="h-4 w-4 text-primary" />
-            Consortium-Wide Security Overview
+            Consortium-Wide Risk Level Distribution
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Aggregate event totals across all scanned institutions (no institution-specific data shown)
+            Risk level distribution across all scanned institutions (no institution-specific data shown)
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-destructive/10">
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Suspected Compromises</p>
-                  <p className="text-2xl font-bold text-foreground">{allAggregated.totalSC.toLocaleString()}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-yellow-500/10">
-                  <Eye className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Public Exposures</p>
-                  <p className="text-2xl font-bold text-foreground">{allAggregated.totalPE.toLocaleString()}</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1">
-                <Shield className="h-3 w-3" />
-                Last Scan: February 2026
-              </Badge>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <ChartContainer config={overviewChartConfig} className="h-[200px] w-[200px]">
-                <PieChart>
-                  <Pie
-                    data={overviewPieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
-                    paddingAngle={3}
-                  >
-                    {overviewPieData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ChartContainer>
-              <div className="flex gap-4 mt-3">
-                {overviewPieData.map(d => (
-                  <div key={d.name} className="flex items-center gap-1.5 text-sm">
-                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                    <span className="text-muted-foreground">{d.name}</span>
-                    <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
-                  </div>
+        <CardContent className="flex flex-col items-center">
+          <ChartContainer config={riskChartConfig} className="h-[220px] w-[220px]">
+            <PieChart>
+              <Pie
+                data={riskDistribution}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={95}
+                paddingAngle={3}
+              >
+                {riskDistribution.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
                 ))}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
+            </PieChart>
+          </ChartContainer>
+          <div className="flex flex-wrap gap-3 mt-4 justify-center">
+            {riskDistribution.map(d => (
+              <div key={d.name} className="flex items-center gap-1.5 text-sm">
+                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                <span className="text-muted-foreground">{d.name}</span>
+                <span className="font-semibold text-foreground">{d.value}</span>
               </div>
-            </div>
+            ))}
           </div>
+          <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1 mt-4">
+            <Shield className="h-3 w-3" />
+            Last Scan: February 2026
+          </Badge>
         </CardContent>
       </Card>
     </div>
