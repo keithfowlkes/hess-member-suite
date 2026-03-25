@@ -392,3 +392,28 @@ export function ArcticSecurityDashboard() {
     </div>
   );
 }
+
+function MemberVisibilityToggle() {
+  const { data: setting } = useSystemSetting('arctic_scan_member_visible');
+  const updateSetting = useUpdateSystemSetting();
+  const isVisible = setting?.setting_value !== 'false'; // default true
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+      <Switch
+        id="arctic-member-visibility"
+        checked={isVisible}
+        onCheckedChange={(checked) => {
+          updateSetting.mutate({
+            settingKey: 'arctic_scan_member_visible',
+            settingValue: String(checked),
+            description: 'Controls visibility of Arctic Security Scan tab in Member Portal'
+          });
+        }}
+      />
+      <Label htmlFor="arctic-member-visibility" className="text-sm cursor-pointer">
+        Show Arctic Security Scan tab in Member Portal
+      </Label>
+    </div>
+  );
+}
