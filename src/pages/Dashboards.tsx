@@ -138,7 +138,7 @@ export default function Dashboards() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-3 text-xl">
                       <div className="p-2 rounded-lg bg-primary/10">
-                        <ShieldCheck className="h-6 w-6 text-primary" />
+                        <img src={arcticLogo} alt="Arctic" className="h-6 w-6" />
                       </div>
                       Arctic Security Scan
                     </CardTitle>
