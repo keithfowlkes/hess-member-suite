@@ -6,6 +6,7 @@ import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrel
 import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMSCorrelation';
 import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationSizeFinancialCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
+import { ArcticSecurityDashboard } from '@/components/ArcticSecurityDashboard';
 import { BarChart3, ChartScatter, MessageSquare, PieChart } from 'lucide-react';
 import arcticLogo from '@/assets/arctic-logo.png';
 import { Button } from '@/components/ui/button';
