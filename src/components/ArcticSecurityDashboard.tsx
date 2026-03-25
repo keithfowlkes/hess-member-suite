@@ -13,6 +13,9 @@ import {
 } from 'recharts';
 import { Search, Shield, AlertTriangle, Eye, Building2, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { useSystemSetting, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
 import arcticLogo from '@/assets/arctic-logo.png';
 
 // ── Raw sample data ──
