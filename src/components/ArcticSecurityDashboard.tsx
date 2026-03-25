@@ -180,6 +180,11 @@ export function ArcticSecurityDashboard() {
     'Public Exposure': { label: 'Public Exposure', color: 'hsl(48 96% 53%)' },
   };
 
+  const riskChartConfig = riskDistribution.reduce((acc, d) => {
+    acc[d.name] = { label: d.name, color: d.color };
+    return acc;
+  }, {} as Record<string, { label: string; color: string }>);
+
   return (
     <div className="space-y-6">
       {/* Header */}
