@@ -13,6 +13,9 @@ import {
 } from 'recharts';
 import { Search, Shield, AlertTriangle, Eye, Building2, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { useSystemSetting, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
 import arcticLogo from '@/assets/arctic-logo.png';
 
 // ── Raw sample data ──
@@ -203,6 +206,9 @@ export function ArcticSecurityDashboard() {
         </Badge>
       </div>
 
+      {/* Member Portal Visibility Toggle */}
+      <MemberVisibilityToggle />
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -383,6 +389,31 @@ export function ArcticSecurityDashboard() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function MemberVisibilityToggle() {
+  const { data: setting } = useSystemSetting('arctic_scan_member_visible');
+  const updateSetting = useUpdateSystemSetting();
+  const isVisible = setting?.setting_value !== 'false'; // default true
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+      <Switch
+        id="arctic-member-visibility"
+        checked={isVisible}
+        onCheckedChange={(checked) => {
+          updateSetting.mutate({
+            settingKey: 'arctic_scan_member_visible',
+            settingValue: String(checked),
+            description: 'Controls visibility of Arctic Security Scan tab in Member Portal'
+          });
+        }}
+      />
+      <Label htmlFor="arctic-member-visibility" className="text-sm cursor-pointer">
+        Show Arctic Security Scan tab in Member Portal
+      </Label>
     </div>
   );
 }

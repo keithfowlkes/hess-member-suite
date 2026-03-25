@@ -13,9 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSystemSetting } from '@/hooks/useSystemSettings';
 
 const MemberAnalytics = () => {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const { data: arcticSetting } = useSystemSetting('arctic_scan_member_visible');
+  const showArcticTab = arcticSetting?.setting_value !== 'false'; // default true
   return <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
@@ -45,7 +48,7 @@ const MemberAnalytics = () => {
             </div>
             
             <Tabs defaultValue="usage" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsList className={`grid w-full mb-6 ${showArcticTab ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 <TabsTrigger value="usage" className="gap-2">
                   <PieChart className="h-4 w-4" />
                   System Usage Analytics
@@ -54,10 +57,12 @@ const MemberAnalytics = () => {
                   <ChartScatter className="h-4 w-4" />
                   Trend Analytics
                 </TabsTrigger>
-                <TabsTrigger value="security" className="gap-2">
-                  <img src={arcticLogo} alt="Arctic" className="h-4 w-4" />
-                  Arctic Security Scan
-                </TabsTrigger>
+                {showArcticTab && (
+                  <TabsTrigger value="security" className="gap-2">
+                    <img src={arcticLogo} alt="Arctic" className="h-4 w-4" />
+                    Arctic Security Scan
+                  </TabsTrigger>
+                )}
               </TabsList>
               
               <TabsContent value="usage">
@@ -127,9 +132,11 @@ const MemberAnalytics = () => {
                 </Card>
               </TabsContent>
               
-              <TabsContent value="security">
-                <MemberArcticSecurityView />
-              </TabsContent>
+              {showArcticTab && (
+                <TabsContent value="security">
+                  <MemberArcticSecurityView />
+                </TabsContent>
+              )}
             </Tabs>
           </div>
           
