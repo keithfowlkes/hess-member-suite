@@ -206,6 +206,9 @@ export function ArcticSecurityDashboard() {
         </Badge>
       </div>
 
+      {/* Member Portal Visibility Toggle */}
+      <MemberVisibilityToggle />
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
