@@ -399,8 +399,36 @@ export function MemberArcticSecurityView() {
             <ul className="list-disc list-inside space-y-1">
               <li>Open database servers</li>
               <li>Open VPN and VNC servers</li>
-              <li>Services that should not be exposed to internet</li>
+             <li>Services that should not be exposed to internet</li>
             </ul>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-2">Leaked Data Service Description</p>
+            <p>The following notifications are available as optional additions to Arctic Early Warning Service:</p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-2">Compromised Credentials</p>
+            <p>This dataset contains compromised usernames and passwords that have been observed in data dumps or by investigating malware stealer logs. Based on the collection method, this dataset contains currently the following content:</p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-2">Leaked Credentials</p>
+            <p>Leaked credentials report credentials that have been leaked in a data breach and shared publicly on the internet. The credentials are identified by the customer's email domains. The data source contains usernames, leaked or reversed plaintext passwords or hashed passwords that have been leaked in data breaches, along with information about the data breach in which each entry has been leaked. Users will initially receive all historical entries for their domains. After the initial batch, they will continue to be informed about new findings.</p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-2">Stolen Credentials</p>
+            <p>Stolen credentials notify users about stolen credentials associated with their email domains. These observations indicate that a compromised client device has been used when logging in by using the reported credentials.</p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-2">Stolen Sessions</p>
+            <p>Stolen sessions are about session cookies associated with the monitored domain names. A stolen session cookie indicates that a compromised client device has been used when accessing a service within the monitored domain.</p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-2">Dark Web Data</p>
+            <p>Dark Web Data dataset contains data associated with the domain name of the user's organization. The reported data is leaked or stolen and published either in the dark web or in a download service. This dataset contains the following data feed:</p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-2">Leaked Content</p>
+            <p>The feed provides links to leaked data content. The recipient should review the content with caution to assess its significance. Content may vary but a typical scenario is ransomware extortion, where the linked data is at risk of being published.</p>
           </div>
         </CardContent>
       </Card>
