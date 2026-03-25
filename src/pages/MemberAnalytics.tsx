@@ -7,6 +7,7 @@ import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMS
 import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationSizeFinancialCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { BarChart3, ChartScatter, MessageSquare, PieChart, ShieldCheck } from 'lucide-react';
+import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
