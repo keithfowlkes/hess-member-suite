@@ -55,7 +55,7 @@ const MemberAnalytics = () => {
                   Trend Analytics
                 </TabsTrigger>
                 <TabsTrigger value="security" className="gap-2">
-                  <ShieldCheck className="h-4 w-4" />
+                  <img src={arcticLogo} alt="Arctic" className="h-4 w-4" />
                   Arctic Security Scan
                 </TabsTrigger>
               </TabsList>
