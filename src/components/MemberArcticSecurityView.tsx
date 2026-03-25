@@ -140,8 +140,39 @@ export function MemberArcticSecurityView() {
     acc[d.name] = { label: d.name, color: d.color };
     return acc;
   }, {} as Record<string, { label: string; color: string }>);
+  // ── Organization-specific data ──
+  const myOrgData = useMemo(() => {
+    if (!userOrg) return null;
+    const orgRows = RAW_DATA.filter(
+      r => r.organization.toLowerCase() === userOrg.toLowerCase()
+    );
+    if (orgRows.length === 0) return null;
 
-  // ── Org-specific pie data ──
+    let publicExposure = 0;
+    let suspectedCompromise = 0;
+    const lastScan = orgRows[0]['observation time'];
+
+    for (const row of orgRows) {
+      const events = parseInt(row['# events'], 10);
+      if (row.category === 'public exposure') publicExposure += events;
+      else suspectedCompromise += events;
+    }
+
+    const total = publicExposure + suspectedCompromise;
+    return {
+      name: orgRows[0].organization,
+      lastScan,
+      publicExposure,
+      suspectedCompromise,
+      total,
+      riskLevel: getRiskLevel(total),
+      categories: orgRows.map(r => ({
+        category: r.category,
+        events: parseInt(r['# events'], 10),
+      })),
+    };
+  }, [userOrg]);
+
   const orgPieData = useMemo(() => {
     if (!myOrgData) return [];
     return [
