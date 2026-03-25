@@ -142,6 +142,7 @@ const MemberAnalytics = () => {
                     <p className="text-muted-foreground">Coming soon — Arctic Security Scan integration will appear here.</p>
                   </CardContent>
                 </Card>
+              </TabsContent>
             </Tabs>
           </div>
           
