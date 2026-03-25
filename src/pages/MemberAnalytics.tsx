@@ -132,9 +132,11 @@ const MemberAnalytics = () => {
                 </Card>
               </TabsContent>
               
-              <TabsContent value="security">
-                <MemberArcticSecurityView />
-              </TabsContent>
+              {showArcticTab && (
+                <TabsContent value="security">
+                  <MemberArcticSecurityView />
+                </TabsContent>
+              )}
             </Tabs>
           </div>
           
