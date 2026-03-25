@@ -12,6 +12,7 @@ import { Shield, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import arcticLogo from '@/assets/arctic-logo.png';
 
 // ── Same raw sample data as admin dashboard ──
 const RAW_DATA = [
@@ -187,12 +188,13 @@ export function MemberArcticSecurityView() {
   }, {} as Record<string, { label: string; color: string }>);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Organization-Specific Section — LEFT */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Lock className="h-4 w-4 text-primary" />
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Organization-Specific Section — LEFT */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Lock className="h-4 w-4 text-primary" />
             Your Organization's Security Scan
           </CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -355,6 +357,33 @@ export function MemberArcticSecurityView() {
             <Shield className="h-3 w-3" />
             Last Scan: February 2026
           </Badge>
+        </CardContent>
+      </Card>
+      </div>
+
+      {/* About Arctic Security */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <img src={arcticLogo} alt="Arctic" className="h-4 w-4" />
+            About Arctic Security
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm text-muted-foreground">
+          <p>
+            Arctic EWS matches global cybersecurity observations to your organization and turns them into ready-to-use notifications. It handles threat types such as compromised machines and remotely exploitable services that act as publicly accessible weak points in your network. Arctic EWS notifications reveal the immediate security issues in your organization's network. Enhance your security by increasing the visibility of cybersecurity issues such as data breaches that could damage your operations. Instead of reacting to issues, anticipate them using high-quality information: fix problems before they cause harm.
+          </p>
+          <div>
+            <p className="font-medium text-foreground mb-2">Examples of different categories of data that are available through the service:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Compromised systems — Infected hosts (e.g. bots communicating with sinkholes)</li>
+              <li>Botnet infrastructure (e.g. command and control)</li>
+              <li>Compromised systems that are serving malware</li>
+              <li>Attacking IPs (Systems in your network attacking others)</li>
+              <li>Sources of spam and phishing</li>
+              <li>Defacements</li>
+            </ul>
+          </div>
         </CardContent>
       </Card>
     </div>
