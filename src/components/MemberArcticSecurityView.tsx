@@ -175,8 +175,136 @@ export function MemberArcticSecurityView() {
   }, {} as Record<string, { label: string; color: string }>);
 
   return (
-    <div className="space-y-6">
-      {/* General Overview — visible to all members, no org-specific info */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Organization-Specific Section — LEFT */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Lock className="h-4 w-4 text-primary" />
+            Your Organization's Security Scan
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            This data is private to your institution only
+          </p>
+        </CardHeader>
+        <CardContent>
+          {!myOrgData ? (
+            <div className="text-center py-8">
+              <Shield className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+              <p className="text-muted-foreground">
+                No Arctic Security scan data found for your organization
+                {userOrg ? ` (${userOrg})` : ''}.
+              </p>
+              <p className="text-sm text-muted-foreground/70 mt-1">
+                Data will appear here once your institution has been included in an Arctic Security scan.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {/* Org header info */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <Card className="border bg-muted/30">
+                  <CardContent className="pt-4 pb-4">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Organization</p>
+                    <p className="text-lg font-semibold text-foreground mt-1">{myOrgData.name}</p>
+                  </CardContent>
+                </Card>
+                <Card className="border bg-muted/30">
+                  <CardContent className="pt-4 pb-4">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Last Scan</p>
+                    <p className="text-lg font-semibold text-foreground mt-1">
+                      {myOrgData.lastScan === '2026-02' ? 'February 2026' : myOrgData.lastScan}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="border bg-muted/30">
+                  <CardContent className="pt-4 pb-4">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Risk Level</p>
+                    <div className="mt-1">
+                      <Badge className={RISK_BADGE_CLASSES[myOrgData.riskLevel]}>
+                        {myOrgData.riskLevel}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Category breakdown table */}
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Category</TableHead>
+                      <TableHead className="text-right">Events</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {myOrgData.categories.map((cat, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium capitalize">{cat.category}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge
+                            variant="secondary"
+                            className={
+                              cat.events > 100
+                                ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                : cat.events > 10
+                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            }
+                          >
+                            {cat.events.toLocaleString()}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow>
+                      <TableCell className="font-bold">Total</TableCell>
+                      <TableCell className="text-right font-bold">{myOrgData.total.toLocaleString()}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Org pie chart */}
+              {orgPieData.length > 0 && (
+                <div className="flex flex-col items-center">
+                  <ChartContainer config={orgChartConfig} className="h-[180px] w-[180px]">
+                    <PieChart>
+                      <Pie
+                        data={orgPieData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={75}
+                        paddingAngle={3}
+                      >
+                        {orgPieData.map((entry, i) => (
+                          <Cell key={i} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ChartContainer>
+                  <div className="flex gap-4 mt-3">
+                    {orgPieData.map(d => (
+                      <div key={d.name} className="flex items-center gap-1.5 text-sm">
+                        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                        <span className="text-muted-foreground">{d.name}</span>
+                        <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* General Overview — RIGHT, visible to all members */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
@@ -188,8 +316,7 @@ export function MemberArcticSecurityView() {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-            {/* Summary stats */}
+          <div className="space-y-6">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-destructive/10">
@@ -215,8 +342,7 @@ export function MemberArcticSecurityView() {
               </Badge>
             </div>
 
-            {/* Pie chart */}
-            <div className="md:col-span-2 flex flex-col items-center">
+            <div className="flex flex-col items-center">
               <ChartContainer config={overviewChartConfig} className="h-[200px] w-[200px]">
                 <PieChart>
                   <Pie
@@ -247,137 +373,6 @@ export function MemberArcticSecurityView() {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Organization-Specific Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Lock className="h-4 w-4 text-primary" />
-            Your Organization's Security Scan
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            This data is private to your institution only
-          </p>
-        </CardHeader>
-        <CardContent>
-          {!myOrgData ? (
-            <div className="text-center py-8">
-              <Shield className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-              <p className="text-muted-foreground">
-                No Arctic Security scan data found for your organization
-                {userOrg ? ` (${userOrg})` : ''}.
-              </p>
-              <p className="text-sm text-muted-foreground/70 mt-1">
-                Data will appear here once your institution has been included in an Arctic Security scan.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Org header info */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="border bg-muted/30">
-                  <CardContent className="pt-4 pb-4">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Organization</p>
-                    <p className="text-lg font-semibold text-foreground mt-1">{myOrgData.name}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border bg-muted/30">
-                  <CardContent className="pt-4 pb-4">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Last Scan</p>
-                    <p className="text-lg font-semibold text-foreground mt-1">
-                      {myOrgData.lastScan === '2026-02' ? 'February 2026' : myOrgData.lastScan}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border bg-muted/30">
-                  <CardContent className="pt-4 pb-4">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Risk Level</p>
-                    <div className="mt-1">
-                      <Badge className={RISK_BADGE_CLASSES[myOrgData.riskLevel]}>
-                        {myOrgData.riskLevel}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Org detail: table + pie */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Category breakdown table */}
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Category</TableHead>
-                        <TableHead className="text-right">Events</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {myOrgData.categories.map((cat, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="font-medium capitalize">{cat.category}</TableCell>
-                          <TableCell className="text-right">
-                            <Badge
-                              variant="secondary"
-                              className={
-                                cat.events > 100
-                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                  : cat.events > 10
-                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                              }
-                            >
-                              {cat.events.toLocaleString()}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow>
-                        <TableCell className="font-bold">Total</TableCell>
-                        <TableCell className="text-right font-bold">{myOrgData.total.toLocaleString()}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Org pie chart */}
-                {orgPieData.length > 0 && (
-                  <div className="flex flex-col items-center justify-center">
-                    <ChartContainer config={orgChartConfig} className="h-[180px] w-[180px]">
-                      <PieChart>
-                        <Pie
-                          data={orgPieData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={45}
-                          outerRadius={75}
-                          paddingAngle={3}
-                        >
-                          {orgPieData.map((entry, i) => (
-                            <Cell key={i} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </PieChart>
-                    </ChartContainer>
-                    <div className="flex gap-4 mt-3">
-                      {orgPieData.map(d => (
-                        <div key={d.name} className="flex items-center gap-1.5 text-sm">
-                          <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                          <span className="text-muted-foreground">{d.name}</span>
-                          <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
