@@ -187,12 +187,13 @@ export function MemberArcticSecurityView() {
   }, {} as Record<string, { label: string; color: string }>);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Organization-Specific Section — LEFT */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Lock className="h-4 w-4 text-primary" />
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Organization-Specific Section — LEFT */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Lock className="h-4 w-4 text-primary" />
             Your Organization's Security Scan
           </CardTitle>
           <p className="text-sm text-muted-foreground">
