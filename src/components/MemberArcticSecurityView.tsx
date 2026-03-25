@@ -106,61 +106,34 @@ export function MemberArcticSecurityView() {
     enabled: !!user,
   });
 
-  // ── Aggregate all orgs (for general overview) ──
-  const allAggregated = useMemo(() => {
-    let totalPE = 0;
-    let totalSC = 0;
+  // ── Aggregate all orgs for risk distribution (no org names exposed) ──
+  const orgData = useMemo(() => {
+    const map = new Map<string, { pe: number; sc: number }>();
     for (const row of RAW_DATA) {
+      const existing = map.get(row.organization) || { pe: 0, sc: 0 };
       const events = parseInt(row['# events'], 10);
-      if (row.category === 'public exposure') totalPE += events;
-      else totalSC += events;
+      if (row.category === 'public exposure') existing.pe += events;
+      else existing.sc += events;
+      map.set(row.organization, existing);
     }
-    return { totalPE, totalSC };
+    return Array.from(map.entries()).map(([, { pe, sc }]) => {
+      const total = pe + sc;
+      return { total, riskLevel: getRiskLevel(total) };
+    });
   }, []);
 
-  // ── Organization-specific data ──
-  const myOrgData = useMemo(() => {
-    if (!userOrg) return null;
-    const orgRows = RAW_DATA.filter(
-      r => r.organization.toLowerCase() === userOrg.toLowerCase()
-    );
-    if (orgRows.length === 0) return null;
+  const riskDistribution = useMemo(() => {
+    const counts: Record<RiskLevel, number> = { Low: 0, Medium: 0, High: 0, Critical: 0 };
+    orgData.forEach(o => counts[o.riskLevel]++);
+    return (['Critical', 'High', 'Medium', 'Low'] as RiskLevel[])
+      .map(level => ({ name: level, value: counts[level], color: RISK_COLORS[level] }))
+      .filter(d => d.value > 0);
+  }, [orgData]);
 
-    let publicExposure = 0;
-    let suspectedCompromise = 0;
-    const lastScan = orgRows[0]['observation time'];
-
-    for (const row of orgRows) {
-      const events = parseInt(row['# events'], 10);
-      if (row.category === 'public exposure') publicExposure += events;
-      else suspectedCompromise += events;
-    }
-
-    const total = publicExposure + suspectedCompromise;
-    return {
-      name: orgRows[0].organization,
-      lastScan,
-      publicExposure,
-      suspectedCompromise,
-      total,
-      riskLevel: getRiskLevel(total),
-      categories: orgRows.map(r => ({
-        category: r.category,
-        events: parseInt(r['# events'], 10),
-      })),
-    };
-  }, [userOrg]);
-
-  // ── General overview pie data (no org info) ──
-  const overviewPieData = useMemo(() => [
-    { name: 'Suspected Compromise', value: allAggregated.totalSC, color: CATEGORY_COLORS['Suspected Compromise'] },
-    { name: 'Public Exposure', value: allAggregated.totalPE, color: CATEGORY_COLORS['Public Exposure'] },
-  ], [allAggregated]);
-
-  const overviewChartConfig = {
-    'Suspected Compromise': { label: 'Suspected Compromise', color: CATEGORY_COLORS['Suspected Compromise'] },
-    'Public Exposure': { label: 'Public Exposure', color: CATEGORY_COLORS['Public Exposure'] },
-  };
+  const riskChartConfig = riskDistribution.reduce((acc, d) => {
+    acc[d.name] = { label: d.name, color: d.color };
+    return acc;
+  }, {} as Record<string, { label: string; color: string }>);
 
   // ── Org-specific pie data ──
   const orgPieData = useMemo(() => {
