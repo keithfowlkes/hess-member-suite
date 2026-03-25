@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/chart';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell,
-  ResponsiveContainer,
 } from 'recharts';
 import { Search, Shield, AlertTriangle, Eye, Building2, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
