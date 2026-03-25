@@ -213,104 +213,99 @@ export function MemberArcticSecurityView() {
             </div>
           ) : (
             <div className="space-y-5">
-              {/* Org header info */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <Card className="border bg-muted/30">
-                  <CardContent className="pt-4 pb-4">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Organization</p>
-                    <p className="text-lg font-semibold text-foreground mt-1">{myOrgData.name}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border bg-muted/30">
-                  <CardContent className="pt-4 pb-4">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Last Scan</p>
-                    <p className="text-lg font-semibold text-foreground mt-1">
-                      {myOrgData.lastScan === '2026-02' ? 'February 2026' : myOrgData.lastScan}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border bg-muted/30">
-                  <CardContent className="pt-4 pb-4">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Risk Level</p>
-                    <div className="mt-1">
-                      <Badge className={RISK_BADGE_CLASSES[myOrgData.riskLevel]}>
-                        {myOrgData.riskLevel}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Category breakdown table */}
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Category</TableHead>
-                      <TableHead className="text-right">Events</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {myOrgData.categories.map((cat, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="font-medium capitalize">{cat.category}</TableCell>
-                        <TableCell className="text-right">
-                          <Badge
-                            variant="secondary"
-                            className={
-                              cat.events > 100
-                                ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                : cat.events > 10
-                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                            }
-                          >
-                            {cat.events.toLocaleString()}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow>
-                      <TableCell className="font-bold">Total</TableCell>
-                      <TableCell className="text-right font-bold">{myOrgData.total.toLocaleString()}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Org pie chart */}
-              {orgPieData.length > 0 && (
-                <div className="flex flex-col items-center">
-                  <ChartContainer config={orgChartConfig} className="h-[180px] w-[180px]">
-                    <PieChart>
-                      <Pie
-                        data={orgPieData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={45}
-                        outerRadius={75}
-                        paddingAngle={3}
-                      >
-                        {orgPieData.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                    </PieChart>
-                  </ChartContainer>
-                  <div className="flex gap-4 mt-3">
-                    {orgPieData.map(d => (
-                      <div key={d.name} className="flex items-center gap-1.5 text-sm">
-                        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                        <span className="text-muted-foreground">{d.name}</span>
-                        <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
-                      </div>
-                    ))}
-                  </div>
+              {/* Org summary row */}
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Organization: </span>
+                  <span className="font-semibold text-foreground">{myOrgData.name}</span>
                 </div>
-              )}
+                <div>
+                  <span className="text-muted-foreground">Last Scan: </span>
+                  <span className="font-semibold text-foreground">
+                    {myOrgData.lastScan === '2026-02' ? 'February 2026' : myOrgData.lastScan}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Risk Level: </span>
+                  <Badge className={RISK_BADGE_CLASSES[myOrgData.riskLevel]}>
+                    {myOrgData.riskLevel}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Table + pie side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                {/* Category breakdown table */}
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Category</TableHead>
+                        <TableHead className="text-right">Events</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {myOrgData.categories.map((cat, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium capitalize">{cat.category}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge
+                              variant="secondary"
+                              className={
+                                cat.events > 100
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                  : cat.events > 10
+                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                              }
+                            >
+                              {cat.events.toLocaleString()}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow>
+                        <TableCell className="font-bold">Total</TableCell>
+                        <TableCell className="text-right font-bold">{myOrgData.total.toLocaleString()}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Org pie chart */}
+                {orgPieData.length > 0 && (
+                  <div className="flex flex-col items-center justify-center">
+                    <ChartContainer config={orgChartConfig} className="h-[150px] w-[150px]">
+                      <PieChart>
+                        <Pie
+                          data={orgPieData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={35}
+                          outerRadius={60}
+                          paddingAngle={3}
+                        >
+                          {orgPieData.map((entry, i) => (
+                            <Cell key={i} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ChartContainer>
+                    <div className="flex flex-wrap gap-3 mt-2 justify-center">
+                      {orgPieData.map(d => (
+                        <div key={d.name} className="flex items-center gap-1.5 text-xs">
+                          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: d.color }} />
+                          <span className="text-muted-foreground">{d.name}</span>
+                          <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
