@@ -310,6 +310,7 @@ export function MemberArcticSecurityView() {
               </div>
             </div>
           )}
+          <p className="text-xs text-muted-foreground/70 italic mt-4">Your information here is confidential and specific to your HESS member institution.</p>
         </CardContent>
       </Card>
 
