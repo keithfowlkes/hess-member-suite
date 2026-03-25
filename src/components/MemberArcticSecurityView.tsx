@@ -384,6 +384,23 @@ export function MemberArcticSecurityView() {
               <li>Defacements</li>
             </ul>
           </div>
+          <div>
+            <p className="font-medium text-foreground mb-2">Available EWS notification types</p>
+            <p className="font-medium text-foreground mt-3 mb-1">Vulnerable Systems</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Services and systems with known vulnerabilities</li>
+              <li>Services that enable use of weak crypto algorithms</li>
+              <li>Services with expired x509 certificates</li>
+              <li>Services facilitating amplification (DDOS) attacks</li>
+              <li>Misconfigured servers</li>
+            </ul>
+            <p className="font-medium text-foreground mt-3 mb-1">Open services</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Open database servers</li>
+              <li>Open VPN and VNC servers</li>
+              <li>Services that should not be exposed to internet</li>
+            </ul>
+          </div>
         </CardContent>
       </Card>
     </div>
