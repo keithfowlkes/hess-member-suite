@@ -6,7 +6,7 @@ import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrel
 import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMSCorrelation';
 import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationSizeFinancialCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
-import { BarChart3, ChartScatter, MessageSquare, PieChart } from 'lucide-react';
+import { BarChart3, ChartScatter, MessageSquare, PieChart, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -45,7 +45,7 @@ export default function Dashboards() {
             </div>
             
             <Tabs defaultValue="usage" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="usage" className="gap-2">
                   <PieChart className="h-4 w-4" />
                   System Usage Analytics
@@ -53,6 +53,10 @@ export default function Dashboards() {
                 <TabsTrigger value="trends" className="gap-2">
                   <ChartScatter className="h-4 w-4" />
                   Trend Analytics
+                </TabsTrigger>
+                <TabsTrigger value="security" className="gap-2">
+                  <ShieldCheck className="h-4 w-4" />
+                  Arctic Security Scan
                 </TabsTrigger>
               </TabsList>
               
@@ -124,6 +128,25 @@ export default function Dashboards() {
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="security">
+                <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <ShieldCheck className="h-6 w-6 text-primary" />
+                      </div>
+                      Arctic Security Scan
+                    </CardTitle>
+                    <p className="text-muted-foreground mt-1">
+                      Security scanning and vulnerability assessment for member institutions
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">Coming soon — Arctic Security Scan integration will appear here.</p>
                   </CardContent>
                 </Card>
               </TabsContent>
