@@ -8,7 +8,7 @@ import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from '@/components/ui/chart';
 import { PieChart, Pie, Cell } from 'recharts';
-import { Shield, AlertTriangle, Eye, Lock } from 'lucide-react';
+import { Shield, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -82,6 +82,12 @@ const RISK_BADGE_CLASSES: Record<RiskLevel, string> = {
   High: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
   Critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 };
+const RISK_COLORS: Record<RiskLevel, string> = {
+  Low: 'hsl(142 71% 45%)',
+  Medium: 'hsl(48 96% 53%)',
+  High: 'hsl(25 95% 53%)',
+  Critical: 'hsl(0 84% 60%)',
+};
 
 const CATEGORY_COLORS = {
   'Suspected Compromise': 'hsl(0 84% 60%)',
@@ -106,18 +112,34 @@ export function MemberArcticSecurityView() {
     enabled: !!user,
   });
 
-  // ── Aggregate all orgs (for general overview) ──
-  const allAggregated = useMemo(() => {
-    let totalPE = 0;
-    let totalSC = 0;
+  // ── Aggregate all orgs for risk distribution (no org names exposed) ──
+  const orgData = useMemo(() => {
+    const map = new Map<string, { pe: number; sc: number }>();
     for (const row of RAW_DATA) {
+      const existing = map.get(row.organization) || { pe: 0, sc: 0 };
       const events = parseInt(row['# events'], 10);
-      if (row.category === 'public exposure') totalPE += events;
-      else totalSC += events;
+      if (row.category === 'public exposure') existing.pe += events;
+      else existing.sc += events;
+      map.set(row.organization, existing);
     }
-    return { totalPE, totalSC };
+    return Array.from(map.entries()).map(([, { pe, sc }]) => {
+      const total = pe + sc;
+      return { total, riskLevel: getRiskLevel(total) };
+    });
   }, []);
 
+  const riskDistribution = useMemo(() => {
+    const counts: Record<RiskLevel, number> = { Low: 0, Medium: 0, High: 0, Critical: 0 };
+    orgData.forEach(o => counts[o.riskLevel]++);
+    return (['Critical', 'High', 'Medium', 'Low'] as RiskLevel[])
+      .map(level => ({ name: level, value: counts[level], color: RISK_COLORS[level] }))
+      .filter(d => d.value > 0);
+  }, [orgData]);
+
+  const riskChartConfig = riskDistribution.reduce((acc, d) => {
+    acc[d.name] = { label: d.name, color: d.color };
+    return acc;
+  }, {} as Record<string, { label: string; color: string }>);
   // ── Organization-specific data ──
   const myOrgData = useMemo(() => {
     if (!userOrg) return null;
@@ -151,18 +173,6 @@ export function MemberArcticSecurityView() {
     };
   }, [userOrg]);
 
-  // ── General overview pie data (no org info) ──
-  const overviewPieData = useMemo(() => [
-    { name: 'Suspected Compromise', value: allAggregated.totalSC, color: CATEGORY_COLORS['Suspected Compromise'] },
-    { name: 'Public Exposure', value: allAggregated.totalPE, color: CATEGORY_COLORS['Public Exposure'] },
-  ], [allAggregated]);
-
-  const overviewChartConfig = {
-    'Suspected Compromise': { label: 'Suspected Compromise', color: CATEGORY_COLORS['Suspected Compromise'] },
-    'Public Exposure': { label: 'Public Exposure', color: CATEGORY_COLORS['Public Exposure'] },
-  };
-
-  // ── Org-specific pie data ──
   const orgPieData = useMemo(() => {
     if (!myOrgData) return [];
     return [
@@ -306,75 +316,50 @@ export function MemberArcticSecurityView() {
         </CardContent>
       </Card>
 
-      {/* General Overview — RIGHT, visible to all members */}
+      {/* Consortium-Wide Risk Level Distribution — RIGHT */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Shield className="h-4 w-4 text-primary" />
-            Consortium-Wide Security Overview
+            Consortium-Wide Risk Level Distribution
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Aggregate event totals across all scanned institutions (no institution-specific data shown)
+            Risk level distribution across all scanned institutions (no institution-specific data shown)
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-destructive/10">
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Suspected Compromises</p>
-                  <p className="text-2xl font-bold text-foreground">{allAggregated.totalSC.toLocaleString()}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-yellow-500/10">
-                  <Eye className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Public Exposures</p>
-                  <p className="text-2xl font-bold text-foreground">{allAggregated.totalPE.toLocaleString()}</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1">
-                <Shield className="h-3 w-3" />
-                Last Scan: February 2026
-              </Badge>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <ChartContainer config={overviewChartConfig} className="h-[200px] w-[200px]">
-                <PieChart>
-                  <Pie
-                    data={overviewPieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
-                    paddingAngle={3}
-                  >
-                    {overviewPieData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ChartContainer>
-              <div className="flex gap-4 mt-3">
-                {overviewPieData.map(d => (
-                  <div key={d.name} className="flex items-center gap-1.5 text-sm">
-                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                    <span className="text-muted-foreground">{d.name}</span>
-                    <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
-                  </div>
+        <CardContent className="flex flex-col items-center">
+          <ChartContainer config={riskChartConfig} className="h-[220px] w-[220px]">
+            <PieChart>
+              <Pie
+                data={riskDistribution}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={95}
+                paddingAngle={3}
+              >
+                {riskDistribution.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
                 ))}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
+            </PieChart>
+          </ChartContainer>
+          <div className="flex flex-wrap gap-3 mt-4 justify-center">
+            {riskDistribution.map(d => (
+              <div key={d.name} className="flex items-center gap-1.5 text-sm">
+                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                <span className="text-muted-foreground">{d.name}</span>
+                <span className="font-semibold text-foreground">{d.value}</span>
               </div>
-            </div>
+            ))}
           </div>
+          <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1 mt-4">
+            <Shield className="h-3 w-3" />
+            Last Scan: February 2026
+          </Badge>
         </CardContent>
       </Card>
     </div>
