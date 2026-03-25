@@ -6,8 +6,9 @@ import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrel
 import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMSCorrelation';
 import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationSizeFinancialCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
-import { BarChart3, ChartScatter, MessageSquare, PieChart, ShieldCheck } from 'lucide-react';
+import { BarChart3, ChartScatter, MessageSquare, PieChart } from 'lucide-react';
 import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
+import arcticLogo from '@/assets/arctic-logo.png';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -54,7 +55,7 @@ const MemberAnalytics = () => {
                   Trend Analytics
                 </TabsTrigger>
                 <TabsTrigger value="security" className="gap-2">
-                  <ShieldCheck className="h-4 w-4" />
+                  <img src={arcticLogo} alt="Arctic" className="h-4 w-4" />
                   Arctic Security Scan
                 </TabsTrigger>
               </TabsList>
