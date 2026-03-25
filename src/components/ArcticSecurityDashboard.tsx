@@ -274,27 +274,25 @@ export function ArcticSecurityDashboard() {
             <CardTitle className="text-base">Risk Level Distribution</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
-            <div className="h-[200px] w-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={riskDistribution}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
-                    paddingAngle={3}
-                  >
-                    {riskDistribution.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <ChartContainer config={riskChartConfig} className="h-[200px] w-[200px]">
+              <PieChart>
+                <Pie
+                  data={riskDistribution}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={3}
+                >
+                  {riskDistribution.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ChartContainer>
             <div className="flex flex-wrap gap-3 mt-4 justify-center">
               {riskDistribution.map(d => (
                 <div key={d.name} className="flex items-center gap-1.5 text-sm">
