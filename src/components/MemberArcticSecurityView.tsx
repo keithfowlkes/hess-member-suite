@@ -8,7 +8,10 @@ import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from '@/components/ui/chart';
 import { PieChart, Pie, Cell } from 'recharts';
-import { Shield, Lock } from 'lucide-react';
+import { Shield, Lock, HelpCircle } from 'lucide-react';
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from '@/components/ui/popover';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -195,8 +198,18 @@ export function MemberArcticSecurityView() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Lock className="h-4 w-4 text-primary" />
-            Your Organization's Security Scan
-          </CardTitle>
+             Your Organization's Security Scan
+             <Popover>
+               <PopoverTrigger asChild>
+                 <button className="ml-1 rounded-full hover:bg-muted p-0.5 transition-colors">
+                   <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                 </button>
+               </PopoverTrigger>
+               <PopoverContent className="max-w-sm text-sm">
+                 This information is provided to HESS members as a basic "heads-up" for possible cybersecurity threats. For additional information, read the "About Arctic Security" information below on how to get detail information through their services at the HESS member discount.
+               </PopoverContent>
+             </Popover>
+           </CardTitle>
           <p className="text-sm text-muted-foreground">
             This data is private to your institution only
           </p>
