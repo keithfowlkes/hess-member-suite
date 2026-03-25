@@ -12,6 +12,7 @@ import { Shield, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import arcticLogo from '@/assets/arctic-logo.png';
 
 // ── Same raw sample data as admin dashboard ──
 const RAW_DATA = [
