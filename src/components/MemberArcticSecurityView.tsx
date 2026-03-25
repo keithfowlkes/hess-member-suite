@@ -82,6 +82,12 @@ const RISK_BADGE_CLASSES: Record<RiskLevel, string> = {
   High: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
   Critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 };
+const RISK_COLORS: Record<RiskLevel, string> = {
+  Low: 'hsl(142 71% 45%)',
+  Medium: 'hsl(48 96% 53%)',
+  High: 'hsl(25 95% 53%)',
+  Critical: 'hsl(0 84% 60%)',
+};
 
 const CATEGORY_COLORS = {
   'Suspected Compromise': 'hsl(0 84% 60%)',
