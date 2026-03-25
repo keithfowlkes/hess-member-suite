@@ -17,6 +17,8 @@ import { useSystemSetting } from '@/hooks/useSystemSettings';
 
 const MemberAnalytics = () => {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const { data: arcticSetting } = useSystemSetting('arctic_scan_member_visible');
+  const showArcticTab = arcticSetting?.setting_value !== 'false'; // default true
   return <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
