@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/chart';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell,
-  ResponsiveContainer,
 } from 'recharts';
 import { Search, Shield, AlertTriangle, Eye, Building2, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -180,6 +179,11 @@ export function ArcticSecurityDashboard() {
     'Public Exposure': { label: 'Public Exposure', color: 'hsl(48 96% 53%)' },
   };
 
+  const riskChartConfig = riskDistribution.reduce((acc, d) => {
+    acc[d.name] = { label: d.name, color: d.color };
+    return acc;
+  }, {} as Record<string, { label: string; color: string }>);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -269,27 +273,25 @@ export function ArcticSecurityDashboard() {
             <CardTitle className="text-base">Risk Level Distribution</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
-            <div className="h-[200px] w-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={riskDistribution}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
-                    paddingAngle={3}
-                  >
-                    {riskDistribution.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <ChartContainer config={riskChartConfig} className="h-[200px] w-[200px]">
+              <PieChart>
+                <Pie
+                  data={riskDistribution}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={3}
+                >
+                  {riskDistribution.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ChartContainer>
             <div className="flex flex-wrap gap-3 mt-4 justify-center">
               {riskDistribution.map(d => (
                 <div key={d.name} className="flex items-center gap-1.5 text-sm">
