@@ -6,6 +6,7 @@ import { OrganizationSizeCorrelation } from '@/components/OrganizationSizeCorrel
 import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMSCorrelation';
 import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationSizeFinancialCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
+import { ArcticSecurityDashboard } from '@/components/ArcticSecurityDashboard';
 import { BarChart3, ChartScatter, MessageSquare, PieChart } from 'lucide-react';
 import arcticLogo from '@/assets/arctic-logo.png';
 import { Button } from '@/components/ui/button';
@@ -134,22 +135,7 @@ export default function Dashboards() {
               </TabsContent>
               
               <TabsContent value="security">
-                <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-xl">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <img src={arcticLogo} alt="Arctic" className="h-6 w-6" />
-                      </div>
-                      Arctic Security Scan
-                    </CardTitle>
-                    <p className="text-muted-foreground mt-1">
-                      Security scanning and vulnerability assessment for member institutions
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">Coming soon — Arctic Security Scan integration will appear here.</p>
-                  </CardContent>
-                </Card>
+                <ArcticSecurityDashboard />
               </TabsContent>
             </Tabs>
           </div>
