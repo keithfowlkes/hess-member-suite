@@ -209,6 +209,7 @@ export function MemberArcticSecurityView() {
                  This information is provided to HESS members as a basic "heads-up" for possible cybersecurity threats. For additional information, read the "About Arctic Security" information below on how to get detail information through their services at the HESS member discount.
                </PopoverContent>
              </Popover>
+           </CardTitle>
           <p className="text-sm text-muted-foreground">
             This data is private to your institution only
           </p>
