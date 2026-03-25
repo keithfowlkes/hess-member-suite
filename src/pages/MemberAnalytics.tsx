@@ -7,6 +7,7 @@ import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMS
 import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationSizeFinancialCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { BarChart3, ChartScatter, MessageSquare, PieChart, ShieldCheck } from 'lucide-react';
+import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -126,22 +127,7 @@ const MemberAnalytics = () => {
               </TabsContent>
               
               <TabsContent value="security">
-                <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-xl">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <ShieldCheck className="h-6 w-6 text-primary" />
-                      </div>
-                      Arctic Security Scan
-                    </CardTitle>
-                    <p className="text-muted-foreground mt-1">
-                      Security scanning and vulnerability assessment for member institutions
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">Coming soon — Arctic Security Scan integration will appear here.</p>
-                  </CardContent>
-                </Card>
+                <MemberArcticSecurityView />
               </TabsContent>
             </Tabs>
           </div>
