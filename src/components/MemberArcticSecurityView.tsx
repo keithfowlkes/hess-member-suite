@@ -63,6 +63,8 @@ const RAW_DATA = [
   {"observation time":"2026-02","organization":"Lambfurt University","category":"public exposure","# events":"2"},
   {"observation time":"2026-02","organization":"Laurenberg University","category":"suspected compromise","# events":"2"},
   {"observation time":"2026-02","organization":"Matthewside University","category":"suspected compromise","# events":"2"},
+  {"observation time":"2026-02","organization":"HESS Consortium Administrator","category":"public exposure","# events":"3"},
+  {"observation time":"2026-02","organization":"HESS Consortium Administrator","category":"suspected compromise","# events":"12"},
 ];
 
 type RiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
