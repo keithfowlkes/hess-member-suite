@@ -43,7 +43,7 @@ const MemberAnalytics = () => {
             </div>
             
             <Tabs defaultValue="usage" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="usage" className="gap-2">
                   <PieChart className="h-4 w-4" />
                   System Usage Analytics
@@ -51,6 +51,10 @@ const MemberAnalytics = () => {
                 <TabsTrigger value="trends" className="gap-2">
                   <ChartScatter className="h-4 w-4" />
                   Trend Analytics
+                </TabsTrigger>
+                <TabsTrigger value="security" className="gap-2">
+                  <ShieldCheck className="h-4 w-4" />
+                  Arctic Security Scan
                 </TabsTrigger>
               </TabsList>
               
