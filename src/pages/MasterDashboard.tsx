@@ -176,6 +176,7 @@ const MasterDashboard = () => {
   const [selectedProfileEditRequest, setSelectedProfileEditRequest] = useState(null);
   const [showProfileEditComparisonDialog, setShowProfileEditComparisonDialog] = useState(false);
   const [showTransferApprovalDialog, setShowTransferApprovalDialog] = useState(false);
+  const [showTransferEmailPreview, setShowTransferEmailPreview] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
 
   // Organization updates state
