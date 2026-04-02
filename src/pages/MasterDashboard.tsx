@@ -2457,47 +2457,56 @@ const MasterDashboard = () => {
               </div>
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-between gap-2 mt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                if (selectedTransferRequest) {
-                  try {
-                    await supabase.functions.invoke('initiate-contact-transfer', {
-                      body: {
-                        organization_id: selectedTransferRequest.organization_id,
-                        new_contact_email: selectedTransferRequest.new_contact_email,
-                        organization_name: selectedTransferRequest.organization?.name || 'Organization'
-                      }
-                    });
-                  } catch (e) {
-                    // Resend notification via centralized-email-delivery directly
-                    await supabase.functions.invoke('centralized-email-delivery', {
-                      body: {
-                        type: 'contact_transfer',
-                        to: selectedTransferRequest.new_contact_email,
-                        data: {
-                          organization_name: selectedTransferRequest.organization?.name || 'Organization',
-                          current_contact_name: `${selectedTransferRequest.current_contact?.first_name || ''} ${selectedTransferRequest.current_contact?.last_name || ''}`,
-                          current_contact_email: selectedTransferRequest.current_contact?.email || '',
-                          transfer_link: `https://members.hessconsortium.app/auth?action=accept-transfer&token=${selectedTransferRequest.transfer_token}`,
-                          expires_at: new Date(selectedTransferRequest.expires_at).toLocaleDateString(),
-                          site_url: 'https://members.hessconsortium.app'
+          <div className="flex flex-wrap justify-between gap-2 mt-4">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowTransferEmailPreview(true)}
+              >
+                <Eye className="h-3 w-3 mr-1" />
+                Preview Email
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  if (selectedTransferRequest) {
+                    try {
+                      await supabase.functions.invoke('initiate-contact-transfer', {
+                        body: {
+                          organization_id: selectedTransferRequest.organization_id,
+                          new_contact_email: selectedTransferRequest.new_contact_email,
+                          organization_name: selectedTransferRequest.organization?.name || 'Organization'
                         }
-                      }
+                      });
+                    } catch (e) {
+                      await supabase.functions.invoke('centralized-email-delivery', {
+                        body: {
+                          type: 'contact_transfer',
+                          to: selectedTransferRequest.new_contact_email,
+                          data: {
+                            organization_name: selectedTransferRequest.organization?.name || 'Organization',
+                            current_contact_name: `${selectedTransferRequest.current_contact?.first_name || ''} ${selectedTransferRequest.current_contact?.last_name || ''}`,
+                            current_contact_email: selectedTransferRequest.current_contact?.email || '',
+                            transfer_link: `https://members.hessconsortium.app/auth?action=accept-transfer&token=${selectedTransferRequest.transfer_token}`,
+                            expires_at: new Date(selectedTransferRequest.expires_at).toLocaleDateString(),
+                            site_url: 'https://members.hessconsortium.app'
+                          }
+                        }
+                      });
+                    }
+                    toast({
+                      title: 'Notification Resent',
+                      description: `Reminder email sent to ${selectedTransferRequest.new_contact_email}`
                     });
                   }
-                  toast({
-                    title: 'Notification Resent',
-                    description: `Reminder email sent to ${selectedTransferRequest.new_contact_email}`
-                  });
-                }
-              }}
-            >
-              <Mail className="h-3 w-3 mr-1" />
-              Resend Notification
-            </Button>
+                }}
+              >
+                <Mail className="h-3 w-3 mr-1" />
+                Resend Notification
+              </Button>
+            </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
