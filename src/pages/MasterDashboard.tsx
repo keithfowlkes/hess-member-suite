@@ -2551,6 +2551,64 @@ const MasterDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Transfer Email Preview Dialog */}
+      <Dialog open={showTransferEmailPreview} onOpenChange={setShowTransferEmailPreview}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Email Preview — Transfer Notification
+            </DialogTitle>
+            <DialogDescription>
+              This is the email that will be sent to <strong>{selectedTransferRequest?.new_contact_email}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTransferRequest && (
+            <div className="border rounded-lg overflow-hidden bg-white">
+              <div className="bg-muted px-4 py-2 text-xs space-y-1 border-b">
+                <div><strong>To:</strong> {selectedTransferRequest.new_contact_email}</div>
+                <div><strong>Subject:</strong> Primary Contact Transfer Request - {selectedTransferRequest.organization?.name || 'Organization'}</div>
+              </div>
+              <div
+                className="p-4"
+                dangerouslySetInnerHTML={{
+                  __html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+                      <h2 style="color: #7c3aed;">Primary Contact Transfer Request</h2>
+                      <p>You have been designated as the new primary contact for <strong>${selectedTransferRequest.organization?.name || 'Organization'}</strong> in the HESS Consortium Member Portal.</p>
+                      <p><strong>${selectedTransferRequest.current_contact?.first_name || ''} ${selectedTransferRequest.current_contact?.last_name || ''}</strong> (${selectedTransferRequest.current_contact?.email || ''}) has initiated this transfer.</p>
+                      
+                      <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                        <h3 style="color: #7c3aed; margin-top: 0;">To complete this transfer, please follow these steps:</h3>
+                        <ol style="padding-left: 20px; line-height: 1.8;">
+                          <li><strong>Click the link below</strong> to accept the transfer request</li>
+                          <li><strong>Register for an account</strong> at the HESS Member Portal if you don't already have one</li>
+                          <li><strong>Log in</strong> and navigate to your Profile page</li>
+                          <li><strong>Review and update</strong> your organization's information</li>
+                        </ol>
+                        <p style="font-size: 13px; color: #666;">Once you have updated the organization record, an administrator will be notified and can finalize the transfer.</p>
+                      </div>
+
+                      <div style="margin: 30px 0; text-align: center;">
+                        <span style="background-color: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Accept Transfer</span>
+                      </div>
+                      <p style="color: #666; font-size: 14px;">This transfer request will expire on ${new Date(selectedTransferRequest.expires_at).toLocaleDateString()}.</p>
+                      <p>If you did not expect this transfer request or have questions, please contact the HESS Consortium.</p>
+                      <p>Best regards,<br><span style="color: #7c3aed;">HESS Consortium Team</span></p>
+                    </div>
+                  `
+                }}
+              />
+            </div>
+          )}
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setShowTransferEmailPreview(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
