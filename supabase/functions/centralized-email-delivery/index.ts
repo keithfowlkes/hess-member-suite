@@ -190,14 +190,26 @@ const handler = async (req: Request): Promise<Response> => {
       // For custom emails with template provided
       finalHtml = replaceTemplateVariables(emailRequest.template, templateData);
     } else if (emailRequest.type === 'contact_transfer') {
-      // Contact transfer request email
+      // Contact transfer request email - includes registration + org update instructions
       finalSubject = `Primary Contact Transfer Request - ${templateData.organization_name}`;
       const designSettings = await getEmailDesignSettings();
       let transferTemplate = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
           <h2 style="color: {{primary_color}};">Primary Contact Transfer Request</h2>
-          <p>You have been invited to become the primary contact for <strong>${templateData.organization_name}</strong> in the HESS Consortium Member Portal.</p>
+          <p>You have been designated as the new primary contact for <strong>${templateData.organization_name}</strong> in the HESS Consortium Member Portal.</p>
           <p><strong>${templateData.current_contact_name}</strong> (${templateData.current_contact_email}) has initiated this transfer.</p>
+          
+          <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: {{primary_color}}; margin-top: 0;">To complete this transfer, please follow these steps:</h3>
+            <ol style="padding-left: 20px; line-height: 1.8;">
+              <li><strong>Click the link below</strong> to accept the transfer request</li>
+              <li><strong>Register for an account</strong> at the HESS Member Portal if you don't already have one</li>
+              <li><strong>Log in</strong> and navigate to your Profile page</li>
+              <li><strong>Review and update</strong> your organization's information</li>
+            </ol>
+            <p style="font-size: 13px; color: #666;">Once you have updated the organization record, an administrator will be notified and can finalize the transfer.</p>
+          </div>
+
           <div style="margin: 30px 0; text-align: center;">
             <a href="${templateData.transfer_link}" style="background-color: {{primary_color}}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Accept Transfer</a>
           </div>
@@ -207,6 +219,31 @@ const handler = async (req: Request): Promise<Response> => {
         </div>
       `;
       finalHtml = replaceColorVariables(transferTemplate, designSettings);
+    } else if (emailRequest.type === 'contact_transfer_confirmation') {
+      // Confirmation email sent to the CURRENT contact who initiated the transfer
+      finalSubject = `Transfer Request Submitted - ${templateData.organization_name}`;
+      const designSettings = await getEmailDesignSettings();
+      let confirmTemplate = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
+          <h2 style="color: {{primary_color}};">Transfer Request Submitted</h2>
+          <p>Hello ${templateData.current_contact_name},</p>
+          <p>Your request to transfer the primary contact role for <strong>${templateData.organization_name}</strong> to <strong>${templateData.new_contact_email}</strong> has been submitted.</p>
+          
+          <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: {{primary_color}}; margin-top: 0;">What happens next?</h3>
+            <ol style="padding-left: 20px; line-height: 1.8;">
+              <li>The new contact will receive an email with instructions</li>
+              <li>They must register for an account (if they don't have one)</li>
+              <li>They must review and update the organization's information</li>
+              <li>An administrator will review and approve the transfer</li>
+            </ol>
+          </div>
+
+          <p style="color: #666; font-size: 14px;">This transfer request will expire on ${templateData.expires_at}. You can cancel this request at any time from your Profile page.</p>
+          <p>Best regards,<br><span style="color: {{primary_color}};">HESS Consortium Team</span></p>
+        </div>
+      `;
+      finalHtml = replaceColorVariables(confirmTemplate, designSettings);
     } else if (emailRequest.type === 'contact_transfer_complete') {
       // Contact transfer completion email
       const isNewContact = templateData.is_new_contact === 'true' || templateData.is_new_contact === true;
