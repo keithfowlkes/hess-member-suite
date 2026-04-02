@@ -23,6 +23,7 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
+  const [pendingTransfer, setPendingTransfer] = useState<any>(null);
 
   // Check if user is a cohort leader
   useEffect(() => {
