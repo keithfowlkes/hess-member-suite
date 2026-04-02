@@ -822,6 +822,7 @@ export type Database = {
           id: string
           new_contact_email: string
           new_contact_id: string | null
+          org_updated_at: string | null
           organization_id: string
           requested_by: string
           status: string
@@ -836,6 +837,7 @@ export type Database = {
           id?: string
           new_contact_email: string
           new_contact_id?: string | null
+          org_updated_at?: string | null
           organization_id: string
           requested_by: string
           status?: string
@@ -850,6 +852,7 @@ export type Database = {
           id?: string
           new_contact_email?: string
           new_contact_id?: string | null
+          org_updated_at?: string | null
           organization_id?: string
           requested_by?: string
           status?: string
