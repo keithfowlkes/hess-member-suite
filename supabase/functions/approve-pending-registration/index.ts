@@ -1052,6 +1052,83 @@ serve(async (req) => {
               });
             }
           }
+
+          // Cohort-specific list mappings: check org system fields against mappings
+          try {
+            const { data: cohortMappings } = await supabaseAdmin
+              .from('simplelists_cohort_mappings')
+              .select('system_field, field_value, simplelists_list_name')
+              .eq('is_active', true);
+
+            if (cohortMappings && cohortMappings.length > 0) {
+              // Build a map of the registration's system field values
+              const regSystemValues: Record<string, string> = {};
+              const fieldKeys = [
+                'student_information_system', 'financial_system', 'financial_aid',
+                'hcm_hr', 'payroll_system', 'purchasing_system', 'housing_management',
+                'learning_management', 'admissions_crm', 'alumni_advancement_crm',
+                'payment_platform', 'meal_plan_management', 'identity_management',
+                'door_access', 'document_management', 'voip', 'network_infrastructure'
+              ];
+              for (const key of fieldKeys) {
+                const val = (pendingReg as any)[key];
+                if (val && val.trim()) regSystemValues[key] = val.trim();
+              }
+
+              // Find matching lists
+              const cohortListsToAdd = new Set<string>();
+              for (const mapping of cohortMappings) {
+                const regVal = regSystemValues[mapping.system_field];
+                if (regVal && regVal.toLowerCase() === mapping.field_value.toLowerCase()) {
+                  cohortListsToAdd.add(mapping.simplelists_list_name);
+                }
+              }
+
+              // Add primary contact to each cohort list
+              for (const cohortList of cohortListsToAdd) {
+                try {
+                  const cohortContact = {
+                    firstname: pendingReg.first_name,
+                    surname: pendingReg.last_name,
+                    emails: [pendingReg.email],
+                    lists: [cohortList],
+                  };
+                  const clRes = await fetch('https://www.simplelists.com/api/2/contacts/', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${SIMPLELISTS_API_KEY}`,
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(cohortContact),
+                  });
+                  const clData = await clRes.text();
+                  console.log(`Simplelists cohort add ${pendingReg.email} -> ${cohortList}: ${clRes.status}`);
+
+                  await supabaseAdmin.from('simplelists_sync_log').insert({
+                    action: 'cohort_add',
+                    email: pendingReg.email,
+                    organization_name: pendingReg.organization_name,
+                    status: clRes.ok ? 'success' : 'error',
+                    error_message: clRes.ok ? null : clData,
+                    details: { list_name: cohortList, triggered_by: 'approve_registration' },
+                  });
+                } catch (clErr) {
+                  console.error(`Simplelists cohort add error for ${cohortList}:`, clErr);
+                  await supabaseAdmin.from('simplelists_sync_log').insert({
+                    action: 'cohort_add',
+                    email: pendingReg.email,
+                    organization_name: pendingReg.organization_name,
+                    status: 'error',
+                    error_message: clErr.message,
+                    details: { list_name: cohortList },
+                  });
+                }
+              }
+            }
+          } catch (cohortErr) {
+            console.error('Cohort list mapping error (non-blocking):', cohortErr);
+          }
         }
       }
     } catch (slError) {

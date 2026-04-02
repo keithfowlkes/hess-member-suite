@@ -17,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, ExternalLink, Shield, Activity, Copy, Check, Mail, RefreshCw, Wifi, WifiOff, Users, Loader2 } from 'lucide-react';
+import { SimplelistsCohortMappings } from '@/components/SimplelistsCohortMappings';
 import { format } from 'date-fns';
 
 interface ExternalApplication {
@@ -773,14 +774,14 @@ function MyComponent() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="sl-list-name">List Name</Label>
+                      <Label htmlFor="sl-list-name">Primary List Name</Label>
                       <Input
                         id="sl-list-name"
                         value={slListName}
                         onChange={(e) => setSlListName(e.target.value)}
-                        placeholder="members@yourdomain.com"
+                        placeholder="hess_members@hessconsortium.simplelists.com"
                       />
-                      <p className="text-xs text-muted-foreground">The Simplelists list name contacts will be added to</p>
+                      <p className="text-xs text-muted-foreground">The main Simplelists list all contacts will be added to</p>
                     </div>
                     <div className="space-y-4 pt-6">
                       <div className="flex items-center space-x-2">
@@ -805,6 +806,9 @@ function MyComponent() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Cohort-to-List Mapping */}
+              <SimplelistsCohortMappings />
 
               {/* Sync Activity Log */}
               <Card>
@@ -868,14 +872,18 @@ function MyComponent() {
                   <div className="space-y-3 text-sm text-muted-foreground">
                     <div className="flex gap-3">
                       <Badge variant="outline" className="shrink-0">1</Badge>
-                      <p><strong>Member Approval:</strong> When a new registration is approved, the primary (and optionally secondary) contact is automatically added to your Simplelists list.</p>
+                      <p><strong>Member Approval:</strong> When a new registration is approved, the primary (and optionally secondary) contact is automatically added to your primary Simplelists list.</p>
                     </div>
                     <div className="flex gap-3">
                       <Badge variant="outline" className="shrink-0">2</Badge>
-                      <p><strong>Organization Deletion:</strong> When an organization/member is removed, their contacts are automatically removed from Simplelists.</p>
+                      <p><strong>Cohort Lists:</strong> If the registration includes system fields that match your cohort-to-list mappings below, contacts are also added to those cohort-specific lists.</p>
                     </div>
                     <div className="flex gap-3">
                       <Badge variant="outline" className="shrink-0">3</Badge>
+                      <p><strong>Organization Deletion:</strong> When an organization/member is removed, their contacts are automatically removed from Simplelists.</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Badge variant="outline" className="shrink-0">4</Badge>
                       <p><strong>Contact Transfer:</strong> When a primary contact transfer is approved, the old contact is removed and the new contact is added to Simplelists.</p>
                     </div>
                   </div>

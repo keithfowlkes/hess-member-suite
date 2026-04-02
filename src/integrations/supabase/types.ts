@@ -1446,6 +1446,36 @@ export type Database = {
         }
         Relationships: []
       }
+      simplelists_cohort_mappings: {
+        Row: {
+          created_at: string
+          field_value: string
+          id: string
+          is_active: boolean
+          simplelists_list_name: string
+          system_field: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          field_value: string
+          id?: string
+          is_active?: boolean
+          simplelists_list_name: string
+          system_field: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          field_value?: string
+          id?: string
+          is_active?: boolean
+          simplelists_list_name?: string
+          system_field?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       simplelists_sync_log: {
         Row: {
           action: string
