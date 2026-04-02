@@ -120,8 +120,7 @@ import {
   Filter,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown,
-  Eye
+  ArrowDown
 } from 'lucide-react';
 import { SystemHealthStatus } from '@/components/SystemHealthStatus';
 import { FollowUpReminders } from '@/components/FollowUpReminders';
