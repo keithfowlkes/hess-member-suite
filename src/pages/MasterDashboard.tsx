@@ -2363,13 +2363,13 @@ const MasterDashboard = () => {
       </Dialog>
 
       {/* Transfer Approval Dialog */}
-      <AlertDialog open={showTransferApprovalDialog} onOpenChange={setShowTransferApprovalDialog}>
-        <AlertDialogContent className="max-w-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
+      <Dialog open={showTransferApprovalDialog} onOpenChange={setShowTransferApprovalDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5 text-indigo-600" />
-              Approve Primary Contact Transfer
-            </AlertDialogTitle>
+              Review Contact Transfer
+            </DialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4">
                 {selectedTransferRequest && (
