@@ -2363,14 +2363,14 @@ const MasterDashboard = () => {
       </Dialog>
 
       {/* Transfer Approval Dialog */}
-      <AlertDialog open={showTransferApprovalDialog} onOpenChange={setShowTransferApprovalDialog}>
-        <AlertDialogContent className="max-w-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
+      <Dialog open={showTransferApprovalDialog} onOpenChange={setShowTransferApprovalDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5 text-indigo-600" />
-              Approve Primary Contact Transfer
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
+              Review Contact Transfer
+            </DialogTitle>
+            <DialogDescription asChild>
               <div className="space-y-4">
                 {selectedTransferRequest && (
                   <>
@@ -2402,10 +2402,18 @@ const MasterDashboard = () => {
                   </>
                 )}
               </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowTransferApprovalDialog(false);
+                setSelectedTransferRequest(null);
+              }}
+            >
+              Cancel
+            </Button>
             <Button
               variant="destructive"
               onClick={() => {
@@ -2420,7 +2428,7 @@ const MasterDashboard = () => {
               {rejectTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
               Reject
             </Button>
-            <AlertDialogAction
+            <Button
               onClick={() => {
                 if (selectedTransferRequest) {
                   approveTransfer.mutate({ id: selectedTransferRequest.id });
@@ -2429,14 +2437,14 @@ const MasterDashboard = () => {
                 }
               }}
               disabled={approveTransfer.isPending || !selectedTransferRequest?.new_contact_profile}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
               {approveTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
               Approve Transfer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
