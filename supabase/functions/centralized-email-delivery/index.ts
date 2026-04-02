@@ -27,6 +27,7 @@ interface EmailRequest {
     | 'overdue-reminder'
     | 'organization_update_alert'
     | 'contact_transfer'
+    | 'contact_transfer_confirmation'
     | 'contact_transfer_complete'
     | 'custom';
   to: string | string[];
