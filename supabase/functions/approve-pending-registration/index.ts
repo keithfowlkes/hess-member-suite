@@ -975,6 +975,89 @@ serve(async (req) => {
       // Don't fail the approval if email fails
     }
 
+    // Simplelists sync: add primary (and optionally secondary) contacts
+    try {
+      // Check if Simplelists is enabled
+      const { data: slEnabledSetting } = await supabaseAdmin
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'simplelists_enabled')
+        .maybeSingle();
+
+      if (slEnabledSetting?.setting_value === 'true') {
+        console.log('Simplelists sync enabled, adding contacts...');
+        
+        const { data: slListSetting } = await supabaseAdmin
+          .from('system_settings')
+          .select('setting_value')
+          .eq('setting_key', 'simplelists_list_name')
+          .maybeSingle();
+        const listName = slListSetting?.setting_value || '';
+
+        const { data: slSecondarySetting } = await supabaseAdmin
+          .from('system_settings')
+          .select('setting_value')
+          .eq('setting_key', 'simplelists_sync_secondary')
+          .maybeSingle();
+        const syncSecondary = slSecondarySetting?.setting_value === 'true';
+
+        const SIMPLELISTS_API_KEY = Deno.env.get('SIMPLELISTS_API_KEY');
+        if (SIMPLELISTS_API_KEY) {
+          const contacts = [{
+            firstname: pendingReg.first_name,
+            surname: pendingReg.last_name,
+            emails: [pendingReg.email],
+            ...(listName ? { lists: [listName] } : {})
+          }];
+
+          if (syncSecondary && pendingReg.secondary_contact_email) {
+            contacts.push({
+              firstname: pendingReg.secondary_first_name || '',
+              surname: pendingReg.secondary_last_name || '',
+              emails: [pendingReg.secondary_contact_email],
+              ...(listName ? { lists: [listName] } : {})
+            });
+          }
+
+          for (const contact of contacts) {
+            try {
+              const slRes = await fetch('https://www.simplelists.com/api/2/contacts/', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${SIMPLELISTS_API_KEY}`,
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                },
+                body: JSON.stringify(contact)
+              });
+              const slData = await slRes.text();
+              console.log(`Simplelists add ${contact.emails[0]}: ${slRes.status} ${slData}`);
+
+              await supabaseAdmin.from('simplelists_sync_log').insert({
+                action: 'auto_add',
+                email: contact.emails[0],
+                organization_name: pendingReg.organization_name,
+                status: slRes.ok ? 'success' : 'error',
+                error_message: slRes.ok ? null : slData,
+                details: { triggered_by: 'approve_registration' }
+              });
+            } catch (slErr) {
+              console.error('Simplelists add error:', slErr);
+              await supabaseAdmin.from('simplelists_sync_log').insert({
+                action: 'auto_add',
+                email: contact.emails[0],
+                organization_name: pendingReg.organization_name,
+                status: 'error',
+                error_message: slErr.message
+              });
+            }
+          }
+        }
+      }
+    } catch (slError) {
+      console.error('Simplelists sync error (non-blocking):', slError);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 

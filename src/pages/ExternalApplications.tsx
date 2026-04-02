@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, ExternalLink, Shield, Activity, Copy, Check } from 'lucide-react';
+import { Plus, Edit, Trash2, ExternalLink, Shield, Activity, Copy, Check, Mail, RefreshCw, Wifi, WifiOff, Users, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ExternalApplication {
@@ -56,6 +56,16 @@ export default function ExternalApplications() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<ExternalApplication | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  
+  // Simplelists state
+  const [slEnabled, setSlEnabled] = useState(false);
+  const [slListName, setSlListName] = useState('');
+  const [slSyncSecondary, setSlSyncSecondary] = useState(false);
+  const [slTesting, setSlTesting] = useState(false);
+  const [slConnectionStatus, setSlConnectionStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
+  const [slSyncing, setSlSyncing] = useState(false);
+  const [slSaving, setSlSaving] = useState(false);
+
   const [newApp, setNewApp] = useState({
     name: '',
     description: '',
@@ -202,6 +212,98 @@ export default function ExternalApplications() {
     }
   };
 
+  // Fetch Simplelists settings
+  const { data: slSettings, isLoading: slSettingsLoading } = useQuery({
+    queryKey: ['simplelists-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('simplelists-sync', {
+        body: { action: 'get_settings' }
+      });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin
+  });
+
+  // Fetch Simplelists sync logs
+  const { data: syncLogs, isLoading: syncLogsLoading } = useQuery({
+    queryKey: ['simplelists-sync-logs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('simplelists_sync_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin
+  });
+
+  // Update local state when settings load
+  useEffect(() => {
+    if (slSettings && !slSettingsLoading) {
+      setSlEnabled(slSettings.enabled);
+      setSlListName(slSettings.list_name || '');
+      setSlSyncSecondary(slSettings.sync_secondary);
+    }
+  }, [slSettings, slSettingsLoading]);
+
+  const handleSlTestConnection = async () => {
+    setSlTesting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('simplelists-sync', {
+        body: { action: 'test_connection' }
+      });
+      if (error) throw error;
+      if (data?.connected) {
+        setSlConnectionStatus('connected');
+        toast.success('Successfully connected to Simplelists API');
+      } else {
+        setSlConnectionStatus('error');
+        toast.error('Connection failed: ' + (data?.message || 'Unknown error'));
+      }
+    } catch (err: any) {
+      setSlConnectionStatus('error');
+      toast.error('Connection test failed: ' + err.message);
+    } finally {
+      setSlTesting(false);
+    }
+  };
+
+  const handleSlSaveSettings = async () => {
+    setSlSaving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('simplelists-sync', {
+        body: { action: 'update_settings', enabled: slEnabled, list_name: slListName, sync_secondary: slSyncSecondary }
+      });
+      if (error) throw error;
+      toast.success('Simplelists settings saved');
+      queryClient.invalidateQueries({ queryKey: ['simplelists-settings'] });
+    } catch (err: any) {
+      toast.error('Failed to save settings: ' + err.message);
+    } finally {
+      setSlSaving(false);
+    }
+  };
+
+  const handleSlSyncAll = async () => {
+    if (!confirm('This will add all active member contacts to your Simplelists list. Continue?')) return;
+    setSlSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('simplelists-sync', {
+        body: { action: 'sync_all_members' }
+      });
+      if (error) throw error;
+      toast.success(`Synced ${data?.synced || 0} contacts to Simplelists`);
+      queryClient.invalidateQueries({ queryKey: ['simplelists-sync-logs'] });
+    } catch (err: any) {
+      toast.error('Sync failed: ' + err.message);
+    } finally {
+      setSlSyncing(false);
+    }
+  };
+
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -305,6 +407,10 @@ export default function ExternalApplications() {
           <Tabs defaultValue="applications" className="space-y-4">
             <TabsList>
               <TabsTrigger value="applications">Applications</TabsTrigger>
+              <TabsTrigger value="simplelists">
+                <Mail className="h-4 w-4 mr-1" />
+                Simplelists
+              </TabsTrigger>
               <TabsTrigger value="logs">Access Logs</TabsTrigger>
               <TabsTrigger value="integration">Integration Guide</TabsTrigger>
             </TabsList>
@@ -625,6 +731,153 @@ function MyComponent() {
                       <li>Users log in once and session works across all integrated apps</li>
                       <li>Data is always up-to-date since all apps read from the same database</li>
                     </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="simplelists" className="space-y-4">
+              {/* Connection & Settings */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Mail className="h-5 w-5" />
+                        Simplelists Integration
+                        {slConnectionStatus === 'connected' && (
+                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            <Wifi className="h-3 w-3 mr-1" /> Connected
+                          </Badge>
+                        )}
+                        {slConnectionStatus === 'error' && (
+                          <Badge variant="destructive">
+                            <WifiOff className="h-3 w-3 mr-1" /> Error
+                          </Badge>
+                        )}
+                      </CardTitle>
+                      <CardDescription>
+                        Automatically sync member contacts with your Simplelists mailing list
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleSlTestConnection}
+                      disabled={slTesting}
+                    >
+                      {slTesting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wifi className="h-4 w-4 mr-2" />}
+                      Test Connection
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="sl-list-name">List Name</Label>
+                      <Input
+                        id="sl-list-name"
+                        value={slListName}
+                        onChange={(e) => setSlListName(e.target.value)}
+                        placeholder="members@yourdomain.com"
+                      />
+                      <p className="text-xs text-muted-foreground">The Simplelists list name contacts will be added to</p>
+                    </div>
+                    <div className="space-y-4 pt-6">
+                      <div className="flex items-center space-x-2">
+                        <Switch checked={slEnabled} onCheckedChange={setSlEnabled} />
+                        <Label>Enable Auto-Sync</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch checked={slSyncSecondary} onCheckedChange={setSlSyncSecondary} />
+                        <Label>Sync Secondary Contacts</Label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleSlSaveSettings} disabled={slSaving}>
+                      {slSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                      Save Settings
+                    </Button>
+                    <Button variant="outline" onClick={handleSlSyncAll} disabled={slSyncing}>
+                      {slSyncing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Users className="h-4 w-4 mr-2" />}
+                      Sync All Current Members
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sync Activity Log */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Sync Activity Log
+                  </CardTitle>
+                  <CardDescription>Recent Simplelists sync operations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Time</TableHead>
+                        <TableHead>Action</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Organization</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {syncLogs?.map((log: any) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="text-sm">
+                            {format(new Date(log.created_at), 'MMM d, HH:mm:ss')}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{log.action}</Badge>
+                          </TableCell>
+                          <TableCell className="text-sm">{log.email}</TableCell>
+                          <TableCell className="text-sm">{log.organization_name || '—'}</TableCell>
+                          <TableCell>
+                            <Badge variant={log.status === 'success' ? 'default' : 'destructive'}>
+                              {log.status}
+                            </Badge>
+                            {log.error_message && (
+                              <p className="text-xs text-destructive mt-1">{log.error_message}</p>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {(!syncLogs || syncLogs.length === 0) && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                            No sync activity yet
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              {/* How It Works */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>How Auto-Sync Works</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-sm text-muted-foreground">
+                    <div className="flex gap-3">
+                      <Badge variant="outline" className="shrink-0">1</Badge>
+                      <p><strong>Member Approval:</strong> When a new registration is approved, the primary (and optionally secondary) contact is automatically added to your Simplelists list.</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Badge variant="outline" className="shrink-0">2</Badge>
+                      <p><strong>Organization Deletion:</strong> When an organization/member is removed, their contacts are automatically removed from Simplelists.</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Badge variant="outline" className="shrink-0">3</Badge>
+                      <p><strong>Contact Transfer:</strong> When a primary contact transfer is approved, the old contact is removed and the new contact is added to Simplelists.</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
