@@ -98,6 +98,62 @@ serve(async (req) => {
       console.log(`Found associated user: ${userId}`);
     }
 
+    // Simplelists: remove primary and secondary contacts before deletion
+    try {
+      const { data: slEnabledSetting } = await supabaseAdmin
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'simplelists_enabled')
+        .maybeSingle();
+
+      if (slEnabledSetting?.setting_value === 'true') {
+        const SIMPLELISTS_API_KEY = Deno.env.get('SIMPLELISTS_API_KEY');
+        if (SIMPLELISTS_API_KEY) {
+          const emailsToRemove: string[] = [];
+          if (organization.profiles?.email) emailsToRemove.push(organization.profiles.email);
+          
+          const { data: orgFull } = await supabaseAdmin
+            .from('organizations')
+            .select('secondary_contact_email')
+            .eq('id', organizationId)
+            .single();
+          if (orgFull?.secondary_contact_email) emailsToRemove.push(orgFull.secondary_contact_email);
+
+          for (const email of emailsToRemove) {
+            try {
+              const findRes = await fetch(`https://www.simplelists.com/api/2/contacts/?email=${encodeURIComponent(email)}`, {
+                headers: { 'Authorization': `Bearer ${SIMPLELISTS_API_KEY}`, 'Accept': 'application/json' }
+              });
+              if (findRes.ok) {
+                const findData = await findRes.json();
+                const results = findData?.results || findData;
+                if (Array.isArray(results) && results.length > 0) {
+                  const contactId = results[0].id || results[0].pk;
+                  await fetch(`https://www.simplelists.com/api/2/contacts/${contactId}/`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${SIMPLELISTS_API_KEY}` }
+                  });
+                  console.log(`Simplelists: removed ${email}`);
+                }
+              }
+              await supabaseAdmin.from('simplelists_sync_log').insert({
+                action: 'auto_remove', email, organization_name: organization.name,
+                status: 'success', details: { triggered_by: 'delete_organization' }
+              });
+            } catch (slErr: any) {
+              console.error(`Simplelists remove error for ${email}:`, slErr);
+              await supabaseAdmin.from('simplelists_sync_log').insert({
+                action: 'auto_remove', email, organization_name: organization.name,
+                status: 'error', error_message: slErr.message
+              });
+            }
+          }
+        }
+      }
+    } catch (slError) {
+      console.error('Simplelists sync error (non-blocking):', slError);
+    }
+
     // 1. Delete invoices associated with the organization
     const { data: deletedInvoices, error: invoiceError } = await supabaseAdmin
       .from('invoices')
