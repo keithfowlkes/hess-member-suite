@@ -1446,6 +1446,39 @@ export type Database = {
         }
         Relationships: []
       }
+      simplelists_sync_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          email: string
+          error_message: string | null
+          id: string
+          organization_name: string | null
+          status: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          email: string
+          error_message?: string | null
+          id?: string
+          organization_name?: string | null
+          status?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          email?: string
+          error_message?: string | null
+          id?: string
+          organization_name?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       survey_answers: {
         Row: {
           answer_options: Json | null
