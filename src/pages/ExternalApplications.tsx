@@ -407,6 +407,10 @@ export default function ExternalApplications() {
           <Tabs defaultValue="applications" className="space-y-4">
             <TabsList>
               <TabsTrigger value="applications">Applications</TabsTrigger>
+              <TabsTrigger value="simplelists">
+                <Mail className="h-4 w-4 mr-1" />
+                Simplelists
+              </TabsTrigger>
               <TabsTrigger value="logs">Access Logs</TabsTrigger>
               <TabsTrigger value="integration">Integration Guide</TabsTrigger>
             </TabsList>
