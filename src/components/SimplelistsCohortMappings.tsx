@@ -11,28 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { Plus, Trash2, Link2, Loader2 } from 'lucide-react';
-import { useSimpleSystemFieldOptions, FIELD_LABELS, SYSTEM_FIELDS, type SystemField } from '@/hooks/useSimpleSystemFieldOptions';
-
-// Only the system cohort fields relevant for list mapping
-const COHORT_FIELDS: SystemField[] = [
-  'student_information_system',
-  'financial_system',
-  'financial_aid',
-  'hcm_hr',
-  'payroll_system',
-  'purchasing_system',
-  'housing_management',
-  'learning_management',
-  'admissions_crm',
-  'alumni_advancement_crm',
-  'payment_platform',
-  'meal_plan_management',
-  'identity_management',
-  'door_access',
-  'document_management',
-  'voip',
-  'network_infrastructure',
-];
+import { useSimpleSystemFieldOptions } from '@/hooks/useSimpleSystemFieldOptions';
 
 interface CohortMapping {
   id: string;
@@ -48,9 +27,14 @@ export function SimplelistsCohortMappings() {
   const queryClient = useQueryClient();
   const { data: fieldOptions = [] } = useSimpleSystemFieldOptions();
   
-  const [newField, setNewField] = useState<string>('');
   const [newValue, setNewValue] = useState<string>('');
   const [newListName, setNewListName] = useState('');
+
+  // Get cohort membership options from system_field_options
+  const cohortOptions = fieldOptions
+    .filter(o => o.field_name === 'cohort_membership' && o.option_value.toLowerCase() !== 'none')
+    .map(o => o.option_value)
+    .sort();
 
   const { data: mappings = [], isLoading } = useQuery({
     queryKey: ['simplelists-cohort-mappings'],
@@ -58,7 +42,7 @@ export function SimplelistsCohortMappings() {
       const { data, error } = await supabase
         .from('simplelists_cohort_mappings')
         .select('*')
-        .order('system_field, field_value');
+        .order('field_value');
       if (error) throw error;
       return data as CohortMapping[];
     },
@@ -66,11 +50,11 @@ export function SimplelistsCohortMappings() {
 
   const addMapping = useMutation({
     mutationFn: async () => {
-      if (!newField || !newValue || !newListName.trim()) throw new Error('All fields required');
+      if (!newValue || !newListName.trim()) throw new Error('All fields required');
       const { error } = await supabase
         .from('simplelists_cohort_mappings')
         .insert({
-          system_field: newField,
+          system_field: 'cohort_membership',
           field_value: newValue,
           simplelists_list_name: newListName.trim(),
         });
@@ -79,7 +63,6 @@ export function SimplelistsCohortMappings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['simplelists-cohort-mappings'] });
       toast.success('Mapping added');
-      setNewField('');
       setNewValue('');
       setNewListName('');
     },
@@ -112,10 +95,10 @@ export function SimplelistsCohortMappings() {
     onError: (err: any) => toast.error(err.message),
   });
 
-  // Get options for the selected field
-  const valuesForField = newField
-    ? fieldOptions.filter(o => o.field_name === newField).map(o => o.option_value).sort()
-    : [];
+  // Filter out cohorts that already have a mapping
+  const availableValues = cohortOptions.filter(
+    v => !mappings.some(m => m.field_value.toLowerCase() === v.toLowerCase())
+  );
 
   return (
     <Card>
@@ -125,36 +108,26 @@ export function SimplelistsCohortMappings() {
           Cohort-to-List Mappings
         </CardTitle>
         <CardDescription>
-          Map system field values (e.g. "Ellucian Banner" under Student Information System) to specific Simplelists list names.
-          When a member is approved with a matching system value, they'll be added to the mapped list in addition to the primary list.
+          Map Professional Cohort Memberships (e.g. "Ellucian Banner", "Workday") to specific Simplelists list names.
+          When a member joins or leaves a cohort, they'll be automatically added to or removed from the mapped list.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Add new mapping */}
-        <div className="grid grid-cols-4 gap-2 items-end">
+        <div className="grid grid-cols-3 gap-2 items-end">
           <div className="space-y-1">
-            <Label className="text-xs">System Field</Label>
-            <Select value={newField} onValueChange={(v) => { setNewField(v); setNewValue(''); }}>
+            <Label className="text-xs">Cohort Membership</Label>
+            <Select value={newValue} onValueChange={setNewValue}>
               <SelectTrigger>
-                <SelectValue placeholder="Select field..." />
+                <SelectValue placeholder="Select cohort..." />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border z-50">
-                {COHORT_FIELDS.map(f => (
-                  <SelectItem key={f} value={f}>{FIELD_LABELS[f]}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Field Value</Label>
-            <Select value={newValue} onValueChange={setNewValue} disabled={!newField}>
-              <SelectTrigger>
-                <SelectValue placeholder={newField ? 'Select value...' : 'Pick field first'} />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border-border z-50 max-h-60">
-                {valuesForField.map(v => (
+                {availableValues.map(v => (
                   <SelectItem key={v} value={v}>{v}</SelectItem>
                 ))}
+                {availableValues.length === 0 && (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">All cohorts mapped</div>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -168,7 +141,7 @@ export function SimplelistsCohortMappings() {
           </div>
           <Button
             onClick={() => addMapping.mutate()}
-            disabled={!newField || !newValue || !newListName.trim() || addMapping.isPending}
+            disabled={!newValue || !newListName.trim() || addMapping.isPending}
           >
             {addMapping.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
             Add
@@ -186,8 +159,7 @@ export function SimplelistsCohortMappings() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>System Field</TableHead>
-                <TableHead>Value</TableHead>
+                <TableHead>Cohort Membership</TableHead>
                 <TableHead>Simplelists List</TableHead>
                 <TableHead>Active</TableHead>
                 <TableHead className="w-12"></TableHead>
@@ -196,10 +168,7 @@ export function SimplelistsCohortMappings() {
             <TableBody>
               {mappings.map(m => (
                 <TableRow key={m.id}>
-                  <TableCell className="text-sm font-medium">
-                    {FIELD_LABELS[m.system_field as SystemField] || m.system_field}
-                  </TableCell>
-                  <TableCell className="text-sm">{m.field_value}</TableCell>
+                  <TableCell className="text-sm font-medium">{m.field_value}</TableCell>
                   <TableCell className="text-sm">
                     <Badge variant="outline">{m.simplelists_list_name}</Badge>
                   </TableCell>
