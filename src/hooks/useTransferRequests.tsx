@@ -37,11 +37,11 @@ export const useTransferRequests = () => {
   const query = useQuery({
     queryKey: ['transfer-requests'],
     queryFn: async () => {
-      // Get pending and accepted (awaiting admin approval) transfer requests
+      // Get pending, accepted, and ready_for_approval transfer requests
       const { data, error } = await supabase
         .from('organization_transfer_requests')
         .select('*')
-        .in('status', ['pending', 'accepted'])
+        .in('status', ['pending', 'accepted', 'ready_for_approval'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
