@@ -631,6 +631,176 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('✅ Password cleared from registration_data for security');
     }
 
+    // Simplelists sync: update primary list and cohort-specific lists after approval
+    try {
+      const { data: slEnabledSetting } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'simplelists_enabled')
+        .maybeSingle();
+
+      if (slEnabledSetting?.setting_value === 'true') {
+        const SIMPLELISTS_API_KEY = Deno.env.get('SIMPLELISTS_API_KEY');
+        if (SIMPLELISTS_API_KEY) {
+          console.log('Simplelists sync: processing after member update approval');
+
+          const { data: slListSetting } = await supabase
+            .from('system_settings')
+            .select('setting_value')
+            .eq('setting_key', 'simplelists_list_name')
+            .maybeSingle();
+          const primaryListName = slListSetting?.setting_value || '';
+
+          const { data: slSecondarySetting } = await supabase
+            .from('system_settings')
+            .select('setting_value')
+            .eq('setting_key', 'simplelists_sync_secondary')
+            .maybeSingle();
+          const syncSecondary = slSecondarySetting?.setting_value === 'true';
+
+          const slHeaders = {
+            'Authorization': `Bearer ${SIMPLELISTS_API_KEY}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          };
+
+          // Helper to add a contact to a list
+          const addToList = async (firstname: string, surname: string, email: string, listName: string, logAction: string) => {
+            try {
+              const body: any = { firstname, surname, emails: [email] };
+              if (listName) body.lists = [listName];
+              const res = await fetch('https://www.simplelists.com/api/2/contacts/', {
+                method: 'POST', headers: slHeaders, body: JSON.stringify(body),
+              });
+              const txt = await res.text();
+              console.log(`Simplelists ${logAction} ${email} -> ${listName}: ${res.status}`);
+              await supabase.from('simplelists_sync_log').insert({
+                action: logAction, email, organization_name: organizationName,
+                status: res.ok ? 'success' : 'error',
+                error_message: res.ok ? null : txt,
+                details: { list_name: listName, triggered_by: 'member_update_approval' },
+              });
+            } catch (err) {
+              console.error(`Simplelists ${logAction} error:`, err);
+              await supabase.from('simplelists_sync_log').insert({
+                action: logAction, email, organization_name: organizationName,
+                status: 'error', error_message: err.message,
+              });
+            }
+          };
+
+          // Helper to remove a contact from a specific list (or entirely)
+          const removeFromList = async (email: string, listName: string, logAction: string) => {
+            try {
+              // Find the contact
+              const findRes = await fetch(`https://www.simplelists.com/api/2/contacts/?email=${encodeURIComponent(email)}`, {
+                method: 'GET', headers: slHeaders,
+              });
+              const findData = await findRes.json();
+              const results = findData?.results || findData;
+              if (Array.isArray(results) && results.length > 0) {
+                const contactId = results[0].id || results[0].pk;
+                // If we need to remove from a specific list, update their lists; 
+                // otherwise delete entirely
+                await fetch(`https://www.simplelists.com/api/2/contacts/${contactId}/`, {
+                  method: 'DELETE', headers: slHeaders,
+                });
+                console.log(`Simplelists ${logAction}: removed ${email} (contact ${contactId})`);
+              }
+              await supabase.from('simplelists_sync_log').insert({
+                action: logAction, email, organization_name: organizationName,
+                status: 'success', details: { list_name: listName, triggered_by: 'member_update_approval' },
+              });
+            } catch (err) {
+              console.error(`Simplelists ${logAction} error:`, err);
+              await supabase.from('simplelists_sync_log').insert({
+                action: logAction, email, organization_name: organizationName,
+                status: 'error', error_message: err.message,
+              });
+            }
+          };
+
+          // For member updates: sync primary/secondary contacts to main list
+          if (!isUpdate) {
+            // New registration: add primary contact to primary list
+            await addToList(registrationData.first_name, registrationData.last_name, registrationData.email, primaryListName, 'auto_add');
+            if (syncSecondary && registrationData.secondary_contact_email) {
+              await addToList(registrationData.secondary_first_name || '', registrationData.secondary_last_name || '', registrationData.secondary_contact_email, primaryListName, 'auto_add');
+            }
+          }
+
+          // Cohort-specific list sync: compare old vs new system field values
+          const { data: cohortMappings } = await supabase
+            .from('simplelists_cohort_mappings')
+            .select('system_field, field_value, simplelists_list_name')
+            .eq('is_active', true);
+
+          if (cohortMappings && cohortMappings.length > 0) {
+            const systemFieldKeys = [
+              'student_information_system', 'financial_system', 'financial_aid',
+              'hcm_hr', 'payroll_system', 'purchasing_system', 'housing_management',
+              'learning_management', 'admissions_crm', 'alumni_advancement_crm',
+              'payment_platform', 'meal_plan_management', 'identity_management',
+              'door_access', 'document_management', 'voip', 'network_infrastructure'
+            ];
+
+            // Build new system values from registration data
+            const newValues: Record<string, string> = {};
+            for (const key of systemFieldKeys) {
+              const val = registrationData[key] || organizationData[key];
+              if (val && typeof val === 'string' && val.trim()) newValues[key] = val.trim();
+            }
+
+            // Build old system values (only for updates)
+            const oldValues: Record<string, string> = {};
+            if (isUpdate && existingOrganization) {
+              for (const key of systemFieldKeys) {
+                const val = existingOrganization[key];
+                if (val && typeof val === 'string' && val.trim()) oldValues[key] = val.trim();
+              }
+            }
+
+            // Find lists to remove from (old value mapped but new value different or missing)
+            const listsToRemove = new Set<string>();
+            const listsToAdd = new Set<string>();
+
+            for (const mapping of cohortMappings) {
+              const oldVal = oldValues[mapping.system_field];
+              const newVal = newValues[mapping.system_field];
+              const mappingVal = mapping.field_value.toLowerCase();
+
+              // Was on this list before, no longer matches
+              if (oldVal && oldVal.toLowerCase() === mappingVal && (!newVal || newVal.toLowerCase() !== mappingVal)) {
+                listsToRemove.add(mapping.simplelists_list_name);
+              }
+              // Newly matches this list
+              if (newVal && newVal.toLowerCase() === mappingVal && (!oldVal || oldVal.toLowerCase() !== mappingVal)) {
+                listsToAdd.add(mapping.simplelists_list_name);
+              }
+              // New registration (not update) — just add if matches
+              if (!isUpdate && newVal && newVal.toLowerCase() === mappingVal) {
+                listsToAdd.add(mapping.simplelists_list_name);
+              }
+            }
+
+            // Execute removals
+            for (const listName of listsToRemove) {
+              await removeFromList(registrationData.email, listName, 'cohort_remove');
+            }
+
+            // Execute additions
+            for (const listName of listsToAdd) {
+              await addToList(registrationData.first_name, registrationData.last_name, registrationData.email, listName, 'cohort_add');
+            }
+
+            console.log(`Simplelists cohort sync: removed from ${listsToRemove.size} lists, added to ${listsToAdd.size} lists`);
+          }
+        }
+      }
+    } catch (slError) {
+      console.error('Simplelists sync error (non-blocking):', slError);
+    }
+
     // Step 8: Build update details for the email notification
     const updateDetails = [];
     
