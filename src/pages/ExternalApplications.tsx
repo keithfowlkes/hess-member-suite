@@ -56,6 +56,16 @@ export default function ExternalApplications() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<ExternalApplication | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  
+  // Simplelists state
+  const [slEnabled, setSlEnabled] = useState(false);
+  const [slListName, setSlListName] = useState('');
+  const [slSyncSecondary, setSlSyncSecondary] = useState(false);
+  const [slTesting, setSlTesting] = useState(false);
+  const [slConnectionStatus, setSlConnectionStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
+  const [slSyncing, setSlSyncing] = useState(false);
+  const [slSaving, setSlSaving] = useState(false);
+
   const [newApp, setNewApp] = useState({
     name: '',
     description: '',
