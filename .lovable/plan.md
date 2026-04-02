@@ -1,71 +1,36 @@
 
 
-## Plan: Streamlined Primary Contact Transfer with Data Protection
+## Plan: Simplelists API Integration ✅ IMPLEMENTED
 
 ### Summary
-Implement the multi-step transfer workflow where both contacts are notified, the new contact must register and update the org record, and the admin can only approve once everything is ready. The organization record is never destroyed -- only `contact_person_id` and the new contact's `profiles.organization` field are updated.
+Integrated the Simplelists V2 API to automatically sync primary and secondary contacts with the HESS mailing list. Added a new "Simplelists" tab to the External Applications admin page with configuration controls, and hooked into member approval, deletion, and contact transfer workflows.
 
-### Data Safety Guarantee
-The `approve-contact-transfer` edge function will ONLY update two fields:
-1. `organizations.contact_person_id` → new profile ID
-2. `profiles.organization` → org name (on new contact's profile)
+### What Was Built
 
-No other organization columns are touched. All org data (systems, FTE, address, membership, etc.) is preserved. An audit log snapshot of the org record will be saved before the transfer for rollback safety.
+**1. Edge Function: `simplelists-sync`**
+- Handles: `test_connection`, `get_settings`, `update_settings`, `add_contacts`, `remove_contact`, `transfer_contact`, `sync_all_members`
+- Uses Bearer token auth with `SIMPLELISTS_API_KEY` secret
+- All operations logged to `simplelists_sync_log` table
 
-### Changes
+**2. Database: `simplelists_sync_log` table**
+- Tracks all sync operations with action, email, org name, status, error messages
+- Admin-only RLS access
 
-**1. Database Migration**
-- Add `org_updated_at` (nullable timestamp) column to `organization_transfer_requests` to track when the new contact updated the org
+**3. Admin UI: Simplelists Tab in External Applications**
+- Connection test button with status indicator
+- List name configuration
+- Enable/disable auto-sync toggle
+- Sync secondary contacts toggle
+- "Sync All Current Members" bulk action
+- Activity log table showing recent sync operations
+- "How It Works" guide
 
-**2. Update `initiate-contact-transfer` edge function**
-- Send a confirmation email to the **current contact** confirming they initiated the transfer
-- Update the new contact email to include clear instructions: register at the portal, log in, and update the organization record
-- Add `contact_transfer_confirmation` email type handling
+**4. Workflow Hooks (auto-sync when enabled)**
+- `approve-pending-registration`: Adds primary + secondary contacts on member approval
+- `delete-organization`: Removes primary + secondary contacts before org deletion
+- `approve-contact-transfer`: Removes old contact, adds new contact on transfer approval
 
-**3. Update `centralized-email-delivery` edge function**
-- Add `contact_transfer_confirmation` email type for the current contact notification
-- Update `contact_transfer` template text to include registration and org update instructions
-
-**4. Update `approve-contact-transfer` edge function**
-- Only allow approval when status is `ready_for_approval` (in addition to current `pending`/`accepted`)
-- Snapshot the full organization record in the audit log before making the transfer (data loss protection)
-- Verify org data hasn't been corrupted before completing
-
-**5. Member Portal: Pending Transfer Banner (`Profile.tsx`)**
-- On login, check if the user's email matches any pending/accepted transfer request
-- Show a banner: "You have a pending contact transfer for [Org]. Please review and update the organization's information."
-- When the new contact submits an org profile edit request, auto-update the transfer request to `ready_for_approval` and set `org_updated_at`
-
-**6. Update `useUnifiedProfile` or org edit handler**
-- After a successful org profile edit submission, check for a pending transfer matching the user's email
-- If found, update the transfer status to `ready_for_approval` and notify admin
-
-**7. Update Master Dashboard UI (`MasterDashboard.tsx`)**
-- Add three status badges: `pending` (email sent), `accepted` (link clicked), `ready_for_approval` (org updated)
-- Only enable "Approve" when status is `ready_for_approval` AND new contact has an account
-- Add "Resend Notification" button
-- Show transfer progress timeline in the review dialog
-
-**8. Update `useTransferRequests` hook**
-- Include `ready_for_approval` in status filter
-- Add display labels for all statuses
-
-### Files to Create/Modify
-
-| File | Action |
-|------|--------|
-| New migration SQL | Add `org_updated_at` column |
-| `supabase/functions/initiate-contact-transfer/index.ts` | Send confirmation to current contact |
-| `supabase/functions/centralized-email-delivery/index.ts` | Add `contact_transfer_confirmation` type |
-| `supabase/functions/approve-contact-transfer/index.ts` | Require `ready_for_approval`, snapshot org data |
-| `src/pages/Profile.tsx` | Add pending transfer detection banner |
-| `src/hooks/useTransferRequests.tsx` | Update status filters and labels |
-| `src/pages/MasterDashboard.tsx` | Status badges, resend, conditional approve, timeline |
-| `src/hooks/useUnifiedProfile.tsx` or org edit handler | Auto-mark transfer ready after org update |
-
-### Data Loss Prevention Measures
-- Audit log captures full `organization.*` snapshot before `contact_person_id` update
-- Only `contact_person_id` and new contact's `profiles.organization` are modified
-- The approve function will re-fetch and verify the org exists and has data before proceeding
-- If any update fails, the transfer status remains unchanged (no partial state)
-
+### Settings (stored in `system_settings`)
+- `simplelists_enabled` — master toggle
+- `simplelists_list_name` — target list name
+- `simplelists_sync_secondary` — whether to include secondary contacts
