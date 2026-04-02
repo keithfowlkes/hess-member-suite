@@ -2404,8 +2404,16 @@ const MasterDashboard = () => {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowTransferApprovalDialog(false);
+                setSelectedTransferRequest(null);
+              }}
+            >
+              Cancel
+            </Button>
             <Button
               variant="destructive"
               onClick={() => {
@@ -2420,7 +2428,7 @@ const MasterDashboard = () => {
               {rejectTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
               Reject
             </Button>
-            <AlertDialogAction
+            <Button
               onClick={() => {
                 if (selectedTransferRequest) {
                   approveTransfer.mutate({ id: selectedTransferRequest.id });
@@ -2429,12 +2437,12 @@ const MasterDashboard = () => {
                 }
               }}
               disabled={approveTransfer.isPending || !selectedTransferRequest?.new_contact_profile}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
               {approveTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
               Approve Transfer
-            </AlertDialogAction>
-          </AlertDialogFooter>
+            </Button>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </SidebarProvider>
