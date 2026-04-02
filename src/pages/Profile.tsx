@@ -199,6 +199,25 @@ const Profile = () => {
           </div>
           
           <div className="space-y-6">
+            {/* Pending Transfer Banner */}
+            {pendingTransfer && (
+              <Card className="border-amber-300 bg-amber-50">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-amber-900">Pending Contact Transfer</h3>
+                      <p className="text-sm text-amber-800 mt-1">
+                        You have been designated as the new primary contact for{' '}
+                        <strong>{(pendingTransfer as any).organizations?.name || 'an organization'}</strong>.
+                        To complete this transfer, please review and update the organization's information below, then save your changes.
+                        Once you do, an administrator will be notified and can finalize the transfer.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             {/* Change Password Button - Always visible */}
             <div className="flex justify-end">
               <Button 
