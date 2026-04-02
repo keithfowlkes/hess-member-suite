@@ -11,7 +11,7 @@ export interface TransferRequest {
   new_contact_id: string | null;
   new_contact_email: string;
   transfer_token: string;
-  status: 'pending' | 'accepted' | 'completed' | 'rejected' | 'cancelled' | 'expired';
+  status: string;
   expires_at: string;
   completed_at: string | null;
   created_at: string;

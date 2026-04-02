@@ -71,6 +71,7 @@ import { useMemberRegistrationUpdates } from '@/hooks/useMemberRegistrationUpdat
 import { useTransferRequests, useApproveTransferRequest, useRejectTransferRequest } from '@/hooks/useTransferRequests';
 import { useInvoices } from '@/hooks/useInvoices';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 // Components
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
