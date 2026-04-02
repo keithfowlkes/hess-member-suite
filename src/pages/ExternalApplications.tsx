@@ -240,24 +240,14 @@ export default function ExternalApplications() {
     enabled: isAdmin
   });
 
-  // Initialize simplelists state from settings
-  useState(() => {
-    if (slSettings) {
-      setSlEnabled(slSettings.enabled);
-      setSlListName(slSettings.list_name || '');
-      setSlSyncSecondary(slSettings.sync_secondary);
-    }
-  });
-
   // Update local state when settings load
-  const prevSettings = JSON.stringify(slSettings);
-  useState(() => {
+  useEffect(() => {
     if (slSettings && !slSettingsLoading) {
       setSlEnabled(slSettings.enabled);
       setSlListName(slSettings.list_name || '');
       setSlSyncSecondary(slSettings.sync_secondary);
     }
-  });
+  }, [slSettings, slSettingsLoading]);
 
   const handleSlTestConnection = async () => {
     setSlTesting(true);
