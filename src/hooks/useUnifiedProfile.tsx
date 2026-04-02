@@ -312,6 +312,32 @@ export function useUnifiedProfile(userId?: string) {
       // Refresh data
       await fetchUnifiedProfile();
 
+      // Check if there's a pending transfer for this user's email - auto-mark as ready_for_approval
+      if (updates.organization) {
+        try {
+          const { data: pendingTransfers } = await supabase
+            .from('organization_transfer_requests')
+            .select('id')
+            .eq('new_contact_email', data.profile.email.toLowerCase())
+            .in('status', ['pending', 'accepted']);
+          
+          if (pendingTransfers && pendingTransfers.length > 0) {
+            for (const transfer of pendingTransfers) {
+              await supabase
+                .from('organization_transfer_requests')
+                .update({ 
+                  status: 'ready_for_approval',
+                  org_updated_at: new Date().toISOString()
+                })
+                .eq('id', transfer.id);
+              console.log(`✅ Transfer ${transfer.id} marked as ready_for_approval after direct org update`);
+            }
+          }
+        } catch (transferError) {
+          console.warn('[useUnifiedProfile] Error checking/updating transfer status:', transferError);
+        }
+      }
+
       toast({
         title: 'Success',
         description: 'Profile updated successfully'
