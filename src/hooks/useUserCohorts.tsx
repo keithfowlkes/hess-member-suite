@@ -128,10 +128,11 @@ export function useUserCohorts(userId?: string) {
 
       if (!profile?.email) return;
 
-      // Get active cohort mappings
+      // Get active cohort membership mappings
       const { data: mappings } = await supabase
         .from('simplelists_cohort_mappings')
         .select('field_value, simplelists_list_name')
+        .eq('system_field', 'cohort_membership')
         .eq('is_active', true);
 
       if (!mappings || mappings.length === 0) return;
