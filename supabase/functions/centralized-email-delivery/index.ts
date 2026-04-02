@@ -193,12 +193,18 @@ const handler = async (req: Request): Promise<Response> => {
       // Contact transfer request email - includes registration + org update instructions
       finalSubject = `Primary Contact Transfer Request - ${templateData.organization_name}`;
       const designSettings = await getEmailDesignSettings();
-      let transferTemplate = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
-          <h2 style="color: {{primary_color}};">Primary Contact Transfer Request</h2>
+      let transferBody = `
+          <h2 style="color: {{primary_color}}; margin-top: 0;">Primary Contact Transfer Request</h2>
           <p>You have been designated as the new primary contact for <strong>${templateData.organization_name}</strong> in the HESS Consortium Member Portal.</p>
-          <p><strong>${templateData.current_contact_name}</strong> (${templateData.current_contact_email}) has initiated this transfer.</p>
           
+          <div style="background-color: #f0f0f5; border-left: 4px solid {{primary_color}}; padding: 15px; margin: 15px 0; border-radius: 4px;">
+            <p style="margin: 0; font-size: 14px;"><strong>Requested by:</strong> ${templateData.current_contact_name}</p>
+            <p style="margin: 5px 0 0; font-size: 14px;"><strong>Email:</strong> ${templateData.current_contact_email}</p>
+            <p style="margin: 5px 0 0; font-size: 14px;"><strong>Institution:</strong> ${templateData.organization_name}</p>
+          </div>
+          
+          <p>${templateData.current_contact_name} has requested that you become the new primary contact for <strong>${templateData.organization_name}</strong>. If you have questions about this request, please reach out to them directly at <a href="mailto:${templateData.current_contact_email}" style="color: {{primary_color}};">${templateData.current_contact_email}</a>.</p>
+
           <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h3 style="color: {{primary_color}}; margin-top: 0;">To complete this transfer, please follow these steps:</h3>
             <ol style="padding-left: 20px; line-height: 1.8;">
@@ -216,9 +222,9 @@ const handler = async (req: Request): Promise<Response> => {
           <p style="color: #666; font-size: 14px;">This transfer request will expire on ${templateData.expires_at}.</p>
           <p>If you did not expect this transfer request or have questions, please contact the HESS Consortium.</p>
           <p>Best regards,<br><span style="color: {{primary_color}};">HESS Consortium Team</span></p>
-        </div>
       `;
-      finalHtml = replaceColorVariables(transferTemplate, designSettings);
+      transferBody = replaceColorVariables(transferBody, designSettings);
+      finalHtml = await wrapInStandardTemplate(transferBody);
     } else if (emailRequest.type === 'contact_transfer_confirmation') {
       // Confirmation email sent to the CURRENT contact who initiated the transfer
       finalSubject = `Transfer Request Submitted - ${templateData.organization_name}`;

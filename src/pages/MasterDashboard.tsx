@@ -2574,10 +2574,20 @@ const MasterDashboard = () => {
                 dangerouslySetInnerHTML={{
                   __html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+                      <div style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #7c3aed;">
+                        <img src="/lovable-uploads/4a98a7dc-4bad-4f5b-94d4-fa028adbc2f6.png" alt="HESS Consortium Logo" style="max-width: 200px; height: auto;" />
+                      </div>
                       <h2 style="color: #7c3aed;">Primary Contact Transfer Request</h2>
                       <p>You have been designated as the new primary contact for <strong>${selectedTransferRequest.organization?.name || 'Organization'}</strong> in the HESS Consortium Member Portal.</p>
-                      <p><strong>${selectedTransferRequest.current_contact?.first_name || ''} ${selectedTransferRequest.current_contact?.last_name || ''}</strong> (${selectedTransferRequest.current_contact?.email || ''}) has initiated this transfer.</p>
                       
+                      <div style="background-color: #f0f0f5; border-left: 4px solid #7c3aed; padding: 15px; margin: 15px 0; border-radius: 4px;">
+                        <p style="margin: 0; font-size: 14px;"><strong>Requested by:</strong> ${selectedTransferRequest.current_contact?.first_name || ''} ${selectedTransferRequest.current_contact?.last_name || ''}</p>
+                        <p style="margin: 5px 0 0; font-size: 14px;"><strong>Email:</strong> ${selectedTransferRequest.current_contact?.email || ''}</p>
+                        <p style="margin: 5px 0 0; font-size: 14px;"><strong>Institution:</strong> ${selectedTransferRequest.organization?.name || 'Organization'}</p>
+                      </div>
+                      
+                      <p>${selectedTransferRequest.current_contact?.first_name || ''} ${selectedTransferRequest.current_contact?.last_name || ''} has requested that you become the new primary contact for <strong>${selectedTransferRequest.organization?.name || 'Organization'}</strong>. If you have questions about this request, please reach out to them directly at <a href="mailto:${selectedTransferRequest.current_contact?.email || ''}" style="color: #7c3aed;">${selectedTransferRequest.current_contact?.email || ''}</a>.</p>
+
                       <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 20px 0;">
                         <h3 style="color: #7c3aed; margin-top: 0;">To complete this transfer, please follow these steps:</h3>
                         <ol style="padding-left: 20px; line-height: 1.8;">
