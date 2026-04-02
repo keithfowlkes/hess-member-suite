@@ -47,6 +47,7 @@ export function useUserCohorts(userId?: string) {
     if (!targetUserId || updating) return false;
 
     setUpdating(true);
+    const oldCohorts = [...cohorts];
     
     try {
       // First, remove all existing cohorts for this user
@@ -94,6 +95,9 @@ export function useUserCohorts(userId?: string) {
         description: 'Cohort memberships updated successfully',
       });
 
+      // Sync Simplelists cohort list changes (non-blocking)
+      syncSimplelistsCohortChanges(targetUserId, oldCohorts, newCohorts);
+
       return true;
     } catch (error) {
       console.error('Error updating user cohorts:', error);
@@ -105,6 +109,78 @@ export function useUserCohorts(userId?: string) {
       return false;
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const syncSimplelistsCohortChanges = async (userId: string, oldCohorts: string[], newCohorts: string[]) => {
+    try {
+      const removed = oldCohorts.filter(c => !newCohorts.includes(c));
+      const added = newCohorts.filter(c => !oldCohorts.includes(c));
+
+      if (removed.length === 0 && added.length === 0) return;
+
+      // Get user's profile info for Simplelists contact
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email, organization')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!profile?.email) return;
+
+      // Get active cohort mappings
+      const { data: mappings } = await supabase
+        .from('simplelists_cohort_mappings')
+        .select('field_value, simplelists_list_name')
+        .eq('is_active', true);
+
+      if (!mappings || mappings.length === 0) return;
+
+      // Build lookup: cohort value → list names
+      const valueToLists = new Map<string, string[]>();
+      for (const m of mappings) {
+        const key = m.field_value.toLowerCase();
+        if (!valueToLists.has(key)) valueToLists.set(key, []);
+        valueToLists.get(key)!.push(m.simplelists_list_name);
+      }
+
+      // Remove from old cohort lists
+      for (const cohort of removed) {
+        const lists = valueToLists.get(cohort.toLowerCase());
+        if (!lists) continue;
+        for (const listName of lists) {
+          supabase.functions.invoke('simplelists-sync', {
+            body: {
+              action: 'remove_contact',
+              email: profile.email,
+              organization_name: profile.organization || '',
+              list_name: listName,
+            },
+          }).catch(err => console.error('Simplelists cohort remove error:', err));
+        }
+      }
+
+      // Add to new cohort lists
+      for (const cohort of added) {
+        const lists = valueToLists.get(cohort.toLowerCase());
+        if (!lists) continue;
+        for (const listName of lists) {
+          supabase.functions.invoke('simplelists-sync', {
+            body: {
+              action: 'add_contacts',
+              contacts: [{
+                firstname: profile.first_name,
+                surname: profile.last_name,
+                email: profile.email,
+                organization_name: profile.organization || '',
+              }],
+              list_name: listName,
+            },
+          }).catch(err => console.error('Simplelists cohort add error:', err));
+        }
+      }
+    } catch (err) {
+      console.error('Simplelists cohort sync error (non-blocking):', err);
     }
   };
 
