@@ -1053,33 +1053,22 @@ serve(async (req) => {
             }
           }
 
-          // Cohort-specific list mappings: check org system fields against mappings
+          // Cohort-specific list mappings: check user's cohort memberships against mappings
           try {
             const { data: cohortMappings } = await supabaseAdmin
               .from('simplelists_cohort_mappings')
-              .select('system_field, field_value, simplelists_list_name')
+              .select('field_value, simplelists_list_name')
+              .eq('system_field', 'cohort_membership')
               .eq('is_active', true);
 
-            if (cohortMappings && cohortMappings.length > 0) {
-              // Build a map of the registration's system field values
-              const regSystemValues: Record<string, string> = {};
-              const fieldKeys = [
-                'student_information_system', 'financial_system', 'financial_aid',
-                'hcm_hr', 'payroll_system', 'purchasing_system', 'housing_management',
-                'learning_management', 'admissions_crm', 'alumni_advancement_crm',
-                'payment_platform', 'meal_plan_management', 'identity_management',
-                'door_access', 'document_management', 'voip', 'network_infrastructure'
-              ];
-              for (const key of fieldKeys) {
-                const val = (pendingReg as any)[key];
-                if (val && val.trim()) regSystemValues[key] = val.trim();
-              }
-
-              // Find matching lists
+            if (cohortMappings && cohortMappings.length > 0 && pendingReg.requested_cohorts && Array.isArray(pendingReg.requested_cohorts)) {
+              // Find matching lists based on the user's requested cohort memberships
               const cohortListsToAdd = new Set<string>();
               for (const mapping of cohortMappings) {
-                const regVal = regSystemValues[mapping.system_field];
-                if (regVal && regVal.toLowerCase() === mapping.field_value.toLowerCase()) {
+                const hasMatch = pendingReg.requested_cohorts.some(
+                  (cohort: string) => cohort.toLowerCase() === mapping.field_value.toLowerCase()
+                );
+                if (hasMatch) {
                   cohortListsToAdd.add(mapping.simplelists_list_name);
                 }
               }
@@ -1111,7 +1100,7 @@ serve(async (req) => {
                     organization_name: pendingReg.organization_name,
                     status: clRes.ok ? 'success' : 'error',
                     error_message: clRes.ok ? null : clData,
-                    details: { list_name: cohortList, triggered_by: 'approve_registration' },
+                    details: { list_name: cohortList, cohort_membership: true, triggered_by: 'approve_registration' },
                   });
                 } catch (clErr) {
                   console.error(`Simplelists cohort add error for ${cohortList}:`, clErr);
