@@ -2370,7 +2370,7 @@ const MasterDashboard = () => {
               <UserPlus className="h-5 w-5 text-indigo-600" />
               Review Contact Transfer
             </DialogTitle>
-            <AlertDialogDescription asChild>
+            <DialogDescription asChild>
               <div className="space-y-4">
                 {selectedTransferRequest && (
                   <>
@@ -2402,8 +2402,8 @@ const MasterDashboard = () => {
                   </>
                 )}
               </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+            </DialogDescription>
+          </DialogHeader>
           <div className="flex justify-end gap-2 mt-4">
             <Button
               variant="outline"
@@ -2443,8 +2443,8 @@ const MasterDashboard = () => {
               Approve Transfer
             </Button>
           </div>
-        </AlertDialogContent>
-      </AlertDialog>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
