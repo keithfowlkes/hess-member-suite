@@ -2603,8 +2603,8 @@ const MasterDashboard = () => {
                         <span style="background-color: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Accept Transfer</span>
                       </div>
                       <p style="color: #666; font-size: 14px;">This transfer request will expire on ${new Date(selectedTransferRequest.expires_at).toLocaleDateString()}.</p>
-                      <p>If you did not expect this transfer request or have questions, please contact the HESS Consortium.</p>
-                      <p>Best regards,<br><span style="color: #7c3aed;">HESS Consortium Team</span></p>
+                      <p>If you did not expect this transfer request or have questions, please contact the HESS Consortium at <a href="mailto:info@hessconsortium.org" style="color: #7c3aed;">info@hessconsortium.org</a>.</p>
+                      <p>Best regards,<br><span style="color: #7c3aed;">HESS Consortium Team</span><br><a href="mailto:info@hessconsortium.org" style="color: #7c3aed; font-size: 13px;">info@hessconsortium.org</a></p>
                     </div>
                   `
                 }}
