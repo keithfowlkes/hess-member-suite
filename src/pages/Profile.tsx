@@ -43,6 +43,27 @@ const Profile = () => {
     checkCohortLeaderRole();
   }, [user]);
 
+  // Check if user has a pending transfer targeting them
+  useEffect(() => {
+    const checkPendingTransfer = async () => {
+      if (!data?.profile?.email) return;
+      
+      const { data: transfers } = await supabase
+        .from('organization_transfer_requests')
+        .select('*, organizations:organization_id(name)')
+        .eq('new_contact_email', data.profile.email.toLowerCase())
+        .in('status', ['pending', 'accepted']);
+      
+      if (transfers && transfers.length > 0) {
+        setPendingTransfer(transfers[0]);
+      } else {
+        setPendingTransfer(null);
+      }
+    };
+    
+    checkPendingTransfer();
+  }, [data?.profile?.email]);
+
   // Scroll to top when profile page loads
   useEffect(() => {
     window.scrollTo(0, 0);
