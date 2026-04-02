@@ -729,71 +729,39 @@ const handler = async (req: Request): Promise<Response> => {
             }
           }
 
-          // Cohort-specific list sync: compare old vs new system field values
-          const { data: cohortMappings } = await supabase
-            .from('simplelists_cohort_mappings')
-            .select('system_field, field_value, simplelists_list_name')
-            .eq('is_active', true);
+          // Cohort-specific list sync: use user_cohorts table (cohort memberships)
+          // For member updates, the user_cohorts don't change through this flow
+          // (they change via the MemberCohortSelector in the profile UI),
+          // so we only need to handle new registrations here
+          if (!isUpdate) {
+            const { data: cohortMappings } = await supabase
+              .from('simplelists_cohort_mappings')
+              .select('field_value, simplelists_list_name')
+              .eq('system_field', 'cohort_membership')
+              .eq('is_active', true);
 
-          if (cohortMappings && cohortMappings.length > 0) {
-            const systemFieldKeys = [
-              'student_information_system', 'financial_system', 'financial_aid',
-              'hcm_hr', 'payroll_system', 'purchasing_system', 'housing_management',
-              'learning_management', 'admissions_crm', 'alumni_advancement_crm',
-              'payment_platform', 'meal_plan_management', 'identity_management',
-              'door_access', 'document_management', 'voip', 'network_infrastructure'
-            ];
+            if (cohortMappings && cohortMappings.length > 0) {
+              // For new registrations via member update, check if requested_cohorts exist in registration data
+              const requestedCohorts: string[] = registrationData.requested_cohorts || [];
 
-            // Build new system values from registration data
-            const newValues: Record<string, string> = {};
-            for (const key of systemFieldKeys) {
-              const val = registrationData[key] || organizationData[key];
-              if (val && typeof val === 'string' && val.trim()) newValues[key] = val.trim();
-            }
+              if (requestedCohorts.length > 0) {
+                const cohortListsToAdd = new Set<string>();
+                for (const mapping of cohortMappings) {
+                  const hasMatch = requestedCohorts.some(
+                    (cohort: string) => cohort.toLowerCase() === mapping.field_value.toLowerCase()
+                  );
+                  if (hasMatch) {
+                    cohortListsToAdd.add(mapping.simplelists_list_name);
+                  }
+                }
 
-            // Build old system values (only for updates)
-            const oldValues: Record<string, string> = {};
-            if (isUpdate && existingOrganization) {
-              for (const key of systemFieldKeys) {
-                const val = existingOrganization[key];
-                if (val && typeof val === 'string' && val.trim()) oldValues[key] = val.trim();
+                for (const listName of cohortListsToAdd) {
+                  await addToList(registrationData.first_name, registrationData.last_name, registrationData.email, listName, 'cohort_add');
+                }
+
+                console.log(`Simplelists cohort sync: added to ${cohortListsToAdd.size} cohort lists`);
               }
             }
-
-            // Find lists to remove from (old value mapped but new value different or missing)
-            const listsToRemove = new Set<string>();
-            const listsToAdd = new Set<string>();
-
-            for (const mapping of cohortMappings) {
-              const oldVal = oldValues[mapping.system_field];
-              const newVal = newValues[mapping.system_field];
-              const mappingVal = mapping.field_value.toLowerCase();
-
-              // Was on this list before, no longer matches
-              if (oldVal && oldVal.toLowerCase() === mappingVal && (!newVal || newVal.toLowerCase() !== mappingVal)) {
-                listsToRemove.add(mapping.simplelists_list_name);
-              }
-              // Newly matches this list
-              if (newVal && newVal.toLowerCase() === mappingVal && (!oldVal || oldVal.toLowerCase() !== mappingVal)) {
-                listsToAdd.add(mapping.simplelists_list_name);
-              }
-              // New registration (not update) — just add if matches
-              if (!isUpdate && newVal && newVal.toLowerCase() === mappingVal) {
-                listsToAdd.add(mapping.simplelists_list_name);
-              }
-            }
-
-            // Execute removals
-            for (const listName of listsToRemove) {
-              await removeFromList(registrationData.email, listName, 'cohort_remove');
-            }
-
-            // Execute additions
-            for (const listName of listsToAdd) {
-              await addToList(registrationData.first_name, registrationData.last_name, registrationData.email, listName, 'cohort_add');
-            }
-
-            console.log(`Simplelists cohort sync: removed from ${listsToRemove.size} lists, added to ${listsToAdd.size} lists`);
           }
         }
       }
