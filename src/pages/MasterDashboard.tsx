@@ -1439,11 +1439,17 @@ const MasterDashboard = () => {
                                       {transfer.organization?.name || 'Organization'}
                                     </h3>
                                     <Badge variant="outline" className={`text-xs flex-shrink-0 ${
-                                      transfer.status === 'accepted' 
-                                        ? 'bg-green-50 text-green-700 border-green-200' 
-                                        : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                      transfer.status === 'ready_for_approval'
+                                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                        : transfer.status === 'accepted' 
+                                          ? 'bg-green-50 text-green-700 border-green-200' 
+                                          : 'bg-indigo-50 text-indigo-700 border-indigo-200'
                                     }`}>
-                                      {transfer.status === 'accepted' ? 'Accepted - Awaiting Approval' : 'Pending'}
+                                      {transfer.status === 'ready_for_approval' 
+                                        ? 'Ready for Approval' 
+                                        : transfer.status === 'accepted' 
+                                          ? 'Accepted - Awaiting Org Update' 
+                                          : 'Pending - Awaiting Response'}
                                     </Badge>
                                   </div>
                                   <div className="text-xs text-muted-foreground space-y-1">
