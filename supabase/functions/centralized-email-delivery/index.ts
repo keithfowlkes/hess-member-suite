@@ -220,8 +220,8 @@ const handler = async (req: Request): Promise<Response> => {
             <a href="${templateData.transfer_link}" style="background-color: {{primary_color}}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Accept Transfer</a>
           </div>
           <p style="color: #666; font-size: 14px;">This transfer request will expire on ${templateData.expires_at}.</p>
-          <p>If you did not expect this transfer request or have questions, please contact the HESS Consortium.</p>
-          <p>Best regards,<br><span style="color: {{primary_color}};">HESS Consortium Team</span></p>
+          <p>If you did not expect this transfer request or have questions, please contact the HESS Consortium at <a href="mailto:info@hessconsortium.org" style="color: {{primary_color}};">info@hessconsortium.org</a>.</p>
+          <p>Best regards,<br><span style="color: {{primary_color}};">HESS Consortium Team</span><br><a href="mailto:info@hessconsortium.org" style="color: {{primary_color}}; font-size: 13px;">info@hessconsortium.org</a></p>
       `;
       transferBody = replaceColorVariables(transferBody, designSettings);
       finalHtml = await wrapInStandardTemplate(transferBody);
