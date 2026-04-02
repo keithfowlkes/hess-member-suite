@@ -53,6 +53,25 @@ serve(async (req) => {
 
     console.log(`Starting organization deletion: ${organizationId} by admin: ${adminUserId}`);
 
+    // Simplelists sync: remove contacts before deletion
+    try {
+      const { data: slEnabledSetting } = await supabaseAdmin
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'simplelists_enabled')
+        .maybeSingle();
+
+      if (slEnabledSetting?.setting_value === 'true') {
+        const SIMPLELISTS_API_KEY = Deno.env.get('SIMPLELISTS_API_KEY');
+        if (SIMPLELISTS_API_KEY) {
+          // We'll collect emails to remove after we fetch the org details
+          console.log('Simplelists sync enabled, will remove contacts after fetching org details');
+        }
+      }
+    } catch (slCheckErr) {
+      console.error('Simplelists check error (non-blocking):', slCheckErr);
+    }
+
     // Get organization details for logging
     const { data: organization, error: orgError } = await supabaseAdmin
       .from('organizations')
