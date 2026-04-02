@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, Key } from 'lucide-react';
+import { Loader2, Key, AlertTriangle } from 'lucide-react';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { UnifiedProfileEditor } from '@/components/UnifiedProfileEditor';
 import { MemberCohortSelector } from '@/components/MemberCohortSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +23,7 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
+  const [pendingTransfer, setPendingTransfer] = useState<any>(null);
 
   // Check if user is a cohort leader
   useEffect(() => {
@@ -40,6 +42,27 @@ const Profile = () => {
     
     checkCohortLeaderRole();
   }, [user]);
+
+  // Check if user has a pending transfer targeting them
+  useEffect(() => {
+    const checkPendingTransfer = async () => {
+      if (!data?.profile?.email) return;
+      
+      const { data: transfers } = await supabase
+        .from('organization_transfer_requests')
+        .select('*, organizations:organization_id(name)')
+        .eq('new_contact_email', data.profile.email.toLowerCase())
+        .in('status', ['pending', 'accepted']);
+      
+      if (transfers && transfers.length > 0) {
+        setPendingTransfer(transfers[0]);
+      } else {
+        setPendingTransfer(null);
+      }
+    };
+    
+    checkPendingTransfer();
+  }, [data?.profile?.email]);
 
   // Scroll to top when profile page loads
   useEffect(() => {
@@ -176,6 +199,25 @@ const Profile = () => {
           </div>
           
           <div className="space-y-6">
+            {/* Pending Transfer Banner */}
+            {pendingTransfer && (
+              <Card className="border-amber-300 bg-amber-50">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-amber-900">Pending Contact Transfer</h3>
+                      <p className="text-sm text-amber-800 mt-1">
+                        You have been designated as the new primary contact for{' '}
+                        <strong>{(pendingTransfer as any).organizations?.name || 'an organization'}</strong>.
+                        To complete this transfer, please review and update the organization's information below, then save your changes.
+                        Once you do, an administrator will be notified and can finalize the transfer.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             {/* Change Password Button - Always visible */}
             <div className="flex justify-end">
               <Button 

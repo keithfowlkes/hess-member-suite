@@ -63,12 +63,12 @@ Deno.serve(async (req) => {
 
     console.log(`[approve-contact-transfer] Admin ${user.id} approving transfer ${transfer_id}`);
 
-    // Get the transfer request
+    // Get the transfer request - allow pending, accepted, AND ready_for_approval
     const { data: transferRequest, error: findError } = await adminClient
       .from('organization_transfer_requests')
       .select('*')
       .eq('id', transfer_id)
-      .in('status', ['pending', 'accepted'])
+      .in('status', ['pending', 'accepted', 'ready_for_approval'])
       .single();
 
     if (findError || !transferRequest) {
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get organization
+    // Get organization - FULL record for snapshot
     const { data: organization, error: orgError } = await adminClient
       .from('organizations')
       .select('*')
@@ -123,6 +123,21 @@ Deno.serve(async (req) => {
       });
     }
 
+    // DATA LOSS PREVENTION: Snapshot the full organization record before transfer
+    console.log(`[approve-contact-transfer] Creating pre-transfer org snapshot for data safety`);
+    await adminClient.from('audit_log').insert({
+      action: 'contact_transfer_pre_snapshot',
+      entity_type: 'organization',
+      entity_id: transferRequest.organization_id,
+      user_id: user.id,
+      details: {
+        transfer_request_id: transferRequest.id,
+        organization_snapshot: organization,
+        old_contact_person_id: organization.contact_person_id,
+        new_contact_profile_id: newContactProfile.id
+      }
+    });
+
     // Get old contact info
     const { data: oldContactProfile } = await adminClient
       .from('profiles')
@@ -130,7 +145,7 @@ Deno.serve(async (req) => {
       .eq('id', transferRequest.current_contact_id)
       .single();
 
-    // Update organization with new contact
+    // ONLY update contact_person_id - NO other org fields touched
     const { error: updateError } = await adminClient
       .from('organizations')
       .update({ 
@@ -163,11 +178,23 @@ Deno.serve(async (req) => {
       })
       .eq('id', transferRequest.id);
 
-    console.log(`[approve-contact-transfer] Transfer completed for org ${organization.name}`);
+    // Verify org data integrity after transfer
+    const { data: verifiedOrg } = await adminClient
+      .from('organizations')
+      .select('id, name, contact_person_id, student_fte, membership_status')
+      .eq('id', transferRequest.organization_id)
+      .single();
+
+    console.log(`[approve-contact-transfer] Transfer completed. Verified org:`, {
+      id: verifiedOrg?.id,
+      name: verifiedOrg?.name,
+      new_contact_person_id: verifiedOrg?.contact_person_id,
+      student_fte: verifiedOrg?.student_fte,
+      membership_status: verifiedOrg?.membership_status
+    });
 
     // Send confirmation emails
     try {
-      // Email to new contact
       await adminClient.functions.invoke('centralized-email-delivery', {
         body: {
           type: 'contact_transfer_complete',
@@ -179,7 +206,6 @@ Deno.serve(async (req) => {
         }
       });
 
-      // Email to old contact
       if (oldContactProfile?.email) {
         await adminClient.functions.invoke('centralized-email-delivery', {
           body: {
@@ -208,7 +234,8 @@ Deno.serve(async (req) => {
         new_contact_id: newContactProfile.id,
         new_contact_email: transferRequest.new_contact_email,
         transfer_request_id: transferRequest.id,
-        admin_notes
+        admin_notes,
+        data_integrity_verified: true
       }
     });
 

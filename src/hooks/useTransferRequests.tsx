@@ -11,7 +11,7 @@ export interface TransferRequest {
   new_contact_id: string | null;
   new_contact_email: string;
   transfer_token: string;
-  status: 'pending' | 'accepted' | 'completed' | 'rejected' | 'cancelled' | 'expired';
+  status: string;
   expires_at: string;
   completed_at: string | null;
   created_at: string;
@@ -37,11 +37,11 @@ export const useTransferRequests = () => {
   const query = useQuery({
     queryKey: ['transfer-requests'],
     queryFn: async () => {
-      // Get pending and accepted (awaiting admin approval) transfer requests
+      // Get pending, accepted, and ready_for_approval transfer requests
       const { data, error } = await supabase
         .from('organization_transfer_requests')
         .select('*')
-        .in('status', ['pending', 'accepted'])
+        .in('status', ['pending', 'accepted', 'ready_for_approval'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;

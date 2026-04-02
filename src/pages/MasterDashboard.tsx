@@ -71,6 +71,7 @@ import { useMemberRegistrationUpdates } from '@/hooks/useMemberRegistrationUpdat
 import { useTransferRequests, useApproveTransferRequest, useRejectTransferRequest } from '@/hooks/useTransferRequests';
 import { useInvoices } from '@/hooks/useInvoices';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 // Components
 import { OrganizationApprovalDialog } from '@/components/OrganizationApprovalDialog';
@@ -1439,11 +1440,17 @@ const MasterDashboard = () => {
                                       {transfer.organization?.name || 'Organization'}
                                     </h3>
                                     <Badge variant="outline" className={`text-xs flex-shrink-0 ${
-                                      transfer.status === 'accepted' 
-                                        ? 'bg-green-50 text-green-700 border-green-200' 
-                                        : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                      transfer.status === 'ready_for_approval'
+                                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                        : transfer.status === 'accepted' 
+                                          ? 'bg-green-50 text-green-700 border-green-200' 
+                                          : 'bg-indigo-50 text-indigo-700 border-indigo-200'
                                     }`}>
-                                      {transfer.status === 'accepted' ? 'Accepted - Awaiting Approval' : 'Pending'}
+                                      {transfer.status === 'ready_for_approval' 
+                                        ? 'Ready for Approval' 
+                                        : transfer.status === 'accepted' 
+                                          ? 'Accepted - Awaiting Org Update' 
+                                          : 'Pending - Awaiting Response'}
                                     </Badge>
                                   </div>
                                   <div className="text-xs text-muted-foreground space-y-1">
@@ -2377,6 +2384,41 @@ const MasterDashboard = () => {
                     <p>
                       Transfer primary contact for <strong>{selectedTransferRequest.organization?.name}</strong>
                     </p>
+                    
+                    {/* Transfer Progress Timeline */}
+                    <div className="bg-muted/50 p-3 rounded-lg">
+                      <p className="text-xs font-semibold mb-2">Transfer Progress</p>
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="flex items-center gap-1">
+                          <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                          <span>Initiated</span>
+                        </div>
+                        <div className="h-px w-4 bg-border" />
+                        <div className="flex items-center gap-1">
+                          {selectedTransferRequest.status === 'pending' ? (
+                            <Clock className="h-3.5 w-3.5 text-amber-500" />
+                          ) : (
+                            <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                          )}
+                          <span>Accepted</span>
+                        </div>
+                        <div className="h-px w-4 bg-border" />
+                        <div className="flex items-center gap-1">
+                          {selectedTransferRequest.status === 'ready_for_approval' ? (
+                            <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                          ) : (
+                            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                          )}
+                          <span>Org Updated</span>
+                        </div>
+                        <div className="h-px w-4 bg-border" />
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>Approved</span>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="bg-muted p-3 rounded-lg space-y-2 text-sm">
                       <div>
                         <strong>Current Contact:</strong>{' '}
@@ -2398,50 +2440,103 @@ const MasterDashboard = () => {
                           ⚠️ The new contact hasn't created an account yet. They must register before the transfer can be completed.
                         </div>
                       )}
+                      {selectedTransferRequest.new_contact_profile && selectedTransferRequest.status !== 'ready_for_approval' && (
+                        <div className="text-amber-600 text-xs mt-2">
+                          ⚠️ The new contact has an account but hasn't updated the organization record yet. They must review and update the organization's information before approval.
+                        </div>
+                      )}
+                      {selectedTransferRequest.status === 'ready_for_approval' && (
+                        <div className="text-green-600 text-xs mt-2">
+                          ✅ The new contact has registered and updated the organization record. This transfer is ready for approval.
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
               </div>
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-end gap-2 mt-4">
+          <div className="flex justify-between gap-2 mt-4">
             <Button
               variant="outline"
-              onClick={() => {
-                setShowTransferApprovalDialog(false);
-                setSelectedTransferRequest(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
+              size="sm"
+              onClick={async () => {
                 if (selectedTransferRequest) {
-                  rejectTransfer.mutate({ id: selectedTransferRequest.id });
-                  setShowTransferApprovalDialog(false);
-                  setSelectedTransferRequest(null);
+                  try {
+                    await supabase.functions.invoke('initiate-contact-transfer', {
+                      body: {
+                        organization_id: selectedTransferRequest.organization_id,
+                        new_contact_email: selectedTransferRequest.new_contact_email,
+                        organization_name: selectedTransferRequest.organization?.name || 'Organization'
+                      }
+                    });
+                  } catch (e) {
+                    // Resend notification via centralized-email-delivery directly
+                    await supabase.functions.invoke('centralized-email-delivery', {
+                      body: {
+                        type: 'contact_transfer',
+                        to: selectedTransferRequest.new_contact_email,
+                        data: {
+                          organization_name: selectedTransferRequest.organization?.name || 'Organization',
+                          current_contact_name: `${selectedTransferRequest.current_contact?.first_name || ''} ${selectedTransferRequest.current_contact?.last_name || ''}`,
+                          current_contact_email: selectedTransferRequest.current_contact?.email || '',
+                          transfer_link: `https://members.hessconsortium.app/auth?action=accept-transfer&token=${selectedTransferRequest.transfer_token}`,
+                          expires_at: new Date(selectedTransferRequest.expires_at).toLocaleDateString(),
+                          site_url: 'https://members.hessconsortium.app'
+                        }
+                      }
+                    });
+                  }
+                  toast({
+                    title: 'Notification Resent',
+                    description: `Reminder email sent to ${selectedTransferRequest.new_contact_email}`
+                  });
                 }
               }}
-              disabled={rejectTransfer.isPending}
             >
-              {rejectTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
-              Reject
+              <Mail className="h-3 w-3 mr-1" />
+              Resend Notification
             </Button>
-            <Button
-              onClick={() => {
-                if (selectedTransferRequest) {
-                  approveTransfer.mutate({ id: selectedTransferRequest.id });
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
                   setShowTransferApprovalDialog(false);
                   setSelectedTransferRequest(null);
-                }
-              }}
-              disabled={approveTransfer.isPending || !selectedTransferRequest?.new_contact_profile}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              {approveTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-              Approve Transfer
-            </Button>
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (selectedTransferRequest) {
+                    rejectTransfer.mutate({ id: selectedTransferRequest.id });
+                    setShowTransferApprovalDialog(false);
+                    setSelectedTransferRequest(null);
+                  }
+                }}
+                disabled={rejectTransfer.isPending}
+              >
+                {rejectTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
+                Reject
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedTransferRequest) {
+                    approveTransfer.mutate({ id: selectedTransferRequest.id });
+                    setShowTransferApprovalDialog(false);
+                    setSelectedTransferRequest(null);
+                  }
+                }}
+                disabled={approveTransfer.isPending || !selectedTransferRequest?.new_contact_profile || selectedTransferRequest?.status !== 'ready_for_approval'}
+                className="bg-green-600 hover:bg-green-700 text-white"
+                title={selectedTransferRequest?.status !== 'ready_for_approval' ? 'The new contact must update the organization record before approval' : ''}
+              >
+                {approveTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                Approve Transfer
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
