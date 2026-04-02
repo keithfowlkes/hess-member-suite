@@ -15,7 +15,6 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-    // Create client with user's auth token
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'No authorization header' }), {
@@ -47,7 +46,6 @@ Deno.serve(async (req) => {
 
     console.log(`[initiate-contact-transfer] User ${user.id} initiating transfer for org ${organization_id} to ${new_contact_email}`);
 
-    // Use service role client for database operations
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get user's profile
@@ -90,7 +88,7 @@ Deno.serve(async (req) => {
       .from('organization_transfer_requests')
       .select('id')
       .eq('organization_id', organization_id)
-      .eq('status', 'pending')
+      .in('status', ['pending', 'accepted', 'ready_for_approval'])
       .maybeSingle();
 
     if (existingTransfer) {
@@ -140,28 +138,47 @@ Deno.serve(async (req) => {
 
     console.log(`[initiate-contact-transfer] Transfer request created: ${transferRequest.id}`);
 
-    // Send email to new contact
-    try {
-      const siteUrl = 'https://members.hessconsortium.app';
-      const transferLink = `${siteUrl}/auth?action=accept-transfer&token=${transferToken}`;
+    const siteUrl = 'https://members.hessconsortium.app';
+    const transferLink = `${siteUrl}/auth?action=accept-transfer&token=${transferToken}`;
 
+    // Send email to NEW contact with registration + update instructions
+    try {
       await adminClient.functions.invoke('centralized-email-delivery', {
         body: {
           type: 'contact_transfer',
-          recipient: new_contact_email,
+          to: new_contact_email,
           data: {
             organization_name: organization_name,
             current_contact_name: `${profile.first_name} ${profile.last_name}`,
             current_contact_email: profile.email,
             transfer_link: transferLink,
+            expires_at: expiresAt.toLocaleDateString(),
+            site_url: siteUrl
+          }
+        }
+      });
+      console.log(`[initiate-contact-transfer] Email sent to new contact: ${new_contact_email}`);
+    } catch (emailError) {
+      console.error('[initiate-contact-transfer] Email error (new contact):', emailError);
+    }
+
+    // Send confirmation email to CURRENT contact
+    try {
+      await adminClient.functions.invoke('centralized-email-delivery', {
+        body: {
+          type: 'contact_transfer_confirmation',
+          to: profile.email,
+          data: {
+            organization_name: organization_name,
+            new_contact_email: new_contact_email,
+            current_contact_name: `${profile.first_name} ${profile.last_name}`,
             expires_at: expiresAt.toLocaleDateString()
           }
         }
       });
-      console.log(`[initiate-contact-transfer] Email sent to ${new_contact_email}`);
+      console.log(`[initiate-contact-transfer] Confirmation email sent to current contact: ${profile.email}`);
     } catch (emailError) {
-      console.error('[initiate-contact-transfer] Email error:', emailError);
-      // Don't fail the request if email fails
+      console.error('[initiate-contact-transfer] Email error (current contact):', emailError);
     }
 
     // Send notification to admin
@@ -195,7 +212,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true, 
       transfer_id: transferRequest.id,
-      message: 'Transfer request created and email sent'
+      message: 'Transfer request created and emails sent to both contacts'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
