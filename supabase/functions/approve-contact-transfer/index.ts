@@ -223,6 +223,93 @@ Deno.serve(async (req) => {
       console.error('[approve-contact-transfer] Email error:', emailError);
     }
 
+    // Simplelists sync: transfer contact (remove old, add new)
+    try {
+      const { data: slEnabledSetting } = await adminClient
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'simplelists_enabled')
+        .maybeSingle();
+
+      if (slEnabledSetting?.setting_value === 'true') {
+        const SIMPLELISTS_API_KEY = Deno.env.get('SIMPLELISTS_API_KEY');
+        if (SIMPLELISTS_API_KEY) {
+          const { data: slListSetting } = await adminClient
+            .from('system_settings')
+            .select('setting_value')
+            .eq('setting_key', 'simplelists_list_name')
+            .maybeSingle();
+          const listName = slListSetting?.setting_value || '';
+
+          // Remove old contact
+          if (oldContactProfile?.email) {
+            try {
+              const findRes = await fetch(`https://www.simplelists.com/api/2/contacts/?email=${encodeURIComponent(oldContactProfile.email)}`, {
+                headers: { 'Authorization': `Bearer ${SIMPLELISTS_API_KEY}`, 'Accept': 'application/json' }
+              });
+              if (findRes.ok) {
+                const findData = await findRes.json();
+                const results = findData?.results || findData;
+                if (Array.isArray(results) && results.length > 0) {
+                  const contactId = results[0].id || results[0].pk;
+                  await fetch(`https://www.simplelists.com/api/2/contacts/${contactId}/`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${SIMPLELISTS_API_KEY}` }
+                  });
+                  console.log(`Simplelists: removed old contact ${oldContactProfile.email}`);
+                }
+              }
+              await adminClient.from('simplelists_sync_log').insert({
+                action: 'transfer_remove', email: oldContactProfile.email,
+                organization_name: organization.name, status: 'success',
+                details: { triggered_by: 'approve_contact_transfer' }
+              });
+            } catch (slErr: any) {
+              console.error('Simplelists remove old contact error:', slErr);
+              await adminClient.from('simplelists_sync_log').insert({
+                action: 'transfer_remove', email: oldContactProfile.email,
+                organization_name: organization.name, status: 'error', error_message: slErr.message
+              });
+            }
+          }
+
+          // Add new contact
+          try {
+            const newContact: any = {
+              firstname: newContactProfile.first_name || '',
+              surname: newContactProfile.last_name || '',
+              emails: [transferRequest.new_contact_email],
+            };
+            if (listName) newContact.lists = [listName];
+
+            const addRes = await fetch('https://www.simplelists.com/api/2/contacts/', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${SIMPLELISTS_API_KEY}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify(newContact)
+            });
+            console.log(`Simplelists: added new contact ${transferRequest.new_contact_email}: ${addRes.status}`);
+            await adminClient.from('simplelists_sync_log').insert({
+              action: 'transfer_add', email: transferRequest.new_contact_email,
+              organization_name: organization.name, status: addRes.ok ? 'success' : 'error',
+              details: { triggered_by: 'approve_contact_transfer' }
+            });
+          } catch (slErr: any) {
+            console.error('Simplelists add new contact error:', slErr);
+            await adminClient.from('simplelists_sync_log').insert({
+              action: 'transfer_add', email: transferRequest.new_contact_email,
+              organization_name: organization.name, status: 'error', error_message: slErr.message
+            });
+          }
+        }
+      }
+    } catch (slError) {
+      console.error('Simplelists sync error (non-blocking):', slError);
+    }
+
     // Log to audit
     await adminClient.from('audit_log').insert({
       action: 'contact_transfer_approved',
