@@ -212,6 +212,108 @@ export default function ExternalApplications() {
     }
   };
 
+  // Fetch Simplelists settings
+  const { data: slSettings, isLoading: slSettingsLoading } = useQuery({
+    queryKey: ['simplelists-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('simplelists-sync', {
+        body: { action: 'get_settings' }
+      });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin
+  });
+
+  // Fetch Simplelists sync logs
+  const { data: syncLogs, isLoading: syncLogsLoading } = useQuery({
+    queryKey: ['simplelists-sync-logs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('simplelists_sync_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin
+  });
+
+  // Initialize simplelists state from settings
+  useState(() => {
+    if (slSettings) {
+      setSlEnabled(slSettings.enabled);
+      setSlListName(slSettings.list_name || '');
+      setSlSyncSecondary(slSettings.sync_secondary);
+    }
+  });
+
+  // Update local state when settings load
+  const prevSettings = JSON.stringify(slSettings);
+  useState(() => {
+    if (slSettings && !slSettingsLoading) {
+      setSlEnabled(slSettings.enabled);
+      setSlListName(slSettings.list_name || '');
+      setSlSyncSecondary(slSettings.sync_secondary);
+    }
+  });
+
+  const handleSlTestConnection = async () => {
+    setSlTesting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('simplelists-sync', {
+        body: { action: 'test_connection' }
+      });
+      if (error) throw error;
+      if (data?.connected) {
+        setSlConnectionStatus('connected');
+        toast.success('Successfully connected to Simplelists API');
+      } else {
+        setSlConnectionStatus('error');
+        toast.error('Connection failed: ' + (data?.message || 'Unknown error'));
+      }
+    } catch (err: any) {
+      setSlConnectionStatus('error');
+      toast.error('Connection test failed: ' + err.message);
+    } finally {
+      setSlTesting(false);
+    }
+  };
+
+  const handleSlSaveSettings = async () => {
+    setSlSaving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('simplelists-sync', {
+        body: { action: 'update_settings', enabled: slEnabled, list_name: slListName, sync_secondary: slSyncSecondary }
+      });
+      if (error) throw error;
+      toast.success('Simplelists settings saved');
+      queryClient.invalidateQueries({ queryKey: ['simplelists-settings'] });
+    } catch (err: any) {
+      toast.error('Failed to save settings: ' + err.message);
+    } finally {
+      setSlSaving(false);
+    }
+  };
+
+  const handleSlSyncAll = async () => {
+    if (!confirm('This will add all active member contacts to your Simplelists list. Continue?')) return;
+    setSlSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('simplelists-sync', {
+        body: { action: 'sync_all_members' }
+      });
+      if (error) throw error;
+      toast.success(`Synced ${data?.synced || 0} contacts to Simplelists`);
+      queryClient.invalidateQueries({ queryKey: ['simplelists-sync-logs'] });
+    } catch (err: any) {
+      toast.error('Sync failed: ' + err.message);
+    } finally {
+      setSlSyncing(false);
+    }
+  };
+
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
