@@ -29,7 +29,7 @@ export function useContactTransfer(organizationId: string) {
         .from('organization_transfer_requests')
         .select('*')
         .eq('organization_id', organizationId)
-        .eq('status', 'pending')
+        .in('status', ['pending', 'accepted', 'ready_for_approval'])
         .maybeSingle();
 
       if (error) throw error;
