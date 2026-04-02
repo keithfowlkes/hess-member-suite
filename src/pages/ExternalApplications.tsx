@@ -735,6 +735,153 @@ function MyComponent() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="simplelists" className="space-y-4">
+              {/* Connection & Settings */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Mail className="h-5 w-5" />
+                        Simplelists Integration
+                        {slConnectionStatus === 'connected' && (
+                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            <Wifi className="h-3 w-3 mr-1" /> Connected
+                          </Badge>
+                        )}
+                        {slConnectionStatus === 'error' && (
+                          <Badge variant="destructive">
+                            <WifiOff className="h-3 w-3 mr-1" /> Error
+                          </Badge>
+                        )}
+                      </CardTitle>
+                      <CardDescription>
+                        Automatically sync member contacts with your Simplelists mailing list
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleSlTestConnection}
+                      disabled={slTesting}
+                    >
+                      {slTesting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wifi className="h-4 w-4 mr-2" />}
+                      Test Connection
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="sl-list-name">List Name</Label>
+                      <Input
+                        id="sl-list-name"
+                        value={slListName}
+                        onChange={(e) => setSlListName(e.target.value)}
+                        placeholder="members@yourdomain.com"
+                      />
+                      <p className="text-xs text-muted-foreground">The Simplelists list name contacts will be added to</p>
+                    </div>
+                    <div className="space-y-4 pt-6">
+                      <div className="flex items-center space-x-2">
+                        <Switch checked={slEnabled} onCheckedChange={setSlEnabled} />
+                        <Label>Enable Auto-Sync</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch checked={slSyncSecondary} onCheckedChange={setSlSyncSecondary} />
+                        <Label>Sync Secondary Contacts</Label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleSlSaveSettings} disabled={slSaving}>
+                      {slSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                      Save Settings
+                    </Button>
+                    <Button variant="outline" onClick={handleSlSyncAll} disabled={slSyncing}>
+                      {slSyncing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Users className="h-4 w-4 mr-2" />}
+                      Sync All Current Members
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sync Activity Log */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Sync Activity Log
+                  </CardTitle>
+                  <CardDescription>Recent Simplelists sync operations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Time</TableHead>
+                        <TableHead>Action</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Organization</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {syncLogs?.map((log: any) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="text-sm">
+                            {format(new Date(log.created_at), 'MMM d, HH:mm:ss')}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{log.action}</Badge>
+                          </TableCell>
+                          <TableCell className="text-sm">{log.email}</TableCell>
+                          <TableCell className="text-sm">{log.organization_name || '—'}</TableCell>
+                          <TableCell>
+                            <Badge variant={log.status === 'success' ? 'default' : 'destructive'}>
+                              {log.status}
+                            </Badge>
+                            {log.error_message && (
+                              <p className="text-xs text-destructive mt-1">{log.error_message}</p>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {(!syncLogs || syncLogs.length === 0) && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                            No sync activity yet
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              {/* How It Works */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>How Auto-Sync Works</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-sm text-muted-foreground">
+                    <div className="flex gap-3">
+                      <Badge variant="outline" className="shrink-0">1</Badge>
+                      <p><strong>Member Approval:</strong> When a new registration is approved, the primary (and optionally secondary) contact is automatically added to your Simplelists list.</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Badge variant="outline" className="shrink-0">2</Badge>
+                      <p><strong>Organization Deletion:</strong> When an organization/member is removed, their contacts are automatically removed from Simplelists.</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Badge variant="outline" className="shrink-0">3</Badge>
+                      <p><strong>Contact Transfer:</strong> When a primary contact transfer is approved, the old contact is removed and the new contact is added to Simplelists.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
 
           {/* Edit Dialog */}
