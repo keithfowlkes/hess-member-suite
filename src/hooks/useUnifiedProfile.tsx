@@ -188,6 +188,41 @@ export function useUnifiedProfile(userId?: string) {
 
         if (error) throw error;
 
+        // Check if there's a pending transfer for this user's email - auto-mark as ready_for_approval
+        try {
+          const { data: pendingTransfers } = await supabase
+            .from('organization_transfer_requests')
+            .select('id')
+            .eq('new_contact_email', data.profile.email.toLowerCase())
+            .in('status', ['pending', 'accepted']);
+          
+          if (pendingTransfers && pendingTransfers.length > 0) {
+            for (const transfer of pendingTransfers) {
+              await supabase
+                .from('organization_transfer_requests')
+                .update({ 
+                  status: 'ready_for_approval',
+                  org_updated_at: new Date().toISOString()
+                })
+                .eq('id', transfer.id);
+              console.log(`✅ Transfer ${transfer.id} marked as ready_for_approval after org update`);
+            }
+
+            // Notify admin
+            await supabase.functions.invoke('send-admin-notification', {
+              body: {
+                type: 'contact_transfer_ready',
+                updateData: {
+                  organization_name: data.organization?.name || 'Unknown Organization',
+                  new_contact_email: data.profile.email
+                }
+              }
+            });
+          }
+        } catch (transferError) {
+          console.warn('[useUnifiedProfile] Error checking/updating transfer status:', transferError);
+        }
+
         // Send admin notification for new profile edit request
         try {
           console.log('🔔 Sending admin notification for profile edit request');
@@ -203,7 +238,6 @@ export function useUnifiedProfile(userId?: string) {
           console.log('✅ Admin notification sent successfully');
         } catch (adminNotificationError) {
           console.warn('[useUnifiedProfile] Failed to send admin notification:', adminNotificationError);
-          // Don't fail the whole operation for notification errors
         }
 
         toast({
