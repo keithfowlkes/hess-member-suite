@@ -1003,35 +1003,44 @@ serve(async (req) => {
 
         const SIMPLELISTS_API_KEY = Deno.env.get('SIMPLELISTS_API_KEY');
         if (SIMPLELISTS_API_KEY) {
-          const contacts = [{
-            firstname: pendingReg.first_name,
-            surname: pendingReg.last_name,
-            emails: [pendingReg.email],
-            ...(listName ? { lists: [listName] } : {})
-          }];
+          // Helper to build form-encoded body for Simplelists API
+          const buildFormBody = (firstname: string, surname: string, email: string, lists?: string[]) => {
+            const params = new URLSearchParams();
+            params.append('firstname', firstname);
+            params.append('surname', surname);
+            params.append('emails', email);
+            if (lists) {
+              for (const list of lists) {
+                params.append('lists', list);
+              }
+            }
+            return params;
+          };
+
+          const contactsToAdd = [
+            { firstname: pendingReg.first_name, surname: pendingReg.last_name, email: pendingReg.email },
+          ];
 
           if (syncSecondary && pendingReg.secondary_contact_email) {
-            contacts.push({
+            contactsToAdd.push({
               firstname: pendingReg.secondary_first_name || '',
               surname: pendingReg.secondary_last_name || '',
-              emails: [pendingReg.secondary_contact_email],
-              ...(listName ? { lists: [listName] } : {})
+              email: pendingReg.secondary_contact_email,
             });
           }
 
-          for (const contact of contacts) {
+          for (const contact of contactsToAdd) {
             try {
+              const formBody = buildFormBody(contact.firstname, contact.surname, contact.email, listName ? [listName] : undefined);
               const slRes = await fetch('https://www.simplelists.com/api/2/contacts/', {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${SIMPLELISTS_API_KEY}`,
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json',
                 },
-                body: JSON.stringify(contact)
+                body: formBody
               });
               const slData = await slRes.text();
-              console.log(`Simplelists add ${contact.emails[0]}: ${slRes.status} ${slData}`);
+              console.log(`Simplelists add ${contact.email}: ${slRes.status} ${slData}`);
 
               await supabaseAdmin.from('simplelists_sync_log').insert({
                 action: 'auto_add',
