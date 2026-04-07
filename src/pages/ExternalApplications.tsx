@@ -67,6 +67,10 @@ export default function ExternalApplications() {
   const [slConnectionStatus, setSlConnectionStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
   const [slSyncing, setSlSyncing] = useState(false);
   const [slSaving, setSlSaving] = useState(false);
+  
+  // Conference Hub fee notifications state
+  const [chFeeNotifications, setChFeeNotifications] = useState(false);
+  const [chSaving, setChSaving] = useState(false);
 
   const [newApp, setNewApp] = useState({
     name: '',
