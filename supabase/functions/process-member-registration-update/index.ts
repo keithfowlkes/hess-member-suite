@@ -660,17 +660,24 @@ const handler = async (req: Request): Promise<Response> => {
 
           const slHeaders = {
             'Authorization': `Bearer ${SIMPLELISTS_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
+          };
+
+          // Helper to build form-encoded body for Simplelists API
+          const buildFormBody = (firstname: string, surname: string, email: string, listName?: string) => {
+            const params = new URLSearchParams();
+            params.append('firstname', firstname);
+            params.append('surname', surname);
+            params.append('emails', email);
+            if (listName) params.append('lists', listName);
+            return params;
           };
 
           // Helper to add a contact to a list
           const addToList = async (firstname: string, surname: string, email: string, listName: string, logAction: string) => {
             try {
-              const body: any = { firstname, surname, emails: [email] };
-              if (listName) body.lists = [listName];
+              const formBody = buildFormBody(firstname, surname, email, listName || undefined);
               const res = await fetch('https://www.simplelists.com/api/2/contacts/', {
-                method: 'POST', headers: slHeaders, body: JSON.stringify(body),
+                method: 'POST', headers: slHeaders, body: formBody,
               });
               const txt = await res.text();
               console.log(`Simplelists ${logAction} ${email} -> ${listName}: ${res.status}`);
