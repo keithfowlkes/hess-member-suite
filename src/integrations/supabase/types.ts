@@ -1991,6 +1991,7 @@ export type Database = {
           cleaned_count: number
         }[]
       }
+      cleanup_simplelists_sync_log: { Args: never; Returns: undefined }
       cohort_leader_can_access_org: {
         Args: {
           org_admissions_crm: string
