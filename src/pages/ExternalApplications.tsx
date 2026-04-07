@@ -246,6 +246,21 @@ export default function ExternalApplications() {
     enabled: isAdmin
   });
 
+  // Fetch Conference Hub fee notification setting
+  const { data: chFeeSetting } = useQuery({
+    queryKey: ['conference-hub-fee-setting'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'conference_hub_fee_notifications')
+        .maybeSingle();
+      if (error) throw error;
+      return data?.setting_value === 'true';
+    },
+    enabled: isAdmin
+  });
+
   // Update local state when settings load
   useEffect(() => {
     if (slSettings && !slSettingsLoading) {
@@ -254,6 +269,12 @@ export default function ExternalApplications() {
       setSlSyncSecondary(slSettings.sync_secondary);
     }
   }, [slSettings, slSettingsLoading]);
+
+  useEffect(() => {
+    if (chFeeSetting !== undefined) {
+      setChFeeNotifications(chFeeSetting);
+    }
+  }, [chFeeSetting]);
 
   const handleSlTestConnection = async () => {
     setSlTesting(true);
