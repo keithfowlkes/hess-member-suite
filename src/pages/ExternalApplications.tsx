@@ -49,6 +49,7 @@ const AVAILABLE_SCOPES = [
   { id: 'organization:systems', label: 'Systems', description: 'Read software/system information' },
   { id: 'roles:read', label: 'Roles', description: 'Read user roles' },
   { id: 'cohorts:read', label: 'Cohorts', description: 'Read cohort memberships' },
+  { id: 'fees:notify', label: 'Fee Notifications', description: 'Receive payment status updates' },
 ];
 
 export default function ExternalApplications() {
