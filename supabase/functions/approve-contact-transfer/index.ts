@@ -275,21 +275,18 @@ Deno.serve(async (req) => {
 
           // Add new contact
           try {
-            const newContact: any = {
-              firstname: newContactProfile.first_name || '',
-              surname: newContactProfile.last_name || '',
-              emails: [transferRequest.new_contact_email],
-            };
-            if (listName) newContact.lists = [listName];
+            const formBody = new URLSearchParams();
+            formBody.append('firstname', newContactProfile.first_name || '');
+            formBody.append('surname', newContactProfile.last_name || '');
+            formBody.append('emails', transferRequest.new_contact_email);
+            if (listName) formBody.append('lists', listName);
 
             const addRes = await fetch('https://www.simplelists.com/api/2/contacts/', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${SIMPLELISTS_API_KEY}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
               },
-              body: JSON.stringify(newContact)
+              body: formBody
             });
             console.log(`Simplelists: added new contact ${transferRequest.new_contact_email}: ${addRes.status}`);
             await adminClient.from('simplelists_sync_log').insert({
