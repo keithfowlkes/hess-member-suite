@@ -49,6 +49,7 @@ const AVAILABLE_SCOPES = [
   { id: 'organization:systems', label: 'Systems', description: 'Read software/system information' },
   { id: 'roles:read', label: 'Roles', description: 'Read user roles' },
   { id: 'cohorts:read', label: 'Cohorts', description: 'Read cohort memberships' },
+  { id: 'fees:notify', label: 'Fee Notifications', description: 'Receive payment status updates' },
 ];
 
 export default function ExternalApplications() {
@@ -66,6 +67,10 @@ export default function ExternalApplications() {
   const [slConnectionStatus, setSlConnectionStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
   const [slSyncing, setSlSyncing] = useState(false);
   const [slSaving, setSlSaving] = useState(false);
+  
+  // Conference Hub fee notifications state
+  const [chFeeNotifications, setChFeeNotifications] = useState(false);
+  const [chSaving, setChSaving] = useState(false);
 
   const [newApp, setNewApp] = useState({
     name: '',
@@ -241,6 +246,21 @@ export default function ExternalApplications() {
     enabled: isAdmin
   });
 
+  // Fetch Conference Hub fee notification setting
+  const { data: chFeeSetting } = useQuery({
+    queryKey: ['conference-hub-fee-setting'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'conference_hub_fee_notifications')
+        .maybeSingle();
+      if (error) throw error;
+      return data?.setting_value === 'true';
+    },
+    enabled: isAdmin
+  });
+
   // Update local state when settings load
   useEffect(() => {
     if (slSettings && !slSettingsLoading) {
@@ -249,6 +269,12 @@ export default function ExternalApplications() {
       setSlSyncSecondary(slSettings.sync_secondary);
     }
   }, [slSettings, slSettingsLoading]);
+
+  useEffect(() => {
+    if (chFeeSetting !== undefined) {
+      setChFeeNotifications(chFeeSetting);
+    }
+  }, [chFeeSetting]);
 
   const handleSlTestConnection = async () => {
     setSlTesting(true);
@@ -302,6 +328,26 @@ export default function ExternalApplications() {
       toast.error('Sync failed: ' + err.message);
     } finally {
       setSlSyncing(false);
+    }
+  };
+
+  const handleChSaveFeeNotifications = async () => {
+    setChSaving(true);
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert({
+          setting_key: 'conference_hub_fee_notifications',
+          setting_value: chFeeNotifications ? 'true' : 'false',
+          description: 'Enable sending payment status notifications to Conference Hub'
+        }, { onConflict: 'setting_key' });
+      if (error) throw error;
+      toast.success('Conference Hub fee notification setting saved');
+      queryClient.invalidateQueries({ queryKey: ['conference-hub-fee-setting'] });
+    } catch (err: any) {
+      toast.error('Failed to save setting: ' + err.message);
+    } finally {
+      setChSaving(false);
     }
   };
 
@@ -508,6 +554,35 @@ export default function ExternalApplications() {
                   )}
                 </div>
               )}
+
+              {/* Conference Hub Fee Notifications */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Conference Hub — Fee Payment Notifications
+                  </CardTitle>
+                  <CardDescription>
+                    When enabled, the HESS Member Portal will send a notification to Conference Hub each time an invoice is marked as paid, including the organization name and payment status.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium">Enable Fee Payment Notifications</p>
+                      <p className="text-xs text-muted-foreground">Send payment status updates to Conference Hub when invoices are marked as paid</p>
+                    </div>
+                    <Switch
+                      checked={chFeeNotifications}
+                      onCheckedChange={setChFeeNotifications}
+                    />
+                  </div>
+                  <Button onClick={handleChSaveFeeNotifications} disabled={chSaving}>
+                    {chSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Save Setting
+                  </Button>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="logs">
