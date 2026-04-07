@@ -1044,7 +1044,7 @@ serve(async (req) => {
 
               await supabaseAdmin.from('simplelists_sync_log').insert({
                 action: 'auto_add',
-                email: contact.emails[0],
+                email: contact.email,
                 organization_name: pendingReg.organization_name,
                 status: slRes.ok ? 'success' : 'error',
                 error_message: slRes.ok ? null : slData,
@@ -1054,7 +1054,7 @@ serve(async (req) => {
               console.error('Simplelists add error:', slErr);
               await supabaseAdmin.from('simplelists_sync_log').insert({
                 action: 'auto_add',
-                email: contact.emails[0],
+                email: contact.email,
                 organization_name: pendingReg.organization_name,
                 status: 'error',
                 error_message: slErr.message
