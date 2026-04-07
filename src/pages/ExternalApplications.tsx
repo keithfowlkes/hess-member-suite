@@ -554,6 +554,35 @@ export default function ExternalApplications() {
                   )}
                 </div>
               )}
+
+              {/* Conference Hub Fee Notifications */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Conference Hub — Fee Payment Notifications
+                  </CardTitle>
+                  <CardDescription>
+                    When enabled, the HESS Member Portal will send a notification to Conference Hub each time an invoice is marked as paid, including the organization name and payment status.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium">Enable Fee Payment Notifications</p>
+                      <p className="text-xs text-muted-foreground">Send payment status updates to Conference Hub when invoices are marked as paid</p>
+                    </div>
+                    <Switch
+                      checked={chFeeNotifications}
+                      onCheckedChange={setChFeeNotifications}
+                    />
+                  </div>
+                  <Button onClick={handleChSaveFeeNotifications} disabled={chSaving}>
+                    {chSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Save Setting
+                  </Button>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="logs">
