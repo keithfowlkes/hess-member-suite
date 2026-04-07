@@ -331,6 +331,26 @@ export default function ExternalApplications() {
     }
   };
 
+  const handleChSaveFeeNotifications = async () => {
+    setChSaving(true);
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert({
+          setting_key: 'conference_hub_fee_notifications',
+          setting_value: chFeeNotifications ? 'true' : 'false',
+          description: 'Enable sending payment status notifications to Conference Hub'
+        }, { onConflict: 'setting_key' });
+      if (error) throw error;
+      toast.success('Conference Hub fee notification setting saved');
+      queryClient.invalidateQueries({ queryKey: ['conference-hub-fee-setting'] });
+    } catch (err: any) {
+      toast.error('Failed to save setting: ' + err.message);
+    } finally {
+      setChSaving(false);
+    }
+  };
+
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
