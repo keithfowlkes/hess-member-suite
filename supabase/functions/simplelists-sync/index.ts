@@ -61,15 +61,34 @@ async function findContactByEmail(email: string) {
 }
 
 async function addContact(firstname: string, surname: string, email: string, listName?: string) {
-  const body: SimplelistsContact = {
-    firstname,
-    surname,
-    emails: [email],
-  };
+  const params = new URLSearchParams();
+  params.append('firstname', firstname);
+  params.append('surname', surname);
+  params.append('emails', email);
   if (listName) {
-    body.lists = [listName];
+    params.append('lists', listName);
   }
-  return await simplelistsRequest('POST', '/contacts/', body);
+
+  const apiKey = Deno.env.get('SIMPLELISTS_API_KEY');
+  if (!apiKey) throw new Error('SIMPLELISTS_API_KEY not configured');
+
+  const url = `${SIMPLELISTS_API_BASE}/contacts/`;
+  console.log(`[simplelists-sync] POST ${url}`);
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: params,
+  });
+  const text = await response.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = text; }
+  if (!response.ok) {
+    console.error(`[simplelists-sync] API error ${response.status}:`, data);
+    throw new Error(`Simplelists API error ${response.status}: ${typeof data === 'string' ? data : JSON.stringify(data)}`);
+  }
+  return data;
 }
 
 async function removeContactByEmail(email: string) {
