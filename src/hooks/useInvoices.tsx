@@ -150,11 +150,19 @@ export function useInvoices() {
 
   const markAsPaid = async (id: string) => {
     try {
+      // Get invoice details first for the notification
+      const { data: invoiceDetails } = await supabase
+        .from('invoices')
+        .select('*, organizations ( name )')
+        .eq('id', id)
+        .single();
+
+      const paidDate = new Date().toISOString();
       const { data, error } = await supabase
         .from('invoices')
         .update({
           status: 'paid',
-          paid_date: new Date().toISOString()
+          paid_date: paidDate
         })
         .eq('id', id)
         .select()
@@ -166,6 +174,24 @@ export function useInvoices() {
         title: 'Success',
         description: 'Invoice marked as paid'
       });
+
+      // Notify Conference Hub (non-blocking)
+      if (invoiceDetails?.organizations) {
+        supabase.functions.invoke('notify-payment-status', {
+          body: {
+            invoice_id: id,
+            organization_name: (invoiceDetails as any).organizations.name,
+            status: 'paid',
+            paid_date: paidDate,
+          }
+        }).then(({ data: notifyData }) => {
+          if (notifyData?.success && !notifyData?.skipped) {
+            console.log('Conference Hub notified of payment');
+          }
+        }).catch(err => {
+          console.warn('Conference Hub notification failed (non-critical):', err.message);
+        });
+      }
       
       await fetchInvoices();
       return data;
