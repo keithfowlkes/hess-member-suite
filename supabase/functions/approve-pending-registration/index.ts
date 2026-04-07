@@ -1085,20 +1085,13 @@ serve(async (req) => {
               // Add primary contact to each cohort list
               for (const cohortList of cohortListsToAdd) {
                 try {
-                  const cohortContact = {
-                    firstname: pendingReg.first_name,
-                    surname: pendingReg.last_name,
-                    emails: [pendingReg.email],
-                    lists: [cohortList],
-                  };
+                  const cohortFormBody = buildFormBody(pendingReg.first_name, pendingReg.last_name, pendingReg.email, [cohortList]);
                   const clRes = await fetch('https://www.simplelists.com/api/2/contacts/', {
                     method: 'POST',
                     headers: {
                       'Authorization': `Bearer ${SIMPLELISTS_API_KEY}`,
-                      'Content-Type': 'application/json',
-                      'Accept': 'application/json',
                     },
-                    body: JSON.stringify(cohortContact),
+                    body: cohortFormBody,
                   });
                   const clData = await clRes.text();
                   console.log(`Simplelists cohort add ${pendingReg.email} -> ${cohortList}: ${clRes.status}`);
