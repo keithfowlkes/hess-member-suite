@@ -18,6 +18,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSurveys } from '@/hooks/useSurveys';
 import { supabase } from '@/integrations/supabase/client';
 import { getMembershipDuesStatus } from '@/utils/membershipDuesStatus';
+import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
 
 import { useState, useEffect } from 'react';
 
