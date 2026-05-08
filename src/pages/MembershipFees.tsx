@@ -2333,10 +2333,27 @@ export default function MembershipFees() {
                   {/* Organizations Needing Prorated Fees */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5" />
-                        Organizations Needing Prorated Fees
-                      </CardTitle>
+                      <div className="flex items-center justify-between gap-4 flex-wrap">
+                        <CardTitle className="flex items-center gap-2">
+                          <DollarSign className="h-5 w-5" />
+                          Organizations Needing Prorated Fees
+                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor="prorationEnabled" className="text-sm font-medium">
+                            {prorationEnabled ? 'Prorated fees enabled' : 'Prorated fees disabled'}
+                          </Label>
+                          <Switch
+                            id="prorationEnabled"
+                            checked={prorationEnabled}
+                            onCheckedChange={setProrationEnabled}
+                          />
+                        </div>
+                      </div>
+                      {!prorationEnabled && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Proration is turned off. Selected organizations will be billed the full annual fee instead of a prorated amount.
+                        </p>
+                      )}
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {(() => {
