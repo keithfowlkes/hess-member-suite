@@ -29,6 +29,7 @@ import CohortInformation from "./pages/CohortInformation";
 import Surveys from "./pages/Surveys";
 import AdminSurveys from "./pages/AdminSurveys";
 import ExternalApplications from "./pages/ExternalApplications";
+import InboundPayments from "./pages/InboundPayments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
