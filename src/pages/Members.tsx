@@ -372,9 +372,12 @@ export default function Members() {
                             <CardTitle className="text-base font-medium leading-tight" title={organization.name}>
                               {organization.name}
                             </CardTitle>
-                            <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
-                              {organization.membership_status}
-                            </Badge>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
+                                {organization.membership_status}
+                              </Badge>
+                              <MembershipDuesBadge invoices={invoicesByOrg[organization.id]} compact />
+                            </div>
                           </div>
                         </CardHeader>
                         <CardContent className="pt-0 space-y-3">
