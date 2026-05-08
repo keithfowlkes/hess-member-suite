@@ -54,10 +54,16 @@ export default function Members() {
         (org.profiles?.email && org.profiles.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (org.profiles?.first_name && org.profiles.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (org.profiles?.last_name && org.profiles.last_name.toLowerCase().includes(searchTerm.toLowerCase()));
-      
+
       const matchesState = selectedState === 'all' || selectedState === '' || org.state === selectedState;
-      
-      return matchesSearch && matchesState;
+
+      let matchesPayment = true;
+      if (statusFilter === 'paid' || statusFilter === 'unpaid') {
+        const { isPaid } = getMembershipDuesStatus(invoicesByOrg[org.id]);
+        matchesPayment = statusFilter === 'paid' ? isPaid : !isPaid;
+      }
+
+      return matchesSearch && matchesState && matchesPayment;
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
