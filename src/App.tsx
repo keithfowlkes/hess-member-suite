@@ -81,6 +81,7 @@ const App = () => (
             <Route path="/surveys" element={<ProtectedRoute><Surveys /></ProtectedRoute>} />
             <Route path="/admin/surveys" element={<ProtectedRoute><AdminSurveys /></ProtectedRoute>} />
             <Route path="/admin/external-apps" element={<ProtectedRoute><ExternalApplications /></ProtectedRoute>} />
+            <Route path="/admin/inbound-payments" element={<ProtectedRoute><InboundPayments /></ProtectedRoute>} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
