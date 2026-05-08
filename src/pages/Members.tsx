@@ -24,9 +24,11 @@ import { useInvoices, type Invoice } from '@/hooks/useInvoices';
 import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
 import { getMembershipDuesStatus } from '@/utils/membershipDuesStatus';
 import { useMemo } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Members() {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'expired' | 'cancelled' | 'paid' | 'unpaid'>('active');
   const isPaymentFilter = statusFilter === 'paid' || statusFilter === 'unpaid';
   const { organizations, loading } = useMembers(isPaymentFilter ? 'all' : statusFilter);
@@ -329,8 +331,8 @@ export default function Members() {
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="expired">Expired</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
-                        <SelectItem value="paid">Paid</SelectItem>
-                        <SelectItem value="unpaid">Unpaid</SelectItem>
+                        {isAdmin && <SelectItem value="paid">Paid</SelectItem>}
+                        {isAdmin && <SelectItem value="unpaid">Unpaid</SelectItem>}
                       </SelectContent>
                     </Select>
                     <Select value={selectedState} onValueChange={setSelectedState}>
