@@ -1870,23 +1870,52 @@ export default function MembershipFees() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="selectAll"
-                          checked={selectedOrganizations.size === filteredOrganizations.length && filteredOrganizations.length > 0}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedOrganizations(new Set(filteredOrganizations.map(org => org.id)));
-                            } else {
-                              setSelectedOrganizations(new Set());
-                            }
-                          }}
-                        />
-                        <Label htmlFor="selectAll" className="text-sm font-medium">
-                          Select All Organizations ({filteredOrganizations.length}{organizationSearchTerm && ` of ${organizations.length}`})
-                        </Label>
+                      <div className="flex items-center gap-6 flex-wrap">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="selectAll"
+                            checked={selectedOrganizations.size === filteredOrganizations.length && filteredOrganizations.length > 0}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedOrganizations(new Set(filteredOrganizations.map(org => org.id)));
+                              } else {
+                                setSelectedOrganizations(new Set());
+                              }
+                            }}
+                          />
+                          <Label htmlFor="selectAll" className="text-sm font-medium">
+                            Select All Organizations ({filteredOrganizations.length}{organizationSearchTerm && ` of ${organizations.length}`})
+                          </Label>
+                        </div>
+                        {(() => {
+                          const unpaidOrgs = filteredOrganizations.filter(org => getPaymentStatus(org.id) === 'pending');
+                          const allUnpaidSelected = unpaidOrgs.length > 0 && unpaidOrgs.every(org => selectedOrganizations.has(org.id));
+                          return (
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="selectAllUnpaid"
+                                checked={allUnpaidSelected}
+                                onCheckedChange={(checked) => {
+                                  setSelectedOrganizations(prev => {
+                                    const next = new Set(prev);
+                                    if (checked) {
+                                      unpaidOrgs.forEach(org => next.add(org.id));
+                                    } else {
+                                      unpaidOrgs.forEach(org => next.delete(org.id));
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                disabled={unpaidOrgs.length === 0}
+                              />
+                              <Label htmlFor="selectAllUnpaid" className="text-sm font-medium">
+                                Select All Unpaid ({unpaidOrgs.length})
+                              </Label>
+                            </div>
+                          );
+                        })()}
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
                         <Label className="text-sm font-medium">Set Fee Tier for Selected:</Label>
                         <DropdownMenu key={`fee-tiers-${additionalFeeTiers.length}-${fullMemberFee}-${affiliateMemberFee}`}>
