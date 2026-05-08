@@ -124,6 +124,7 @@ export default function MembershipFees() {
   const [standardRenewalDate, setStandardRenewalDate] = useState<Date>(new Date(new Date().getFullYear(), 11, 31)); // Dec 31st by default
   const [proratedOrganizations, setProratedOrganizations] = useState<any[]>([]);
   const [updatingProrated, setUpdatingProrated] = useState<Set<string>>(new Set());
+  const [prorationEnabled, setProrationEnabled] = useState(true);
 
   // Fee tier states
   const [fullMemberFee, setFullMemberFee] = useState<string>('1000');
