@@ -6,14 +6,23 @@ interface MembershipDuesBadgeProps {
   invoices: Invoice[] | undefined | null;
   /** Render compact badge (smaller padding/text) — useful in card grids. */
   compact?: boolean;
+  /** Show an amber "UNPAID" badge when there is no current-period invoice
+   *  (admin contexts where every org should display a status). */
+  showUnpaidFallback?: boolean;
   className?: string;
 }
 
 /**
  * Renders the shared PAID / MEMBERSHIP FEE DUE badge used across the portal,
- * driven by getMembershipDuesStatus. Returns null if neither applies.
+ * driven by getMembershipDuesStatus. Returns null if neither applies (unless
+ * showUnpaidFallback is set, in which case a generic UNPAID badge is shown).
  */
-export function MembershipDuesBadge({ invoices, compact = false, className }: MembershipDuesBadgeProps) {
+export function MembershipDuesBadge({
+  invoices,
+  compact = false,
+  showUnpaidFallback = false,
+  className,
+}: MembershipDuesBadgeProps) {
   const { isPaid, unpaidInvoice } = getMembershipDuesStatus(invoices ?? []);
 
   const sizing = compact
@@ -41,6 +50,16 @@ export function MembershipDuesBadge({ invoices, compact = false, className }: Me
         className={`bg-amber-500 hover:bg-amber-500 text-white font-semibold tracking-wide whitespace-normal text-center ${sizing} ${className ?? ''}`}
       >
         {compact ? `DUE ${dueLabel}` : `MEMBERSHIP FEE DUE ${dueLabel}`}
+      </Badge>
+    );
+  }
+
+  if (showUnpaidFallback) {
+    return (
+      <Badge
+        className={`bg-amber-500 hover:bg-amber-500 text-white font-semibold tracking-wide ${sizing} ${className ?? ''}`}
+      >
+        UNPAID
       </Badge>
     );
   }
