@@ -52,7 +52,7 @@ const AVAILABLE_SCOPES = [
   { id: 'fees:notify', label: 'Fee Notifications', description: 'Receive payment status updates' },
 ];
 
-export default function ExternalApplications() {
+export function ExternalApplicationsContent() {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -356,10 +356,7 @@ export default function ExternalApplications() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">External Applications</h1>
@@ -1042,6 +1039,17 @@ function MyComponent() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+        </div>
+  );
+}
+
+export default function ExternalApplications() {
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <div className="p-4 pt-0">
+          <ExternalApplicationsContent />
         </div>
       </SidebarInset>
     </SidebarProvider>
