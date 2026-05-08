@@ -383,7 +383,14 @@ const Index = () => {
                   </div>
 
                   {/* Profile Update Button */}
-                  <div className="flex-shrink-0 lg:w-64">
+                  <div className="flex-shrink-0 lg:w-64 space-y-3">
+                    {duesPaidForCurrentPeriod && (
+                      <div className="flex justify-center">
+                        <Badge className="bg-green-600 hover:bg-green-600 text-white font-semibold tracking-wide px-3 py-1">
+                          PAID
+                        </Badge>
+                      </div>
+                    )}
                     <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 h-full flex flex-col justify-center">
                       <div className="text-center space-y-3">
                         <Edit3 className="h-8 w-8 text-primary mx-auto" />
