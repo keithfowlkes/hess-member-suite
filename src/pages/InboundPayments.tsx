@@ -139,8 +139,8 @@ export default function InboundPayments() {
                   </TableHeader>
                   <TableBody>
                     {data.map((n) => (
-                      <>
-                        <TableRow key={n.id}>
+                      <React.Fragment key={n.id}>
+                        <TableRow>
                           <TableCell>
                             <Button
                               variant="ghost"
