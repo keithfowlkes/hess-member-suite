@@ -36,6 +36,21 @@ const Index = () => {
   // Use organization data from unified profile
   const userOrganization = unifiedProfileData?.organization;
 
+  // Determine if current period dues are paid (for green PAID badge)
+  const duesPaidForCurrentPeriod = (() => {
+    if (!invoices || invoices.length === 0) return false;
+    const today = new Date();
+    return invoices.some((inv) => {
+      if (inv.status !== 'paid') return false;
+      const start = inv.period_start_date ? new Date(inv.period_start_date) : null;
+      const end = inv.period_end_date ? new Date(inv.period_end_date) : null;
+      if (start && end) return today >= start && today <= end;
+      // Fallback: paid invoice in current calendar year
+      const year = inv.period_start_date ? new Date(inv.period_start_date).getFullYear() : new Date(inv.created_at).getFullYear();
+      return year === today.getFullYear();
+    });
+  })();
+
   // Check for unanswered active surveys
   useEffect(() => {
     const checkUnansweredSurveys = async () => {
@@ -368,7 +383,14 @@ const Index = () => {
                   </div>
 
                   {/* Profile Update Button */}
-                  <div className="flex-shrink-0 lg:w-64">
+                  <div className="flex-shrink-0 lg:w-64 space-y-3">
+                    {duesPaidForCurrentPeriod && (
+                      <div className="flex justify-center">
+                        <Badge className="bg-green-600 hover:bg-green-600 text-white font-semibold tracking-wide px-3 py-1">
+                          PAID
+                        </Badge>
+                      </div>
+                    )}
                     <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 h-full flex flex-col justify-center">
                       <div className="text-center space-y-3">
                         <Edit3 className="h-8 w-8 text-primary mx-auto" />
