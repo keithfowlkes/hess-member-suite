@@ -29,6 +29,14 @@ export default function Members() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'expired' | 'cancelled'>('active');
   const { organizations, loading } = useMembers(statusFilter);
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
+  const { invoices } = useInvoices();
+  const invoicesByOrg = useMemo(() => {
+    const map: Record<string, Invoice[]> = {};
+    for (const inv of invoices) {
+      (map[inv.organization_id] ||= []).push(inv);
+    }
+    return map;
+  }, [invoices]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState<string>('');
   const [selectedOrganization, setSelectedOrganization] = useState(null);
