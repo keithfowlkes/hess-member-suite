@@ -36,6 +36,21 @@ const Index = () => {
   // Use organization data from unified profile
   const userOrganization = unifiedProfileData?.organization;
 
+  // Determine if current period dues are paid (for green PAID badge)
+  const duesPaidForCurrentPeriod = (() => {
+    if (!invoices || invoices.length === 0) return false;
+    const today = new Date();
+    return invoices.some((inv) => {
+      if (inv.status !== 'paid') return false;
+      const start = inv.period_start_date ? new Date(inv.period_start_date) : null;
+      const end = inv.period_end_date ? new Date(inv.period_end_date) : null;
+      if (start && end) return today >= start && today <= end;
+      // Fallback: paid invoice in current calendar year
+      const year = inv.period_start_date ? new Date(inv.period_start_date).getFullYear() : new Date(inv.created_at).getFullYear();
+      return year === today.getFullYear();
+    });
+  })();
+
   // Check for unanswered active surveys
   useEffect(() => {
     const checkUnansweredSurveys = async () => {
