@@ -78,6 +78,21 @@ serve(async (req) => {
 
   const providedSecret = req.headers.get("x-webhook-secret") ?? "";
   if (!timingSafeEqual(providedSecret, expectedSecret)) {
+    // SAFE DEBUG: log only lengths + first/last 2 chars (never full secret).
+    // Remove this block once the conference→portal handshake is confirmed.
+    const peek = (s: string) =>
+      s.length === 0
+        ? "(empty)"
+        : `${s.slice(0, 2)}…${s.slice(-2)} (len=${s.length})`;
+    const headerNames = [...req.headers.keys()].filter((h) =>
+      h.toLowerCase().includes("secret") || h.toLowerCase().includes("webhook")
+    );
+    console.warn("[receive-membership-payment] 401 secret mismatch", {
+      provided: peek(providedSecret),
+      expected: peek(expectedSecret),
+      provided_header_present: req.headers.has("x-webhook-secret"),
+      secret_like_headers_received: headerNames,
+    });
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
