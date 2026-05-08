@@ -22,6 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useInvoices, type Invoice } from '@/hooks/useInvoices';
 import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
+import { getMembershipDuesStatus } from '@/utils/membershipDuesStatus';
 import { useMemo } from 'react';
 
 export default function Members() {
