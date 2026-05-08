@@ -17,6 +17,7 @@ import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSurveys } from '@/hooks/useSurveys';
 import { supabase } from '@/integrations/supabase/client';
+import { getMembershipDuesStatus } from '@/utils/membershipDuesStatus';
 
 import { useState, useEffect } from 'react';
 
@@ -36,44 +37,9 @@ const Index = () => {
   // Use organization data from unified profile
   const userOrganization = unifiedProfileData?.organization;
 
-  // Determine if current period dues are paid (for green PAID badge)
-  const duesPaidForCurrentPeriod = (() => {
-    if (!invoices || invoices.length === 0) return false;
-    const today = new Date();
-    return invoices.some((inv) => {
-      if (inv.status !== 'paid') return false;
-      const start = inv.period_start_date ? new Date(inv.period_start_date) : null;
-      const end = inv.period_end_date ? new Date(inv.period_end_date) : null;
-      if (start && end) return today >= start && today <= end;
-      // Fallback: paid invoice in current calendar year
-      const year = inv.period_start_date ? new Date(inv.period_start_date).getFullYear() : new Date(inv.created_at).getFullYear();
-      return year === today.getFullYear();
-    });
-  })();
-
-  // Find current-period unpaid invoice (for amber DUE badge)
-  const currentPeriodUnpaidInvoice = (() => {
-    if (duesPaidForCurrentPeriod) return null;
-    if (!invoices || invoices.length === 0) return null;
-    const today = new Date();
-    // Prefer an invoice whose period covers today
-    const covering = invoices.find((inv) => {
-      if (inv.status === 'paid' || inv.status === 'cancelled') return false;
-      const start = inv.period_start_date ? new Date(inv.period_start_date) : null;
-      const end = inv.period_end_date ? new Date(inv.period_end_date) : null;
-      return start && end && today >= start && today <= end;
-    });
-    if (covering) return covering;
-    // Otherwise, most recent unpaid invoice in current calendar year
-    const thisYear = invoices
-      .filter((inv) => inv.status !== 'paid' && inv.status !== 'cancelled')
-      .filter((inv) => {
-        const ref = inv.period_start_date || inv.due_date || inv.invoice_date;
-        return ref ? new Date(ref).getFullYear() === today.getFullYear() : false;
-      })
-      .sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime());
-    return thisYear[0] || null;
-  })();
+  // Membership-dues status (PAID / DUE badges) — shared helper for consistency
+  const { isPaid: duesPaidForCurrentPeriod, unpaidInvoice: currentPeriodUnpaidInvoice } =
+    getMembershipDuesStatus(invoices);
 
   // Check for unanswered active surveys
   useEffect(() => {
