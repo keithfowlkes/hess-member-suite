@@ -59,7 +59,8 @@ import {
   AlertCircle,
   CheckCircle,
   Image as ImageIcon,
-  Palette
+  Palette,
+  Share2
 } from 'lucide-react';
 
 const availableSections = [
