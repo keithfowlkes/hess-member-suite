@@ -46,7 +46,7 @@ const statusVariant = (status: string) => {
   }
 };
 
-export default function InboundPayments() {
+export function InboundPaymentsContent() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -100,14 +100,13 @@ export default function InboundPayments() {
   };
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-8 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Inbound Payment Notifications</h1>
-          <p className="text-muted-foreground mt-1">
-            Membership payment webhooks received from Medius Events.
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Inbound Payment Notifications</h2>
+        <p className="text-muted-foreground mt-1">
+          Membership payment webhooks received from Medius Events.
+        </p>
+      </div>
 
         <Card>
           <CardHeader>
@@ -231,7 +230,16 @@ export default function InboundPayments() {
               </div>
             )}
           </CardContent>
-        </Card>
+      </Card>
+    </div>
+  );
+}
+
+export default function InboundPayments() {
+  return (
+    <Layout>
+      <div className="container mx-auto px-4 py-8">
+        <InboundPaymentsContent />
       </div>
     </Layout>
   );

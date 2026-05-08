@@ -34,6 +34,7 @@ import { USMap } from '@/components/USMap';
 import { MessageTextContent } from '@/components/MessageTextContent';
 import { ResendApiConfig } from '@/components/ResendApiConfig';
 import { EmailDesignManager } from '@/components/EmailDesignManager';
+import { IntegrationsManagement } from '@/components/IntegrationsManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
@@ -58,7 +59,8 @@ import {
   AlertCircle,
   CheckCircle,
   Image as ImageIcon,
-  Palette
+  Palette,
+  Share2
 } from 'lucide-react';
 
 const availableSections = [
@@ -670,7 +672,8 @@ export default function Settings() {
                       { id: 'fields', label: 'Field Options', icon: FormInput, description: 'Configure dropdown options' },
                       { id: 'public', label: 'Public Views', icon: Eye, description: 'Public-facing content' },
                       { id: 'security', label: 'Security Settings', icon: Shield, description: 'Authentication and security' },
-                      { id: 'messaging', label: 'Messaging Config', icon: Mail, description: 'Email and notifications' }
+                      { id: 'messaging', label: 'Messaging Config', icon: Mail, description: 'Email and notifications' },
+                      { id: 'integrations', label: 'Integrations', icon: Share2, description: 'External apps and inbound payments' }
                     ].map((section) => (
                       <button
                         key={section.id}
@@ -1393,6 +1396,19 @@ export default function Settings() {
                   </TabsContent>
                 </Tabs>
                     </div>
+                )}
+
+                {/* Integrations Section */}
+                {activeSection === 'integrations' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-2xl font-semibold">Integrations</h2>
+                      <p className="text-muted-foreground mt-2">
+                        Manage external applications and inbound payment notifications
+                      </p>
+                    </div>
+                    <IntegrationsManagement />
+                  </div>
                 )}
               </div>
             </div>
