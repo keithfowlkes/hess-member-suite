@@ -435,6 +435,57 @@ export type Database = {
         }
         Relationships: []
       }
+      inbound_payment_notifications: {
+        Row: {
+          amount_paid: number | null
+          contact_email: string | null
+          created_at: string
+          currency: string | null
+          error_message: string | null
+          external_reference: string | null
+          id: string
+          matched_invoice_id: string | null
+          matched_organization_id: string | null
+          organization_name: string | null
+          paid_at: string | null
+          payload: Json
+          received_at: string
+          status: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          contact_email?: string | null
+          created_at?: string
+          currency?: string | null
+          error_message?: string | null
+          external_reference?: string | null
+          id?: string
+          matched_invoice_id?: string | null
+          matched_organization_id?: string | null
+          organization_name?: string | null
+          paid_at?: string | null
+          payload: Json
+          received_at?: string
+          status?: string
+        }
+        Update: {
+          amount_paid?: number | null
+          contact_email?: string | null
+          created_at?: string
+          currency?: string | null
+          error_message?: string | null
+          external_reference?: string | null
+          id?: string
+          matched_invoice_id?: string | null
+          matched_organization_id?: string | null
+          organization_name?: string | null
+          paid_at?: string | null
+          payload?: Json
+          received_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       invoice_templates: {
         Row: {
           created_at: string
@@ -476,6 +527,7 @@ export type Database = {
           amount: number
           created_at: string
           due_date: string
+          external_reference: string | null
           id: string
           invoice_date: string
           invoice_number: string
@@ -483,6 +535,7 @@ export type Database = {
           opened_at: string | null
           organization_id: string
           paid_date: string | null
+          payment_source: string | null
           period_end_date: string
           period_start_date: string
           prorated_amount: number | null
@@ -494,6 +547,7 @@ export type Database = {
           amount: number
           created_at?: string
           due_date: string
+          external_reference?: string | null
           id?: string
           invoice_date?: string
           invoice_number: string
@@ -501,6 +555,7 @@ export type Database = {
           opened_at?: string | null
           organization_id: string
           paid_date?: string | null
+          payment_source?: string | null
           period_end_date: string
           period_start_date: string
           prorated_amount?: number | null
@@ -512,6 +567,7 @@ export type Database = {
           amount?: number
           created_at?: string
           due_date?: string
+          external_reference?: string | null
           id?: string
           invoice_date?: string
           invoice_number?: string
@@ -519,6 +575,7 @@ export type Database = {
           opened_at?: string | null
           organization_id?: string
           paid_date?: string | null
+          payment_source?: string | null
           period_end_date?: string
           period_start_date?: string
           prorated_amount?: number | null
