@@ -51,6 +51,30 @@ const Index = () => {
     });
   })();
 
+  // Find current-period unpaid invoice (for amber DUE badge)
+  const currentPeriodUnpaidInvoice = (() => {
+    if (duesPaidForCurrentPeriod) return null;
+    if (!invoices || invoices.length === 0) return null;
+    const today = new Date();
+    // Prefer an invoice whose period covers today
+    const covering = invoices.find((inv) => {
+      if (inv.status === 'paid' || inv.status === 'cancelled') return false;
+      const start = inv.period_start_date ? new Date(inv.period_start_date) : null;
+      const end = inv.period_end_date ? new Date(inv.period_end_date) : null;
+      return start && end && today >= start && today <= end;
+    });
+    if (covering) return covering;
+    // Otherwise, most recent unpaid invoice in current calendar year
+    const thisYear = invoices
+      .filter((inv) => inv.status !== 'paid' && inv.status !== 'cancelled')
+      .filter((inv) => {
+        const ref = inv.period_start_date || inv.due_date || inv.invoice_date;
+        return ref ? new Date(ref).getFullYear() === today.getFullYear() : false;
+      })
+      .sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime());
+    return thisYear[0] || null;
+  })();
+
   // Check for unanswered active surveys
   useEffect(() => {
     const checkUnansweredSurveys = async () => {
