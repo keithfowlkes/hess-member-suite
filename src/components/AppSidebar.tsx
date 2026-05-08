@@ -172,9 +172,7 @@ export function AppSidebar() {
     { title: 'Cohort Information', url: '/cohort-information', icon: GraduationCap },
     { title: 'Member Analytics', url: '/dashboards', icon: BarChart3 },
     { title: 'Surveys', url: '/admin/surveys', icon: FileQuestion },
-    { title: 'External Apps', url: '/admin/external-apps', icon: Share2 },
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
-    { title: 'Inbound Payments', url: '/admin/inbound-payments', icon: FileText },
     { title: 'Organization Profile', url: '/profile', icon: User },
     { title: 'Settings', url: '/settings', icon: Settings },
   ];
