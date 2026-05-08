@@ -50,8 +50,10 @@ import {
   Trash2,
   Clock,
   CreditCard,
-  AlertCircle
+  AlertCircle,
+  HelpCircle
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
