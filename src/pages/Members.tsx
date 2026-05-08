@@ -26,8 +26,9 @@ import { useMemo } from 'react';
 
 export default function Members() {
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'expired' | 'cancelled'>('active');
-  const { organizations, loading } = useMembers(statusFilter);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'expired' | 'cancelled' | 'paid' | 'unpaid'>('active');
+  const isPaymentFilter = statusFilter === 'paid' || statusFilter === 'unpaid';
+  const { organizations, loading } = useMembers(isPaymentFilter ? 'all' : statusFilter);
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
   const { invoices } = useInvoices();
   const invoicesByOrg = useMemo(() => {
