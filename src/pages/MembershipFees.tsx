@@ -379,6 +379,7 @@ export default function MembershipFees() {
 
   // Get prorated amount for an organization
   const getProratedAmount = (organizationId: string): number | null => {
+    if (!prorationEnabled) return null;
     const proratedOrg = proratedOrganizations.find(p => p.id === organizationId);
     return proratedOrg?.proratedAmount || null;
   };
