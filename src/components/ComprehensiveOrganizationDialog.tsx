@@ -558,6 +558,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
             {organization?.id && (
               <MembershipDuesBadge
                 invoices={orgInvoices.filter((inv) => inv.organization_id === organization.id)}
+                showUnpaidFallback
               />
             )}
           </DialogTitle>
