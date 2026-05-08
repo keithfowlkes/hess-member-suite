@@ -551,9 +551,14 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
             <Building2 className="h-5 w-5" />
             {organization ? 'Organization & Member Details' : 'Add New Organization'}
+            {organization?.id && (
+              <MembershipDuesBadge
+                invoices={orgInvoices.filter((inv) => inv.organization_id === organization.id)}
+              />
+            )}
           </DialogTitle>
         </DialogHeader>
 
