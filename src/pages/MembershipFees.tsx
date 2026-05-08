@@ -2379,14 +2379,14 @@ export default function MembershipFees() {
                               </p>
                               <Button 
                                 onClick={applyBulkProratedFees}
-                                disabled={isUpdating}
+                                disabled={isUpdating || !prorationEnabled}
                                 variant="outline"
                               >
                                 {isUpdating ? "Applying..." : "Apply All Calculated Fees"}
                               </Button>
                             </div>
                             
-                            <div className="space-y-4">
+                            <div className={`space-y-4 ${!prorationEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
                               <div className="grid grid-cols-12 gap-2 p-3 font-medium text-sm text-muted-foreground border-b">
                                 <div className="col-span-3">Organization</div>
                                 <div className="col-span-2">Start Date</div>
