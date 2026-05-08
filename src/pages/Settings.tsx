@@ -35,6 +35,7 @@ import { MessageTextContent } from '@/components/MessageTextContent';
 import { ResendApiConfig } from '@/components/ResendApiConfig';
 import { EmailDesignManager } from '@/components/EmailDesignManager';
 import { IntegrationsManagement } from '@/components/IntegrationsManagement';
+import { StripeSettings } from '@/components/StripeSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
