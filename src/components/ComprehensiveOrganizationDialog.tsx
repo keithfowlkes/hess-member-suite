@@ -196,6 +196,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState(defaultTab);
   const { toast } = useToast();
+  const { invoices: orgInvoices } = useInvoices();
 
   console.log('ComprehensiveOrganizationDialog - isAdmin:', isAdmin, 'organization:', !!organization);
 
