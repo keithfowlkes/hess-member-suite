@@ -1,36 +1,40 @@
+# Resolve 401 on receive-membership-payment
 
+Two coordinated changes so the next test fire either succeeds outright or gives us a clean length comparison to diagnose the mismatch.
 
-## Plan: Simplelists API Integration ✅ IMPLEMENTED
+## 1. Rotate `MEDIUS_EVENTS_WEBHOOK_SECRET`
 
-### Summary
-Integrated the Simplelists V2 API to automatically sync primary and secondary contacts with the HESS mailing list. Added a new "Simplelists" tab to the External Applications admin page with configuration controls, and hooked into member approval, deletion, and contact transfer workflows.
+- Prompt you (via the secrets tool) to paste a fresh strong value into `MEDIUS_EVENTS_WEBHOOK_SECRET`.
+- You then paste the **exact same value** into the conference system's `hess_portal_webhook_secret` config.
+- Guidance I'll give when requesting it:
+  - Generate with `openssl rand -hex 32` (or any 40+ char random string).
+  - No surrounding quotes.
+  - No leading/trailing whitespace or newline.
+  - Copy/paste the same string into both systems — don't retype.
 
-### What Was Built
+## 2. Add a one-shot, safe debug log to the edge function
 
-**1. Edge Function: `simplelists-sync`**
-- Handles: `test_connection`, `get_settings`, `update_settings`, `add_contacts`, `remove_contact`, `transfer_contact`, `sync_all_members`
-- Uses Bearer token auth with `SIMPLELISTS_API_KEY` secret
-- All operations logged to `simplelists_sync_log` table
+Edit `supabase/functions/receive-membership-payment/index.ts` so that **only when the secret check fails**, it logs:
 
-**2. Database: `simplelists_sync_log` table**
-- Tracks all sync operations with action, email, org name, status, error messages
-- Admin-only RLS access
+- `provided.length`, `expected.length`
+- `provided.first2`, `provided.last2` (only first/last 2 chars — never the full value)
+- `expected.first2`, `expected.last2`
+- whether `expected` is empty (config issue) vs mismatch
+- the header name actually received (in case a proxy lowercased/renamed it)
 
-**3. Admin UI: Simplelists Tab in External Applications**
-- Connection test button with status indicator
-- List name configuration
-- Enable/disable auto-sync toggle
-- Sync secondary contacts toggle
-- "Sync All Current Members" bulk action
-- Activity log table showing recent sync operations
-- "How It Works" guide
+It will **never** log the full secret. The 401 response body stays unchanged.
 
-**4. Workflow Hooks (auto-sync when enabled)**
-- `approve-pending-registration`: Adds primary + secondary contacts on member approval
-- `delete-organization`: Removes primary + secondary contacts before org deletion
-- `approve-contact-transfer`: Removes old contact, adds new contact on transfer approval
+This lets us read the function logs after the next test fire and confirm in seconds whether it's a length mismatch (whitespace/newline), a wrong-value mismatch, or a header-routing problem.
 
-### Settings (stored in `system_settings`)
-- `simplelists_enabled` — master toggle
-- `simplelists_list_name` — target list name
-- `simplelists_sync_secondary` — whether to include secondary contacts
+## 3. Verification flow
+
+1. You fire the test from the conference system.
+2. If it returns 200 → done. I'll suggest removing the debug log in a follow-up.
+3. If it still 401s → I read the edge function logs, compare the lengths and end-chars, and tell you exactly which side has the discrepancy.
+
+## Technical details
+
+- Only `index.ts` of `receive-membership-payment` changes; no schema changes, no other functions touched.
+- `timingSafeEqual` stays in place — debug log runs only on the failure branch, so timing of the success path is unaffected.
+- Debug output uses `console.warn` so it stands out in the log stream.
+- After the issue is resolved, the debug block should be removed (one-line revert) to keep logs clean.
