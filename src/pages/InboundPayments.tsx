@@ -230,7 +230,16 @@ export function InboundPaymentsContent() {
               </div>
             )}
           </CardContent>
-        </Card>
+      </Card>
+    </div>
+  );
+}
+
+export default function InboundPayments() {
+  return (
+    <Layout>
+      <div className="container mx-auto px-4 py-8">
+        <InboundPaymentsContent />
       </div>
     </Layout>
   );
