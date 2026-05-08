@@ -224,7 +224,7 @@ export default function InboundPayments() {
                             </TableCell>
                           </TableRow>
                         )}
-                      </>
+                      </React.Fragment>
                     ))}
                   </TableBody>
                 </Table>
