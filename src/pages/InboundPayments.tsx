@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Layout } from "@/components/Layout";
@@ -139,8 +139,8 @@ export default function InboundPayments() {
                   </TableHeader>
                   <TableBody>
                     {data.map((n) => (
-                      <>
-                        <TableRow key={n.id}>
+                      <React.Fragment key={n.id}>
+                        <TableRow>
                           <TableCell>
                             <Button
                               variant="ghost"
@@ -224,7 +224,7 @@ export default function InboundPayments() {
                             </TableCell>
                           </TableRow>
                         )}
-                      </>
+                      </React.Fragment>
                     ))}
                   </TableBody>
                 </Table>
