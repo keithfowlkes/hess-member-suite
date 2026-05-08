@@ -2349,6 +2349,27 @@ export default function MembershipFees() {
                             checked={prorationEnabled}
                             onCheckedChange={setProrationEnabled}
                           />
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="text-muted-foreground hover:text-foreground transition-colors"
+                                  aria-label="How proration works"
+                                >
+                                  <HelpCircle className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="max-w-xs">
+                                <p className="text-xs leading-relaxed">
+                                  Proration charges a partial annual fee based on the number of days between an organization's
+                                  membership start date and the membership year end date (June 30), with a minimum of 25% of the
+                                  annual fee. It is applied automatically when generating invoices for organizations whose
+                                  start date falls after the membership year begins. Toggle off to bill the full annual fee instead.
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
                       {!prorationEnabled && (
