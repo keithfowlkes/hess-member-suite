@@ -124,6 +124,7 @@ export default function MembershipFees() {
   const [standardRenewalDate, setStandardRenewalDate] = useState<Date>(new Date(new Date().getFullYear(), 11, 31)); // Dec 31st by default
   const [proratedOrganizations, setProratedOrganizations] = useState<any[]>([]);
   const [updatingProrated, setUpdatingProrated] = useState<Set<string>>(new Set());
+  const [prorationEnabled, setProrationEnabled] = useState(true);
 
   // Fee tier states
   const [fullMemberFee, setFullMemberFee] = useState<string>('1000');
@@ -378,6 +379,7 @@ export default function MembershipFees() {
 
   // Get prorated amount for an organization
   const getProratedAmount = (organizationId: string): number | null => {
+    if (!prorationEnabled) return null;
     const proratedOrg = proratedOrganizations.find(p => p.id === organizationId);
     return proratedOrg?.proratedAmount || null;
   };
@@ -2331,10 +2333,27 @@ export default function MembershipFees() {
                   {/* Organizations Needing Prorated Fees */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5" />
-                        Organizations Needing Prorated Fees
-                      </CardTitle>
+                      <div className="flex items-center justify-between gap-4 flex-wrap">
+                        <CardTitle className="flex items-center gap-2">
+                          <DollarSign className="h-5 w-5" />
+                          Organizations Needing Prorated Fees
+                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor="prorationEnabled" className="text-sm font-medium">
+                            {prorationEnabled ? 'Prorated fees enabled' : 'Prorated fees disabled'}
+                          </Label>
+                          <Switch
+                            id="prorationEnabled"
+                            checked={prorationEnabled}
+                            onCheckedChange={setProrationEnabled}
+                          />
+                        </div>
+                      </div>
+                      {!prorationEnabled && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Proration is turned off. Selected organizations will be billed the full annual fee instead of a prorated amount.
+                        </p>
+                      )}
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {(() => {
@@ -2360,14 +2379,14 @@ export default function MembershipFees() {
                               </p>
                               <Button 
                                 onClick={applyBulkProratedFees}
-                                disabled={isUpdating}
+                                disabled={isUpdating || !prorationEnabled}
                                 variant="outline"
                               >
                                 {isUpdating ? "Applying..." : "Apply All Calculated Fees"}
                               </Button>
                             </div>
                             
-                            <div className="space-y-4">
+                            <div className={`space-y-4 ${!prorationEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
                               <div className="grid grid-cols-12 gap-2 p-3 font-medium text-sm text-muted-foreground border-b">
                                 <div className="col-span-3">Organization</div>
                                 <div className="col-span-2">Start Date</div>
