@@ -1397,6 +1397,19 @@ export default function Settings() {
                 </Tabs>
                     </div>
                 )}
+
+                {/* Integrations Section */}
+                {activeSection === 'integrations' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-2xl font-semibold">Integrations</h2>
+                      <p className="text-muted-foreground mt-2">
+                        Manage external applications and inbound payment notifications
+                      </p>
+                    </div>
+                    <IntegrationsManagement />
+                  </div>
+                )}
               </div>
             </div>
           </div>
