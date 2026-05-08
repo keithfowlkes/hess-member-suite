@@ -9,26 +9,35 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const PayloadSchema = z.object({
-  source: z.literal("medius-events"),
-  event: z.literal("membership_payment_completed"),
-  data: z.object({
-    conference_slug: z.string().optional(),
-    conference_organization_id: z.string().optional(),
-    fee_level_id: z.string().optional(),
-    fee_level_name: z.string().optional(),
-    registration_id: z.string().optional(),
-    organization_name: z.string().min(1),
-    contact_full_name: z.string().optional(),
-    contact_email: z.string().email(),
-    amount_paid: z.number().nonnegative(),
-    currency: z.string().default("usd"),
-    paid_at: z.string(),
-    stripe_session_id: z.string().min(1),
-  }),
+const DataSchema = z.object({
+  membership_dues_paid: z.boolean().optional(),
+  payment_type: z.string().optional(),
+  period_year: z.number().int().optional(),
+  source_channel: z.string().optional(),
+  registration_option: z.string().optional(),
+
+  conference_slug: z.string().nullable().optional(),
+  conference_organization_id: z.string().nullable().optional(),
+  fee_level_id: z.string().nullable().optional(),
+  fee_level_name: z.string().nullable().optional(),
+  registration_id: z.string().nullable().optional(),
+
+  organization_name: z.string().min(1),
+  contact_full_name: z.string().nullable().optional(),
+  contact_email: z.string().email(),
+
+  amount_paid: z.number().nonnegative(),
+  currency: z.string().default("usd"),
+  paid_at: z.string(),
+  stripe_session_id: z.string().min(1),
 });
 
-// Constant-time string comparison
+const PayloadSchema = z.object({
+  source: z.literal("medius-events"),
+  event: z.enum(["membership_dues_paid", "membership_payment_completed"]),
+  data: DataSchema,
+});
+
 function timingSafeEqual(a: string, b: string): boolean {
   const enc = new TextEncoder();
   const ab = enc.encode(a);
@@ -37,6 +46,13 @@ function timingSafeEqual(a: string, b: string): boolean {
   let diff = 0;
   for (let i = 0; i < ab.byteLength; i++) diff |= ab[i] ^ bb[i];
   return diff === 0;
+}
+
+function ok(body: Record<string, unknown>) {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 }
 
 serve(async (req) => {
@@ -85,29 +101,57 @@ serve(async (req) => {
 
   const parsed = PayloadSchema.safeParse(rawBody);
   if (!parsed.success) {
-    // Audit the bad payload
     await supabase.from("inbound_payment_notifications").insert({
       payload: rawBody as Record<string, unknown>,
       status: "error",
       error_message: JSON.stringify(parsed.error.flatten()),
     });
-    return new Response(
-      JSON.stringify({ error: "Invalid payload", details: parsed.error.flatten() }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    // Return 200 so sender's audit log records delivery (per spec)
+    return ok({
+      success: false,
+      matched: false,
+      status: "error",
+      error: "Invalid payload",
+    });
   }
 
-  const { data } = parsed.data;
+  const { event, data } = parsed.data;
   const paidAtIso = new Date(data.paid_at).toISOString();
+  const periodYear =
+    data.period_year ?? new Date(paidAtIso).getUTCFullYear();
+
+  // Authoritative dues confirmation check.
+  // Legacy event name is accepted for backward compatibility.
+  const isDuesConfirmation =
+    event === "membership_payment_completed" ||
+    (event === "membership_dues_paid" &&
+      data.membership_dues_paid === true &&
+      data.payment_type === "annual_membership_dues");
+
+  if (!isDuesConfirmation) {
+    await supabase.from("inbound_payment_notifications").insert({
+      payload: parsed.data as unknown as Record<string, unknown>,
+      organization_name: data.organization_name,
+      contact_email: data.contact_email,
+      amount_paid: data.amount_paid,
+      currency: data.currency,
+      paid_at: paidAtIso,
+      external_reference: data.stripe_session_id,
+      status: "error",
+      error_message: "Not a membership dues confirmation",
+    });
+    return ok({ success: true, matched: false, status: "ignored" });
+  }
 
   try {
-    // 1) Match organization (case-insensitive name, then email-domain fallback)
+    // 1) Match organization
     let matchedOrgId: string | null = null;
+    const trimmedName = data.organization_name.trim();
 
     const { data: nameMatch } = await supabase
       .from("organizations")
       .select("id")
-      .ilike("name", data.organization_name)
+      .ilike("name", trimmedName)
       .eq("organization_type", "member")
       .limit(1)
       .maybeSingle();
@@ -119,7 +163,7 @@ serve(async (req) => {
       if (domain) {
         const { data: domainMatch } = await supabase
           .from("organizations")
-          .select("id, website, email")
+          .select("id")
           .or(`website.ilike.%${domain}%,email.ilike.%@${domain}`)
           .eq("organization_type", "member")
           .limit(1)
@@ -131,8 +175,11 @@ serve(async (req) => {
     let matchedInvoiceId: string | null = null;
 
     if (matchedOrgId) {
-      // 2) Find invoice whose period contains paid_at, then upsert as paid
+      const periodStart = `${periodYear}-01-01`;
+      const periodEnd = `${periodYear}-12-31`;
       const paidDateOnly = paidAtIso.slice(0, 10);
+
+      // Find invoice whose period contains paid_at
       const { data: invoice } = await supabase
         .from("invoices")
         .select("id")
@@ -149,6 +196,7 @@ serve(async (req) => {
           .update({
             status: "paid",
             paid_date: paidAtIso,
+            amount: data.amount_paid,
             payment_source: "medius-events",
             external_reference: data.stripe_session_id,
           })
@@ -156,12 +204,7 @@ serve(async (req) => {
         if (updErr) throw updErr;
         matchedInvoiceId = invoice.id;
       } else {
-        // Create a new paid invoice covering the membership year of paid_at
-        const year = new Date(paidAtIso).getUTCFullYear();
-        const periodStart = `${year}-01-01`;
-        const periodEnd = `${year}-12-31`;
         const invoiceNumber = `MEDIUS-${data.stripe_session_id.slice(-12)}`;
-
         const { data: created, error: insErr } = await supabase
           .from("invoices")
           .upsert(
@@ -177,7 +220,7 @@ serve(async (req) => {
               period_end_date: periodEnd,
               payment_source: "medius-events",
               external_reference: data.stripe_session_id,
-              notes: `Auto-recorded from Medius Events (${data.fee_level_name ?? "membership"})`,
+              notes: `Auto-recorded from Medius Events (${data.fee_level_name ?? "HESS Annual Membership Fee"}) for ${periodYear}`,
             },
             { onConflict: "payment_source,external_reference", ignoreDuplicates: false },
           )
@@ -188,7 +231,8 @@ serve(async (req) => {
       }
     }
 
-    // 3) Audit row
+    const status = matchedOrgId ? "processed" : "unmatched";
+
     await supabase.from("inbound_payment_notifications").insert({
       payload: parsed.data as unknown as Record<string, unknown>,
       matched_organization_id: matchedOrgId,
@@ -199,18 +243,16 @@ serve(async (req) => {
       currency: data.currency,
       paid_at: paidAtIso,
       external_reference: data.stripe_session_id,
-      status: matchedOrgId ? "processed" : "unmatched",
+      status,
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        matched: !!matchedOrgId,
-        organization_id: matchedOrgId,
-        invoice_id: matchedInvoiceId,
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return ok({
+      success: true,
+      matched: !!matchedOrgId,
+      organization_id: matchedOrgId,
+      invoice_id: matchedInvoiceId,
+      status,
+    });
   } catch (err: any) {
     console.error("receive-membership-payment error:", err);
     await supabase.from("inbound_payment_notifications").insert({
@@ -225,9 +267,12 @@ serve(async (req) => {
       error_message: String(err?.message ?? err),
     });
 
-    return new Response(
-      JSON.stringify({ success: false, error: "Server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    // Return 200 per spec — only auth/JSON parse return non-2xx.
+    return ok({
+      success: false,
+      matched: false,
+      status: "error",
+      error: String(err?.message ?? err),
+    });
   }
 });
