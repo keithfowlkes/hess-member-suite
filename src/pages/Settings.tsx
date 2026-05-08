@@ -35,6 +35,7 @@ import { MessageTextContent } from '@/components/MessageTextContent';
 import { ResendApiConfig } from '@/components/ResendApiConfig';
 import { EmailDesignManager } from '@/components/EmailDesignManager';
 import { IntegrationsManagement } from '@/components/IntegrationsManagement';
+import { StripeSettings } from '@/components/StripeSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
@@ -1425,27 +1426,7 @@ export default function Settings() {
                       </p>
                     </div>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <CreditCard className="h-5 w-5" />
-                          Stripe Configuration
-                        </CardTitle>
-                        <CardDescription>
-                          Stripe payment configuration for member organizations. Settings will be configured here.
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="rounded-lg border border-dashed p-8 text-center bg-muted/30">
-                          <CreditCard className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-                          <p className="font-medium text-foreground">Stripe payment settings coming soon</p>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            This is where Stripe API keys, webhook endpoints, accepted payment methods,
-                            and member-facing checkout options will be configured.
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <StripeSettings />
                   </div>
                 )}
               </div>
