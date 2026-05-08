@@ -22,12 +22,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useInvoices, type Invoice } from '@/hooks/useInvoices';
 import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
+import { getMembershipDuesStatus } from '@/utils/membershipDuesStatus';
 import { useMemo } from 'react';
 
 export default function Members() {
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'expired' | 'cancelled'>('active');
-  const { organizations, loading } = useMembers(statusFilter);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'expired' | 'cancelled' | 'paid' | 'unpaid'>('active');
+  const isPaymentFilter = statusFilter === 'paid' || statusFilter === 'unpaid';
+  const { organizations, loading } = useMembers(isPaymentFilter ? 'all' : statusFilter);
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
   const { invoices } = useInvoices();
   const invoicesByOrg = useMemo(() => {
@@ -52,10 +54,16 @@ export default function Members() {
         (org.profiles?.email && org.profiles.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (org.profiles?.first_name && org.profiles.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (org.profiles?.last_name && org.profiles.last_name.toLowerCase().includes(searchTerm.toLowerCase()));
-      
+
       const matchesState = selectedState === 'all' || selectedState === '' || org.state === selectedState;
-      
-      return matchesSearch && matchesState;
+
+      let matchesPayment = true;
+      if (statusFilter === 'paid' || statusFilter === 'unpaid') {
+        const { isPaid } = getMembershipDuesStatus(invoicesByOrg[org.id]);
+        matchesPayment = statusFilter === 'paid' ? isPaid : !isPaid;
+      }
+
+      return matchesSearch && matchesState && matchesPayment;
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -321,6 +329,8 @@ export default function Members() {
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="expired">Expired</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                        <SelectItem value="unpaid">Unpaid</SelectItem>
                       </SelectContent>
                     </Select>
                     <Select value={selectedState} onValueChange={setSelectedState}>
