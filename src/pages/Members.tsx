@@ -20,12 +20,23 @@ import { OrganizationViewModal } from '@/components/OrganizationViewModal';
 import { OrganizationUpdateTrackerDialog } from '@/components/OrganizationUpdateTrackerDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useInvoices, type Invoice } from '@/hooks/useInvoices';
+import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
+import { useMemo } from 'react';
 
 export default function Members() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'expired' | 'cancelled'>('active');
   const { organizations, loading } = useMembers(statusFilter);
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
+  const { invoices } = useInvoices();
+  const invoicesByOrg = useMemo(() => {
+    const map: Record<string, Invoice[]> = {};
+    for (const inv of invoices) {
+      (map[inv.organization_id] ||= []).push(inv);
+    }
+    return map;
+  }, [invoices]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState<string>('');
   const [selectedOrganization, setSelectedOrganization] = useState(null);
@@ -361,9 +372,12 @@ export default function Members() {
                             <CardTitle className="text-base font-medium leading-tight" title={organization.name}>
                               {organization.name}
                             </CardTitle>
-                            <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
-                              {organization.membership_status}
-                            </Badge>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
+                                {organization.membership_status}
+                              </Badge>
+                              <MembershipDuesBadge invoices={invoicesByOrg[organization.id]} compact />
+                            </div>
                           </div>
                         </CardHeader>
                         <CardContent className="pt-0 space-y-3">
@@ -504,10 +518,11 @@ export default function Members() {
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </div>
-                            <div className="col-span-1">
+                            <div className="col-span-1 flex flex-col gap-1 items-start">
                               <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
                                 {organization.membership_status}
                               </Badge>
+                              <MembershipDuesBadge invoices={invoicesByOrg[organization.id]} compact />
                             </div>
                             <div className="col-span-1">
                               <div className="text-sm font-medium">

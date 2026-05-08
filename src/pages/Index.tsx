@@ -18,6 +18,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSurveys } from '@/hooks/useSurveys';
 import { supabase } from '@/integrations/supabase/client';
 import { getMembershipDuesStatus } from '@/utils/membershipDuesStatus';
+import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
 
 import { useState, useEffect } from 'react';
 
@@ -374,18 +375,9 @@ const Index = () => {
 
                   {/* Profile Update Button */}
                   <div className="flex-shrink-0 lg:w-64 space-y-3">
-                    {duesPaidForCurrentPeriod && (
+                    {(duesPaidForCurrentPeriod || currentPeriodUnpaidInvoice) && (
                       <div className="flex justify-center">
-                        <Badge className="bg-green-600 hover:bg-green-600 text-white font-semibold tracking-wide px-3 py-1">
-                          PAID
-                        </Badge>
-                      </div>
-                    )}
-                    {!duesPaidForCurrentPeriod && currentPeriodUnpaidInvoice && (
-                      <div className="flex justify-center">
-                        <Badge className="bg-amber-500 hover:bg-amber-500 text-white font-semibold tracking-wide px-3 py-1 text-center whitespace-normal">
-                          MEMBERSHIP FEE DUE {new Date(currentPeriodUnpaidInvoice.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                        </Badge>
+                        <MembershipDuesBadge invoices={invoices} />
                       </div>
                     )}
                     <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 h-full flex flex-col justify-center">

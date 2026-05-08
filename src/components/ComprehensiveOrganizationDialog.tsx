@@ -38,6 +38,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { useInvoices } from '@/hooks/useInvoices';
+import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -194,6 +196,7 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState(defaultTab);
   const { toast } = useToast();
+  const { invoices: orgInvoices } = useInvoices();
 
   console.log('ComprehensiveOrganizationDialog - isAdmin:', isAdmin, 'organization:', !!organization);
 
@@ -549,9 +552,14 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
             <Building2 className="h-5 w-5" />
             {organization ? 'Organization & Member Details' : 'Add New Organization'}
+            {organization?.id && (
+              <MembershipDuesBadge
+                invoices={orgInvoices.filter((inv) => inv.organization_id === organization.id)}
+              />
+            )}
           </DialogTitle>
         </DialogHeader>
 
