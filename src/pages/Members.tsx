@@ -24,9 +24,11 @@ import { useInvoices, type Invoice } from '@/hooks/useInvoices';
 import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
 import { getMembershipDuesStatus } from '@/utils/membershipDuesStatus';
 import { useMemo } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Members() {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'expired' | 'cancelled' | 'paid' | 'unpaid'>('active');
   const isPaymentFilter = statusFilter === 'paid' || statusFilter === 'unpaid';
   const { organizations, loading } = useMembers(isPaymentFilter ? 'all' : statusFilter);
