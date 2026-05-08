@@ -329,6 +329,8 @@ export default function Members() {
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="expired">Expired</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                        <SelectItem value="unpaid">Unpaid</SelectItem>
                       </SelectContent>
                     </Select>
                     <Select value={selectedState} onValueChange={setSelectedState}>
