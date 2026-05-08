@@ -518,10 +518,11 @@ export default function Members() {
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </div>
-                            <div className="col-span-1">
+                            <div className="col-span-1 flex flex-col gap-1 items-start">
                               <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
                                 {organization.membership_status}
                               </Badge>
+                              <MembershipDuesBadge invoices={invoicesByOrg[organization.id]} compact />
                             </div>
                             <div className="col-span-1">
                               <div className="text-sm font-medium">
