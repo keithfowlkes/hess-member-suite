@@ -522,7 +522,7 @@ export default function Members() {
                               <Badge className={`${getStatusColor(organization.membership_status)} text-xs`}>
                                 {organization.membership_status}
                               </Badge>
-                              <MembershipDuesBadge invoices={invoicesByOrg[organization.id]} compact />
+                              <MembershipDuesBadge invoices={invoicesByOrg[organization.id]} compact showUnpaidFallback />
                             </div>
                             <div className="col-span-1">
                               <div className="text-sm font-medium">
