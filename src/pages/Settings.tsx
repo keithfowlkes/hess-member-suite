@@ -674,7 +674,8 @@ export default function Settings() {
                       { id: 'public', label: 'Public Views', icon: Eye, description: 'Public-facing content' },
                       { id: 'security', label: 'Security Settings', icon: Shield, description: 'Authentication and security' },
                       { id: 'messaging', label: 'Messaging Config', icon: Mail, description: 'Email and notifications' },
-                      { id: 'integrations', label: 'Integrations', icon: Share2, description: 'External apps and inbound payments' }
+                      { id: 'integrations', label: 'Integrations', icon: Share2, description: 'External apps and inbound payments' },
+                      { id: 'online_payments', label: 'Online Payments', icon: CreditCard, description: 'Configure Stripe payments for members' }
                     ].map((section) => (
                       <button
                         key={section.id}
