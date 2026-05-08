@@ -3,7 +3,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
 import { AdminPasswordManager } from '@/components/AdminPasswordManager';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -60,7 +60,8 @@ import {
   CheckCircle,
   Image as ImageIcon,
   Palette,
-  Share2
+  Share2,
+  CreditCard
 } from 'lucide-react';
 
 const availableSections = [
@@ -673,7 +674,8 @@ export default function Settings() {
                       { id: 'public', label: 'Public Views', icon: Eye, description: 'Public-facing content' },
                       { id: 'security', label: 'Security Settings', icon: Shield, description: 'Authentication and security' },
                       { id: 'messaging', label: 'Messaging Config', icon: Mail, description: 'Email and notifications' },
-                      { id: 'integrations', label: 'Integrations', icon: Share2, description: 'External apps and inbound payments' }
+                      { id: 'integrations', label: 'Integrations', icon: Share2, description: 'External apps and inbound payments' },
+                      { id: 'online_payments', label: 'Online Payments', icon: CreditCard, description: 'Configure Stripe payments for members' }
                     ].map((section) => (
                       <button
                         key={section.id}
@@ -1408,6 +1410,42 @@ export default function Settings() {
                       </p>
                     </div>
                     <IntegrationsManagement />
+                  </div>
+                )}
+
+                {activeSection === 'online_payments' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-2xl font-semibold flex items-center gap-2">
+                        <CreditCard className="h-6 w-6" />
+                        Online Payments
+                      </h2>
+                      <p className="text-muted-foreground mt-2">
+                        Configure Stripe payments so member organizations can pay their membership fees online.
+                      </p>
+                    </div>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <CreditCard className="h-5 w-5" />
+                          Stripe Configuration
+                        </CardTitle>
+                        <CardDescription>
+                          Stripe payment configuration for member organizations. Settings will be configured here.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="rounded-lg border border-dashed p-8 text-center bg-muted/30">
+                          <CreditCard className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                          <p className="font-medium text-foreground">Stripe payment settings coming soon</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            This is where Stripe API keys, webhook endpoints, accepted payment methods,
+                            and member-facing checkout options will be configured.
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 )}
               </div>
