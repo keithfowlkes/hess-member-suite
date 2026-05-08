@@ -146,3 +146,6 @@ verify_jwt = false
 
 [functions.normalize-workday-finance]
 verify_jwt = false
+
+[functions.receive-membership-payment]
+verify_jwt = false
