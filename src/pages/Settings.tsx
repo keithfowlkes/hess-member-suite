@@ -60,7 +60,8 @@ import {
   CheckCircle,
   Image as ImageIcon,
   Palette,
-  Share2
+  Share2,
+  CreditCard
 } from 'lucide-react';
 
 const availableSections = [
