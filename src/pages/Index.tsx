@@ -415,6 +415,13 @@ const Index = () => {
                         </Badge>
                       </div>
                     )}
+                    {!duesPaidForCurrentPeriod && currentPeriodUnpaidInvoice && (
+                      <div className="flex justify-center">
+                        <Badge className="bg-amber-500 hover:bg-amber-500 text-white font-semibold tracking-wide px-3 py-1 text-center whitespace-normal">
+                          MEMBERSHIP FEE DUE {new Date(currentPeriodUnpaidInvoice.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                        </Badge>
+                      </div>
+                    )}
                     <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 h-full flex flex-col justify-center">
                       <div className="text-center space-y-3">
                         <Edit3 className="h-8 w-8 text-primary mx-auto" />
