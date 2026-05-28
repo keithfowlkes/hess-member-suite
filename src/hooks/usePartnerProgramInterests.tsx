@@ -81,8 +81,7 @@ export function usePartnerProgramInterests(forceShowAll: boolean = false, previe
 
         const userIsAdmin = roleData?.some(r => r.role === 'admin') || false;
         setIsAdmin(userIsAdmin);
-        const userIsAdmin = roleData?.some(r => r.role === 'admin') || false;
-        setIsAdmin(userIsAdmin);
+
 
         // Admin preview mode: filter by the cohort selected in the preview dropdown
         if (userIsAdmin && previewCohort) {
@@ -140,11 +139,12 @@ export function usePartnerProgramInterests(forceShowAll: boolean = false, previe
           }).filter(item => item.partnerProgramInterest.length > 0);
 
           setInterests(result);
-          setLoading(false);
-          return;
         }
 
+        // If admin and forceShowAll is true, fetch all interests
+        if (userIsAdmin && forceShowAll) {
           const { data: organizationsData, error: orgsError } = await supabase
+
             .from('organizations')
             .select(`
               id,
