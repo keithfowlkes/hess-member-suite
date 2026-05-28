@@ -48,6 +48,8 @@ export function RecentMemberSubmissionsTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   const [currentPage, setCurrentPage] = useState(1);
+  const [downloadFrom, setDownloadFrom] = useState<Date | undefined>();
+  const [downloadTo, setDownloadTo] = useState<Date | undefined>();
 
   useEffect(() => {
     fetchAllSubmissions();
