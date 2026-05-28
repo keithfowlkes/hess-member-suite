@@ -267,7 +267,9 @@ const MasterDashboard = () => {
               email
             )
           `)
-          .eq('membership_status', 'active');
+          .eq('membership_status', 'active')
+          .or('organization_type.eq.member,organization_type.is.null')
+          .not('name', 'ilike', '%Administrator%');
 
         if (error) throw error;
 
