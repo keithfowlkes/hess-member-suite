@@ -36,7 +36,8 @@ export function useDashboardStats() {
         .from('organizations')
         .select('membership_status, annual_fee_amount')
         .eq('membership_status', 'active')
-        .or('organization_type.eq.member,organization_type.is.null');
+        .or('organization_type.eq.member,organization_type.is.null')
+        .not('name', 'ilike', '%Administrator%');
 
       if (orgError) {
         console.error('Organization stats error:', orgError);
