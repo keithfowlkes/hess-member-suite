@@ -12,11 +12,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Mail, Building2, Calendar, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Mail, Building2, Calendar, Search, ChevronLeft, ChevronRight, Download, CalendarIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { OrganizationViewModal } from '@/components/OrganizationViewModal';
 import { Organization } from '@/hooks/useMembers';
 import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface RecentSubmission {
   id: string;
