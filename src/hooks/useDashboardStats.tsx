@@ -79,13 +79,10 @@ export function useDashboardStats() {
 
     } catch (error: any) {
       console.error('Error fetching dashboard stats:', error);
-      toast({
-        title: 'Error loading dashboard statistics',
-        description: error.message,
-        variant: 'destructive'
-      });
-    } finally {
-      console.log('Dashboard stats loading complete');
+    } catch (error: any) {
+      console.error('Error fetching dashboard stats:', error);
+      // Silent failure — transient network errors during initial load should not flash a destructive toast
+
       setLoading(false);
     }
   }, [totalsLoading, totals, toast]);

@@ -36,11 +36,9 @@ export const useOrganizationInvitations = () => {
       setInvitations(data || []);
     } catch (error: any) {
       console.error('Error fetching invitations:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch invitations",
-        variant: "destructive"
-      });
+      // Silent failure on initial fetch — transient network errors should not flash a destructive toast
+    }
+
     } finally {
       setLoading(false);
     }

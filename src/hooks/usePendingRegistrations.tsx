@@ -76,13 +76,10 @@ export function usePendingRegistrations() {
 
       if (error) {
         console.error('❌ PENDING DEBUG: Error fetching pending registrations:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch pending registrations",
-          variant: "destructive"
-        });
+        // Silent failure on initial fetch — transient network errors should not flash a destructive toast
         return;
       }
+
 
       console.log('✅ PENDING DEBUG: Successfully fetched pending registrations:', {
         count: data?.length || 0,
