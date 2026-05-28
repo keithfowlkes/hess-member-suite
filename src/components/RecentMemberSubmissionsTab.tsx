@@ -297,6 +297,57 @@ export function RecentMemberSubmissionsTab() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Download by date range */}
+          <div className="flex flex-col sm:flex-row gap-3 mt-3 sm:items-center">
+            <span className="text-sm font-medium text-muted-foreground">Download range:</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn('justify-start text-left font-normal', !downloadFrom && 'text-muted-foreground')}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {downloadFrom ? format(downloadFrom, 'MMM d, yyyy') : 'From date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={downloadFrom}
+                  onSelect={setDownloadFrom}
+                  initialFocus
+                  className={cn('p-3 pointer-events-auto')}
+                />
+              </PopoverContent>
+            </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn('justify-start text-left font-normal', !downloadTo && 'text-muted-foreground')}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {downloadTo ? format(downloadTo, 'MMM d, yyyy') : 'To date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={downloadTo}
+                  onSelect={setDownloadTo}
+                  initialFocus
+                  className={cn('p-3 pointer-events-auto')}
+                />
+              </PopoverContent>
+            </Popover>
+            <Button size="sm" onClick={handleDownload} disabled={!downloadFrom || !downloadTo}>
+              <Download className="h-4 w-4 mr-2" />
+              Download CSV
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {filteredSubmissions.length === 0 ? (
