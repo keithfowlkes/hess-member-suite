@@ -37,12 +37,11 @@ export const useOrganizationInvitations = () => {
     } catch (error: any) {
       console.error('Error fetching invitations:', error);
       // Silent failure on initial fetch — transient network errors should not flash a destructive toast
-    }
-
     } finally {
       setLoading(false);
     }
   };
+
 
   const createInvitation = async (organizationId: string, email: string) => {
     try {
