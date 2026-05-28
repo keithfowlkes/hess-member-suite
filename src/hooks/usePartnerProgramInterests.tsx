@@ -38,8 +38,9 @@ const cohortToPartnerMap: Record<string, string> = {
   'Anthology': 'Anthology',
 };
 
-export function usePartnerProgramInterests(forceShowAll: boolean = false) {
+export function usePartnerProgramInterests(forceShowAll: boolean = false, previewCohort?: string | null) {
   const { user } = useAuth();
+
   const [interests, setInterests] = useState<PartnerProgramInterest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,10 +81,69 @@ export function usePartnerProgramInterests(forceShowAll: boolean = false) {
 
         const userIsAdmin = roleData?.some(r => r.role === 'admin') || false;
         setIsAdmin(userIsAdmin);
+        const userIsAdmin = roleData?.some(r => r.role === 'admin') || false;
+        setIsAdmin(userIsAdmin);
 
-        // If admin and forceShowAll is true, fetch all interests
-        if (userIsAdmin && forceShowAll) {
-          // Fetch all organizations with partner program interests
+        // Admin preview mode: filter by the cohort selected in the preview dropdown
+        if (userIsAdmin && previewCohort) {
+          const relevantPartnerPrograms = [cohortToPartnerMap[previewCohort]].filter(Boolean);
+          if (relevantPartnerPrograms.length === 0) {
+            setInterests([]);
+            setLoading(false);
+            return;
+          }
+
+          const { data: orgsData, error: orgsErr } = await supabase
+            .from('organizations')
+            .select(`id, name, city, state, student_fte, partner_program_interest, website, phone, membership_start_date, contact_person_id`)
+            .eq('membership_status', 'active')
+            .not('partner_program_interest', 'is', null);
+
+          if (orgsErr) throw new Error('Failed to fetch organizations');
+
+          const matching = (orgsData || []).filter(org => {
+            if (!Array.isArray(org.partner_program_interest)) return false;
+            return org.partner_program_interest.some(
+              (i: string) => relevantPartnerPrograms.includes(i) && i !== 'None'
+            );
+          });
+
+          const contactIds = matching.map(o => o.contact_person_id).filter(Boolean);
+          let contactsMap: Map<string, any> = new Map();
+          if (contactIds.length > 0) {
+            const { data: cData } = await supabase
+              .from('profiles')
+              .select('id, first_name, last_name, email, primary_contact_title')
+              .in('id', contactIds);
+            if (cData) contactsMap = new Map(cData.map(c => [c.id, c]));
+          }
+
+          const result: PartnerProgramInterest[] = matching.map(org => {
+            const contact = org.contact_person_id ? contactsMap.get(org.contact_person_id) : null;
+            const relevantInterests = (org.partner_program_interest || []).filter(
+              (i: string) => relevantPartnerPrograms.includes(i) && i !== 'None'
+            );
+            return {
+              organizationId: org.id,
+              organizationName: org.name,
+              contactName: contact ? `${contact.first_name} ${contact.last_name}` : 'Unknown',
+              contactEmail: contact?.email || '',
+              contactTitle: contact?.primary_contact_title || '',
+              city: org.city || '',
+              state: org.state || '',
+              studentFte: org.student_fte,
+              partnerProgramInterest: relevantInterests,
+              website: org.website || '',
+              phone: org.phone || '',
+              membershipStartDate: org.membership_start_date,
+            };
+          }).filter(item => item.partnerProgramInterest.length > 0);
+
+          setInterests(result);
+          setLoading(false);
+          return;
+        }
+
           const { data: organizationsData, error: orgsError } = await supabase
             .from('organizations')
             .select(`
@@ -287,7 +347,8 @@ export function usePartnerProgramInterests(forceShowAll: boolean = false) {
     };
 
     fetchPartnerInterests();
-  }, [user, forceShowAll]);
+  }, [user, forceShowAll, previewCohort]);
+
 
   // Calculate unviewed count - if current count is greater than what was viewed, show the difference
   const unviewedCount = interests.length > viewedCount ? interests.length - viewedCount : 0;
