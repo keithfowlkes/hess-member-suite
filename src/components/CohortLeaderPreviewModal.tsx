@@ -316,7 +316,8 @@ export function CohortLeaderPreviewModal({ isOpen, onClose }: CohortLeaderPrevie
                   <Eye className="h-4 w-4" />
                   Partner Program Interest Notifications (Cohort Leader View)
                 </div>
-                <PartnerProgramInterestNotifications />
+                <PartnerProgramInterestNotifications previewCohort={selectedCohort} />
+
               </div>
 
               {/* Cohort Overview Stats */}

@@ -108,10 +108,15 @@ function EmailActions({ interest, isContacted, contactedAt, onToggleContacted }:
   );
 }
 
-export function PartnerProgramInterestNotifications() {
+interface PartnerProgramInterestNotificationsProps {
+  previewCohort?: string | null;
+}
+
+export function PartnerProgramInterestNotifications({ previewCohort }: PartnerProgramInterestNotificationsProps = {}) {
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   const [showContacted, setShowContacted] = useState<boolean>(true);
-  const { interests, loading, error, count } = usePartnerProgramInterests();
+  const { interests, loading, error, count } = usePartnerProgramInterests(false, previewCohort);
+
   const { isContacted, getContactedAt, markAsContacted, unmarkAsContacted, loading: contactsLoading } = usePartnerInterestContacts();
 
   if (loading || contactsLoading) {
