@@ -212,6 +212,49 @@ export function RecentMemberSubmissionsTab() {
     setCurrentPage(prev => Math.min(totalPages, prev + 1));
   };
 
+  const handleDownload = () => {
+    if (!downloadFrom || !downloadTo) {
+      toast.error('Please select both start and end dates');
+      return;
+    }
+    const from = new Date(downloadFrom); from.setHours(0, 0, 0, 0);
+    const to = new Date(downloadTo); to.setHours(23, 59, 59, 999);
+    const rows = allSubmissions.filter(s => {
+      const d = new Date(s.created_at).getTime();
+      return d >= from.getTime() && d <= to.getTime();
+    });
+    if (rows.length === 0) {
+      toast.error('No submissions found in that date range');
+      return;
+    }
+    const headers = ['Organization', 'Primary Contact', 'Title', 'Email', 'City', 'State', 'Membership Status', 'Joined'];
+    const escape = (v: any) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [
+      headers.join(','),
+      ...rows.map(s => [
+        s.name,
+        getContactName(s),
+        s.profiles?.primary_contact_title || '',
+        getContactEmail(s) || '',
+        s.city || '',
+        s.state || '',
+        s.membership_status,
+        format(new Date(s.created_at), 'yyyy-MM-dd'),
+      ].map(escape).join(','))
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `submissions_${format(downloadFrom, 'yyyy-MM-dd')}_to_${format(downloadTo, 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Downloaded ${rows.length} submission${rows.length === 1 ? '' : 's'}`);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
