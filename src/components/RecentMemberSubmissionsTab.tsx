@@ -12,11 +12,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Mail, Building2, Calendar, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Mail, Building2, Calendar, Search, ChevronLeft, ChevronRight, Download, CalendarIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { OrganizationViewModal } from '@/components/OrganizationViewModal';
 import { Organization } from '@/hooks/useMembers';
 import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface RecentSubmission {
   id: string;
@@ -44,6 +48,8 @@ export function RecentMemberSubmissionsTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   const [currentPage, setCurrentPage] = useState(1);
+  const [downloadFrom, setDownloadFrom] = useState<Date | undefined>();
+  const [downloadTo, setDownloadTo] = useState<Date | undefined>();
 
   useEffect(() => {
     fetchAllSubmissions();
@@ -206,6 +212,49 @@ export function RecentMemberSubmissionsTab() {
     setCurrentPage(prev => Math.min(totalPages, prev + 1));
   };
 
+  const handleDownload = () => {
+    if (!downloadFrom || !downloadTo) {
+      toast.error('Please select both start and end dates');
+      return;
+    }
+    const from = new Date(downloadFrom); from.setHours(0, 0, 0, 0);
+    const to = new Date(downloadTo); to.setHours(23, 59, 59, 999);
+    const rows = allSubmissions.filter(s => {
+      const d = new Date(s.created_at).getTime();
+      return d >= from.getTime() && d <= to.getTime();
+    });
+    if (rows.length === 0) {
+      toast.error('No submissions found in that date range');
+      return;
+    }
+    const headers = ['Organization', 'Primary Contact', 'Title', 'Email', 'City', 'State', 'Membership Status', 'Joined'];
+    const escape = (v: any) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [
+      headers.join(','),
+      ...rows.map(s => [
+        s.name,
+        getContactName(s),
+        s.profiles?.primary_contact_title || '',
+        getContactEmail(s) || '',
+        s.city || '',
+        s.state || '',
+        s.membership_status,
+        format(new Date(s.created_at), 'yyyy-MM-dd'),
+      ].map(escape).join(','))
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `submissions_${format(downloadFrom, 'yyyy-MM-dd')}_to_${format(downloadTo, 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Downloaded ${rows.length} submission${rows.length === 1 ? '' : 's'}`);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -247,6 +296,57 @@ export function RecentMemberSubmissionsTab() {
                 <SelectItem value="oldest">Oldest First</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Download by date range */}
+          <div className="flex flex-col sm:flex-row gap-3 mt-3 sm:items-center">
+            <span className="text-sm font-medium text-muted-foreground">Download range:</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn('justify-start text-left font-normal', !downloadFrom && 'text-muted-foreground')}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {downloadFrom ? format(downloadFrom, 'MMM d, yyyy') : 'From date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={downloadFrom}
+                  onSelect={setDownloadFrom}
+                  initialFocus
+                  className={cn('p-3 pointer-events-auto')}
+                />
+              </PopoverContent>
+            </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn('justify-start text-left font-normal', !downloadTo && 'text-muted-foreground')}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {downloadTo ? format(downloadTo, 'MMM d, yyyy') : 'To date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={downloadTo}
+                  onSelect={setDownloadTo}
+                  initialFocus
+                  className={cn('p-3 pointer-events-auto')}
+                />
+              </PopoverContent>
+            </Popover>
+            <Button size="sm" onClick={handleDownload} disabled={!downloadFrom || !downloadTo}>
+              <Download className="h-4 w-4 mr-2" />
+              Download CSV
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
