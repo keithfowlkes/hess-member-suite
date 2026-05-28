@@ -79,12 +79,12 @@ export function useDashboardStats() {
 
     } catch (error: any) {
       console.error('Error fetching dashboard stats:', error);
-    } catch (error: any) {
-      console.error('Error fetching dashboard stats:', error);
       // Silent failure — transient network errors during initial load should not flash a destructive toast
-
+    } finally {
+      console.log('Dashboard stats loading complete');
       setLoading(false);
     }
+
   }, [totalsLoading, totals, toast]);
 
   // Set up real-time subscription for organizations and datacube
