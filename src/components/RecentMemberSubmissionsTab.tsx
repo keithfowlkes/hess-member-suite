@@ -52,6 +52,10 @@ export function RecentMemberSubmissionsTab() {
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadFrom, setDownloadFrom] = useState<Date | undefined>();
   const [downloadTo, setDownloadTo] = useState<Date | undefined>();
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeLoading, setWelcomeLoading] = useState(false);
+  const [welcomeOrg, setWelcomeOrg] = useState<RecentSubmission | null>(null);
+  const [welcomeText, setWelcomeText] = useState('');
 
   useEffect(() => {
     fetchAllSubmissions();
