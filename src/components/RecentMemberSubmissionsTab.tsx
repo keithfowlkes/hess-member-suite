@@ -218,6 +218,40 @@ export function RecentMemberSubmissionsTab() {
     setCurrentPage(prev => Math.min(totalPages, prev + 1));
   };
 
+  const handleGenerateWelcome = async (submission: RecentSubmission) => {
+    setWelcomeOrg(submission);
+    setWelcomeText('');
+    setWelcomeOpen(true);
+    setWelcomeLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-welcome-message', {
+        body: {
+          organizationName: submission.name,
+          city: submission.city,
+          state: submission.state,
+          contactName: getContactName(submission),
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setWelcomeText((data as any)?.message || '');
+    } catch (e: any) {
+      console.error('Welcome generation failed:', e);
+      toast.error(e?.message || 'Failed to generate welcome message');
+      setWelcomeOpen(false);
+    } finally {
+      setWelcomeLoading(false);
+    }
+  };
+
+  const handleEmailWelcome = () => {
+    if (!welcomeOrg) return;
+    const to = getContactEmail(welcomeOrg) || '';
+    const subject = `Welcome to the HESS Consortium, ${welcomeOrg.name}`;
+    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(welcomeText)}`;
+  };
+
+
   const handleDownload = () => {
     if (!downloadFrom || !downloadTo) {
       toast.error('Please select both start and end dates');
