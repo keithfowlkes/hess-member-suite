@@ -93,13 +93,21 @@ Deno.serve(async (req) => {
       return json({ error: "Stripe payments are not enabled" }, 400);
     }
     const mode = settings.stripe_mode === "live" ? "live" : "test";
+    // Secret keys are managed in the Admin Panel → Online Payments view and
+    // stored in `system_settings`. Edge-function env vars are kept as a
+    // fallback for legacy installs only.
     const secretKey =
-      mode === "live"
+      (mode === "live"
+        ? settings.stripe_secret_key_live
+        : settings.stripe_secret_key_test) ||
+      (mode === "live"
         ? Deno.env.get("STRIPE_SECRET_KEY_LIVE")
-        : Deno.env.get("STRIPE_SECRET_KEY_TEST");
+        : Deno.env.get("STRIPE_SECRET_KEY_TEST"));
     if (!secretKey) {
       return json(
-        { error: `Stripe secret key not configured for ${mode} mode` },
+        {
+          error: `Stripe ${mode}-mode secret key is not configured. Add it in Admin Panel → Online Payments.`,
+        },
         500,
       );
     }

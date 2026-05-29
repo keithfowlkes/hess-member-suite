@@ -82,15 +82,23 @@ Deno.serve(async (req) => {
   for (const r of settingsRows ?? [])
     settings[r.setting_key] = r.setting_value ?? "";
 
+  // Webhook signing secrets are managed in Admin Panel → Online Payments and
+  // stored in system_settings. Env vars are kept as legacy fallback.
   const mode = settings.stripe_mode === "live" ? "live" : "test";
   const primarySecret =
-    mode === "live"
+    (mode === "live"
+      ? settings.stripe_webhook_secret_live
+      : settings.stripe_webhook_secret_test) ||
+    (mode === "live"
       ? Deno.env.get("STRIPE_WEBHOOK_SECRET_LIVE")
-      : Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST");
+      : Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST"));
   const fallbackSecret =
-    mode === "live"
+    (mode === "live"
+      ? settings.stripe_webhook_secret_test
+      : settings.stripe_webhook_secret_live) ||
+    (mode === "live"
       ? Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST")
-      : Deno.env.get("STRIPE_WEBHOOK_SECRET_LIVE");
+      : Deno.env.get("STRIPE_WEBHOOK_SECRET_LIVE"));
 
   let verified = false;
   for (const secret of [primarySecret, fallbackSecret]) {
