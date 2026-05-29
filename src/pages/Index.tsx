@@ -375,11 +375,6 @@ const Index = () => {
 
                   {/* Profile Update Button */}
                   <div className="flex-shrink-0 lg:w-64 space-y-3">
-                    {(duesPaidForCurrentPeriod || currentPeriodUnpaidInvoice) && (
-                      <div className="flex justify-center">
-                        <MembershipDuesBadge invoices={invoices} />
-                      </div>
-                    )}
                     <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 h-full flex flex-col justify-center">
                       <div className="text-center space-y-3">
                         <Edit3 className="h-8 w-8 text-primary mx-auto" />
@@ -402,6 +397,36 @@ const Index = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Membership Fee Status */}
+            {(() => {
+              const isAdministrator = !!userOrganization?.name?.toLowerCase().includes('administrator');
+              const showFallback = isAdministrator;
+              const hasAnyBadge = duesPaidForCurrentPeriod || currentPeriodUnpaidInvoice || showFallback;
+              if (!hasAnyBadge) return null;
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="h-5 w-5" />
+                      Membership Fee
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between gap-4 flex-wrap">
+                      <div className="text-sm text-muted-foreground">
+                        Current status of your HESS Consortium annual membership dues.
+                      </div>
+                      <MembershipDuesBadge
+                        invoices={isAdministrator ? [] : invoices}
+                        showUnpaidFallback={showFallback}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
 
             {/* Stats Grid */}
             <div className="space-y-6">
