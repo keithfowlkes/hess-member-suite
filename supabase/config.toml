@@ -149,3 +149,9 @@ verify_jwt = false
 
 [functions.receive-membership-payment]
 verify_jwt = false
+
+[functions.create-stripe-checkout]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
