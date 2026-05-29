@@ -453,7 +453,7 @@ const Index = () => {
                           invoices={isAdministrator ? [] : invoices}
                           showUnpaidFallback={showFallback}
                         />
-                        {!isAdministrator && currentPeriodUnpaidInvoice && (
+                        {currentPeriodUnpaidInvoice && (
                           <>
                             <Button
                               variant="outline"
