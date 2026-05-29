@@ -244,14 +244,6 @@ export function RecentMemberSubmissionsTab() {
     }
   };
 
-  const handleEmailWelcome = () => {
-    if (!welcomeOrg) return;
-    const to = getContactEmail(welcomeOrg) || '';
-    const subject = `Welcome to the HESS Consortium, ${welcomeOrg.name}`;
-    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(welcomeText)}`;
-  };
-
-
   const handleDownload = () => {
     if (!downloadFrom || !downloadTo) {
       toast.error('Please select both start and end dates');
@@ -518,7 +510,7 @@ export function RecentMemberSubmissionsTab() {
               Welcome message{welcomeOrg ? ` — ${welcomeOrg.name}` : ''}
             </DialogTitle>
             <DialogDescription>
-              AI-generated welcome to the HESS Consortium. Review and edit before sending.
+              AI-generated welcome to the HESS Consortium. Review and edit as needed.
             </DialogDescription>
           </DialogHeader>
           {welcomeLoading ? (
@@ -552,13 +544,6 @@ export function RecentMemberSubmissionsTab() {
             >
               <Copy className="h-4 w-4 mr-2" />
               Copy
-            </Button>
-            <Button
-              onClick={handleEmailWelcome}
-              disabled={welcomeLoading || !welcomeText || !welcomeOrg || !getContactEmail(welcomeOrg)}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              Open in Email
             </Button>
           </DialogFooter>
         </DialogContent>
