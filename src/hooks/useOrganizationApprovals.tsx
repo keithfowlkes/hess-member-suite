@@ -109,12 +109,8 @@ export const useOrganizationApprovals = () => {
       const cleaned = (pending || []).filter(o => !/__reassign_/.test(o.name));
       setPendingOrganizations(cleaned);
     } catch (error: any) {
+      // Silently log transient fetch errors (e.g. network/abort) to avoid noisy toasts on page load
       console.error('Error fetching pending organizations:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch pending organizations",
-        variant: "destructive"
-      });
     } finally {
       setLoading(false);
     }
