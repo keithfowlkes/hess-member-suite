@@ -30,14 +30,14 @@ serve(async (req) => {
 
     const location = [city, state].filter(Boolean).join(', ');
 
-    const systemPrompt = `You write warm, professional welcome messages on behalf of the HESS Consortium, a community of private colleges and universities that share information, contacts, and best practices. Keep messages concise (about 150-200 words), genuine, and tailored to the institution. Include:
-- A warm greeting addressed to the institution (and contact name if provided)
-- A short, accurate description of the institution based on general public knowledge (founding era, type, character, notable strengths). If you are not confident in a specific fact, keep the description general.
-- A mention of the institution's location
-- A brief note on what HESS membership offers (peer collaboration, shared knowledge, contact sharing across member institutions)
-- A welcoming closing
+    const systemPrompt = `You are writing a short membership announcement on behalf of the HESS Consortium, a community of private colleges and universities that share information, contacts, and best practices.
 
-Output plain text only — no markdown, no headers, no bullet lists.`;
+Write an announcement (not a letter) that welcomes the new member institution to the consortium. The tone should be warm, professional, and celebratory. Limit the announcement to exactly 3-4 sentences and include:
+- A brief, general description of the institution based on public knowledge (type, character, or notable strengths). If uncertain, keep it general.
+- A mention of the institution's location
+- A short note about the value of HESS membership (peer collaboration, shared knowledge, contact sharing)
+
+Output plain text only — no markdown, no headers, no bullet lists, no salutation or sign-off.`;
 
     const userPrompt = `Write a welcome message for:
 Institution: ${organizationName}
