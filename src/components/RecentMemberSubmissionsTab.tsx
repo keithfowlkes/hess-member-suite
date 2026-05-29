@@ -404,6 +404,7 @@ export function RecentMemberSubmissionsTab() {
                     <TableHead>Email</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Joined</TableHead>
+                    <TableHead className="text-right">Welcome</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
