@@ -273,10 +273,10 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
             <td className="amount-cell">
               {invoice.prorated_amount ? (
                 <>
-                  <div>${invoice.prorated_amount.toLocaleString()}</div>
+                  <div>{formatCurrency(invoice.prorated_amount)}</div>
                 </>
               ) : (
-                `$${invoice.amount.toLocaleString()}`
+                formatCurrency(invoice.amount)
               )}
             </td>
           </tr>
