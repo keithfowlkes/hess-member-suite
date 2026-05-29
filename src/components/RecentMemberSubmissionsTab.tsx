@@ -545,13 +545,6 @@ export function RecentMemberSubmissionsTab() {
               <Copy className="h-4 w-4 mr-2" />
               Copy
             </Button>
-            <Button
-              onClick={handleEmailWelcome}
-              disabled={welcomeLoading || !welcomeText || !welcomeOrg || !getContactEmail(welcomeOrg)}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              Open in Email
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
