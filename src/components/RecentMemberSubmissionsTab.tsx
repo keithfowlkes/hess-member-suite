@@ -446,6 +446,19 @@ export function RecentMemberSubmissionsTab() {
                             {format(new Date(submission.created_at), 'MMM d, yyyy')}
                           </div>
                         </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleGenerateWelcome(submission);
+                            }}
+                          >
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Welcome
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
