@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { useInvoiceTemplates } from '@/hooks/useInvoiceTemplates';
 import { Invoice } from '@/hooks/useInvoices';
+import { formatCurrency } from '@/lib/utils';
 
 interface ProfessionalInvoiceProps {
   invoice: Invoice;
@@ -31,8 +32,8 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
     '{{ORGANIZATION_ADDRESS}}': getOrganizationAddress(invoice),
     '{{ORGANIZATION_EMAIL}}': invoice.organizations?.email || '',
     '{{ORGANIZATION_PHONE}}': '', // Add phone field to organizations if needed
-    '{{AMOUNT}}': `$${invoice.amount.toLocaleString()}`,
-    '{{PRORATED_AMOUNT}}': invoice.prorated_amount ? `$${invoice.prorated_amount.toLocaleString()}` : '',
+    '{{AMOUNT}}': formatCurrency(invoice.amount),
+    '{{PRORATED_AMOUNT}}': invoice.prorated_amount ? formatCurrency(invoice.prorated_amount) : '',
     '{{PERIOD_START}}': format(new Date(invoice.period_start_date), 'MMM dd, yyyy'),
     '{{PERIOD_END}}': format(new Date(invoice.period_end_date), 'MMM dd, yyyy'),
     '{{PAYMENT_TERMS}}': '30',
@@ -272,10 +273,10 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
             <td className="amount-cell">
               {invoice.prorated_amount ? (
                 <>
-                  <div>${invoice.prorated_amount.toLocaleString()}</div>
+                  <div>{formatCurrency(invoice.prorated_amount)}</div>
                 </>
               ) : (
-                `$${invoice.amount.toLocaleString()}`
+                formatCurrency(invoice.amount)
               )}
             </td>
           </tr>
@@ -284,7 +285,7 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
 
       {/* Total Due */}
       <div className="total-section">
-        <p><strong>Total Due: ${(invoice.prorated_amount || invoice.amount).toLocaleString()}</strong></p>
+        <p><strong>Total Due: {formatCurrency(invoice.prorated_amount || invoice.amount)}</strong></p>
       </div>
 
       {/* Notes */}
