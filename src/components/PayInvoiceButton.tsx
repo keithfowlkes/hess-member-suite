@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { CreditCard, Loader2 } from 'lucide-react';
 import { useStripeCheckout } from '@/hooks/useStripeCheckout';
 import { useStripeEnabled } from '@/hooks/useStripeEnabled';
+import { useToast } from '@/hooks/use-toast';
 
 interface PayInvoiceButtonProps {
   invoiceId: string;
@@ -20,17 +21,30 @@ export function PayInvoiceButton({
   className,
   label = 'Pay with card',
 }: PayInvoiceButtonProps) {
-  const { enabled } = useStripeEnabled();
+  const { enabled, isLoading } = useStripeEnabled();
   const checkout = useStripeCheckout();
+  const { toast } = useToast();
 
-  if (!enabled) return null;
+  const handleClick = () => {
+    if (!enabled) {
+      toast({
+        title: 'Online payments are not configured yet',
+        description: 'Enable Stripe in Admin Panel → Online Payments to start invoice checkout.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    checkout.mutate(invoiceId);
+  };
 
   return (
     <Button
       size={size}
       className={className}
-      onClick={() => checkout.mutate(invoiceId)}
-      disabled={checkout.isPending}
+      variant={enabled ? 'default' : 'outline'}
+      onClick={handleClick}
+      disabled={checkout.isPending || isLoading}
     >
       {checkout.isPending ? (
         <>
