@@ -509,6 +509,60 @@ export function RecentMemberSubmissionsTab() {
           setSelectedOrganization(null);
         }}
       />
+
+      <Dialog open={welcomeOpen} onOpenChange={setWelcomeOpen}>
+        <DialogContent className="max-w-2xl bg-background">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              Welcome message{welcomeOrg ? ` — ${welcomeOrg.name}` : ''}
+            </DialogTitle>
+            <DialogDescription>
+              AI-generated welcome to the HESS Consortium. Review and edit before sending.
+            </DialogDescription>
+          </DialogHeader>
+          {welcomeLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Textarea
+              value={welcomeText}
+              onChange={(e) => setWelcomeText(e.target.value)}
+              rows={14}
+              className="font-sans"
+            />
+          )}
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => welcomeOrg && handleGenerateWelcome(welcomeOrg)}
+              disabled={welcomeLoading}
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Regenerate
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(welcomeText);
+                toast.success('Copied to clipboard');
+              }}
+              disabled={welcomeLoading || !welcomeText}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              Copy
+            </Button>
+            <Button
+              onClick={handleEmailWelcome}
+              disabled={welcomeLoading || !welcomeText || !welcomeOrg || !getContactEmail(welcomeOrg)}
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              Open in Email
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
