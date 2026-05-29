@@ -510,7 +510,7 @@ export function RecentMemberSubmissionsTab() {
               Welcome message{welcomeOrg ? ` — ${welcomeOrg.name}` : ''}
             </DialogTitle>
             <DialogDescription>
-              AI-generated welcome to the HESS Consortium. Review and edit before sending.
+              AI-generated welcome to the HESS Consortium. Review and edit as needed.
             </DialogDescription>
           </DialogHeader>
           {welcomeLoading ? (
