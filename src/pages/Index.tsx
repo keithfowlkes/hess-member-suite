@@ -21,7 +21,6 @@ import { getMembershipDuesStatus } from '@/utils/membershipDuesStatus';
 import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
 import { PayInvoiceButton } from '@/components/PayInvoiceButton';
 import { MemberInvoiceViewModal } from '@/components/MemberInvoiceViewModal';
-import { FileText as FileTextIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
