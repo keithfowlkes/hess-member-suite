@@ -60,14 +60,38 @@ export function useInvoices() {
 
       // If not admin, only show invoices for user's organization
       if (!isAdmin) {
-        const { data: userOrg } = await supabase
-          .from('organizations')
-          .select('id')
-          .eq('contact_person_id', user?.id)
-          .single();
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id, organization')
+          .eq('user_id', user?.id)
+          .maybeSingle();
 
-        if (userOrg) {
+        let userOrg = null;
+
+        if (profileData?.id) {
+          const { data: primaryOrg } = await supabase
+            .from('organizations')
+            .select('id')
+            .eq('contact_person_id', profileData.id)
+            .maybeSingle();
+
+          userOrg = primaryOrg;
+        }
+
+        if (!userOrg && profileData?.organization) {
+          const { data: memberOrg } = await supabase
+            .from('organizations')
+            .select('id')
+            .eq('name', profileData.organization)
+            .maybeSingle();
+
+          userOrg = memberOrg;
+        }
+
+        if (userOrg?.id) {
           query = query.eq('organization_id', userOrg.id);
+        } else {
+          query = query.eq('organization_id', '__no_matching_organization__');
         }
       }
 
