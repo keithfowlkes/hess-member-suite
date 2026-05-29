@@ -40,6 +40,7 @@ const Index = () => {
   const queryClient = useQueryClient();
   const [unansweredSurveys, setUnansweredSurveys] = useState<number>(0);
   const [surveyAlertDismissed, setSurveyAlertDismissed] = useState(false);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
 
   // Handle Stripe success/cancel redirect
   useEffect(() => {
