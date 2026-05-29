@@ -30,6 +30,17 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
             <ProfessionalInvoice invoice={invoice} />
           </div>
         </div>
+
+        {isUnpaid && (
+          <div className="mt-6 flex justify-center">
+            <PayInvoiceButton
+              invoiceId={invoice.id}
+              size="default"
+              label="Pay online"
+              className="w-full max-w-md"
+            />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
