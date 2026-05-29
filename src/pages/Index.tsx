@@ -454,10 +454,20 @@ const Index = () => {
                           showUnpaidFallback={showFallback}
                         />
                         {!isAdministrator && currentPeriodUnpaidInvoice && (
-                          <PayInvoiceButton
-                            invoiceId={currentPeriodUnpaidInvoice.id}
-                            size="sm"
-                          />
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setInvoiceModalOpen(true)}
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              View Invoice
+                            </Button>
+                            <PayInvoiceButton
+                              invoiceId={currentPeriodUnpaidInvoice.id}
+                              size="sm"
+                            />
+                          </>
                         )}
                       </div>
                     </div>
@@ -465,6 +475,11 @@ const Index = () => {
                 </Card>
               );
             })()}
+            <MemberInvoiceViewModal
+              open={invoiceModalOpen}
+              onOpenChange={setInvoiceModalOpen}
+              invoice={currentPeriodUnpaidInvoice ?? null}
+            />
 
 
             {/* Stats Grid */}
