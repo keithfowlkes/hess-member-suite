@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getMembershipDuesStatus } from '@/utils/membershipDuesStatus';
 import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
 import { PayInvoiceButton } from '@/components/PayInvoiceButton';
+import { MemberInvoiceViewModal } from '@/components/MemberInvoiceViewModal';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -39,6 +40,7 @@ const Index = () => {
   const queryClient = useQueryClient();
   const [unansweredSurveys, setUnansweredSurveys] = useState<number>(0);
   const [surveyAlertDismissed, setSurveyAlertDismissed] = useState(false);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
 
   // Handle Stripe success/cancel redirect
   useEffect(() => {
@@ -452,10 +454,20 @@ const Index = () => {
                           showUnpaidFallback={showFallback}
                         />
                         {!isAdministrator && currentPeriodUnpaidInvoice && (
-                          <PayInvoiceButton
-                            invoiceId={currentPeriodUnpaidInvoice.id}
-                            size="sm"
-                          />
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setInvoiceModalOpen(true)}
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              View Invoice
+                            </Button>
+                            <PayInvoiceButton
+                              invoiceId={currentPeriodUnpaidInvoice.id}
+                              size="sm"
+                            />
+                          </>
                         )}
                       </div>
                     </div>
@@ -463,6 +475,11 @@ const Index = () => {
                 </Card>
               );
             })()}
+            <MemberInvoiceViewModal
+              open={invoiceModalOpen}
+              onOpenChange={setInvoiceModalOpen}
+              invoice={currentPeriodUnpaidInvoice ?? null}
+            />
 
 
             {/* Stats Grid */}
