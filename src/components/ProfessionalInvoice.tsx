@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { useInvoiceTemplates } from '@/hooks/useInvoiceTemplates';
 import { Invoice } from '@/hooks/useInvoices';
+import { formatCurrency } from '@/lib/utils';
 
 interface ProfessionalInvoiceProps {
   invoice: Invoice;
