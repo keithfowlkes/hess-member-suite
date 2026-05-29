@@ -237,7 +237,7 @@ export function RecentMemberSubmissionsTab() {
       setWelcomeText((data as any)?.message || '');
     } catch (e: any) {
       console.error('Welcome generation failed:', e);
-      toast.error(e?.message || 'Failed to generate welcome message');
+      toast.error(e?.message || 'Failed to generate announcement');
       setWelcomeOpen(false);
     } finally {
       setWelcomeLoading(false);
@@ -396,7 +396,7 @@ export function RecentMemberSubmissionsTab() {
                     <TableHead>Email</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Welcome</TableHead>
+                    <TableHead className="text-right">Announce</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -448,7 +448,7 @@ export function RecentMemberSubmissionsTab() {
                             }}
                           >
                             <Sparkles className="h-3 w-3 mr-1" />
-                            Welcome
+                            Announce
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -507,10 +507,10 @@ export function RecentMemberSubmissionsTab() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
-              Welcome message{welcomeOrg ? ` — ${welcomeOrg.name}` : ''}
+              Membership announcement{welcomeOrg ? ` — ${welcomeOrg.name}` : ''}
             </DialogTitle>
             <DialogDescription>
-              AI-generated welcome to the HESS Consortium. Review and edit as needed.
+              AI-generated announcement welcoming the new member to the HESS Consortium. Review and edit as needed.
             </DialogDescription>
           </DialogHeader>
           {welcomeLoading ? (
@@ -521,7 +521,7 @@ export function RecentMemberSubmissionsTab() {
             <Textarea
               value={welcomeText}
               onChange={(e) => setWelcomeText(e.target.value)}
-              rows={14}
+              rows={6}
               className="font-sans"
             />
           )}
