@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Mail, Building2, Calendar, Search, ChevronLeft, ChevronRight, Download, CalendarIcon } from 'lucide-react';
+import { Loader2, Mail, Building2, Calendar, Search, ChevronLeft, ChevronRight, Download, CalendarIcon, Sparkles, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { OrganizationViewModal } from '@/components/OrganizationViewModal';
 import { Organization } from '@/hooks/useMembers';
@@ -21,6 +21,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 interface RecentSubmission {
   id: string;
