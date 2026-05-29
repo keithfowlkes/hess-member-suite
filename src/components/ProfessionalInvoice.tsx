@@ -285,7 +285,7 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
 
       {/* Total Due */}
       <div className="total-section">
-        <p><strong>Total Due: ${(invoice.prorated_amount || invoice.amount).toLocaleString()}</strong></p>
+        <p><strong>Total Due: {formatCurrency(invoice.prorated_amount || invoice.amount)}</strong></p>
       </div>
 
       {/* Notes */}
