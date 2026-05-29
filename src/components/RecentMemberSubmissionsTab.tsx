@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Mail, Building2, Calendar, Search, ChevronLeft, ChevronRight, Download, CalendarIcon } from 'lucide-react';
+import { Loader2, Mail, Building2, Calendar, Search, ChevronLeft, ChevronRight, Download, CalendarIcon, Sparkles, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { OrganizationViewModal } from '@/components/OrganizationViewModal';
 import { Organization } from '@/hooks/useMembers';
@@ -21,6 +21,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 interface RecentSubmission {
   id: string;
@@ -50,6 +52,10 @@ export function RecentMemberSubmissionsTab() {
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadFrom, setDownloadFrom] = useState<Date | undefined>();
   const [downloadTo, setDownloadTo] = useState<Date | undefined>();
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeLoading, setWelcomeLoading] = useState(false);
+  const [welcomeOrg, setWelcomeOrg] = useState<RecentSubmission | null>(null);
+  const [welcomeText, setWelcomeText] = useState('');
 
   useEffect(() => {
     fetchAllSubmissions();
@@ -212,6 +218,40 @@ export function RecentMemberSubmissionsTab() {
     setCurrentPage(prev => Math.min(totalPages, prev + 1));
   };
 
+  const handleGenerateWelcome = async (submission: RecentSubmission) => {
+    setWelcomeOrg(submission);
+    setWelcomeText('');
+    setWelcomeOpen(true);
+    setWelcomeLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-welcome-message', {
+        body: {
+          organizationName: submission.name,
+          city: submission.city,
+          state: submission.state,
+          contactName: getContactName(submission),
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setWelcomeText((data as any)?.message || '');
+    } catch (e: any) {
+      console.error('Welcome generation failed:', e);
+      toast.error(e?.message || 'Failed to generate welcome message');
+      setWelcomeOpen(false);
+    } finally {
+      setWelcomeLoading(false);
+    }
+  };
+
+  const handleEmailWelcome = () => {
+    if (!welcomeOrg) return;
+    const to = getContactEmail(welcomeOrg) || '';
+    const subject = `Welcome to the HESS Consortium, ${welcomeOrg.name}`;
+    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(welcomeText)}`;
+  };
+
+
   const handleDownload = () => {
     if (!downloadFrom || !downloadTo) {
       toast.error('Please select both start and end dates');
@@ -364,6 +404,7 @@ export function RecentMemberSubmissionsTab() {
                     <TableHead>Email</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Joined</TableHead>
+                    <TableHead className="text-right">Welcome</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -404,6 +445,19 @@ export function RecentMemberSubmissionsTab() {
                             <Calendar className="h-3 w-3" />
                             {format(new Date(submission.created_at), 'MMM d, yyyy')}
                           </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleGenerateWelcome(submission);
+                            }}
+                          >
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Welcome
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -455,6 +509,60 @@ export function RecentMemberSubmissionsTab() {
           setSelectedOrganization(null);
         }}
       />
+
+      <Dialog open={welcomeOpen} onOpenChange={setWelcomeOpen}>
+        <DialogContent className="max-w-2xl bg-background">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              Welcome message{welcomeOrg ? ` — ${welcomeOrg.name}` : ''}
+            </DialogTitle>
+            <DialogDescription>
+              AI-generated welcome to the HESS Consortium. Review and edit before sending.
+            </DialogDescription>
+          </DialogHeader>
+          {welcomeLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Textarea
+              value={welcomeText}
+              onChange={(e) => setWelcomeText(e.target.value)}
+              rows={14}
+              className="font-sans"
+            />
+          )}
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => welcomeOrg && handleGenerateWelcome(welcomeOrg)}
+              disabled={welcomeLoading}
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Regenerate
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(welcomeText);
+                toast.success('Copied to clipboard');
+              }}
+              disabled={welcomeLoading || !welcomeText}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              Copy
+            </Button>
+            <Button
+              onClick={handleEmailWelcome}
+              disabled={welcomeLoading || !welcomeText || !welcomeOrg || !getContactEmail(welcomeOrg)}
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              Open in Email
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
