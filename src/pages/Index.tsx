@@ -19,6 +19,9 @@ import { useSurveys } from '@/hooks/useSurveys';
 import { supabase } from '@/integrations/supabase/client';
 import { getMembershipDuesStatus } from '@/utils/membershipDuesStatus';
 import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
+import { PayInvoiceButton } from '@/components/PayInvoiceButton';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { useState, useEffect } from 'react';
 
@@ -30,10 +33,36 @@ const Index = () => {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const { data: unifiedProfileData, loading: profileLoading } = useUnifiedProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
-  const { invoices, loading: invoicesLoading } = useInvoices();
+  const { invoices, loading: invoicesLoading, fetchInvoices } = useInvoices();
   const { data: surveys } = useSurveys();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [unansweredSurveys, setUnansweredSurveys] = useState<number>(0);
   const [surveyAlertDismissed, setSurveyAlertDismissed] = useState(false);
+
+  // Handle Stripe success/cancel redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    if (payment === 'success') {
+      toast({
+        title: 'Payment received',
+        description: 'Thank you — your membership invoice has been paid.',
+      });
+      fetchInvoices();
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+      // Clean the URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (payment === 'cancelled') {
+      toast({
+        title: 'Payment cancelled',
+        description: 'No charge was made. You can try again any time.',
+        variant: 'destructive',
+      });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Use organization data from unified profile
   const userOrganization = unifiedProfileData?.organization;
@@ -417,10 +446,18 @@ const Index = () => {
                       <div className="text-sm text-muted-foreground">
                         Current status of your HESS Consortium annual membership dues.
                       </div>
-                      <MembershipDuesBadge
-                        invoices={isAdministrator ? [] : invoices}
-                        showUnpaidFallback={showFallback}
-                      />
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <MembershipDuesBadge
+                          invoices={isAdministrator ? [] : invoices}
+                          showUnpaidFallback={showFallback}
+                        />
+                        {!isAdministrator && currentPeriodUnpaidInvoice && (
+                          <PayInvoiceButton
+                            invoiceId={currentPeriodUnpaidInvoice.id}
+                            size="sm"
+                          />
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
