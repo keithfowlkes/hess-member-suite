@@ -68,10 +68,13 @@ const Index = () => {
 
   // Use organization data from unified profile
   const userOrganization = unifiedProfileData?.organization;
+  const organizationInvoices = userOrganization?.id
+    ? invoices.filter((invoice) => invoice.organization_id === userOrganization.id)
+    : [];
 
   // Membership-dues status (PAID / DUE badges) — shared helper for consistency
   const { isPaid: duesPaidForCurrentPeriod, unpaidInvoice: currentPeriodUnpaidInvoice } =
-    getMembershipDuesStatus(invoices);
+    getMembershipDuesStatus(organizationInvoices);
 
   // Check for unanswered active surveys
   useEffect(() => {
@@ -139,7 +142,7 @@ const Index = () => {
   }
 
   // Calculate outstanding balance from invoices
-  const outstandingBalance = invoices
+  const outstandingBalance = organizationInvoices
     .filter(invoice => invoice.status !== 'paid')
     .reduce((total, invoice) => total + (invoice.prorated_amount || invoice.amount), 0);
 
