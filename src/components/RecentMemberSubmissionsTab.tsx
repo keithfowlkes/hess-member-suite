@@ -244,14 +244,6 @@ export function RecentMemberSubmissionsTab() {
     }
   };
 
-  const handleEmailWelcome = () => {
-    if (!welcomeOrg) return;
-    const to = getContactEmail(welcomeOrg) || '';
-    const subject = `Welcome to the HESS Consortium, ${welcomeOrg.name}`;
-    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(welcomeText)}`;
-  };
-
-
   const handleDownload = () => {
     if (!downloadFrom || !downloadTo) {
       toast.error('Please select both start and end dates');
