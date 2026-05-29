@@ -31,6 +31,10 @@ interface StripeSettingsForm {
   mode: StripeMode;
   publishable_key_test: string;
   publishable_key_live: string;
+  secret_key_test: string;
+  secret_key_live: string;
+  webhook_secret_test: string;
+  webhook_secret_live: string;
   account_id: string;
   default_currency: string;
   statement_descriptor: string;
@@ -51,6 +55,10 @@ const DEFAULTS: StripeSettingsForm = {
   mode: 'test',
   publishable_key_test: '',
   publishable_key_live: '',
+  secret_key_test: '',
+  secret_key_live: '',
+  webhook_secret_test: '',
+  webhook_secret_live: '',
   account_id: '',
   default_currency: 'usd',
   statement_descriptor: '',
@@ -237,26 +245,67 @@ export function StripeSettings() {
             </div>
           </div>
 
+          <Separator />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="sk-test">Secret key (test)</Label>
+              <Input
+                id="sk-test"
+                type="password"
+                autoComplete="off"
+                placeholder="sk_test_..."
+                value={form.secret_key_test}
+                onChange={(e) => update('secret_key_test', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sk-live">Secret key (live)</Label>
+              <Input
+                id="sk-live"
+                type="password"
+                autoComplete="off"
+                placeholder="sk_live_..."
+                value={form.secret_key_live}
+                onChange={(e) => update('secret_key_live', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="whsec-test">Webhook signing secret (test)</Label>
+              <Input
+                id="whsec-test"
+                type="password"
+                autoComplete="off"
+                placeholder="whsec_..."
+                value={form.webhook_secret_test}
+                onChange={(e) => update('webhook_secret_test', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="whsec-live">Webhook signing secret (live)</Label>
+              <Input
+                id="whsec-live"
+                type="password"
+                autoComplete="off"
+                placeholder="whsec_..."
+                value={form.webhook_secret_live}
+                onChange={(e) => update('webhook_secret_live', e.target.value)}
+              />
+            </div>
+          </div>
+
           <Alert>
             <ShieldCheck className="h-4 w-4" />
-            <AlertTitle>Secret keys stay in Supabase</AlertTitle>
-            <AlertDescription className="space-y-2">
+            <AlertTitle>Where to find these</AlertTitle>
+            <AlertDescription className="space-y-1 text-sm">
               <p>
-                Add the following secrets in the Supabase dashboard. They will be available to
-                edge functions and never exposed to the browser:
+                Secret keys: Stripe Dashboard → Developers → API keys. Webhook signing secrets:
+                Stripe Dashboard → Developers → Webhooks → your endpoint.
               </p>
-              <ul className="list-disc pl-5 text-sm">
-                <li><code>STRIPE_SECRET_KEY_TEST</code></li>
-                <li><code>STRIPE_SECRET_KEY_LIVE</code></li>
-                <li><code>STRIPE_WEBHOOK_SECRET_TEST</code></li>
-                <li><code>STRIPE_WEBHOOK_SECRET_LIVE</code></li>
-              </ul>
-              <Button asChild variant="outline" size="sm" className="mt-2">
-                <a href={SUPABASE_SECRETS_URL} target="_blank" rel="noreferrer">
-                  Open Supabase secrets
-                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-                </a>
-              </Button>
+              <p>
+                Values are stored encrypted at rest and only read by the payment edge functions —
+                they are never exposed to the browser.
+              </p>
             </AlertDescription>
           </Alert>
         </CardContent>
