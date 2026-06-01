@@ -14,7 +14,12 @@ Deno.serve(async (req) => {
 
   try {
     console.log('🗑️ Delete user function called');
-    
+
+    // Require an authenticated admin caller
+    const authResult = await requireAdmin(req);
+    if (authResult instanceof Response) return authResult;
+    const callerUserId = authResult.userId;
+
     const { userId } = await req.json();
     
     if (!userId) {
