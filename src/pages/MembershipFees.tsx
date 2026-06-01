@@ -2109,6 +2109,7 @@ export default function MembershipFees() {
                             const totalActions = toMarkExisting.length + toCreatePaid.length;
 
                             if (totalActions === 0) {
+                              setIsMarkingPaid(false);
                               toast({
                                 title: 'Nothing to update',
                                 description: `All ${alreadyPaidCount} selected organization(s) are already marked paid.`,
@@ -2122,10 +2123,10 @@ export default function MembershipFees() {
                               `• ${toCreatePaid.length} paid-status invoice(s) will be created (no email sent)` +
                               `${alreadyPaidCount > 0 ? `\n• ${alreadyPaidCount} already paid — skipped` : ''}`
                             )) {
+                              setIsMarkingPaid(false);
                               return;
                             }
 
-                            setIsMarkingPaid(true);
                             let successCount = 0;
                             const failures: string[] = [];
                             const nowIso = new Date().toISOString();
