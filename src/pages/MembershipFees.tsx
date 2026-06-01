@@ -22,6 +22,7 @@ import { useResendInvoice } from '@/hooks/useResendInvoice';
 import { useSystemSettings, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
 import { Switch } from '@/components/ui/switch';
 import { renderInvoiceEmailHTML } from '@/utils/invoiceEmailRenderer';
+import { isDuesPaidForCurrentPeriod } from '@/utils/membershipDuesStatus';
 import { setupDefaultInvoiceTemplate } from '@/utils/setupDefaultInvoiceTemplate';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { InvoiceDialog } from '@/components/InvoiceDialog';
@@ -614,14 +615,15 @@ export default function MembershipFees() {
     return new Date(org.membership_end_date) < new Date() && org.membership_status !== 'active';
   });
 
-  // Get organizations with their payment status
+  // Get organization's payment status. Uses the same "current membership period"
+  // logic as the Admin -> Member Organizations listing so the two views stay in
+  // sync: an org is 'paid' when it has ANY paid invoice covering today's date
+  // (or, as a fallback, any paid invoice in the current calendar year).
   const getPaymentStatus = (organizationId: string) => {
     const orgInvoices = invoices.filter(inv => inv.organization_id === organizationId);
-    if (orgInvoices.length === 0) return 'pending';
-    
-    const latestInvoice = orgInvoices.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-    return latestInvoice.status === 'paid' ? 'paid' : 'pending';
+    return isDuesPaidForCurrentPeriod(orgInvoices) ? 'paid' : 'pending';
   };
+
 
   // Filter invoices for search
   const filteredInvoices = invoices.filter(invoice => {
