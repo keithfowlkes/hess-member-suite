@@ -53,22 +53,22 @@ export function PayInvoiceButton({
         <CreditCard className="h-4 w-4 mr-2" />
         {label}
       </Button>
-      <EmbeddedCheckoutDialog
-        open={open}
-        onOpenChange={setOpen}
-        invoiceId={invoiceId}
-        onCompleted={() => {
-          toast({
-            title: 'Payment submitted',
-            description:
-              'We received your payment. The invoice will be marked paid once Stripe confirms it.',
-          });
-          // Refresh any invoice-related queries so the UI flips to paid
-          // as soon as the webhook updates the database.
-          queryClient.invalidateQueries({ queryKey: ['invoices'] });
-          queryClient.invalidateQueries({ queryKey: ['member-invoices'] });
-        }}
-      />
+      {open && (
+        <EmbeddedCheckoutDialog
+          open={open}
+          onOpenChange={setOpen}
+          invoiceId={invoiceId}
+          onCompleted={() => {
+            toast({
+              title: 'Payment submitted',
+              description:
+                'We received your payment. The invoice will be marked paid once Stripe confirms it.',
+            });
+            queryClient.invalidateQueries({ queryKey: ['invoices'] });
+            queryClient.invalidateQueries({ queryKey: ['member-invoices'] });
+          }}
+        />
+      )}
     </>
   );
 }

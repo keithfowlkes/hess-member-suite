@@ -563,18 +563,20 @@ export function StripeSettings() {
         </CardContent>
       </Card>
 
-      <EmbeddedCheckoutDialog
-        open={testOpen}
-        onOpenChange={setTestOpen}
-        testMode
-        testAmount={Number(testAmount) || 1}
-        onCompleted={() => {
-          toast({
-            title: 'Test payment submitted',
-            description: 'Check the Stripe Dashboard to confirm the charge.',
-          });
-        }}
-      />
+      {testOpen && (
+        <EmbeddedCheckoutDialog
+          open={testOpen}
+          onOpenChange={setTestOpen}
+          testMode
+          testAmount={Number(testAmount) || 1}
+          onCompleted={() => {
+            toast({
+              title: 'Test payment submitted',
+              description: 'Check the Stripe Dashboard to confirm the charge.',
+            });
+          }}
+        />
+      )}
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving} size="lg">
