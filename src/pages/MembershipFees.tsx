@@ -22,6 +22,7 @@ import { useResendInvoice } from '@/hooks/useResendInvoice';
 import { useSystemSettings, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
 import { Switch } from '@/components/ui/switch';
 import { renderInvoiceEmailHTML } from '@/utils/invoiceEmailRenderer';
+import { isDuesPaidForCurrentPeriod } from '@/utils/membershipDuesStatus';
 import { setupDefaultInvoiceTemplate } from '@/utils/setupDefaultInvoiceTemplate';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { InvoiceDialog } from '@/components/InvoiceDialog';
