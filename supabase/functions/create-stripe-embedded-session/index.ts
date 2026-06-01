@@ -68,8 +68,19 @@ Deno.serve(async (req) => {
     const testMode = body?.testMode === true;
     const invoiceId = String(body?.invoiceId ?? "");
 
+    // Caller's admin status — admins may bypass the "stripe_enabled" toggle
+    // so they can verify the embedded flow from the member view while only
+    // test keys are loaded.
+    const { data: adminRoleRow } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    const isAdmin = !!adminRoleRow;
+
     const settings = await loadSettings(admin);
-    if (settings.stripe_enabled !== "true") {
+    if (settings.stripe_enabled !== "true" && !isAdmin) {
       return json({ error: "Stripe payments are not enabled" }, 400);
     }
     const mode = settings.stripe_mode === "live" ? "live" : "test";
@@ -88,6 +99,7 @@ Deno.serve(async (req) => {
         500,
       );
     }
+
     const currency = (settings.stripe_default_currency || "usd").toLowerCase();
     const origin = req.headers.get("origin") ?? "";
 
@@ -101,13 +113,9 @@ Deno.serve(async (req) => {
 
     if (testMode) {
       // Admin-only smoke test — verify keys & embedded UI works end-to-end.
-      const { data: roleRow } = await admin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (!roleRow) return json({ error: "Forbidden: admin only" }, 403);
+      if (!isAdmin) return json({ error: "Forbidden: admin only" }, 403);
+
+
 
       const requested = Number(body?.amount);
       amountCents = Number.isFinite(requested) && requested > 0
@@ -123,31 +131,36 @@ Deno.serve(async (req) => {
     } else {
       if (!invoiceId) return json({ error: "invoiceId required" }, 400);
 
-      const { data: profile } = await admin
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!profile) return json({ error: "Profile not found" }, 403);
-
-      const { data: org } = await admin
-        .from("organizations")
-        .select("id, name, email")
-        .eq("contact_person_id", profile.id)
-        .maybeSingle();
-      if (!org) {
-        return json({ error: "Organization not found for caller" }, 403);
-      }
-
       const { data: invoice, error: invErr } = await admin
         .from("invoices")
         .select("*")
         .eq("id", invoiceId)
         .maybeSingle();
       if (invErr || !invoice) return json({ error: "Invoice not found" }, 404);
-      if (invoice.organization_id !== org.id) {
-        return json({ error: "Forbidden" }, 403);
+
+      // Members may only pay invoices for their own org. Admins may pay any
+      // invoice (used for testing the embedded flow from the member view).
+      if (!isAdmin) {
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!profile) return json({ error: "Profile not found" }, 403);
+
+        const { data: org } = await admin
+          .from("organizations")
+          .select("id, name, email")
+          .eq("contact_person_id", profile.id)
+          .maybeSingle();
+        if (!org) {
+          return json({ error: "Organization not found for caller" }, 403);
+        }
+        if (invoice.organization_id !== org.id) {
+          return json({ error: "Forbidden" }, 403);
+        }
       }
+
       if (invoice.status === "paid") {
         return json({ error: "Invoice already paid" }, 400);
       }
@@ -164,11 +177,21 @@ Deno.serve(async (req) => {
         `Membership period ${invoice.period_start_date} to ${invoice.period_end_date}`;
       metadata = {
         invoice_id: invoice.id,
-        organization_id: org.id,
+        organization_id: invoice.organization_id,
         invoice_number: invoice.invoice_number,
+        ...(isAdmin && settings.stripe_enabled !== "true"
+          ? { admin_test: "true", initiated_by: user.id }
+          : {}),
       };
       clientReferenceId = invoice.id;
-      customerEmail = org.email ?? "";
+      // Look up the org email for the receipt (admins may be paying any org).
+      const { data: invoiceOrg } = await admin
+        .from("organizations")
+        .select("email")
+        .eq("id", invoice.organization_id)
+        .maybeSingle();
+      customerEmail = invoiceOrg?.email ?? user.email ?? "";
+
       returnUrl =
         `${origin}/?payment=success&invoice=${invoice.id}&session_id={CHECKOUT_SESSION_ID}`;
     }

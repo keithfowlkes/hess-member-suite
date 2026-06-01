@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, FlaskConical } from 'lucide-react';
 import { useStripeEnabled } from '@/hooks/useStripeEnabled';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { EmbeddedCheckoutDialog } from '@/components/EmbeddedCheckoutDialog';
 import { useQueryClient } from '@tanstack/react-query';
-
 
 interface PayInvoiceButtonProps {
   invoiceId: string;
@@ -17,7 +17,9 @@ interface PayInvoiceButtonProps {
 
 /**
  * "Pay with card" button that opens Stripe's secure embedded checkout
- * inline (no redirect). Renders disabled when Stripe is not configured.
+ * inline (no redirect). Renders disabled when Stripe is not configured —
+ * except for admins, who can always launch the embedded flow to test it
+ * from the member view while keys are still in test mode.
  */
 export function PayInvoiceButton({
   invoiceId,
@@ -26,14 +28,17 @@ export function PayInvoiceButton({
   label = 'Pay with card',
 }: PayInvoiceButtonProps) {
   const { enabled, isLoading } = useStripeEnabled();
+  const { isAdmin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
+  const canPay = enabled || isAdmin;
+  const adminTestOnly = !enabled && isAdmin;
 
   const handleClick = () => {
-    if (!enabled) {
+    if (!canPay) {
       toast({
         title: 'Online payments are not configured yet',
         description:
@@ -41,6 +46,13 @@ export function PayInvoiceButton({
         variant: 'destructive',
       });
       return;
+    }
+    if (adminTestOnly) {
+      toast({
+        title: 'Admin test mode',
+        description:
+          'Online payments are toggled off — launching embedded checkout with the configured test keys for admin verification.',
+      });
     }
     setOpen(true);
   };
@@ -53,9 +65,14 @@ export function PayInvoiceButton({
         variant={enabled ? 'default' : 'outline'}
         onClick={handleClick}
         disabled={isLoading}
+        title={adminTestOnly ? 'Admin test mode — payments toggle is off' : undefined}
       >
-        <CreditCard className="h-4 w-4 mr-2" />
-        {label}
+        {adminTestOnly ? (
+          <FlaskConical className="h-4 w-4 mr-2" />
+        ) : (
+          <CreditCard className="h-4 w-4 mr-2" />
+        )}
+        {adminTestOnly ? `${label} (admin test)` : label}
       </Button>
       {open && (
         <EmbeddedCheckoutDialog
@@ -72,7 +89,7 @@ export function PayInvoiceButton({
           }}
         />
       )}
-
     </>
   );
 }
+
