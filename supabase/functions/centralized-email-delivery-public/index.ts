@@ -41,6 +41,60 @@ interface EmailRequest {
   debug?: boolean;
 }
 
+// Allowlisted email types that may be sent WITHOUT authentication.
+// All types are template-driven; arbitrary HTML is not permitted in this path.
+const PUBLIC_ALLOWED_TYPES = new Set<string>([
+  'test',
+  'password_reset',
+  'password-reset',
+  'registration_welcome',
+  'registration_received',
+  'registration_confirmation',
+  'approval_notification',
+  'welcome',
+  'organization',
+  'invoice',
+  'overdue_reminder',
+  'overdue-reminder',
+  'unauthorized_update_warning',
+]);
+
+// Types that ALWAYS require authentication regardless of allowlist
+const AUTH_REQUIRED_TYPES = new Set<string>(['custom']);
+
+const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+async function isAuthorized(req: Request): Promise<boolean> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) return false;
+  const token = authHeader.replace('Bearer ', '').trim();
+  if (!token) return false;
+  if (SERVICE_ROLE_KEY && token === SERVICE_ROLE_KEY) return true;
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user?.id) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Simple in-memory per-IP rate limiter (best-effort; resets on cold start)
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 20;
+const ipHits = new Map<string, { count: number; resetAt: number }>();
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = ipHits.get(ip);
+  if (!entry || entry.resetAt < now) {
+    ipHits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  if (entry.count > RATE_LIMIT_MAX) return true;
+  return false;
+}
+
 serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   if (req.method !== 'POST') return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
@@ -56,6 +110,58 @@ serve(async (req: Request): Promise<Response> => {
       debug: emailRequest.debug ?? false,
       startTs,
     });
+
+    // ---- Security gating ----
+    const rawType = (emailRequest.type || '').toString();
+    const normalizedType = rawType.replace(/-/g, '_');
+    const authed = await isAuthorized(req);
+
+    // 1. Reject custom HTML templates unless authenticated
+    if (AUTH_REQUIRED_TYPES.has(rawType) || AUTH_REQUIRED_TYPES.has(normalizedType)) {
+      if (!authed) {
+        console.warn('[centralized-email-delivery-public] Rejected unauthenticated custom email', { correlationId });
+        return new Response(
+          JSON.stringify({ success: false, error: 'Authentication required for custom email templates', correlationId }),
+          { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+    }
+
+    // 2. Reject attachments unless authenticated
+    if (emailRequest.attachments?.length) {
+      if (!authed) {
+        console.warn('[centralized-email-delivery-public] Rejected unauthenticated attachments', { correlationId });
+        return new Response(
+          JSON.stringify({ success: false, error: 'Authentication required to send attachments', correlationId }),
+          { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+    }
+
+    // 3. Enforce template-type allowlist for unauthenticated callers
+    if (!authed && !PUBLIC_ALLOWED_TYPES.has(rawType) && !PUBLIC_ALLOWED_TYPES.has(normalizedType)) {
+      console.warn('[centralized-email-delivery-public] Rejected unauthenticated email type', { correlationId, type: rawType });
+      return new Response(
+        JSON.stringify({ success: false, error: `Email type '${rawType}' is not permitted for unauthenticated callers`, correlationId }),
+        { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    // 4. Per-IP rate limit unauthenticated callers
+    if (!authed) {
+      const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
+        || req.headers.get('cf-connecting-ip')
+        || 'unknown';
+      if (rateLimited(ip)) {
+        console.warn('[centralized-email-delivery-public] Rate limit exceeded', { correlationId, ip });
+        return new Response(
+          JSON.stringify({ success: false, error: 'Rate limit exceeded', correlationId }),
+          { status: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+    }
+    // ---- End security gating ----
+
 
     // Determine sender
     let configuredFrom = '';

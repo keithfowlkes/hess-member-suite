@@ -699,7 +699,7 @@ export default function Auth() {
             if (currentOrg?.email) {
               console.log('📧 MEMBER UPDATE DEBUG: Sending notification email to current contact:', currentOrg.email);
               
-              const { error: emailError } = await supabase.functions.invoke('centralized-email-delivery', {
+              const { error: emailError } = await supabase.functions.invoke('centralized-email-delivery-public', {
                 body: {
                   type: 'unauthorized_update_warning',
                   to: currentOrg.email,

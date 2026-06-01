@@ -99,6 +99,25 @@ async function logEmailActivity(emailData: EmailRequest, success: boolean, resul
   }
 }
 
+const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+async function isAuthorized(req: Request): Promise<boolean> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) return false;
+  const token = authHeader.replace('Bearer ', '').trim();
+  if (!token) return false;
+  // Allow server-to-server invocations using the service role key
+  if (SERVICE_ROLE_KEY && token === SERVICE_ROLE_KEY) return true;
+  // Otherwise require a valid user JWT
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user?.id) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -112,6 +131,15 @@ const handler = async (req: Request): Promise<Response> => {
         status: 405, 
         headers: { "Content-Type": "application/json", ...corsHeaders } 
       }
+    );
+  }
+
+  // Require authentication (service role or valid user JWT)
+  if (!(await isAuthorized(req))) {
+    console.warn('[centralized-email-delivery] Unauthorized request rejected');
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
 
