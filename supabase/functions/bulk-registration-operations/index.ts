@@ -54,12 +54,12 @@ serve(async (req) => {
         try {
           console.log(`Processing approval for registration: ${registrationId}`);
           
-          // Call the existing approve-pending-registration function
+          // Call the existing approve-pending-registration function (forward caller JWT)
           const { data, error } = await supabaseAdmin.functions.invoke('approve-pending-registration', {
             body: {
               registrationId,
-              adminUserId
-            }
+            },
+            headers: callerAuthHeader ? { Authorization: callerAuthHeader } : undefined,
           });
 
           if (error) {
