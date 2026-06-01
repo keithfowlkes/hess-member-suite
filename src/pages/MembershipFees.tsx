@@ -85,6 +85,7 @@ export default function MembershipFees() {
   const [selectedOrganizations, setSelectedOrganizations] = useState<Set<string>>(new Set());
   const [isSendingInvoices, setIsSendingInvoices] = useState(false);
   const [isUpdatingFeeTiers, setIsUpdatingFeeTiers] = useState(false);
+  const [isMarkingPaid, setIsMarkingPaid] = useState(false);
   const [feeTierUpdateProgress, setFeeTierUpdateProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
   const [feeTierUpdateResults, setFeeTierUpdateResults] = useState<{ successCount: number; failures: string[] } | null>(null);
   
