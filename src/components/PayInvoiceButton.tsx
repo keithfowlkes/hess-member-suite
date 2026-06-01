@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { CreditCard } from 'lucide-react';
 import { useStripeEnabled } from '@/hooks/useStripeEnabled';
 import { useToast } from '@/hooks/use-toast';
 import { EmbeddedCheckoutDialog } from '@/components/EmbeddedCheckoutDialog';
 import { useQueryClient } from '@tanstack/react-query';
+
 
 interface PayInvoiceButtonProps {
   invoiceId: string;
