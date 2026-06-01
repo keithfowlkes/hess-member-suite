@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { requireAdmin } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,7 +14,12 @@ Deno.serve(async (req) => {
 
   try {
     console.log('🗑️ Delete user function called');
-    
+
+    // Require an authenticated admin caller
+    const authResult = await requireAdmin(req);
+    if (authResult instanceof Response) return authResult;
+    const callerUserId = authResult.userId;
+
     const { userId } = await req.json();
     
     if (!userId) {
@@ -169,11 +175,12 @@ Deno.serve(async (req) => {
         action: 'user_deleted',
         entity_type: 'user',
         entity_id: userId,
+        user_id: callerUserId,
         details: { 
           authUserExists: authUserExists,
           authDeleteSuccess: authDeleteSuccess,
           cleanupResults: cleanupResults,
-          deletedBy: 'admin_function'
+          deletedBy: callerUserId
         }
       });
     } catch (auditError) {

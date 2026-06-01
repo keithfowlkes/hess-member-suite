@@ -414,8 +414,8 @@ const handler = async (req: Request): Promise<Response> => {
           const { data: deleteResult, error: deleteError } = await supabase.functions.invoke('delete-organization', {
             body: {
               organizationId: existingOrganization.id,
-              adminUserId: adminUserId
-            }
+            },
+            headers: req.headers.get('Authorization') ? { Authorization: req.headers.get('Authorization')! } : undefined,
           });
 
           if (deleteError) {

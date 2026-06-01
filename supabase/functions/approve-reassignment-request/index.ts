@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { requireAdmin } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +14,11 @@ serve(async (req) => {
   }
 
   try {
+    // Require an authenticated admin caller (JWT-based, mandatory)
+    const authResult = await requireAdmin(req);
+    if (authResult instanceof Response) return authResult;
+    const adminUserId = authResult.userId;
+
     // Initialize Supabase admin client
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -25,33 +31,7 @@ serve(async (req) => {
       }
     );
 
-    // Also initialize a user-aware client to resolve caller from JWT if provided
-    const supabaseUser = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization') ?? '' },
-        },
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-
-    const { requestId, adminUserId: adminUserIdFromBody } = await req.json();
-
-    // Resolve admin user from body or JWT; only requestId is strictly required
-    let adminUserId = adminUserIdFromBody ?? null;
-    try {
-      const { data: { user } } = await supabaseUser.auth.getUser();
-      if (!adminUserId && user?.id) {
-        adminUserId = user.id;
-      }
-    } catch (_e) {
-      console.warn('[APPROVE-REASSIGNMENT] Could not resolve admin user from JWT');
-    }
+    const { requestId } = await req.json();
 
     if (!requestId) {
       return new Response(
@@ -60,24 +40,7 @@ serve(async (req) => {
       );
     }
 
-    // Verify the requesting user is actually an admin
-    if (adminUserId) {
-      const { data: adminRole, error: roleError } = await supabaseAdmin
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', adminUserId)
-        .eq('role', 'admin')
-        .single();
-
-      if (roleError || !adminRole) {
-        console.error(`Unauthorized access attempt by user: ${adminUserId}`);
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized: Admin access required' }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      console.log(`Admin verification successful for user: ${adminUserId}`);
-    }
+    console.log(`Admin verification successful for user: ${adminUserId}`);
 
     console.log(`[APPROVE-REASSIGNMENT] Start requestId=${requestId} adminUserId=${adminUserId}`);
 

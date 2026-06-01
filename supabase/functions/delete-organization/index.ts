@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { requireAdmin } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +14,11 @@ serve(async (req) => {
   }
 
   try {
+    // Require an authenticated admin caller (JWT-based)
+    const authResult = await requireAdmin(req);
+    if (authResult instanceof Response) return authResult;
+    const adminUserId = authResult.userId;
+
     // Initialize Supabase admin client
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -25,30 +31,15 @@ serve(async (req) => {
       }
     );
 
-    const { organizationId, adminUserId } = await req.json();
-    
-    if (!organizationId || !adminUserId) {
+    const { organizationId } = await req.json();
+
+    if (!organizationId) {
       return new Response(
-        JSON.stringify({ error: 'Missing organizationId or adminUserId' }),
+        JSON.stringify({ error: 'Missing organizationId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Verify the requesting user is actually an admin
-    const { data: adminRole, error: roleError } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', adminUserId)
-      .eq('role', 'admin')
-      .single();
-
-    if (roleError || !adminRole) {
-      console.error(`Unauthorized access attempt by user: ${adminUserId}`);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized: Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
     console.log(`Admin verification successful for user: ${adminUserId}`);
 
     console.log(`Starting organization deletion: ${organizationId} by admin: ${adminUserId}`);
