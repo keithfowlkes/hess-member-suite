@@ -530,11 +530,12 @@ export default function MembershipFees() {
     setDeleteTierConfirmOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (tierToDelete) {
-      handleRemoveFeeTier(tierToDelete);
+      const id = tierToDelete;
       setTierToDelete(null);
       setDeleteTierConfirmOpen(false);
+      await handleRemoveFeeTier(id);
     }
   };
 
