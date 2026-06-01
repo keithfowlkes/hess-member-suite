@@ -113,13 +113,9 @@ Deno.serve(async (req) => {
 
     if (testMode) {
       // Admin-only smoke test — verify keys & embedded UI works end-to-end.
-      const { data: roleRow } = await admin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (!roleRow) return json({ error: "Forbidden: admin only" }, 403);
+      if (!isAdmin) return json({ error: "Forbidden: admin only" }, 403);
+
+
 
       const requested = Number(body?.amount);
       amountCents = Number.isFinite(requested) && requested > 0
