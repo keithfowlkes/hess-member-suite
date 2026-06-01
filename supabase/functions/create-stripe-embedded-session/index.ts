@@ -68,8 +68,19 @@ Deno.serve(async (req) => {
     const testMode = body?.testMode === true;
     const invoiceId = String(body?.invoiceId ?? "");
 
+    // Caller's admin status — admins may bypass the "stripe_enabled" toggle
+    // so they can verify the embedded flow from the member view while only
+    // test keys are loaded.
+    const { data: adminRoleRow } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    const isAdmin = !!adminRoleRow;
+
     const settings = await loadSettings(admin);
-    if (settings.stripe_enabled !== "true") {
+    if (settings.stripe_enabled !== "true" && !isAdmin) {
       return json({ error: "Stripe payments are not enabled" }, 400);
     }
     const mode = settings.stripe_mode === "live" ? "live" : "test";
@@ -88,6 +99,7 @@ Deno.serve(async (req) => {
         500,
       );
     }
+
     const currency = (settings.stripe_default_currency || "usd").toLowerCase();
     const origin = req.headers.get("origin") ?? "";
 
