@@ -216,6 +216,37 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
         `}
       </style>
 
+      {isPaid && (
+        <div
+          aria-label="Paid"
+          style={{
+            position: 'absolute',
+            top: '180px',
+            right: '60px',
+            transform: 'rotate(-18deg)',
+            border: '6px solid #16a34a',
+            color: '#16a34a',
+            padding: '8px 24px',
+            fontSize: '3rem',
+            fontWeight: 900,
+            letterSpacing: '6px',
+            borderRadius: '8px',
+            opacity: 0.85,
+            pointerEvents: 'none',
+            textTransform: 'uppercase',
+            background: 'rgba(255,255,255,0.6)',
+            zIndex: 10,
+          }}
+        >
+          Paid
+          {invoice.paid_date && (
+            <div style={{ fontSize: '0.75rem', letterSpacing: '1px', fontWeight: 600, textAlign: 'center', marginTop: '4px' }}>
+              {format(new Date(invoice.paid_date), 'MMM dd, yyyy')}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Header with Logo and Invoice Title */}
       <div className="invoice-header">
         <div className="logo-section">
