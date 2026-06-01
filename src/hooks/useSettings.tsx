@@ -253,11 +253,17 @@ export function useSettings() {
         pendingInvoices
       });
     } catch (error: any) {
-      toast({
-        title: 'Error fetching statistics',
-        description: error.message,
-        variant: 'destructive'
-      });
+      const msg = String(error?.message || '');
+      const isTransient = /Load failed|Failed to fetch|NetworkError|aborted/i.test(msg);
+      if (isTransient) {
+        console.warn('Transient statistics fetch error suppressed:', msg);
+      } else {
+        toast({
+          title: 'Error fetching statistics',
+          description: error.message,
+          variant: 'destructive'
+        });
+      }
     }
   };
 
