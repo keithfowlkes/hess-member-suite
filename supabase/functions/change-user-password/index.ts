@@ -15,7 +15,12 @@ serve(async (req) => {
 
   try {
     console.log('🔑 Change user password function called');
-    
+
+    // Require an authenticated caller (admin OR self-update)
+    const authResult = await requireAuthenticatedUser(req);
+    if (authResult instanceof Response) return authResult;
+    const callerUserId = authResult.userId;
+
     const { userId, userEmail, newPassword } = await req.json();
     
     if ((!userId && !userEmail) || !newPassword) {
