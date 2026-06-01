@@ -177,11 +177,21 @@ Deno.serve(async (req) => {
         `Membership period ${invoice.period_start_date} to ${invoice.period_end_date}`;
       metadata = {
         invoice_id: invoice.id,
-        organization_id: org.id,
+        organization_id: invoice.organization_id,
         invoice_number: invoice.invoice_number,
+        ...(isAdmin && settings.stripe_enabled !== "true"
+          ? { admin_test: "true", initiated_by: user.id }
+          : {}),
       };
       clientReferenceId = invoice.id;
-      customerEmail = org.email ?? "";
+      // Look up the org email for the receipt (admins may be paying any org).
+      const { data: invoiceOrg } = await admin
+        .from("organizations")
+        .select("email")
+        .eq("id", invoice.organization_id)
+        .maybeSingle();
+      customerEmail = invoiceOrg?.email ?? user.email ?? "";
+
       returnUrl =
         `${origin}/?payment=success&invoice=${invoice.id}&session_id={CHECKOUT_SESSION_ID}`;
     }
