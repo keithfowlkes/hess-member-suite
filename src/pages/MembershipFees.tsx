@@ -563,11 +563,11 @@ export default function MembershipFees() {
         title: "Success",
         description: "Default membership term end date updated successfully."
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving default term end date:', error);
       toast({
         title: "Error",
-        description: "Failed to save default term end date.",
+        description: error?.message || error?.error_description || "Failed to save default term end date.",
         variant: "destructive"
       });
     }
