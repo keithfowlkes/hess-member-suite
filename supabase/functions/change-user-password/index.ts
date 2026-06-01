@@ -89,6 +89,21 @@ serve(async (req) => {
 
     console.log('👤 Changing password for user:', targetUserId);
 
+    // Authorization: caller must be admin, OR be changing their own password
+    if (callerUserId !== targetUserId) {
+      const { data: adminRow } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', callerUserId)
+        .eq('role', 'admin')
+        .maybeSingle();
+      if (!adminRow) {
+        console.error('❌ Forbidden: non-admin caller attempting to change another user password');
+        return unauthorizedResponse('Forbidden: admin role required to change another user password', 403);
+      }
+    }
+
+
     // First check if user exists in auth.users
     console.log('🔍 Checking if user exists in auth...');
     const { data: userData, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(targetUserId);
