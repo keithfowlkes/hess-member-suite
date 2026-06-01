@@ -85,6 +85,8 @@ export function StripeSettings() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<StripeSettingsForm>(DEFAULTS);
   const [saving, setSaving] = useState(false);
+  const [testOpen, setTestOpen] = useState(false);
+  const [testAmount, setTestAmount] = useState('1.00');
 
   const { data: rawSettings, isLoading } = useQuery({
     queryKey: ['system-settings', 'stripe'],
