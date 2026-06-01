@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { CreditCard } from 'lucide-react';
 import { useStripeEnabled } from '@/hooks/useStripeEnabled';
 import { useToast } from '@/hooks/use-toast';
 import { EmbeddedCheckoutDialog } from '@/components/EmbeddedCheckoutDialog';
 import { useQueryClient } from '@tanstack/react-query';
+
 
 interface PayInvoiceButtonProps {
   invoiceId: string;
@@ -26,7 +28,9 @@ export function PayInvoiceButton({
   const { enabled, isLoading } = useStripeEnabled();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+
 
   const handleClick = () => {
     if (!enabled) {
@@ -58,17 +62,17 @@ export function PayInvoiceButton({
           open={open}
           onOpenChange={setOpen}
           invoiceId={invoiceId}
-          onCompleted={() => {
-            toast({
-              title: 'Payment submitted',
-              description:
-                'We received your payment. The invoice will be marked paid once Stripe confirms it.',
-            });
+          onCompleted={({ sessionId }) => {
             queryClient.invalidateQueries({ queryKey: ['invoices'] });
             queryClient.invalidateQueries({ queryKey: ['member-invoices'] });
+            setOpen(false);
+            navigate(
+              `/payment/success?invoice=${encodeURIComponent(invoiceId)}&session_id=${encodeURIComponent(sessionId)}`,
+            );
           }}
         />
       )}
+
     </>
   );
 }

@@ -176,15 +176,17 @@ Deno.serve(async (req) => {
     const params: Record<string, string> = {
       mode: "payment",
       ui_mode: "embedded",
+      // We handle navigation in the browser via onComplete → /payment/success
+      redirect_on_completion: "never",
       "payment_method_types[0]": "card",
       "line_items[0][quantity]": "1",
       "line_items[0][price_data][currency]": currency,
       "line_items[0][price_data][unit_amount]": String(amountCents),
       "line_items[0][price_data][product_data][name]": productName,
       "line_items[0][price_data][product_data][description]": productDesc,
-      return_url: returnUrl,
       client_reference_id: clientReferenceId,
     };
+
     for (const [k, v] of Object.entries(metadata)) {
       params[`metadata[${k}]`] = v;
     }
