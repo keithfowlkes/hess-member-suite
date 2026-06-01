@@ -8,10 +8,11 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CreditCard, KeyRound, Save, Webhook, ShieldCheck, ExternalLink, Loader2, Info } from 'lucide-react';
+import { CreditCard, KeyRound, Save, Webhook, ShieldCheck, ExternalLink, Loader2, Info, FlaskConical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { EmbeddedCheckoutDialog } from '@/components/EmbeddedCheckoutDialog';
 
 /**
  * Stripe payments settings UI scaffold.
