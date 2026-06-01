@@ -65,6 +65,11 @@ serve(async (req) => {
   }
 
   try {
+    // Require an authenticated admin caller (JWT-based)
+    const authResult = await requireAdmin(req);
+    if (authResult instanceof Response) return authResult;
+    const adminUserId = authResult.userId;
+
     // Initialize Supabase admin client
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -77,30 +82,15 @@ serve(async (req) => {
       }
     );
 
-    const { registrationId, adminUserId, selectedFeeTier } = await req.json();
-    
-    if (!registrationId || !adminUserId) {
+    const { registrationId, selectedFeeTier } = await req.json();
+
+    if (!registrationId) {
       return new Response(
-        JSON.stringify({ error: 'Missing registrationId or adminUserId' }),
+        JSON.stringify({ error: 'Missing registrationId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Verify the requesting user is actually an admin
-    const { data: adminRole, error: roleError } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', adminUserId)
-      .eq('role', 'admin')
-      .single();
-
-    if (roleError || !adminRole) {
-      console.error(`Unauthorized access attempt by user: ${adminUserId}`);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized: Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
     console.log(`Admin verification successful for user: ${adminUserId}`);
 
     // Use selectedFeeTier or default to 1000
