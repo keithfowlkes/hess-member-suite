@@ -2173,7 +2173,13 @@ export default function MembershipFees() {
                               }
                             }
 
+                            // Give Postgres/PostgREST a moment to surface the writes, then refetch twice
+                            // to ensure the local invoices state reflects the latest paid status.
+                            await new Promise(r => setTimeout(r, 600));
                             await fetchInvoices();
+                            await new Promise(r => setTimeout(r, 400));
+                            await fetchInvoices();
+                            setSelectedOrganizations(new Set());
                             setIsMarkingPaid(false);
                             toast({
                               title: 'Mark as Paid Complete',
