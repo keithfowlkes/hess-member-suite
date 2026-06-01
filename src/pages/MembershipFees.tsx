@@ -2069,8 +2069,80 @@ export default function MembershipFees() {
                             </>
                           )}
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={selectedOrganizations.size === 0 || isMarkingPaid}
+                          onClick={async () => {
+                            const selectedIds = Array.from(selectedOrganizations);
+                            const unpaidByOrg = selectedIds
+                              .map(orgId => {
+                                const orgInvoices = invoices
+                                  .filter(inv => inv.organization_id === orgId && inv.status !== 'paid')
+                                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                                return { orgId, invoice: orgInvoices[0] };
+                              })
+                              .filter(x => x.invoice);
+
+                            const noInvoiceCount = selectedIds.length - unpaidByOrg.length;
+
+                            if (unpaidByOrg.length === 0) {
+                              toast({
+                                title: 'No unpaid invoices',
+                                description: 'None of the selected organizations have unpaid invoices to mark as paid.',
+                                variant: 'destructive'
+                              });
+                              return;
+                            }
+
+                            if (!window.confirm(`Mark ${unpaidByOrg.length} invoice(s) as paid?${noInvoiceCount > 0 ? ` (${noInvoiceCount} selected org(s) have no invoice and will be skipped.)` : ''}`)) {
+                              return;
+                            }
+
+                            setIsMarkingPaid(true);
+                            let successCount = 0;
+                            const failures: string[] = [];
+                            const BATCH_SIZE = 10;
+                            for (let i = 0; i < unpaidByOrg.length; i += BATCH_SIZE) {
+                              const batch = unpaidByOrg.slice(i, i + BATCH_SIZE);
+                              const results = await Promise.allSettled(
+                                batch.map(({ invoice }) => markAsPaid(invoice!.id))
+                              );
+                              results.forEach((r, idx) => {
+                                if (r.status === 'fulfilled') {
+                                  successCount++;
+                                } else {
+                                  const orgName = organizations.find(o => o.id === batch[idx].orgId)?.name || batch[idx].orgId;
+                                  failures.push(orgName);
+                                }
+                              });
+                            }
+                            setIsMarkingPaid(false);
+                            toast({
+                              title: 'Mark as Paid Complete',
+                              description: `${successCount} marked paid${failures.length ? `, ${failures.length} failed` : ''}${noInvoiceCount > 0 ? `, ${noInvoiceCount} skipped (no invoice)` : ''}.`,
+                              variant: failures.length ? 'destructive' : 'default'
+                            });
+                          }}
+                        >
+                          {isMarkingPaid ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                              </svg>
+                              Marking...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Mark Selected as Paid
+                            </>
+                          )}
+                        </Button>
                       </div>
                     </div>
+
                     
                     <div className="max-h-96 overflow-y-auto space-y-2 border rounded-md p-4">
                       <div className="grid grid-cols-12 gap-2 p-2 font-medium text-sm text-muted-foreground border-b">
