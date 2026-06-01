@@ -439,8 +439,19 @@ export default function MembershipFees() {
     return additionalTier ? parseFloat(additionalTier.amount) : 0;
   };
 
+  // Persist additional fee tiers to system_settings immediately
+  const persistAdditionalFeeTiers = async (
+    tiers: Array<{ id: string; name: string; amount: string }>
+  ) => {
+    await updateSystemSetting.mutateAsync({
+      settingKey: 'additional_fee_tiers',
+      settingValue: JSON.stringify(tiers),
+      description: 'Additional custom fee tiers'
+    });
+  };
+
   // Add new fee tier
-  const handleAddFeeTier = () => {
+  const handleAddFeeTier = async () => {
     if (!newTierName || !newTierAmount) {
       toast({
         title: "Invalid Input",
@@ -456,35 +467,61 @@ export default function MembershipFees() {
       amount: newTierAmount
     };
 
-    setAdditionalFeeTiers(prev => [...prev, newTier]);
+    const previous = additionalFeeTiers;
+    const updated = [...previous, newTier];
+    setAdditionalFeeTiers(updated);
     setNewTierName('');
     setNewTierAmount('');
     setAddTierModalOpen(false);
-    
-    toast({
-      title: "Success",
-      description: `Fee tier "${newTierName}" added successfully.`
-    });
+
+    try {
+      await persistAdditionalFeeTiers(updated);
+      toast({
+        title: "Success",
+        description: `Fee tier "${newTier.name}" added and saved.`
+      });
+    } catch (error) {
+      console.error('Error saving new fee tier:', error);
+      setAdditionalFeeTiers(previous);
+      toast({
+        title: "Error",
+        description: "Failed to save the new fee tier.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Remove fee tier
-  const handleRemoveFeeTier = (tierId: string) => {
-    setAdditionalFeeTiers(prev => prev.filter(tier => tier.id !== tierId));
+  const handleRemoveFeeTier = async (tierId: string) => {
+    const previous = additionalFeeTiers;
+    const updated = previous.filter(tier => tier.id !== tierId);
+    setAdditionalFeeTiers(updated);
     // Remove tier assignments for this tier
     setOrganizationFeeTiers(prev => {
-      const updated = { ...prev };
-      Object.keys(updated).forEach(orgId => {
-        if (updated[orgId] === tierId) {
-          delete updated[orgId];
+      const next = { ...prev };
+      Object.keys(next).forEach(orgId => {
+        if (next[orgId] === tierId) {
+          delete next[orgId];
         }
       });
-      return updated;
+      return next;
     });
-    
-    toast({
-      title: "Success",
-      description: "Fee tier deleted successfully."
-    });
+
+    try {
+      await persistAdditionalFeeTiers(updated);
+      toast({
+        title: "Success",
+        description: "Fee tier deleted and saved."
+      });
+    } catch (error) {
+      console.error('Error removing fee tier:', error);
+      setAdditionalFeeTiers(previous);
+      toast({
+        title: "Error",
+        description: "Failed to delete the fee tier.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Confirm delete fee tier
@@ -493,11 +530,12 @@ export default function MembershipFees() {
     setDeleteTierConfirmOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (tierToDelete) {
-      handleRemoveFeeTier(tierToDelete);
+      const id = tierToDelete;
       setTierToDelete(null);
       setDeleteTierConfirmOpen(false);
+      await handleRemoveFeeTier(id);
     }
   };
 
