@@ -2075,55 +2075,115 @@ export default function MembershipFees() {
                           disabled={selectedOrganizations.size === 0 || isMarkingPaid}
                           onClick={async () => {
                             const selectedIds = Array.from(selectedOrganizations);
-                            const unpaidByOrg = selectedIds
-                              .map(orgId => {
-                                const orgInvoices = invoices
-                                  .filter(inv => inv.organization_id === orgId && inv.status !== 'paid')
-                                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                                return { orgId, invoice: orgInvoices[0] };
-                              })
-                              .filter(x => x.invoice);
 
-                            const noInvoiceCount = selectedIds.length - unpaidByOrg.length;
+                            // Classify each selected org: already paid / has unpaid invoice / no invoice
+                            type Bucket = { orgId: string; unpaidInvoiceId?: string; alreadyPaid?: boolean };
+                            const buckets: Bucket[] = selectedIds.map(orgId => {
+                              const orgInvoices = invoices
+                                .filter(inv => inv.organization_id === orgId)
+                                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                              if (orgInvoices.length === 0) return { orgId };
+                              const latest = orgInvoices[0];
+                              if (latest.status === 'paid') return { orgId, alreadyPaid: true };
+                              const unpaid = orgInvoices.find(i => i.status !== 'paid');
+                              return { orgId, unpaidInvoiceId: unpaid?.id };
+                            });
 
-                            if (unpaidByOrg.length === 0) {
+                            const toMarkExisting = buckets.filter(b => b.unpaidInvoiceId);
+                            const toCreatePaid = buckets.filter(b => !b.unpaidInvoiceId && !b.alreadyPaid);
+                            const alreadyPaidCount = buckets.filter(b => b.alreadyPaid).length;
+                            const totalActions = toMarkExisting.length + toCreatePaid.length;
+
+                            if (totalActions === 0) {
                               toast({
-                                title: 'No unpaid invoices',
-                                description: 'None of the selected organizations have unpaid invoices to mark as paid.',
-                                variant: 'destructive'
+                                title: 'Nothing to update',
+                                description: `All ${alreadyPaidCount} selected organization(s) are already marked paid.`,
                               });
                               return;
                             }
 
-                            if (!window.confirm(`Mark ${unpaidByOrg.length} invoice(s) as paid?${noInvoiceCount > 0 ? ` (${noInvoiceCount} selected org(s) have no invoice and will be skipped.)` : ''}`)) {
+                            if (!window.confirm(
+                              `Mark ${totalActions} organization(s) as paid via external gateway?\n` +
+                              `• ${toMarkExisting.length} existing invoice(s) will be marked paid\n` +
+                              `• ${toCreatePaid.length} paid-status invoice(s) will be created (no email sent)` +
+                              `${alreadyPaidCount > 0 ? `\n• ${alreadyPaidCount} already paid — skipped` : ''}`
+                            )) {
                               return;
                             }
 
                             setIsMarkingPaid(true);
                             let successCount = 0;
                             const failures: string[] = [];
+                            const nowIso = new Date().toISOString();
+                            const today = nowIso.slice(0, 10);
+
                             const BATCH_SIZE = 10;
-                            for (let i = 0; i < unpaidByOrg.length; i += BATCH_SIZE) {
-                              const batch = unpaidByOrg.slice(i, i + BATCH_SIZE);
+
+                            // 1) Mark existing unpaid invoices as paid
+                            for (let i = 0; i < toMarkExisting.length; i += BATCH_SIZE) {
+                              const batch = toMarkExisting.slice(i, i + BATCH_SIZE);
                               const results = await Promise.allSettled(
-                                batch.map(({ invoice }) => markAsPaid(invoice!.id))
+                                batch.map(b => markAsPaid(b.unpaidInvoiceId!))
                               );
                               results.forEach((r, idx) => {
-                                if (r.status === 'fulfilled') {
-                                  successCount++;
-                                } else {
-                                  const orgName = organizations.find(o => o.id === batch[idx].orgId)?.name || batch[idx].orgId;
-                                  failures.push(orgName);
-                                }
+                                if (r.status === 'fulfilled') successCount++;
+                                else failures.push(organizations.find(o => o.id === batch[idx].orgId)?.name || batch[idx].orgId);
                               });
                             }
+
+                            // 2) Create paid invoice records for orgs with no invoice (no email send)
+                            for (let i = 0; i < toCreatePaid.length; i += BATCH_SIZE) {
+                              const batch = toCreatePaid.slice(i, i + BATCH_SIZE);
+                              const rows = batch.map(b => {
+                                const org = organizations.find(o => o.id === b.orgId);
+                                const feeTier = organizationFeeTiers[b.orgId];
+                                const tierAmount = feeTier ? getFeeAmountForTier(feeTier) : null;
+                                const amount = tierAmount || org?.annual_fee_amount || 1000;
+                                return {
+                                  organization_id: b.orgId,
+                                  invoice_number: `EXT-${Date.now()}-${b.orgId.slice(-6)}`,
+                                  amount,
+                                  invoice_date: today,
+                                  due_date: today,
+                                  period_start_date: today,
+                                  period_end_date: today,
+                                  status: 'paid' as const,
+                                  paid_date: nowIso,
+                                  payment_source: 'external_gateway',
+                                  notes: 'Marked paid — payment received via external conference gateway.',
+                                };
+                              });
+                              const { data, error } = await supabase.from('invoices').insert(rows).select('id, organization_id');
+                              if (error) {
+                                batch.forEach(b => failures.push(organizations.find(o => o.id === b.orgId)?.name || b.orgId));
+                              } else {
+                                successCount += data?.length || 0;
+                                // Notify Conference Hub (non-blocking) for each created paid invoice
+                                (data || []).forEach((row: any) => {
+                                  const orgName = organizations.find(o => o.id === row.organization_id)?.name || '';
+                                  supabase.functions.invoke('notify-payment-status', {
+                                    body: {
+                                      invoice_id: row.id,
+                                      organization_name: orgName,
+                                      status: 'paid',
+                                      paid_date: nowIso,
+                                    }
+                                  }).catch(() => { /* non-critical */ });
+                                });
+                              }
+                            }
+
                             setIsMarkingPaid(false);
                             toast({
                               title: 'Mark as Paid Complete',
-                              description: `${successCount} marked paid${failures.length ? `, ${failures.length} failed` : ''}${noInvoiceCount > 0 ? `, ${noInvoiceCount} skipped (no invoice)` : ''}.`,
+                              description:
+                                `${successCount} marked paid` +
+                                `${failures.length ? `, ${failures.length} failed` : ''}` +
+                                `${alreadyPaidCount > 0 ? `, ${alreadyPaidCount} already paid` : ''}.`,
                               variant: failures.length ? 'destructive' : 'default'
                             });
                           }}
+
                         >
                           {isMarkingPaid ? (
                             <>
