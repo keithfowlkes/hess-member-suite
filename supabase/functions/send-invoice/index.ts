@@ -293,6 +293,11 @@ serve(async (req) => {
   }
 
   try {
+    // Require an authenticated admin caller (JWT-based)
+    const authResult = await requireAdmin(req);
+    if (authResult instanceof Response) return authResult;
+    const callerAuthHeader = req.headers.get('Authorization') ?? '';
+
     const {
       organizationId,
       organizationName,
