@@ -111,6 +111,58 @@ serve(async (req: Request): Promise<Response> => {
       startTs,
     });
 
+    // ---- Security gating ----
+    const rawType = (emailRequest.type || '').toString();
+    const normalizedType = rawType.replace(/-/g, '_');
+    const authed = await isAuthorized(req);
+
+    // 1. Reject custom HTML templates unless authenticated
+    if (AUTH_REQUIRED_TYPES.has(rawType) || AUTH_REQUIRED_TYPES.has(normalizedType)) {
+      if (!authed) {
+        console.warn('[centralized-email-delivery-public] Rejected unauthenticated custom email', { correlationId });
+        return new Response(
+          JSON.stringify({ success: false, error: 'Authentication required for custom email templates', correlationId }),
+          { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+    }
+
+    // 2. Reject attachments unless authenticated
+    if (emailRequest.attachments?.length) {
+      if (!authed) {
+        console.warn('[centralized-email-delivery-public] Rejected unauthenticated attachments', { correlationId });
+        return new Response(
+          JSON.stringify({ success: false, error: 'Authentication required to send attachments', correlationId }),
+          { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+    }
+
+    // 3. Enforce template-type allowlist for unauthenticated callers
+    if (!authed && !PUBLIC_ALLOWED_TYPES.has(rawType) && !PUBLIC_ALLOWED_TYPES.has(normalizedType)) {
+      console.warn('[centralized-email-delivery-public] Rejected unauthenticated email type', { correlationId, type: rawType });
+      return new Response(
+        JSON.stringify({ success: false, error: `Email type '${rawType}' is not permitted for unauthenticated callers`, correlationId }),
+        { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    // 4. Per-IP rate limit unauthenticated callers
+    if (!authed) {
+      const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
+        || req.headers.get('cf-connecting-ip')
+        || 'unknown';
+      if (rateLimited(ip)) {
+        console.warn('[centralized-email-delivery-public] Rate limit exceeded', { correlationId, ip });
+        return new Response(
+          JSON.stringify({ success: false, error: 'Rate limit exceeded', correlationId }),
+          { status: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+    }
+    // ---- End security gating ----
+
+
     // Determine sender
     let configuredFrom = '';
     try {
