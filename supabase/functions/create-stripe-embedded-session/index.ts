@@ -198,7 +198,7 @@ Deno.serve(async (req) => {
 
     const params: Record<string, string> = {
       mode: "payment",
-      ui_mode: "embedded",
+      ui_mode: "embedded_page",
       // We handle navigation in the browser via onComplete → /payment/success
       redirect_on_completion: "never",
       "payment_method_types[0]": "card",
