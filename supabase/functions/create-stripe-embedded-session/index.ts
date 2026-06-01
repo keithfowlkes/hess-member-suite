@@ -131,31 +131,36 @@ Deno.serve(async (req) => {
     } else {
       if (!invoiceId) return json({ error: "invoiceId required" }, 400);
 
-      const { data: profile } = await admin
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!profile) return json({ error: "Profile not found" }, 403);
-
-      const { data: org } = await admin
-        .from("organizations")
-        .select("id, name, email")
-        .eq("contact_person_id", profile.id)
-        .maybeSingle();
-      if (!org) {
-        return json({ error: "Organization not found for caller" }, 403);
-      }
-
       const { data: invoice, error: invErr } = await admin
         .from("invoices")
         .select("*")
         .eq("id", invoiceId)
         .maybeSingle();
       if (invErr || !invoice) return json({ error: "Invoice not found" }, 404);
-      if (invoice.organization_id !== org.id) {
-        return json({ error: "Forbidden" }, 403);
+
+      // Members may only pay invoices for their own org. Admins may pay any
+      // invoice (used for testing the embedded flow from the member view).
+      if (!isAdmin) {
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!profile) return json({ error: "Profile not found" }, 403);
+
+        const { data: org } = await admin
+          .from("organizations")
+          .select("id, name, email")
+          .eq("contact_person_id", profile.id)
+          .maybeSingle();
+        if (!org) {
+          return json({ error: "Organization not found for caller" }, 403);
+        }
+        if (invoice.organization_id !== org.id) {
+          return json({ error: "Forbidden" }, 403);
+        }
       }
+
       if (invoice.status === "paid") {
         return json({ error: "Invoice already paid" }, 400);
       }
