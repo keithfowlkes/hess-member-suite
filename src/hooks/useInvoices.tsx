@@ -100,11 +100,19 @@ export function useInvoices() {
       if (error) throw error;
       setInvoices(data || []);
     } catch (error: any) {
-      toast({
-        title: 'Error fetching invoices',
-        description: error.message,
-        variant: 'destructive'
-      });
+      const msg = String(error?.message || '');
+      // Suppress transient network/cancellation errors (e.g. WebKit "Load failed"
+      // when a request is aborted during navigation) — they're not actionable.
+      const isTransient = /Load failed|Failed to fetch|NetworkError|aborted/i.test(msg);
+      if (isTransient) {
+        console.warn('Transient invoices fetch error suppressed:', msg);
+      } else {
+        toast({
+          title: 'Error fetching invoices',
+          description: error.message,
+          variant: 'destructive'
+        });
+      }
     } finally {
       setLoading(false);
     }
