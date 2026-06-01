@@ -71,7 +71,7 @@ interface FeesStats {
 
 export default function MembershipFees() {
   const { organizations, loading, updateOrganization, markAllOrganizationsActive } = useMembers();
-  const { invoices, createInvoice, markAsPaid, sendInvoice, markAllInvoicesAsPaid, deleteInvoice } = useInvoices();
+  const { invoices, createInvoice, markAsPaid, sendInvoice, markAllInvoicesAsPaid, deleteInvoice, fetchInvoices } = useInvoices();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const resendInvoice = useResendInvoice();
@@ -2173,6 +2173,7 @@ export default function MembershipFees() {
                               }
                             }
 
+                            await fetchInvoices();
                             setIsMarkingPaid(false);
                             toast({
                               title: 'Mark as Paid Complete',
