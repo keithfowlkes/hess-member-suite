@@ -8,10 +8,11 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CreditCard, KeyRound, Save, Webhook, ShieldCheck, ExternalLink, Loader2, Info } from 'lucide-react';
+import { CreditCard, KeyRound, Save, Webhook, ShieldCheck, ExternalLink, Loader2, Info, FlaskConical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { EmbeddedCheckoutDialog } from '@/components/EmbeddedCheckoutDialog';
 
 /**
  * Stripe payments settings UI scaffold.
@@ -84,6 +85,8 @@ export function StripeSettings() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<StripeSettingsForm>(DEFAULTS);
   const [saving, setSaving] = useState(false);
+  const [testOpen, setTestOpen] = useState(false);
+  const [testAmount, setTestAmount] = useState('1.00');
 
   const { data: rawSettings, isLoading } = useQuery({
     queryKey: ['system-settings', 'stripe'],
@@ -504,6 +507,74 @@ export function StripeSettings() {
           />
         </CardContent>
       </Card>
+
+      {/* Embedded test payment */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FlaskConical className="h-5 w-5" />
+            Test embedded payment
+          </CardTitle>
+          <CardDescription>
+            Runs a one-off charge against your currently selected{' '}
+            <span className="font-medium">{form.mode}</span>-mode keys using
+            Stripe&apos;s secure embedded checkout. Card data is collected
+            inside Stripe&apos;s iframe — it never reaches this app.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <ShieldCheck className="h-4 w-4" />
+            <AlertTitle>PCI-safe by design</AlertTitle>
+            <AlertDescription>
+              The payment form is hosted by Stripe and embedded via a signed
+              session client secret. In test mode, use card{' '}
+              <code className="font-mono">4242 4242 4242 4242</code>, any
+              future expiry, any CVC.
+            </AlertDescription>
+          </Alert>
+          <div className="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-3 items-end">
+            <div className="space-y-2">
+              <Label htmlFor="test-amount">Amount (USD)</Label>
+              <Input
+                id="test-amount"
+                type="number"
+                min="0.5"
+                step="0.01"
+                value={testAmount}
+                onChange={(e) => setTestAmount(e.target.value)}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!form.enabled}
+              onClick={() => setTestOpen(true)}
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Open embedded checkout
+            </Button>
+          </div>
+          {!form.enabled && (
+            <p className="text-sm text-muted-foreground">
+              Enable online payments above and save before running a test.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <EmbeddedCheckoutDialog
+        open={testOpen}
+        onOpenChange={setTestOpen}
+        testMode
+        testAmount={Number(testAmount) || 1}
+        onCompleted={() => {
+          toast({
+            title: 'Test payment submitted',
+            description: 'Check the Stripe Dashboard to confirm the charge.',
+          });
+        }}
+      />
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving} size="lg">
