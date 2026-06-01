@@ -2076,18 +2076,32 @@ export default function MembershipFees() {
                           onClick={async () => {
                             const selectedIds = Array.from(selectedOrganizations);
 
+                            // Always read FRESH invoice data from the DB so we don't create
+                            // duplicate paid invoices when the local cache is stale.
+                            setIsMarkingPaid(true);
+                            const { data: freshInvoices, error: freshErr } = await supabase
+                              .from('invoices')
+                              .select('id, organization_id, status, created_at')
+                              .in('organization_id', selectedIds)
+                              .order('created_at', { ascending: false });
+
+                            if (freshErr) {
+                              setIsMarkingPaid(false);
+                              toast({ title: 'Error', description: freshErr.message, variant: 'destructive' });
+                              return;
+                            }
+
                             // Classify each selected org: already paid / has unpaid invoice / no invoice
                             type Bucket = { orgId: string; unpaidInvoiceId?: string; alreadyPaid?: boolean };
                             const buckets: Bucket[] = selectedIds.map(orgId => {
-                              const orgInvoices = invoices
-                                .filter(inv => inv.organization_id === orgId)
-                                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                              const orgInvoices = (freshInvoices || []).filter(inv => inv.organization_id === orgId);
                               if (orgInvoices.length === 0) return { orgId };
-                              const latest = orgInvoices[0];
+                              const latest = orgInvoices[0]; // already sorted desc
                               if (latest.status === 'paid') return { orgId, alreadyPaid: true };
                               const unpaid = orgInvoices.find(i => i.status !== 'paid');
                               return { orgId, unpaidInvoiceId: unpaid?.id };
                             });
+
 
                             const toMarkExisting = buckets.filter(b => b.unpaidInvoiceId);
                             const toCreatePaid = buckets.filter(b => !b.unpaidInvoiceId && !b.alreadyPaid);
