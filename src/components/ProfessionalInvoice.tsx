@@ -60,8 +60,10 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
   const headerHtml = replaceTemplateVariables(activeTemplate.header_content, templateData);
   const footerHtml = replaceTemplateVariables(activeTemplate.footer_content, templateData);
 
+  const isPaid = invoice.status === 'paid';
+
   return (
-    <div className="invoice-container bg-white p-8 max-w-4xl mx-auto">
+    <div className="invoice-container bg-white p-8 max-w-4xl mx-auto relative">
       {/* Custom Styles matching HESS sample invoice */}
       <style>
         {`
