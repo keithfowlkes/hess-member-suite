@@ -175,11 +175,12 @@ Deno.serve(async (req) => {
         action: 'user_deleted',
         entity_type: 'user',
         entity_id: userId,
+        user_id: callerUserId,
         details: { 
           authUserExists: authUserExists,
           authDeleteSuccess: authDeleteSuccess,
           cleanupResults: cleanupResults,
-          deletedBy: 'admin_function'
+          deletedBy: callerUserId
         }
       });
     } catch (auditError) {
