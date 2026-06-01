@@ -14,6 +14,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Require an authenticated admin caller (JWT-based, not body-supplied)
+    const authResult = await requireAdmin(req);
+    if (authResult instanceof Response) return authResult;
+    const adminUserId = authResult.userId;
+
     // Initialize Supabase admin client with proper configuration
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -31,12 +36,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Allow GET request to clean up fowlkes@thecoalition.us specifically
     let email = 'fowlkes@thecoalition.us';
-    let adminUserId = null;
-    
+
     if (req.method === 'POST') {
       const body = await req.json();
       email = body.email || 'fowlkes@thecoalition.us';
-      adminUserId = body.adminUserId;
     }
     
     if (!email) {
