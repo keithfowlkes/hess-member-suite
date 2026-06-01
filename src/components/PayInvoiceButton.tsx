@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Loader2 } from 'lucide-react';
-import { useStripeCheckout } from '@/hooks/useStripeCheckout';
+import { CreditCard } from 'lucide-react';
 import { useStripeEnabled } from '@/hooks/useStripeEnabled';
 import { useToast } from '@/hooks/use-toast';
+import { EmbeddedCheckoutDialog } from '@/components/EmbeddedCheckoutDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface PayInvoiceButtonProps {
   invoiceId: string;
@@ -12,8 +14,8 @@ interface PayInvoiceButtonProps {
 }
 
 /**
- * "Pay with card" button that creates a Stripe Checkout session for an
- * unpaid invoice. Renders nothing when Stripe is disabled in settings.
+ * "Pay with card" button that opens Stripe's secure embedded checkout
+ * inline (no redirect). Renders disabled when Stripe is not configured.
  */
 export function PayInvoiceButton({
   invoiceId,
@@ -22,41 +24,51 @@ export function PayInvoiceButton({
   label = 'Pay with card',
 }: PayInvoiceButtonProps) {
   const { enabled, isLoading } = useStripeEnabled();
-  const checkout = useStripeCheckout();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
 
   const handleClick = () => {
     if (!enabled) {
       toast({
         title: 'Online payments are not configured yet',
-        description: 'Enable Stripe in Admin Panel → Online Payments to start invoice checkout.',
+        description:
+          'Enable Stripe in Admin Panel → Online Payments to start invoice checkout.',
         variant: 'destructive',
       });
       return;
     }
-
-    checkout.mutate(invoiceId);
+    setOpen(true);
   };
 
   return (
-    <Button
-      size={size}
-      className={className}
-      variant={enabled ? 'default' : 'outline'}
-      onClick={handleClick}
-      disabled={checkout.isPending || isLoading}
-    >
-      {checkout.isPending ? (
-        <>
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          Redirecting…
-        </>
-      ) : (
-        <>
-          <CreditCard className="h-4 w-4 mr-2" />
-          {label}
-        </>
-      )}
-    </Button>
+    <>
+      <Button
+        size={size}
+        className={className}
+        variant={enabled ? 'default' : 'outline'}
+        onClick={handleClick}
+        disabled={isLoading}
+      >
+        <CreditCard className="h-4 w-4 mr-2" />
+        {label}
+      </Button>
+      <EmbeddedCheckoutDialog
+        open={open}
+        onOpenChange={setOpen}
+        invoiceId={invoiceId}
+        onCompleted={() => {
+          toast({
+            title: 'Payment submitted',
+            description:
+              'We received your payment. The invoice will be marked paid once Stripe confirms it.',
+          });
+          // Refresh any invoice-related queries so the UI flips to paid
+          // as soon as the webhook updates the database.
+          queryClient.invalidateQueries({ queryKey: ['invoices'] });
+          queryClient.invalidateQueries({ queryKey: ['member-invoices'] });
+        }}
+      />
+    </>
   );
 }
