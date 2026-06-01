@@ -2173,6 +2173,7 @@ export default function MembershipFees() {
                               }
                             }
 
+                            await fetchInvoices();
                             setIsMarkingPaid(false);
                             toast({
                               title: 'Mark as Paid Complete',
