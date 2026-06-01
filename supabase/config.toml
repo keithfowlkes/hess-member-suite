@@ -153,5 +153,11 @@ verify_jwt = false
 [functions.create-stripe-checkout]
 verify_jwt = true
 
+[functions.create-stripe-embedded-session]
+verify_jwt = true
+
+[functions.get-stripe-session-status]
+verify_jwt = true
+
 [functions.stripe-webhook]
 verify_jwt = false
