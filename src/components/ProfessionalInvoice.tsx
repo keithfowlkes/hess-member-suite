@@ -261,6 +261,9 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
           <tr>
             <td>
               <strong>Annual Membership Fee</strong>
+              <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.25rem' }}>
+                includes Stripe Processing Fee
+              </div>
               {invoice.prorated_amount && (
                 <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.25rem' }}>
                   Prorated from membership start date
