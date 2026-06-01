@@ -59,7 +59,25 @@ serve(async (req) => {
   }
 
   try {
+    // Require an authenticated admin caller
+    const authResult = await requireAdmin(req);
+    if (authResult instanceof Response) return authResult;
+
     const { members }: { members: ImportMemberData[] } = await req.json();
+
+    // Cap import size to prevent abuse
+    if (!Array.isArray(members) || members.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'members must be a non-empty array' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    if (members.length > 2000) {
+      return new Response(
+        JSON.stringify({ error: 'Too many members in a single import (max 2000)' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
     // Create Supabase admin client
     const supabaseAdmin = createClient(
