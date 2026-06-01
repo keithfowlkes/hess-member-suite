@@ -1,94 +1,94 @@
-# Stripe Membership Fee Payments (self-contained)
+# Fix Critical Security Findings
 
-Add a fully self-contained "Pay with Stripe" path for membership invoices. No external SDKs — the edge functions call Stripe's REST API directly and verify webhook signatures with the built-in Web Crypto API. All Stripe configuration is read from the existing Settings → Online Payments panel; no admin UI changes.
+Goal: resolve every finding marked 🔴 Critical in the prior assessment, while preserving anonymous public-page access, authenticated member portal functionality, and admin/management workflows. Work proceeds in three batches ordered by breakage risk. After each batch we verify the three user tiers before moving on.
 
-Organizations flagged Unpaid (the HESS Consortium Administrator account) are excluded from seeing the pay button because they have no real current-period invoice row.
+## Batch A — Edge function auth hardening (low breakage risk)
 
-## Scope
+All of these endpoints are only invoked from the admin UI through `supabase.functions.invoke()`, which automatically forwards the caller's JWT. Adding a JWT + admin check is additive — no frontend code needs to change.
 
-In scope
-- Stripe Checkout session creation for an existing unpaid membership invoice
-- Stripe webhook that marks the matched invoice paid (idempotent)
-- "Pay with card" button on the Member Dashboard Membership Fee card and on the member-facing invoice modal
-- Self-contained implementation: no `stripe` npm package, no Stripe SDK — only `fetch` to `api.stripe.com` and HMAC-SHA256 signature verification
+Functions to update (add `Authorization` validation via `supabase.auth.getClaims()` + `has_role(uid, 'admin')` check, return 401/403 on failure):
 
-Out of scope (deferred)
-- Any new admin settings UI (the existing `StripeSettings.tsx` is the source of truth)
-- Subscriptions / recurring billing
-- ACH, Apple Pay, Google Pay (cards only for v1)
-- Refunds, disputes, partial payments
-- Replacing the Medius/conference-hub inbound payment flow
+1. `cleanup-orphaned-records` — admin only
+2. `delete-user` — admin only
+3. `import-members` — admin only
+4. `change-user-password` — admin OR self (caller `sub` === target `userId`)
+5. `delete-organization` — admin only; ignore body `adminUserId`, derive from JWT
+6. `approve-pending-registration` — admin only; ignore body `adminUserId`
+7. `unapprove-organization` — admin only; ignore body `adminUserId`
+8. `bulk-registration-operations` — remove `if (adminUserId)` guard; always require admin JWT
+9. `approve-reassignment-request` — same fix as above
+10. `send-invoice` — admin only; also validate `organizationId` exists and `invoiceAmount` is a positive number
 
-## User flow
+### Verification after Batch A
+- **Anonymous users:** still able to load `/auth`, public directory, public map, registration form (none of these call the above functions).
+- **Authenticated members:** still able to view profile, request profile edits, view invoices (no member-facing call sites).
+- **Admins:** test from preview as logged-in admin — approve a pending registration, send a test invoice, change a user's password, delete a test user, run bulk operations. All should succeed.
+- Tool: `supabase--curl_edge_functions` against each function with and without auth to confirm 401 unauth and 200 as admin.
 
-1. Member sees Membership Fee card with the existing amber "MEMBERSHIP FEE DUE …" badge.
-2. If Stripe is enabled in settings AND the org has a current-period unpaid invoice → a "Pay with card" button appears.
-3. Click → `create-stripe-checkout` edge function → redirect to Stripe Checkout.
-4. Stripe redirects back to the configured success URL with `?payment=success&invoice=…`.
-5. Stripe POSTs `checkout.session.completed` to `stripe-webhook`, which verifies the signature and flips the invoice to `paid` (`payment_source='stripe'`, `external_reference=<payment_intent>`).
-6. Badge turns green PAID on next refetch.
+## Batch B — Centralized email delivery (medium breakage risk)
 
-## Reuse of existing functionality
+The pre-login flows (password reset, registration welcome, approval notification) legitimately call email endpoints without a session, so we cannot simply require a JWT on `-public`.
 
-- **Settings UI:** `src/components/StripeSettings.tsx` already persists `stripe_enabled`, `stripe_mode`, `stripe_default_currency`, `stripe_statement_descriptor`, `stripe_success_url`, `stripe_cancel_url`, `stripe_auto_mark_invoice_paid`, `stripe_webhook_endpoint_url`, etc. No edits needed.
-- **Invoice table:** `invoices` already has `status`, `paid_date`, `payment_source`, `external_reference`. No migration.
-- **Badge / status:** `MembershipDuesBadge` + `getMembershipDuesStatus` continue to drive the visual state. Pay button derives from the same `currentPeriodUnpaidInvoice` value used in `Index.tsx`.
-- **Admin Unpaid flag:** existing `userOrganization?.name?.toLowerCase().includes('administrator')` check stays as-is. That account has no invoice row, so the pay button naturally hides.
+1. `centralized-email-delivery` (authenticated variant): require JWT, any authenticated user OK (used by admin tools and member self-service like update requests). No allowlist needed.
+2. `centralized-email-delivery-public`:
+   - Restrict the `type` field to a hard allowlist: `password_reset`, `registration_welcome`, `registration_received`, `approval_notification` (audit current call sites and finalize the list before edit).
+   - Reject the `custom` template type and reject any `attachments` field.
+   - Resolve recipient + template server-side from `system_settings` instead of trusting the body where possible.
+   - Add per-IP rate limit (simple in-memory token bucket, with a warning comment that production should move to Redis/DB).
 
-## Technical details
+### Verification after Batch B
+- **Anonymous users:** trigger password reset from `/auth`, complete a new registration, confirm welcome + admin-notification emails still arrive.
+- **Authenticated members:** trigger a profile update request → admin notification email still sent.
+- **Admins:** approve a registration → applicant receives approval email; send invoice → recipient gets invoice email.
+- Check `email_logs` table and Resend dashboard to confirm deliveries.
 
-### New edge functions
+## Batch C — Database & Realtime exposure (mixed risk)
 
-1. **`supabase/functions/create-stripe-checkout/index.ts`** (`verify_jwt = true`)
-   - Auth required; resolves caller's profile then org via `contact_person_id`.
-   - Input: `{ invoiceId: string }`.
-   - Loads invoice with service-role client; rejects if not owned by caller's org or already paid.
-   - Reads `stripe_*` rows from `system_settings`; picks `STRIPE_SECRET_KEY_TEST` or `STRIPE_SECRET_KEY_LIVE` by `stripe_mode`.
-   - POSTs `application/x-www-form-urlencoded` to `https://api.stripe.com/v1/checkout/sessions` with:
-     - `mode=payment`, `payment_method_types[0]=card`
-     - one `price_data` line: currency from settings, `unit_amount = round((prorated_amount ?? amount) * 100)`, product name = "HESS Consortium Membership — Invoice …"
-     - `success_url`, `cancel_url` from settings with `?payment=success&invoice=<id>&session_id={CHECKOUT_SESSION_ID}` appended
-     - `client_reference_id = invoice.id`, `metadata[invoice_id]`, `metadata[organization_id]`
-     - `customer_email = organization.email`
-     - optional `payment_intent_data[statement_descriptor]` from settings (truncated to 22 chars)
-   - Returns `{ url, id }`.
+C1. **Remove `database_backups` from Realtime publication** (zero breakage — nothing subscribes to it).
+```sql
+ALTER PUBLICATION supabase_realtime DROP TABLE public.database_backups;
+```
 
-2. **`supabase/functions/stripe-webhook/index.ts`** (`verify_jwt = false`, raw body)
-   - Reads raw body and `stripe-signature` header.
-   - Verifies signature using Web Crypto HMAC-SHA256 against `t=…,v1=…` scheme with a 5-minute tolerance. Tries `STRIPE_WEBHOOK_SECRET_<mode>` first, falls back to the other (so test webhooks still work while live key is being rotated).
-   - Handles `checkout.session.completed` and `checkout.session.async_payment_succeeded`. Skips when `payment_status !== 'paid'`.
-   - Idempotent: skips invoices already `paid`; otherwise sets `status='paid'`, `paid_date=now()`, `payment_source='stripe'`, `external_reference = payment_intent ?? session.id`.
-   - Best-effort `notify-payment-status` invocation (mirrors `useInvoices.markAsPaid`).
-   - Honors `stripe_auto_mark_invoice_paid` setting.
+C2. **`pending_registrations` — drop from Realtime publication** so password_hash + PII no longer broadcast. Admin UI fetches this table via normal queries; no live subscription is needed.
 
-3. **`supabase/config.toml`** — add `[functions.create-stripe-checkout] verify_jwt = true` and `[functions.stripe-webhook] verify_jwt = false`.
+C3. **`organizations` anon column restriction** — current anon SELECT policy returns all columns including secondary contact PII. Replace with a column-scoped policy: anon can read only `name, city, state, website, organization_type, membership_status`. The existing `public_organization_directory` view (SECURITY DEFINER) continues to serve the public directory page, so anonymous users see no visible change. Authenticated members keep full access via the existing member policy.
 
-### Frontend additions
+C4. **`profiles` PII tightening** — this is the highest-risk change because the consortium portal is *designed* to let members see each other's contact info (per memory `intentional-access-design-choices`). Plan:
+   - Keep current "authenticated members can view all profiles" policy in place (it is intentional per project knowledge).
+   - Mark the scanner finding as `ignore` via `manage_security_finding` with explanation referencing the consortium directory purpose.
+   - Update `mem://security/intentional-access-design-choices` and security memory to document this decision.
+   - **No code change** — this preserves the member portal's core value.
 
-- `src/hooks/useStripeEnabled.tsx` — derives `{ enabled, mode }` from `useSystemSettings()`.
-- `src/hooks/useStripeCheckout.tsx` — `useMutation` that invokes `create-stripe-checkout` and does `window.location.assign(url)`.
-- `src/components/PayInvoiceButton.tsx` — small button that hides itself when `!enabled`, shows a card icon and a loading state.
-- `src/pages/Index.tsx` — inside the Membership Fee card, when `currentPeriodUnpaidInvoice` exists and not the administrator fallback, render `<PayInvoiceButton invoiceId={currentPeriodUnpaidInvoice.id} />` next to the badge. Also: read `?payment=success&invoice=…` on mount and invalidate the invoices query so the badge flips quickly.
-- `src/components/MemberInvoiceViewModal.tsx` — render `PayInvoiceButton` in the dialog header when the invoice is not paid.
+C5. **`pending_registrations.password_hash` column** — keep for now. Removing it requires rebuilding the approval flow (per memory `planned-password-encryption-hardening`), which is explicitly out-of-scope for a "critical-only, no-breakage" pass. Mark this finding as acknowledged-deferred in security memory, not ignored.
 
-### Secrets
+C6. **Realtime channel authorization (`realtime.messages` RLS)** — the app uses Realtime for member analytics and registration update notifications. A blanket RLS policy could silently break those. We'll address by:
+   - Removing the most sensitive tables from the publication: `database_backups` (C1), `pending_registrations` (C2), `audit_log`, `email_logs`, `inbound_payment_notifications`. None of these have live subscriptions in the frontend (verify via codebase search before drop).
+   - Leaving `realtime.messages` RLS for a follow-up pass once we map exact channel usage. Document as deferred.
 
-Will request via `add_secret`:
-- `STRIPE_SECRET_KEY_TEST` (required to start; from Stripe Dashboard → Developers → API keys, test mode)
-- `STRIPE_WEBHOOK_SECRET_TEST` (after creating the webhook endpoint in Stripe pointing at `https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/stripe-webhook`)
-- `STRIPE_SECRET_KEY_LIVE` and `STRIPE_WEBHOOK_SECRET_LIVE` (when switching `stripe_mode` to live)
+### Verification after Batch C
+- **Anonymous users:** load public directory + public map → still see org names, locations, websites. Confirm no contact email/phone leaks via direct REST call to `/rest/v1/organizations`.
+- **Authenticated members:** member directory still shows other members' contact info; analytics charts still update.
+- **Admins:** registration approval queue, member analytics live updates, payment notifications still work.
 
-### Guard rails
+## Out of scope (deferred, documented in security memory)
 
-- Button hidden when `stripe_enabled !== 'true'`, when there is no current-period unpaid invoice (covers the admin Unpaid-fallback case), or when the invoice is already paid.
-- Server re-validates org ownership and unpaid status before creating the session.
-- Webhook handler is idempotent and ignores unknown event types.
+- `profiles` PII gating (intentional consortium feature)
+- `pending_registrations.password_hash` removal (requires invitation-flow redesign)
+- Full `realtime.messages` RLS (requires channel-by-channel mapping)
+- All 🟡 Medium/Low warnings (XSS sanitization, TinyMCE key, Postgres upgrade, etc.) — separate pass
 
-## Verification
+## Technical notes
 
-1. Stripe disabled → no Pay button anywhere; existing badges unchanged.
-2. Enable Stripe (test mode) + add `STRIPE_SECRET_KEY_TEST` + `STRIPE_WEBHOOK_SECRET_TEST` + create the Stripe webhook → Pay button appears for a member with an unpaid invoice.
-3. Administrator account → still shows the UNPAID fallback badge, no Pay button.
-4. Complete a Stripe test Checkout (`4242 4242 4242 4242`) → webhook receives `checkout.session.completed` → invoice flips to PAID, badge turns green after refetch.
-5. Replay the same webhook → no duplicate state change.
-6. Tamper with the signature → webhook returns 401, no DB change.
+- Standard auth pattern for each edge function:
+  ```typescript
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) return new Response(JSON.stringify({error:'Unauthorized'}), {status:401, headers: corsHeaders});
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { headers: { Authorization: authHeader } } });
+  const { data: claims } = await supabase.auth.getClaims(authHeader.replace('Bearer ',''));
+  if (!claims?.claims?.sub) return new Response(JSON.stringify({error:'Unauthorized'}), {status:401, headers: corsHeaders});
+  const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: claims.claims.sub, _role: 'admin' });
+  if (!isAdmin) return new Response(JSON.stringify({error:'Forbidden'}), {status:403, headers: corsHeaders});
+  ```
+- Service-role client (`supabaseAdmin`) is still used internally for the actual DB writes after authorization passes.
+- Migration for Batch C uses `ALTER PUBLICATION` and `DROP POLICY` / `CREATE POLICY` only — no table schema changes, no data loss.
+- After each batch, run `supabase--curl_edge_functions` smoke tests and check edge function logs.
