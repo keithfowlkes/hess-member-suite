@@ -123,6 +123,7 @@ const RiskTooltip = ({ active, payload }: any) => {
 
 export function MemberArcticSecurityView() {
   const { user } = useAuth();
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   // Fetch the logged-in user's organization name
   const { data: userOrg } = useQuery({
