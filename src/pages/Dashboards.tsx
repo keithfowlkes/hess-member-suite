@@ -48,7 +48,7 @@ export default function Dashboards() {
             </div>
             
             <Tabs defaultValue="usage" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsList className="grid w-full grid-cols-4 mb-6">
                 <TabsTrigger value="usage" className="gap-2">
                   <PieChart className="h-4 w-4" />
                   System Usage Analytics
@@ -60,6 +60,10 @@ export default function Dashboards() {
                 <TabsTrigger value="security" className="gap-2">
                   <img src={arcticLogo} alt="Arctic" className="h-4 w-4" />
                   Arctic Security Scan
+                </TabsTrigger>
+                <TabsTrigger value="deepseas" className="gap-2">
+                  <img src={deepseasLogo.url} alt="DeepSeas" className="h-4 w-auto" />
+                  DeepSeas Dark Web Service
                 </TabsTrigger>
               </TabsList>
               
