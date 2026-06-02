@@ -389,7 +389,7 @@ export function HessEnrollmentTrends() {
                 tickFormatter={(v) => v.toLocaleString()}
                 width={80}
               />
-              <Tooltip content={<EnrollmentTooltip />} />
+              <Tooltip content={<EnrollmentTooltip chartData={chartData} />} />
               <Legend wrapperStyle={{ fontSize: '12px' }} />
               {lines.map((l) => (
                 <Line
