@@ -98,6 +98,29 @@ const CATEGORY_COLORS = {
   'Public Exposure': 'hsl(48 96% 53%)',
 };
 
+const RISK_DESCRIPTIONS: Record<RiskLevel, string> = {
+  Low: 'Low risk (≤10 events): minimal observed activity; routine monitoring recommended.',
+  Medium: 'Medium risk (11–100 events): moderate activity; review and investigate suspicious entries.',
+  High: 'High risk (101–200 events): elevated activity; prompt remediation and deeper investigation advised.',
+  Critical: 'Critical risk (>200 events): severe activity; immediate action and incident response recommended.',
+};
+
+const RiskTooltip = ({ active, payload }: any) => {
+  if (!active || !payload || !payload.length) return null;
+  const item = payload[0];
+  const level = item.name as RiskLevel;
+  return (
+    <div className="rounded-md border bg-background p-3 shadow-md max-w-xs">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.payload.color }} />
+        <span className="font-semibold text-foreground">{level}</span>
+        <span className="text-muted-foreground text-sm">({item.value} {item.value === 1 ? 'event' : 'events'})</span>
+      </div>
+      <p className="text-xs text-muted-foreground">{RISK_DESCRIPTIONS[level]}</p>
+    </div>
+  );
+};
+
 export function MemberArcticSecurityView() {
   const { user } = useAuth();
 
