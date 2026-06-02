@@ -9,6 +9,7 @@ import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { BarChart3, ChartScatter, MessageSquare, PieChart } from 'lucide-react';
 import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
 import arcticLogo from '@/assets/arctic-logo.png';
+import deepseasLogo from '@/assets/deepseas-logo.jpg.asset.json';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -48,7 +49,7 @@ const MemberAnalytics = () => {
             </div>
             
             <Tabs defaultValue="usage" className="w-full">
-              <TabsList className={`grid w-full mb-6 ${showArcticTab ? 'grid-cols-3' : 'grid-cols-2'}`}>
+              <TabsList className={`grid w-full mb-6 ${showArcticTab ? 'grid-cols-4' : 'grid-cols-3'}`}>
                 <TabsTrigger value="usage" className="gap-2">
                   <PieChart className="h-4 w-4" />
                   System Usage Analytics
@@ -63,6 +64,10 @@ const MemberAnalytics = () => {
                     Arctic Security Assessment
                   </TabsTrigger>
                 )}
+                <TabsTrigger value="deepseas" className="gap-2">
+                  <img src={deepseasLogo.url} alt="DeepSeas" className="h-4 w-auto" />
+                  DeepSeas Dark Web Service
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="usage">
@@ -137,6 +142,27 @@ const MemberAnalytics = () => {
                   <MemberArcticSecurityView />
                 </TabsContent>
               )}
+
+              <TabsContent value="deepseas">
+                <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
+                  <CardHeader>
+                    <div className="flex items-center gap-4">
+                      <img src={deepseasLogo.url} alt="DeepSeas" className="h-12 w-auto" />
+                      <div>
+                        <CardTitle className="text-xl">DeepSeas Dark Web Service</CardTitle>
+                        <p className="text-muted-foreground mt-1">
+                          Dark web monitoring and threat intelligence for HESS Consortium members.
+                        </p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">
+                      DeepSeas Dark Web Service integration coming soon.
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </Tabs>
           </div>
           
