@@ -490,6 +490,13 @@ export function MemberArcticSecurityView() {
             />
           </button>
 
+          <a
+            href="mailto:sales@arcticsecurity.com"
+            className="text-xs text-primary hover:underline"
+          >
+            Click here to email Arctic Security to get HESS pricing for their service.
+          </a>
+
           {aboutOpen && (
             <div className="space-y-4">
               <ul className="list-disc list-inside space-y-1">
