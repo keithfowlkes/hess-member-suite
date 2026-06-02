@@ -496,13 +496,6 @@ export function MemberArcticSecurityView() {
             />
           </button>
 
-          <a
-            href="mailto:sales@arcticsecurity.com?subject=HESS%20Consortium%20Member%20Interest"
-            className="text-xs text-primary hover:underline text-center block"
-          >
-            Click here to email Arctic Security to get HESS pricing for their service.
-          </a>
-
           {aboutOpen && (
             <div className="space-y-4">
               <ul className="list-disc list-inside space-y-1">
