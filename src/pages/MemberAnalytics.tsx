@@ -133,10 +133,23 @@ const MemberAnalytics = () => {
                           <OrganizationSizeFinancialCorrelation />
                         </AccordionContent>
                       </AccordionItem>
+
+                      <AccordionItem value="hess-enrollment-trends">
+                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                            <span>HESS Member Institution Enrollment Trends</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <HessEnrollmentTrends />
+                        </AccordionContent>
+                      </AccordionItem>
                     </Accordion>
                   </CardContent>
                 </Card>
               </TabsContent>
+PLACEHOLDER_REMOVE_ME
               
               {showArcticTab && (
                 <TabsContent value="security">
