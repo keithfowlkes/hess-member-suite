@@ -183,12 +183,11 @@ export function useSettings() {
 
       setSettings(data || []);
     } catch (error: any) {
-      toast({
-        title: 'Error fetching settings',
-        description: error.message,
-        variant: 'destructive'
-      });
+      console.error('❌ Error fetching settings:', error);
+      // Silently fail on transient network errors so route changes don't
+      // flash a destructive toast.
     }
+
   };
 
   const updateSetting = async (settingKey: string, value: string) => {
