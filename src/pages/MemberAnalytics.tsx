@@ -60,7 +60,7 @@ const MemberAnalytics = () => {
                 {showArcticTab && (
                   <TabsTrigger value="security" className="gap-2">
                     <img src={arcticLogo} alt="Arctic" className="h-4 w-4" />
-                    Arctic Security Scan
+                    Arctic Security Assessment
                   </TabsTrigger>
                 )}
               </TabsList>
