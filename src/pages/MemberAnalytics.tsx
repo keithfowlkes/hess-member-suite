@@ -49,7 +49,7 @@ const MemberAnalytics = () => {
             </div>
             
             <Tabs defaultValue="usage" className="w-full">
-              <TabsList className={`grid w-full mb-6 ${showArcticTab ? 'grid-cols-3' : 'grid-cols-2'}`}>
+              <TabsList className={`grid w-full mb-6 ${showArcticTab ? 'grid-cols-4' : 'grid-cols-3'}`}>
                 <TabsTrigger value="usage" className="gap-2">
                   <PieChart className="h-4 w-4" />
                   System Usage Analytics
@@ -64,6 +64,10 @@ const MemberAnalytics = () => {
                     Arctic Security Assessment
                   </TabsTrigger>
                 )}
+                <TabsTrigger value="deepseas" className="gap-2">
+                  <img src={deepseasLogo.url} alt="DeepSeas" className="h-4 w-auto" />
+                  DeepSeas Dark Web Service
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="usage">
