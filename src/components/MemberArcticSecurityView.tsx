@@ -98,6 +98,29 @@ const CATEGORY_COLORS = {
   'Public Exposure': 'hsl(48 96% 53%)',
 };
 
+const RISK_DESCRIPTIONS: Record<RiskLevel, string> = {
+  Low: 'Low risk (≤10 events): minimal observed activity; routine monitoring recommended.',
+  Medium: 'Medium risk (11–100 events): moderate activity; review and investigate suspicious entries.',
+  High: 'High risk (101–200 events): elevated activity; prompt remediation and deeper investigation advised.',
+  Critical: 'Critical risk (>200 events): severe activity; immediate action and incident response recommended.',
+};
+
+const RiskTooltip = ({ active, payload }: any) => {
+  if (!active || !payload || !payload.length) return null;
+  const item = payload[0];
+  const level = item.name as RiskLevel;
+  return (
+    <div className="rounded-md border bg-background p-3 shadow-md max-w-xs">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.payload.color }} />
+        <span className="font-semibold text-foreground">{level}</span>
+        <span className="text-muted-foreground text-sm">({item.value} {item.value === 1 ? 'event' : 'events'})</span>
+      </div>
+      <p className="text-xs text-muted-foreground">{RISK_DESCRIPTIONS[level]}</p>
+    </div>
+  );
+};
+
 export function MemberArcticSecurityView() {
   const { user } = useAuth();
 
@@ -186,6 +209,24 @@ export function MemberArcticSecurityView() {
   }, [myOrgData]);
 
   const orgChartConfig = orgPieData.reduce((acc, d) => {
+    acc[d.name] = { label: d.name, color: d.color };
+    return acc;
+  }, {} as Record<string, { label: string; color: string }>);
+
+  // Organization-specific risk-level distribution (events grouped by risk level per category)
+  const orgRiskDistribution = useMemo(() => {
+    if (!myOrgData) return [];
+    const counts: Record<RiskLevel, number> = { Low: 0, Medium: 0, High: 0, Critical: 0 };
+    for (const cat of myOrgData.categories) {
+      const level = getRiskLevel(cat.events);
+      counts[level] += cat.events;
+    }
+    return (['Critical', 'High', 'Medium', 'Low'] as RiskLevel[])
+      .map(level => ({ name: level, value: counts[level], color: RISK_COLORS[level] }))
+      .filter(d => d.value > 0);
+  }, [myOrgData]);
+
+  const orgRiskChartConfig = orgRiskDistribution.reduce((acc, d) => {
     acc[d.name] = { label: d.name, color: d.color };
     return acc;
   }, {} as Record<string, { label: string; color: string }>);
@@ -327,50 +368,61 @@ export function MemberArcticSecurityView() {
         </CardContent>
       </Card>
 
-      {/* Consortium-Wide Risk Level Distribution — RIGHT */}
+      {/* Organization-Specific Risk Level Distribution — RIGHT */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Shield className="h-4 w-4 text-primary" />
-            Consortium-Wide Risk Level Distribution
+            Your Risk Level Distribution
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Risk level distribution across all scanned institutions (no institution-specific data shown)
+            Risk level distribution of observed events for your organization (hover slices for threat level details)
           </p>
         </CardHeader>
         <CardContent className="flex flex-col items-center">
-          <ChartContainer config={riskChartConfig} className="h-[220px] w-[220px]">
-            <PieChart>
-              <Pie
-                data={riskDistribution}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={95}
-                paddingAngle={3}
-              >
-                {riskDistribution.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
+          {orgRiskDistribution.length === 0 ? (
+            <div className="text-center py-8">
+              <Shield className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+              <p className="text-muted-foreground text-sm">
+                No risk distribution data available for your organization.
+              </p>
+            </div>
+          ) : (
+            <>
+              <ChartContainer config={orgRiskChartConfig} className="h-[220px] w-[220px]">
+                <PieChart>
+                  <Pie
+                    data={orgRiskDistribution}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={95}
+                    paddingAngle={3}
+                  >
+                    {orgRiskDistribution.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<RiskTooltip />} />
+                </PieChart>
+              </ChartContainer>
+              <div className="flex flex-wrap gap-3 mt-4 justify-center">
+                {orgRiskDistribution.map(d => (
+                  <div key={d.name} className="flex items-center gap-1.5 text-sm">
+                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                    <span className="text-muted-foreground">{d.name}</span>
+                    <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
+                  </div>
                 ))}
-              </Pie>
-              <ChartTooltip content={<ChartTooltipContent />} />
-            </PieChart>
-          </ChartContainer>
-          <div className="flex flex-wrap gap-3 mt-4 justify-center">
-            {riskDistribution.map(d => (
-              <div key={d.name} className="flex items-center gap-1.5 text-sm">
-                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                <span className="text-muted-foreground">{d.name}</span>
-                <span className="font-semibold text-foreground">{d.value}</span>
               </div>
-            ))}
-          </div>
-          <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1 mt-4">
-            <Shield className="h-3 w-3" />
-            Last Scan: February 2026
-          </Badge>
+              <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1 mt-4">
+                <Shield className="h-3 w-3" />
+                Last Scan: February 2026
+              </Badge>
+            </>
+          )}
         </CardContent>
       </Card>
       </div>
