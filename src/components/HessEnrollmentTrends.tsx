@@ -18,10 +18,14 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  TooltipProps,
 } from 'recharts';
 
-function EnrollmentTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function EnrollmentTooltip(props: {
+  active?: boolean;
+  payload?: Array<{ name?: string; value?: number; color?: string }>;
+  label?: string;
+}) {
+  const { active, payload, label } = props;
   if (!active || !payload || payload.length === 0) return null;
 
   const sorted = [...payload].sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
