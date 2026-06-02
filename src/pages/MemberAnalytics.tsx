@@ -9,7 +9,7 @@ import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { BarChart3, ChartScatter, MessageSquare, PieChart } from 'lucide-react';
 import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
 import arcticLogo from '@/assets/arctic-logo.png';
-import deepseasLogo from '@/assets/deepseas-logo.jpg.asset.json';
+import deepseasLogo from '@/assets/deepseas-logo.png.asset.json';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
