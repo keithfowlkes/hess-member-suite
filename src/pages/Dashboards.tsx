@@ -142,6 +142,30 @@ export default function Dashboards() {
               <TabsContent value="security">
                 <ArcticSecurityDashboard />
               </TabsContent>
+
+              <TabsContent value="deepseas">
+                <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
+                  <CardHeader>
+                    <div className="flex items-center gap-4">
+                      <img src={deepseasLogo.url} alt="DeepSeas" className="h-12 w-auto" />
+                      <div>
+                        <CardTitle className="text-xl">DeepSeas Dark Web Service</CardTitle>
+                        <p className="text-muted-foreground mt-1">
+                          Dark web monitoring and threat intelligence for subscribing HESS Consortium member institutions.
+                        </p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">
+                      DeepSeas Dark Web Service integration coming soon.
+                    </p>
+                    <p className="text-muted-foreground mt-2">
+                      If you have not subscribed to this service, you will not see any data for your institution. For more information, <a href="mailto:sales@deepseas.com?subject=HESS%20Consortium%20Member%20Interest" className="text-primary hover:underline">click here</a> to email DeepSeas for HESS discount pricing for this service.
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </Tabs>
           </div>
           
