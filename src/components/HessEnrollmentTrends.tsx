@@ -20,6 +20,40 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
+function EnrollmentTooltip(props: {
+  active?: boolean;
+  payload?: Array<{ name?: string; value?: number; color?: string }>;
+  label?: string;
+}) {
+  const { active, payload, label } = props;
+  if (!active || !payload || payload.length === 0) return null;
+
+  const sorted = [...payload].sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
+
+  return (
+    <div className="rounded-lg border bg-background shadow-lg p-3 min-w-[220px]">
+      <div className="font-semibold text-sm mb-2 text-foreground">{label}</div>
+      <div className="space-y-1">
+        {sorted.map((entry, index) => (
+          <div key={index} className="flex items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="truncate text-muted-foreground">{entry.name}</span>
+            </div>
+            <span className="font-medium tabular-nums text-foreground">
+              {(entry.value ?? 0).toLocaleString()}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 interface Institution {
   name: string;
   city: string;
@@ -211,14 +245,7 @@ export function HessEnrollmentTrends() {
                 tickFormatter={(v) => v.toLocaleString()}
                 width={80}
               />
-              <Tooltip
-                formatter={(v: number) => formatNum(v)}
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '6px',
-                }}
-              />
+              <Tooltip content={<EnrollmentTooltip />} />
               <Legend wrapperStyle={{ fontSize: '12px' }} />
               {lines.map((l) => (
                 <Line
