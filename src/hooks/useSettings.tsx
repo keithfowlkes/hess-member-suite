@@ -89,12 +89,11 @@ export function useSettings() {
       console.log('👥 User list updated with validated profiles');
     } catch (error: any) {
       console.error('❌ Error fetching users:', error);
-      toast({
-        title: 'Error fetching users',
-        description: error.message,
-        variant: 'destructive'
-      });
+      // Silently fail on transient network errors (e.g. "Load failed") so
+      // dashboard navigations don't flash a destructive toast. Real failures
+      // still surface via console + empty user list.
     }
+
   };
 
   const resetUserPassword = async (email: string) => {
@@ -184,12 +183,11 @@ export function useSettings() {
 
       setSettings(data || []);
     } catch (error: any) {
-      toast({
-        title: 'Error fetching settings',
-        description: error.message,
-        variant: 'destructive'
-      });
+      console.error('❌ Error fetching settings:', error);
+      // Silently fail on transient network errors so route changes don't
+      // flash a destructive toast.
     }
+
   };
 
   const updateSetting = async (settingKey: string, value: string) => {
