@@ -245,14 +245,7 @@ export function HessEnrollmentTrends() {
                 tickFormatter={(v) => v.toLocaleString()}
                 width={80}
               />
-              <Tooltip
-                formatter={(v: number) => formatNum(v)}
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '6px',
-                }}
-              />
+              <Tooltip content={<EnrollmentTooltip />} />
               <Legend wrapperStyle={{ fontSize: '12px' }} />
               {lines.map((l) => (
                 <Line
