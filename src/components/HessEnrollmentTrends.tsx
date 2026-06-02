@@ -218,6 +218,42 @@ export function HessEnrollmentTrends() {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30">
+        <div className="text-sm">
+          <span className="font-medium">Source data:</span>{' '}
+          <span className="text-muted-foreground">
+            {customLoaded ? 'Custom upload' : 'Default dataset'} — {data.length} institutions
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFile(f);
+              if (fileInputRef.current) fileInputRef.current.value = '';
+            }}
+          />
+          <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="h-4 w-4 mr-1.5" />
+            Upload .xlsx / .csv
+          </Button>
+          {customLoaded && (
+            <Button size="sm" variant="ghost" onClick={resetData}>
+              <RotateCcw className="h-4 w-4 mr-1.5" />
+              Reset
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        Expected columns: <code className="text-[11px]">name</code>, <code className="text-[11px]">city</code>, <code className="text-[11px]">state</code>, and one column per year (<code className="text-[11px]">2020</code>–<code className="text-[11px]">2025</code>).
+      </p>
+
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex-1 min-w-[260px]">
           <Label className="text-sm font-medium mb-2 block">Institutions</Label>
