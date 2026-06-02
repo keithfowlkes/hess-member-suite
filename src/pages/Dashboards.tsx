@@ -7,7 +7,8 @@ import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMS
 import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationSizeFinancialCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { ArcticSecurityDashboard } from '@/components/ArcticSecurityDashboard';
-import { BarChart3, ChartScatter, MessageSquare, PieChart } from 'lucide-react';
+import { BarChart3, ChartScatter, MessageSquare, PieChart, TrendingUp } from 'lucide-react';
+import { HessEnrollmentTrends } from '@/components/HessEnrollmentTrends';
 import arcticLogo from '@/assets/arctic-logo.png';
 import deepseasLogo from '@/assets/deepseas-logo.png.asset.json';
 import { Button } from '@/components/ui/button';
@@ -132,6 +133,18 @@ export default function Dashboards() {
                         </AccordionTrigger>
                         <AccordionContent>
                           <OrganizationSizeFinancialCorrelation />
+                        </AccordionContent>
+                      </AccordionItem>
+
+                      <AccordionItem value="hess-enrollment-trends">
+                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                            <span>HESS Member Institution Enrollment Trends</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <HessEnrollmentTrends />
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
