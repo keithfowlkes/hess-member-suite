@@ -8,7 +8,7 @@ import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from '@/components/ui/chart';
 import { PieChart, Pie, Cell } from 'recharts';
-import { Shield, Lock, HelpCircle, ChevronDown } from 'lucide-react';
+import { Shield, Lock, HelpCircle, ChevronDown, FileDown } from 'lucide-react';
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import arcticLogo from '@/assets/arctic-logo.png';
+import sampleReport from '@/assets/ews-sample-report.pdf.asset.json';
 
 // ── Same raw sample data as admin dashboard ──
 const RAW_DATA = [
@@ -463,8 +464,9 @@ export function MemberArcticSecurityView() {
       </Card>
       </div>
 
-      {/* About Arctic Security */}
-      <Card>
+      {/* About Arctic Security + Sample Report */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <img src={arcticLogo} alt="Arctic" className="h-4 w-4" />
@@ -547,6 +549,32 @@ export function MemberArcticSecurityView() {
           )}
         </CardContent>
       </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileDown className="h-4 w-4" />
+              Sample Report
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm text-muted-foreground">
+            <p>
+              Download an example Arctic EWS Periodic Protection Report to see the format and depth of information delivered to subscribing organizations.
+            </p>
+            <a
+              href={sampleReport.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-6 text-center transition-colors hover:bg-muted/50 hover:border-primary"
+            >
+              <FileDown className="h-10 w-10 text-primary" />
+              <span className="font-medium text-foreground">Download Sample Report</span>
+              <span className="text-xs">PDF · Opens in new tab</span>
+            </a>
+          </CardContent>
+        </Card>
+      </div>
+
 
       {/* Threat Category Definitions */}
       <Card>
