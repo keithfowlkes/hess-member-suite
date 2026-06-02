@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -8,7 +8,7 @@ import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from '@/components/ui/chart';
 import { PieChart, Pie, Cell } from 'recharts';
-import { Shield, Lock, HelpCircle } from 'lucide-react';
+import { Shield, Lock, HelpCircle, ChevronDown } from 'lucide-react';
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
@@ -123,6 +123,7 @@ const RiskTooltip = ({ active, payload }: any) => {
 
 export function MemberArcticSecurityView() {
   const { user } = useAuth();
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   // Fetch the logged-in user's organization name
   const { data: userOrg } = useQuery({
@@ -439,62 +440,76 @@ export function MemberArcticSecurityView() {
           <p>
             Arctic EWS matches global cybersecurity observations to your organization and turns them into ready-to-use notifications. It handles threat types such as compromised machines and remotely exploitable services that act as publicly accessible weak points in your network. Arctic EWS notifications reveal the immediate security issues in your organization's network. Enhance your security by increasing the visibility of cybersecurity issues such as data breaches that could damage your operations. Instead of reacting to issues, anticipate them using high-quality information: fix problems before they cause harm.
           </p>
-          <div>
-            <p className="font-medium text-foreground mb-2">Examples of different categories of data that are available through the service:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Compromised systems — Infected hosts (e.g. bots communicating with sinkholes)</li>
-              <li>Botnet infrastructure (e.g. command and control)</li>
-              <li>Compromised systems that are serving malware</li>
-              <li>Attacking IPs (Systems in your network attacking others)</li>
-              <li>Sources of spam and phishing</li>
-              <li>Defacements</li>
-            </ul>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-2">Available EWS notification types</p>
-            <p className="font-medium text-foreground mt-3 mb-1">Vulnerable Systems</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Services and systems with known vulnerabilities</li>
-              <li>Services that enable use of weak crypto algorithms</li>
-              <li>Services with expired x509 certificates</li>
-              <li>Services facilitating amplification (DDOS) attacks</li>
-              <li>Misconfigured servers</li>
-            </ul>
-            <p className="font-medium text-foreground mt-3 mb-1">Open services</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Open database servers</li>
-              <li>Open VPN and VNC servers</li>
-             <li>Services that should not be exposed to internet</li>
-            </ul>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-2">Leaked Data Service Description</p>
-            <p>The following notifications are available as optional additions to Arctic Early Warning Service:</p>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-2">Compromised Credentials</p>
-            <p>This dataset contains compromised usernames and passwords that have been observed in data dumps or by investigating malware stealer logs. Based on the collection method, this dataset contains currently the following content:</p>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-2">Leaked Credentials</p>
-            <p>Leaked credentials report credentials that have been leaked in a data breach and shared publicly on the internet. The credentials are identified by the customer's email domains. The data source contains usernames, leaked or reversed plaintext passwords or hashed passwords that have been leaked in data breaches, along with information about the data breach in which each entry has been leaked. Users will initially receive all historical entries for their domains. After the initial batch, they will continue to be informed about new findings.</p>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-2">Stolen Credentials</p>
-            <p>Stolen credentials notify users about stolen credentials associated with their email domains. These observations indicate that a compromised client device has been used when logging in by using the reported credentials.</p>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-2">Stolen Sessions</p>
-            <p>Stolen sessions are about session cookies associated with the monitored domain names. A stolen session cookie indicates that a compromised client device has been used when accessing a service within the monitored domain.</p>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-2">Dark Web Data</p>
-            <p>Dark Web Data dataset contains data associated with the domain name of the user's organization. The reported data is leaked or stolen and published either in the dark web or in a download service. This dataset contains the following data feed:</p>
-          </div>
-          <div>
-            <p className="font-medium text-foreground mb-2">Leaked Content</p>
-            <p>The feed provides links to leaked data content. The recipient should review the content with caution to assess its significance. Content may vary but a typical scenario is ransomware extortion, where the linked data is at risk of being published.</p>
-          </div>
+
+          <button
+            onClick={() => setAboutOpen(!aboutOpen)}
+            className="w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors hover:bg-muted/50"
+          >
+            <span className="font-medium text-foreground">
+              Examples of different categories of data that are available through the service
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${aboutOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {aboutOpen && (
+            <div className="space-y-4">
+              <ul className="list-disc list-inside space-y-1">
+                <li>Compromised systems — Infected hosts (e.g. bots communicating with sinkholes)</li>
+                <li>Botnet infrastructure (e.g. command and control)</li>
+                <li>Compromised systems that are serving malware</li>
+                <li>Attacking IPs (Systems in your network attacking others)</li>
+                <li>Sources of spam and phishing</li>
+                <li>Defacements</li>
+              </ul>
+              <div>
+                <p className="font-medium text-foreground mb-2">Available EWS notification types</p>
+                <p className="font-medium text-foreground mt-3 mb-1">Vulnerable Systems</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Services and systems with known vulnerabilities</li>
+                  <li>Services that enable use of weak crypto algorithms</li>
+                  <li>Services with expired x509 certificates</li>
+                  <li>Services facilitating amplification (DDOS) attacks</li>
+                  <li>Misconfigured servers</li>
+                </ul>
+                <p className="font-medium text-foreground mt-3 mb-1">Open services</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Open database servers</li>
+                  <li>Open VPN and VNC servers</li>
+                  <li>Services that should not be exposed to internet</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-2">Leaked Data Service Description</p>
+                <p>The following notifications are available as optional additions to Arctic Early Warning Service:</p>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-2">Compromised Credentials</p>
+                <p>This dataset contains compromised usernames and passwords that have been observed in data dumps or by investigating malware stealer logs. Based on the collection method, this dataset contains currently the following content:</p>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-2">Leaked Credentials</p>
+                <p>Leaked credentials report credentials that have been leaked in a data breach and shared publicly on the internet. The credentials are identified by the customer's email domains. The data source contains usernames, leaked or reversed plaintext passwords or hashed passwords that have been leaked in data breaches, along with information about the data breach in which each entry has been leaked. Users will initially receive all historical entries for their domains. After the initial batch, they will continue to be informed about new findings.</p>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-2">Stolen Credentials</p>
+                <p>Stolen credentials notify users about stolen credentials associated with their email domains. These observations indicate that a compromised client device has been used when logging in by using the reported credentials.</p>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-2">Stolen Sessions</p>
+                <p>Stolen sessions are about session cookies associated with the monitored domain names. A stolen session cookie indicates that a compromised client device has been used when accessing a service within the monitored domain.</p>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-2">Dark Web Data</p>
+                <p>Dark Web Data dataset contains data associated with the domain name of the user's organization. The reported data is leaked or stolen and published either in the dark web or in a download service. This dataset contains the following data feed:</p>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-2">Leaked Content</p>
+                <p>The feed provides links to leaked data content. The recipient should review the content with caution to assess its significance. Content may vary but a typical scenario is ransomware extortion, where the linked data is at risk of being published.</p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
