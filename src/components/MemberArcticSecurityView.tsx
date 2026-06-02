@@ -547,6 +547,80 @@ export function MemberArcticSecurityView() {
           )}
         </CardContent>
       </Card>
+
+      {/* Threat Category Definitions */}
+      <Card>
+        <CardHeader className="pb-3">
+          <button
+            onClick={() => setCategoryOpen(!categoryOpen)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <CardTitle className="text-base">Threat Category Definitions</CardTitle>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${categoryOpen ? 'rotate-180' : ''}`} />
+          </button>
+        </CardHeader>
+        {categoryOpen && (
+          <CardContent>
+            <div className="overflow-x-auto rounded-md border">
+              <table className="w-full text-sm">
+                <thead className="bg-primary text-primary-foreground">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold">Category</th>
+                    <th className="px-4 py-2 text-left font-semibold">Domain</th>
+                    <th className="px-4 py-2 text-left font-semibold">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {threatCategories.map((row, i) => (
+                    <tr key={row.category} className={i % 2 === 0 ? 'bg-muted/30' : ''}>
+                      <td className="px-4 py-2 align-top font-medium whitespace-nowrap">{row.category}</td>
+                      <td className="px-4 py-2 align-top whitespace-nowrap">{row.domain}</td>
+                      <td className="px-4 py-2 align-top text-muted-foreground">{row.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Threat Type Definitions */}
+      <Card>
+        <CardHeader className="pb-3">
+          <button
+            onClick={() => setTypeOpen(!typeOpen)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <CardTitle className="text-base">Threat Type Definitions</CardTitle>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${typeOpen ? 'rotate-180' : ''}`} />
+          </button>
+        </CardHeader>
+        {typeOpen && (
+          <CardContent>
+            <div className="overflow-x-auto rounded-md border">
+              <table className="w-full text-sm">
+                <thead className="bg-primary text-primary-foreground">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold">Type</th>
+                    <th className="px-4 py-2 text-left font-semibold">Description</th>
+                    <th className="px-4 py-2 text-left font-semibold">Impact</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {threatTypes.map((row, i) => (
+                    <tr key={row.type} className={i % 2 === 0 ? 'bg-muted/30' : ''}>
+                      <td className="px-4 py-2 align-top font-medium whitespace-nowrap">{row.type}</td>
+                      <td className="px-4 py-2 align-top text-muted-foreground">{row.description}</td>
+                      <td className="px-4 py-2 align-top text-muted-foreground">{row.impact}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        )}
+      </Card>
     </div>
   );
 }
