@@ -7,7 +7,8 @@ import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMS
 import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationSizeFinancialCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { ArcticSecurityDashboard } from '@/components/ArcticSecurityDashboard';
-import { BarChart3, ChartScatter, MessageSquare, PieChart } from 'lucide-react';
+import { BarChart3, ChartScatter, MessageSquare, PieChart, TrendingUp } from 'lucide-react';
+import { HessEnrollmentTrends } from '@/components/HessEnrollmentTrends';
 import arcticLogo from '@/assets/arctic-logo.png';
 import deepseasLogo from '@/assets/deepseas-logo.png.asset.json';
 import { Button } from '@/components/ui/button';
