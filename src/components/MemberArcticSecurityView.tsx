@@ -492,7 +492,7 @@ export function MemberArcticSecurityView() {
 
           <a
             href="mailto:sales@arcticsecurity.com"
-            className="text-xs text-primary hover:underline"
+            className="text-xs text-primary hover:underline text-center block"
           >
             Click here to email Arctic Security to get HESS pricing for their service.
           </a>
