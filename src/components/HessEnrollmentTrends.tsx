@@ -78,11 +78,94 @@ const LINE_COLORS = [
 ];
 
 export function HessEnrollmentTrends() {
-  const data = enrollmentData as Institution[];
+  const defaultData = enrollmentData as Institution[];
+  const [data, setData] = useState<Institution[]>(defaultData);
   const [selected, setSelected] = useState<string[]>([]);
   const [combined, setCombined] = useState(true);
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
+  const [customLoaded, setCustomLoaded] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const normalizeRows = (rows: Record<string, unknown>[]): Institution[] => {
+    const findKey = (row: Record<string, unknown>, candidates: string[]) => {
+      const keys = Object.keys(row);
+      for (const c of candidates) {
+        const k = keys.find((x) => x.trim().toLowerCase() === c.toLowerCase());
+        if (k) return k;
+      }
+      return undefined;
+    };
+    return rows
+      .map((row) => {
+        const nameKey = findKey(row, ['name', 'institution', 'institution name', 'school']);
+        const cityKey = findKey(row, ['city']);
+        const stateKey = findKey(row, ['state']);
+        if (!nameKey) return null;
+        const name = String(row[nameKey] ?? '').trim();
+        if (!name) return null;
+        const enrollment: Record<string, number> = {};
+        YEARS.forEach((y) => {
+          const k = findKey(row, [y, `FY${y}`, `${y} enrollment`]);
+          if (k != null) {
+            const v = row[k];
+            const num = typeof v === 'number' ? v : parseFloat(String(v).replace(/[, ]/g, ''));
+            enrollment[y] = isNaN(num) ? 0 : num;
+          } else {
+            enrollment[y] = 0;
+          }
+        });
+        return {
+          name,
+          city: cityKey ? String(row[cityKey] ?? '').trim() : '',
+          state: stateKey ? String(row[stateKey] ?? '').trim() : '',
+          enrollment,
+        } as Institution;
+      })
+      .filter((x): x is Institution => x !== null);
+  };
+
+  const applyData = (rows: Institution[]) => {
+    if (rows.length === 0) {
+      toast.error('No valid rows found in the uploaded file.');
+      return;
+    }
+    setData(rows);
+    setSelected([]);
+    setCustomLoaded(true);
+    toast.success(`Loaded ${rows.length} institutions from uploaded file.`);
+  };
+
+  const handleFile = async (file: File) => {
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (ext === 'csv') {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (res) => applyData(normalizeRows(res.data as Record<string, unknown>[])),
+          error: (err) => toast.error(`CSV parse error: ${err.message}`),
+        });
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' });
+        applyData(normalizeRows(json));
+      } else {
+        toast.error('Unsupported file type. Please upload .xlsx or .csv');
+      }
+    } catch (e) {
+      toast.error(`Failed to parse file: ${e instanceof Error ? e.message : 'unknown error'}`);
+    }
+  };
+
+  const resetData = () => {
+    setData(defaultData);
+    setSelected([]);
+    setCustomLoaded(false);
+    toast.success('Restored original enrollment data.');
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
