@@ -27,30 +27,52 @@ function EnrollmentTooltip(props: {
   active?: boolean;
   payload?: Array<{ name?: string; value?: number; color?: string }>;
   label?: string;
+  chartData?: Array<Record<string, number | string>>;
 }) {
-  const { active, payload, label } = props;
+  const { active, payload, label, chartData } = props;
   if (!active || !payload || payload.length === 0) return null;
 
   const sorted = [...payload].sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
 
+  const currentYearIndex = YEARS.indexOf(label ?? '');
+  const prevYear = currentYearIndex > 0 ? YEARS[currentYearIndex - 1] : null;
+  const prevRow = prevYear && chartData ? chartData.find((d) => d.year === prevYear) : null;
+
   return (
-    <div className="rounded-lg border bg-background shadow-lg p-3 min-w-[220px]">
+    <div className="rounded-lg border bg-background shadow-lg p-3 min-w-[260px]">
       <div className="font-semibold text-sm mb-2 text-foreground">{label}</div>
       <div className="space-y-1">
-        {sorted.map((entry, index) => (
-          <div key={index} className="flex items-center justify-between gap-3 text-sm">
-            <div className="flex items-center gap-2 min-w-0">
-              <span
-                className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="truncate text-muted-foreground">{entry.name}</span>
+        {sorted.map((entry, index) => {
+          const prevValue = prevRow ? (prevRow[entry.name ?? ''] as number) : null;
+          const currentValue = entry.value ?? 0;
+          let pctChange: string | null = null;
+          let pctColor = '';
+          if (prevValue && prevValue > 0) {
+            const diff = ((currentValue - prevValue) / prevValue) * 100;
+            pctChange = `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%`;
+            pctColor = diff >= 0 ? 'text-green-500' : 'text-red-500';
+          }
+
+          return (
+            <div key={index} className="flex items-center justify-between gap-3 text-sm">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span
+                  className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="truncate text-muted-foreground">{entry.name}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {pctChange && (
+                  <span className={`text-xs tabular-nums ${pctColor}`}>{pctChange}</span>
+                )}
+                <span className="font-medium tabular-nums text-foreground">
+                  {(entry.value ?? 0).toLocaleString()}
+                </span>
+              </div>
             </div>
-            <span className="font-medium tabular-nums text-foreground">
-              {(entry.value ?? 0).toLocaleString()}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
