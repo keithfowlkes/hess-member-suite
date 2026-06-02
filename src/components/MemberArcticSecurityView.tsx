@@ -562,7 +562,7 @@ export function MemberArcticSecurityView() {
               Download an example Arctic EWS Periodic Protection Report to see the format and depth of information delivered to subscribing organizations.
             </p>
             <a
-              href={`https://members.hessconsortium.app${sampleReport.url}`}
+              href={sampleReport.url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-6 text-center transition-colors hover:bg-muted/50 hover:border-primary"
