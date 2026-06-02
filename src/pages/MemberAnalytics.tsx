@@ -151,7 +151,7 @@ const MemberAnalytics = () => {
                       <div>
                         <CardTitle className="text-xl">DeepSeas Dark Web Service</CardTitle>
                         <p className="text-muted-foreground mt-1">
-                          Dark web monitoring and threat intelligence for HESS Consortium members.
+                          Dark web monitoring and threat intelligence for subscribing HESS Consortium member institutions.
                         </p>
                       </div>
                     </div>
