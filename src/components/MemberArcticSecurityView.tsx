@@ -213,6 +213,24 @@ export function MemberArcticSecurityView() {
     return acc;
   }, {} as Record<string, { label: string; color: string }>);
 
+  // Organization-specific risk-level distribution (events grouped by risk level per category)
+  const orgRiskDistribution = useMemo(() => {
+    if (!myOrgData) return [];
+    const counts: Record<RiskLevel, number> = { Low: 0, Medium: 0, High: 0, Critical: 0 };
+    for (const cat of myOrgData.categories) {
+      const level = getRiskLevel(cat.events);
+      counts[level] += cat.events;
+    }
+    return (['Critical', 'High', 'Medium', 'Low'] as RiskLevel[])
+      .map(level => ({ name: level, value: counts[level], color: RISK_COLORS[level] }))
+      .filter(d => d.value > 0);
+  }, [myOrgData]);
+
+  const orgRiskChartConfig = orgRiskDistribution.reduce((acc, d) => {
+    acc[d.name] = { label: d.name, color: d.color };
+    return acc;
+  }, {} as Record<string, { label: string; color: string }>);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
