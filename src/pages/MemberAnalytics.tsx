@@ -142,6 +142,27 @@ const MemberAnalytics = () => {
                   <MemberArcticSecurityView />
                 </TabsContent>
               )}
+
+              <TabsContent value="deepseas">
+                <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
+                  <CardHeader>
+                    <div className="flex items-center gap-4">
+                      <img src={deepseasLogo.url} alt="DeepSeas" className="h-12 w-auto" />
+                      <div>
+                        <CardTitle className="text-xl">DeepSeas Dark Web Service</CardTitle>
+                        <p className="text-muted-foreground mt-1">
+                          Dark web monitoring and threat intelligence for HESS Consortium members.
+                        </p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">
+                      DeepSeas Dark Web Service integration coming soon.
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </Tabs>
           </div>
           
