@@ -160,6 +160,9 @@ const MemberAnalytics = () => {
                     <p className="text-muted-foreground">
                       DeepSeas Dark Web Service integration coming soon.
                     </p>
+                    <p className="text-muted-foreground mt-2">
+                      If you have not subscribed to this service, you will not see any data for your institution. For more information, <a href="mailto:sales@deepseas.com?subject=HESS%20Consortium%20Member%20Interest" className="text-primary hover:underline">click here</a> to email DeepSeas for HESS discount pricing for this service.
+                    </p>
                   </CardContent>
                 </Card>
               </TabsContent>
