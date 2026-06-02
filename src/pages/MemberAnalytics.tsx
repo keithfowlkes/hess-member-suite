@@ -149,7 +149,7 @@ const MemberAnalytics = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-PLACEHOLDER_REMOVE_ME
+
               
               {showArcticTab && (
                 <TabsContent value="security">
