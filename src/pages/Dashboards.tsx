@@ -64,7 +64,7 @@ export default function Dashboards() {
                 </TabsTrigger>
                 <TabsTrigger value="deepseas" className="gap-2">
                   <img src={deepseasLogo.url} alt="DeepSeas" className="h-4 w-auto" />
-                  DeepSeas Dark Web Service
+                  Dark Web Service
                 </TabsTrigger>
               </TabsList>
               
