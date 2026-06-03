@@ -276,7 +276,7 @@ export function MemberArcticSecurityView() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Lock className="h-4 w-4 text-primary" />
-             Your Organization's Security Scan
+              Your Organization's Security Assessment
              <Popover>
                <PopoverTrigger asChild>
                  <button className="ml-1 rounded-full hover:bg-muted p-0.5 transition-colors">
@@ -401,7 +401,7 @@ export function MemberArcticSecurityView() {
               </div>
             </div>
           )}
-          <p className="text-xs text-muted-foreground/70 italic mt-4">Your information here is confidential and specific to your HESS member institution.</p>
+          <p className="text-xs text-muted-foreground/70 italic mt-4">Your information here is confidential and specific to your HESS member institution. See below for threat definitions.</p>
         </CardContent>
       </Card>
 
