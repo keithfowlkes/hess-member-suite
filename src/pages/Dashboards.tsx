@@ -117,32 +117,78 @@ export default function Dashboards() {
                           Explore correlations and trends in member data
                         </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setFeedbackDialogOpen(true)}
-                        className="gap-2"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                        What would you like to see?
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        {isAdmin && (
+                          <Button variant="outline" size="sm" onClick={() => setTrendManagerOpen(true)} className="gap-2">
+                            <Settings className="h-4 w-4" />
+                            Manage Analytics
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFeedbackDialogOpen(true)}
+                          className="gap-2"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          What would you like to see?
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <Accordion type="single" collapsible className="w-full">
-                      <AccordionItem value="org-size-correlation">
-                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                          <div className="flex items-center gap-2">
-                            <ChartScatter className="h-5 w-5 text-primary" />
-                            <span>Organization Size vs System Choice</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <OrganizationSizeCorrelation />
-                        </AccordionContent>
-                      </AccordionItem>
-                      
-                      <AccordionItem value="org-size-lms-correlation">
+                      {trendEntries
+                        .filter((e) => e.enabled || isAdmin)
+                        .map((entry) => {
+                          const Icon = entry.analytic_key === 'hess_enrollment' ? TrendingUp : ChartScatter;
+                          return (
+                            <AccordionItem key={entry.id} value={entry.id}>
+                              <div className="flex items-center gap-2">
+                                <AccordionTrigger className="text-lg font-semibold hover:no-underline flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <Icon className="h-5 w-5 text-primary" />
+                                    <span>{entry.title}</span>
+                                    {!entry.enabled && (
+                                      <span className="text-xs font-normal text-muted-foreground">(hidden)</span>
+                                    )}
+                                  </div>
+                                </AccordionTrigger>
+                                {isAdmin && (
+                                  <div className="flex items-center gap-1 pr-2">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={(e) => { e.stopPropagation(); handleEditTrendEntry(entry); }}
+                                      aria-label="Edit analytic"
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={(e) => { e.stopPropagation(); handleDeleteTrendEntry(entry); }}
+                                      aria-label="Delete analytic"
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                              <AccordionContent>
+                                {entry.analytic_key === 'org_size_erp' && <OrganizationSizeCorrelation />}
+                                {entry.analytic_key === 'org_size_lms' && <OrganizationSizeLMSCorrelation />}
+                                {entry.analytic_key === 'org_size_financial' && <OrganizationSizeFinancialCorrelation />}
+                                {entry.analytic_key === 'hess_enrollment' && <HessEnrollmentTrends />}
+                              </AccordionContent>
+                            </AccordionItem>
+                          );
+                        })}
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
                         <AccordionTrigger className="text-lg font-semibold hover:no-underline">
                           <div className="flex items-center gap-2">
                             <ChartScatter className="h-5 w-5 text-primary" />
