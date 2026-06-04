@@ -51,7 +51,8 @@ const MemberAnalytics = () => {
   };
 
   const { data: arcticSetting } = useSystemSetting('arctic_scan_member_visible');
-  const showArcticTab = arcticSetting?.setting_value !== 'false'; // default true
+  const showArcticTab = isAdmin && arcticSetting?.setting_value !== 'false'; // admin-only
+
   return <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
