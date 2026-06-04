@@ -16,9 +16,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSystemSetting } from '@/hooks/useSystemSettings';
+import { useAuth } from '@/hooks/useAuth';
+import { TrendAnalyticsManager, useTrendEntries } from '@/components/TrendAnalyticsManager';
+import { Settings } from 'lucide-react';
 
 const MemberAnalytics = () => {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [trendManagerOpen, setTrendManagerOpen] = useState(false);
+  const { isAdmin } = useAuth();
+  const { data: trendEntries = [] } = useTrendEntries();
   const { data: arcticSetting } = useSystemSetting('arctic_scan_member_visible');
   const showArcticTab = arcticSetting?.setting_value !== 'false'; // default true
   return <SidebarProvider>
