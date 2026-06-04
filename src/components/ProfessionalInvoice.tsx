@@ -364,3 +364,46 @@ export function ProfessionalInvoice({ invoice, template, registrationCode }: Pro
     </div>
   );
 }
+
+function ConferenceRegistrationCodeBlock({
+  organizationId,
+  override,
+}: {
+  organizationId?: string | null;
+  override?: string | null;
+}) {
+  const { data } = useConferenceRegistrationCode(organizationId);
+  const code = override || data?.code;
+  if (!code) return null;
+  return (
+    <div
+      style={{
+        margin: '1.5rem 0',
+        padding: '1rem 1.25rem',
+        border: '2px dashed #0c2340',
+        borderRadius: 6,
+        background: '#f3f6fb',
+      }}
+    >
+      <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0c2340', margin: 0 }}>
+        HESS 2026 Conference Registration Code
+      </h3>
+      <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.85rem', color: '#444' }}>
+        Use this unique code to register <strong>one attendee</strong> from your
+        institution for the HESS 2026 Conference:
+      </p>
+      <p
+        style={{
+          margin: '0.5rem 0 0 0',
+          fontFamily: 'Menlo, Consolas, monospace',
+          fontSize: '1.15rem',
+          fontWeight: 700,
+          letterSpacing: '0.05em',
+          color: '#0c2340',
+        }}
+      >
+        {code}
+      </p>
+    </div>
+  );
+}
