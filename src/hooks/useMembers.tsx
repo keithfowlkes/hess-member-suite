@@ -116,7 +116,6 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
             )
           `)
           .eq('organization_type', 'member')
-          .not('name', 'ilike', '%Administrator%')
           .order('name')
           .range(from, from + PAGE_SIZE - 1);
 
@@ -260,7 +259,6 @@ export function useMembers(statusFilter: 'all' | 'active' | 'pending' | 'expired
           membership_start_date: new Date().toISOString().split('T')[0]
         })
         .neq('membership_status', 'active')
-        .neq('name', 'Administrator')
         .select();
 
       if (error) throw error;
