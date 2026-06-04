@@ -423,6 +423,36 @@ export function SystemHealthStatus() {
                       </div>
                     </div>
                   )}
+
+                  {/* Conference Hub error details */}
+                  {service.name === 'Conference Hub Integration' && service.errors && service.errors.length > 0 && (
+                    <Accordion type="single" collapsible className="mt-2">
+                      <AccordionItem value="errors" className="border-none">
+                        <AccordionTrigger className="py-1 text-xs text-destructive hover:no-underline">
+                          View {service.errors.length} recent error{service.errors.length === 1 ? '' : 's'}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <ul className="space-y-2 mt-2">
+                            {service.errors.map((e, idx) => (
+                              <li key={idx} className="text-xs p-2 rounded border border-destructive/30 bg-destructive/5">
+                                <div className="flex justify-between gap-2">
+                                  <span className="font-medium">
+                                    {e.organization_name || 'Unknown org'} — <code>{e.code}</code>
+                                  </span>
+                                  <span className="text-muted-foreground whitespace-nowrap">
+                                    {new Date(e.created_at).toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="mt-1 text-destructive break-words">
+                                  {e.send_error || 'No error message recorded'}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2">
