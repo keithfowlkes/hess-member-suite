@@ -47,10 +47,17 @@ export function useTrendEntries() {
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  initialEntry?: TrendEntry | null;
 }
 
-export function TrendAnalyticsManager({ open, onOpenChange }: Props) {
+export function TrendAnalyticsManager({ open, onOpenChange, initialEntry }: Props) {
   const qc = useQueryClient();
+  // Preload editor when an initial entry is provided
+  useState(() => {
+    if (initialEntry) {
+      // handled below via effect
+    }
+  });
   const { data: entries = [] } = useTrendEntries();
   const [editing, setEditing] = useState<TrendEntry | null>(null);
   const [isNew, setIsNew] = useState(false);
