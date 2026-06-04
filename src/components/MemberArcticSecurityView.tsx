@@ -560,7 +560,7 @@ export function MemberArcticSecurityView() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <FileDown className="h-4 w-4" />
-              Sample Report
+              Arctic Security Sample Report
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-muted-foreground">
