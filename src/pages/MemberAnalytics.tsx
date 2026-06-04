@@ -17,8 +17,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useAuth } from '@/hooks/useAuth';
-import { TrendAnalyticsManager, useTrendEntries } from '@/components/TrendAnalyticsManager';
-import { Settings } from 'lucide-react';
+import { TrendAnalyticsManager, useTrendEntries, TrendEntry } from '@/components/TrendAnalyticsManager';
+import { Settings, Pencil, Trash2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 const MemberAnalytics = () => {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
