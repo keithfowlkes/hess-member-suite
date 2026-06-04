@@ -2,13 +2,20 @@ import { format } from 'date-fns';
 import { useInvoiceTemplates } from '@/hooks/useInvoiceTemplates';
 import { Invoice } from '@/hooks/useInvoices';
 import { formatCurrency } from '@/lib/utils';
+import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
 
 interface ProfessionalInvoiceProps {
   invoice: Invoice;
   template?: any;
+  /**
+   * Optional override for the conference registration code block. When omitted,
+   * the component looks up the organization's issued code automatically. Pass a
+   * non-empty string (e.g. a placeholder) to force the block to render.
+   */
+  registrationCode?: string | null;
 }
 
-export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoiceProps) {
+export function ProfessionalInvoice({ invoice, template, registrationCode }: ProfessionalInvoiceProps) {
   const { getDefaultTemplate } = useInvoiceTemplates();
   const fallbackTemplate = {
     id: 'fallback',
@@ -331,6 +338,12 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
           <p>{invoice.notes}</p>
         </div>
       )}
+
+      {/* Conference registration code (shown when issued for this org, or when an override is provided for previews) */}
+      <ConferenceRegistrationCodeBlock
+        organizationId={(invoice as any).organization_id}
+        override={registrationCode}
+      />
 
       {/* Payment Information */}
       <div className="payment-info">
