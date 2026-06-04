@@ -26,8 +26,30 @@ import { toast } from 'sonner';
 const MemberAnalytics = () => {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [trendManagerOpen, setTrendManagerOpen] = useState(false);
+  const [editingTrendEntry, setEditingTrendEntry] = useState<TrendEntry | null>(null);
   const { isAdmin } = useAuth();
   const { data: trendEntries = [] } = useTrendEntries();
+  const queryClient = useQueryClient();
+
+  const handleDeleteTrendEntry = async (entry: TrendEntry) => {
+    if (!confirm(`Delete "${entry.title}"?`)) return;
+    const { error } = await supabase
+      .from('trend_analytics_entries' as any)
+      .delete()
+      .eq('id', entry.id);
+    if (error) {
+      toast.error(error.message || 'Failed to delete');
+    } else {
+      toast.success('Deleted');
+      queryClient.invalidateQueries({ queryKey: ['trend-analytics-entries'] });
+    }
+  };
+
+  const handleEditTrendEntry = (entry: TrendEntry) => {
+    setEditingTrendEntry(entry);
+    setTrendManagerOpen(true);
+  };
+
   const { data: arcticSetting } = useSystemSetting('arctic_scan_member_visible');
   const showArcticTab = arcticSetting?.setting_value !== 'false'; // default true
   return <SidebarProvider>
