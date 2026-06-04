@@ -242,6 +242,12 @@ export default function Dashboards() {
         open={feedbackDialogOpen}
         onOpenChange={setFeedbackDialogOpen}
       />
+
+      <TrendAnalyticsManager
+        open={trendManagerOpen}
+        onOpenChange={(v) => { setTrendManagerOpen(v); if (!v) setEditingTrendEntry(null); }}
+        initialEntry={editingTrendEntry}
+      />
     </SidebarProvider>
   );
 }
