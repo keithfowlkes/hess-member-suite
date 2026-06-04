@@ -52,15 +52,20 @@ interface Props {
 
 export function TrendAnalyticsManager({ open, onOpenChange, initialEntry }: Props) {
   const qc = useQueryClient();
-  // Preload editor when an initial entry is provided
-  useState(() => {
-    if (initialEntry) {
-      // handled below via effect
-    }
-  });
   const { data: entries = [] } = useTrendEntries();
   const [editing, setEditing] = useState<TrendEntry | null>(null);
   const [isNew, setIsNew] = useState(false);
+
+  // When the dialog is opened with a specific entry to edit, preload it
+  useEffect(() => {
+    if (open && initialEntry) {
+      setEditing(initialEntry);
+      setIsNew(false);
+    } else if (!open) {
+      setEditing(null);
+      setIsNew(false);
+    }
+  }, [open, initialEntry]);
 
   const save = useMutation({
     mutationFn: async (e: Partial<TrendEntry> & { id?: string }) => {
