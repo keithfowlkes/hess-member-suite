@@ -89,7 +89,6 @@ function DirectoryContent({ showHeader = false, showStats = false }: DirectoryCo
         `)
         .eq('membership_status', 'active')
         .eq('organization_type', 'member')
-        .not('name', 'ilike', '%Administrator%')
         .order('name');
 
       if (error) {

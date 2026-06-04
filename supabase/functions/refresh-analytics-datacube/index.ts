@@ -94,8 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
         primary_office_other
       `)
       .eq('membership_status', 'active')
-      .eq('organization_type', 'member')
-      .not('name', 'ilike', '%Administrator%');
+      .eq('organization_type', 'member');
 
     if (orgError) {
       console.error('Error fetching organizations:', orgError);
