@@ -9,6 +9,8 @@ interface InvoiceEmailData {
   period_start_date: string;
   period_end_date: string;
   notes?: string;
+  registration_code?: string;
+  conference_label?: string;
 }
 
 export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
@@ -85,6 +87,19 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
       <div style="margin: 2rem 0;">
         <h3 style="font-size: 1rem; font-weight: bold; margin-bottom: 0.5rem;">Notes:</h3>
         <p>${data.notes}</p>
+      </div>
+      ` : ''}
+
+      ${data.registration_code ? `
+      <!-- Conference Registration Code -->
+      <div style="margin: 2rem 0; padding: 1rem 1.25rem; border: 2px dashed #0c2340; border-radius: 6px; background: #f3f6fb;">
+        <h3 style="font-size: 1rem; font-weight: bold; color: #0c2340; margin: 0;">${data.conference_label || 'HESS 2026'} Conference Registration Code</h3>
+        <p style="margin: 0.5rem 0 0.25rem 0; font-size: 0.9rem; color: #444;">
+          Use this unique code to register <strong>one attendee</strong> from your institution for the ${data.conference_label || 'HESS 2026'} Conference:
+        </p>
+        <p style="margin: 0.5rem 0 0 0; font-family: Menlo, Consolas, monospace; font-size: 1.15rem; font-weight: bold; letter-spacing: 0.05em; color: #0c2340;">
+          ${data.registration_code}
+        </p>
       </div>
       ` : ''}
 
