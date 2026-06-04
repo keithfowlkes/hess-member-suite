@@ -7,7 +7,7 @@ import { OrganizationSizeLMSCorrelation } from '@/components/OrganizationSizeLMS
 import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationSizeFinancialCorrelation';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { ArcticSecurityDashboard } from '@/components/ArcticSecurityDashboard';
-import { BarChart3, ChartScatter, MessageSquare, PieChart, TrendingUp } from 'lucide-react';
+import { BarChart3, ChartScatter, MessageSquare, PieChart, TrendingUp, Settings, Pencil, Trash2 } from 'lucide-react';
 import { HessEnrollmentTrends } from '@/components/HessEnrollmentTrends';
 import arcticLogo from '@/assets/arctic-logo.png';
 import deepseasLogo from '@/assets/deepseas-logo.png.asset.json';
@@ -15,9 +15,39 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from '@/hooks/useAuth';
+import { TrendAnalyticsManager, useTrendEntries, TrendEntry } from '@/components/TrendAnalyticsManager';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export default function Dashboards() {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [trendManagerOpen, setTrendManagerOpen] = useState(false);
+  const [editingTrendEntry, setEditingTrendEntry] = useState<TrendEntry | null>(null);
+  const { isAdmin } = useAuth();
+  const { data: trendEntries = [] } = useTrendEntries();
+  const queryClient = useQueryClient();
+
+  const handleDeleteTrendEntry = async (entry: TrendEntry) => {
+    if (!confirm(`Delete "${entry.title}"?`)) return;
+    const { error } = await supabase
+      .from('trend_analytics_entries' as any)
+      .delete()
+      .eq('id', entry.id);
+    if (error) {
+      toast.error(error.message || 'Failed to delete');
+    } else {
+      toast.success('Deleted');
+      queryClient.invalidateQueries({ queryKey: ['trend-analytics-entries'] });
+    }
+  };
+
+  const handleEditTrendEntry = (entry: TrendEntry) => {
+    setEditingTrendEntry(entry);
+    setTrendManagerOpen(true);
+  };
+
 
   return (
     <SidebarProvider>
