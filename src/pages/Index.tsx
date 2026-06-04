@@ -20,6 +20,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { getMembershipDuesStatus } from '@/utils/membershipDuesStatus';
 import { MembershipDuesBadge } from '@/components/MembershipDuesBadge';
 import { PayInvoiceButton } from '@/components/PayInvoiceButton';
+import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
+import { Copy, Ticket } from 'lucide-react';
 import { MemberInvoiceViewModal } from '@/components/MemberInvoiceViewModal';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
