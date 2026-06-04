@@ -1,12 +1,21 @@
+import "https://deno.land/std@0.224.0/dotenv/load.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const WEBHOOK_SECRET = Deno.env.get("MEDIUS_EVENTS_WEBHOOK_SECRET")!;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? Deno.env.get("VITE_SUPABASE_URL")!;
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const WEBHOOK_SECRET = Deno.env.get("MEDIUS_EVENTS_WEBHOOK_SECRET") ?? "";
 const FN_URL = `${SUPABASE_URL}/functions/v1/receive-registration-redemption`;
 
+if (!SERVICE_KEY || !WEBHOOK_SECRET) {
+  console.warn(
+    "[skip] Set SUPABASE_SERVICE_ROLE_KEY and MEDIUS_EVENTS_WEBHOOK_SECRET in .env to run integration tests."
+  );
+  Deno.exit(0);
+}
+
 const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
 
 async function getOrgId(): Promise<string> {
   const { data, error } = await admin
