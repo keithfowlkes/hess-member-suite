@@ -637,7 +637,7 @@ const Index = () => {
   );
 };
 
-function ConferenceRegistrationCodeCard({ organizationId }: { organizationId: string }) {
+function ConferenceRegistrationCodeCard({ organizationId, organizationName }: { organizationId: string; organizationName?: string }) {
   const { data, isLoading } = useConferenceRegistrationCode(organizationId);
   const { toast } = useToast();
   if (isLoading || !data?.code) return null;
