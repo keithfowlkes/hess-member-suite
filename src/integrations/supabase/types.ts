@@ -148,6 +148,79 @@ export type Database = {
           },
         ]
       }
+      conference_registration_codes: {
+        Row: {
+          code: string
+          conference_slug: string
+          created_at: string
+          id: string
+          invoice_id: string | null
+          issued_at: string
+          organization_id: string
+          redeemed_at: string | null
+          redeemed_attendee_email: string | null
+          redeemed_attendee_name: string | null
+          send_error: string | null
+          sent_status: string
+          sent_to_conference_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          conference_slug?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          issued_at?: string
+          organization_id: string
+          redeemed_at?: string | null
+          redeemed_attendee_email?: string | null
+          redeemed_attendee_name?: string | null
+          send_error?: string | null
+          sent_status?: string
+          sent_to_conference_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          conference_slug?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          issued_at?: string
+          organization_id?: string
+          redeemed_at?: string | null
+          redeemed_attendee_email?: string | null
+          redeemed_attendee_name?: string | null
+          send_error?: string | null
+          sent_status?: string
+          sent_to_conference_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conference_registration_codes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conference_registration_codes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conference_registration_codes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organization_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_software_entries: {
         Row: {
           admin_notes: string | null

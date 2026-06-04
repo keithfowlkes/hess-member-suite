@@ -223,6 +223,16 @@ export function useInvoices() {
         }).catch(err => {
           console.warn('Conference Hub notification failed (non-critical):', err.message);
         });
+
+        // Issue a conference registration code (non-blocking, gated by system flag)
+        supabase.functions.invoke('issue-conference-registration-code', {
+          body: {
+            invoice_id: id,
+            organization_id: (invoiceDetails as any).organization_id,
+          }
+        }).catch(err => {
+          console.warn('Registration code issuance failed (non-critical):', err.message);
+        });
       }
       
       await fetchInvoices();

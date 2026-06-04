@@ -2186,6 +2186,13 @@ export default function MembershipFees() {
                                       paid_date: nowIso,
                                     }
                                   }).catch(() => { /* non-critical */ });
+                                  // Issue conference registration code (non-blocking, gated by flag)
+                                  supabase.functions.invoke('issue-conference-registration-code', {
+                                    body: {
+                                      invoice_id: row.id,
+                                      organization_id: row.organization_id,
+                                    }
+                                  }).catch(() => { /* non-critical */ });
                                 });
                               }
                             }

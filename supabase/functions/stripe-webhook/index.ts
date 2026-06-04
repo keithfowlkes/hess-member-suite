@@ -182,10 +182,11 @@ Deno.serve(async (req) => {
       try {
         const { data: invDetails } = await admin
           .from("invoices")
-          .select("id, organizations ( name )")
+          .select("id, organization_id, organizations ( name )")
           .eq("id", invoiceId)
           .maybeSingle();
         const orgName = (invDetails as any)?.organizations?.name;
+        const orgId = (invDetails as any)?.organization_id;
         if (orgName) {
           await admin.functions.invoke("notify-payment-status", {
             body: {
@@ -196,8 +197,13 @@ Deno.serve(async (req) => {
             },
           });
         }
+        if (orgId) {
+          await admin.functions.invoke("issue-conference-registration-code", {
+            body: { invoice_id: invoiceId, organization_id: orgId },
+          });
+        }
       } catch (e) {
-        console.warn("stripe-webhook: notify-payment-status failed", e);
+        console.warn("stripe-webhook: post-payment notifications failed", e);
       }
     } else {
       console.log("stripe-webhook: ignoring event type", event.type);

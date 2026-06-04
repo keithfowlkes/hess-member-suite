@@ -1,94 +1,117 @@
-# Fix Critical Security Findings
+# Conference Registration Code on Membership Payment
 
-Goal: resolve every finding marked 🔴 Critical in the prior assessment, while preserving anonymous public-page access, authenticated member portal functionality, and admin/management workflows. Work proceeds in three batches ordered by breakage risk. After each batch we verify the three user tiers before moving on.
+## Goal
 
-## Batch A — Edge function auth hardening (low breakage risk)
+When an organization pays its membership fee, mint a unique conference registration code for that org and push it to the Conference Hub (`/hess2026` instance) via the existing API connection. The code entitles **one** attendee from that organization to register for the 2026 conference.
 
-All of these endpoints are only invoked from the admin UI through `supabase.functions.invoke()`, which automatically forwards the caller's JWT. Adding a JWT + admin check is additive — no frontend code needs to change.
+## Member-portal side (this codebase)
 
-Functions to update (add `Authorization` validation via `supabase.auth.getClaims()` + `has_role(uid, 'admin')` check, return 401/403 on failure):
+### 1. Database
 
-1. `cleanup-orphaned-records` — admin only
-2. `delete-user` — admin only
-3. `import-members` — admin only
-4. `change-user-password` — admin OR self (caller `sub` === target `userId`)
-5. `delete-organization` — admin only; ignore body `adminUserId`, derive from JWT
-6. `approve-pending-registration` — admin only; ignore body `adminUserId`
-7. `unapprove-organization` — admin only; ignore body `adminUserId`
-8. `bulk-registration-operations` — remove `if (adminUserId)` guard; always require admin JWT
-9. `approve-reassignment-request` — same fix as above
-10. `send-invoice` — admin only; also validate `organizationId` exists and `invoiceAmount` is a positive number
+New migration adds `public.conference_registration_codes`:
 
-### Verification after Batch A
-- **Anonymous users:** still able to load `/auth`, public directory, public map, registration form (none of these call the above functions).
-- **Authenticated members:** still able to view profile, request profile edits, view invoices (no member-facing call sites).
-- **Admins:** test from preview as logged-in admin — approve a pending registration, send a test invoice, change a user's password, delete a test user, run bulk operations. All should succeed.
-- Tool: `supabase--curl_edge_functions` against each function with and without auth to confirm 401 unauth and 200 as admin.
+- `organization_id` (FK organizations)
+- `conference_slug` text (default `'hess2026'`)
+- `code` text unique (e.g. `HESS26-XXXXXX`, 8-char base32, collision-checked)
+- `invoice_id` (FK invoices, nullable)
+- `issued_at`, `sent_to_conference_at`, `sent_status` (`pending|sent|failed`), `send_error`
+- `redeemed_at`, `redeemed_attendee_email`, `redeemed_attendee_name` (filled in by Conference Hub callback)
+- Unique `(organization_id, conference_slug)` so paying twice doesn't issue a second code for the same conference
+- RLS: admins full access; members `SELECT` only their own org's code; service_role full
+- GRANTs for `authenticated` + `service_role` per project rules
 
-## Batch B — Centralized email delivery (medium breakage risk)
+### 2. Code generation + delivery
 
-The pre-login flows (password reset, registration welcome, approval notification) legitimately call email endpoints without a session, so we cannot simply require a JWT on `-public`.
+New edge function `issue-conference-registration-code`:
 
-1. `centralized-email-delivery` (authenticated variant): require JWT, any authenticated user OK (used by admin tools and member self-service like update requests). No allowlist needed.
-2. `centralized-email-delivery-public`:
-   - Restrict the `type` field to a hard allowlist: `password_reset`, `registration_welcome`, `registration_received`, `approval_notification` (audit current call sites and finalize the list before edit).
-   - Reject the `custom` template type and reject any `attachments` field.
-   - Resolve recipient + template server-side from `system_settings` instead of trusting the body where possible.
-   - Add per-IP rate limit (simple in-memory token bucket, with a warning comment that production should move to Redis/DB).
+- Input: `{ invoice_id, organization_id, conference_slug? }`
+- Idempotent: if a code already exists for that org+conference, reuse it
+- Generates a readable code, inserts the row, then POSTs to Conference Hub at  
+  `{app_url}/functions/v1/receive-registration-code` with payload:
+  ```json
+  {
+    "source": "hess-member-portal",
+    "event": "registration_code_issued",
+    "data": {
+      "conference_slug": "hess2026",
+      "organization_id": "...",
+      "organization_name": "...",
+      "registration_code": "HESS26-AB12CD34",
+      "issued_at": "...",
+      "max_attendees": 1
+    }
+  }
+  ```
+- Updates `sent_status`/`sent_to_conference_at`; logs to `external_app_access_log` like the existing notifier
 
-### Verification after Batch B
-- **Anonymous users:** trigger password reset from `/auth`, complete a new registration, confirm welcome + admin-notification emails still arrive.
-- **Authenticated members:** trigger a profile update request → admin notification email still sent.
-- **Admins:** approve a registration → applicant receives approval email; send invoice → recipient gets invoice email.
-- Check `email_logs` table and Resend dashboard to confirm deliveries.
+### 3. Trigger on payment
 
-## Batch C — Database & Realtime exposure (mixed risk)
+`supabase/functions/stripe-webhook/index.ts` already calls `notify-payment-status` when an invoice flips to paid. Add a sibling `admin.functions.invoke("issue-conference-registration-code", ...)` in the same block, gated by:
 
-C1. **Remove `database_backups` from Realtime publication** (zero breakage — nothing subscribes to it).
-```sql
-ALTER PUBLICATION supabase_realtime DROP TABLE public.database_backups;
-```
+- Invoice is a membership fee (existing invoice metadata)
+- A `system_settings` flag `conference_hub_registration_codes_enabled = 'true'` (default off until the Conference Hub endpoint is live)
 
-C2. **`pending_registrations` — drop from Realtime publication** so password_hash + PII no longer broadcast. Admin UI fetches this table via normal queries; no live subscription is needed.
+Also wire it into the two manual paid-mark paths already invoking `notify-payment-status` (`src/pages/MembershipFees.tsx` and `src/hooks/useInvoices.tsx`) so admin-marked-paid invoices behave the same.
 
-C3. **`organizations` anon column restriction** — current anon SELECT policy returns all columns including secondary contact PII. Replace with a column-scoped policy: anon can read only `name, city, state, website, organization_type, membership_status`. The existing `public_organization_directory` view (SECURITY DEFINER) continues to serve the public directory page, so anonymous users see no visible change. Authenticated members keep full access via the existing member policy.
+### 4. Member-facing surface (minimal)
 
-C4. **`profiles` PII tightening** — this is the highest-risk change because the consortium portal is *designed* to let members see each other's contact info (per memory `intentional-access-design-choices`). Plan:
-   - Keep current "authenticated members can view all profiles" policy in place (it is intentional per project knowledge).
-   - Mark the scanner finding as `ignore` via `manage_security_finding` with explanation referencing the consortium directory purpose.
-   - Update `mem://security/intentional-access-design-choices` and security memory to document this decision.
-   - **No code change** — this preserves the member portal's core value.
+On the Membership Fees page, after payment, show the org's conference code with copy button and a short note: "Share this code with the one attendee from your institution registering for HESS 2026."
 
-C5. **`pending_registrations.password_hash` column** — keep for now. Removing it requires rebuilding the approval flow (per memory `planned-password-encryption-hardening`), which is explicitly out-of-scope for a "critical-only, no-breakage" pass. Mark this finding as acknowledged-deferred in security memory, not ignored.
+### 5. Optional inbound callback
 
-C6. **Realtime channel authorization (`realtime.messages` RLS)** — the app uses Realtime for member analytics and registration update notifications. A blanket RLS policy could silently break those. We'll address by:
-   - Removing the most sensitive tables from the publication: `database_backups` (C1), `pending_registrations` (C2), `audit_log`, `email_logs`, `inbound_payment_notifications`. None of these have live subscriptions in the frontend (verify via codebase search before drop).
-   - Leaving `realtime.messages` RLS for a follow-up pass once we map exact channel usage. Document as deferred.
+Add `receive-registration-redemption` edge function so Conference Hub can call back when the code is used, updating `redeemed_at` / attendee info. Signed with `MEDIUS_EVENTS_WEBHOOK_SECRET` style HMAC.
 
-### Verification after Batch C
-- **Anonymous users:** load public directory + public map → still see org names, locations, websites. Confirm no contact email/phone leaks via direct REST call to `/rest/v1/organizations`.
-- **Authenticated members:** member directory still shows other members' contact info; analytics charts still update.
-- **Admins:** registration approval queue, member analytics live updates, payment notifications still work.
+---
 
-## Out of scope (deferred, documented in security memory)
+## Prompt to paste into the Conference Hub project (the /hess2026 side)
 
-- `profiles` PII gating (intentional consortium feature)
-- `pending_registrations.password_hash` removal (requires invitation-flow redesign)
-- Full `realtime.messages` RLS (requires channel-by-channel mapping)
-- All 🟡 Medium/Low warnings (XSS sanitization, TinyMCE key, Postgres upgrade, etc.) — separate pass
+> We have an existing payment-status webhook from the HESS Member Portal. Add a second inbound endpoint and use it to gate conference registration so **each member organization gets exactly one attendee seat for the 2026 conference**.
+>
+> **1. New inbound edge function `receive-registration-code`**
+>
+> - Path: `/functions/v1/receive-registration-code`
+> - Auth: verify `X-Source: hess-member-portal` header and shared-secret HMAC (env var `HESS_PORTAL_WEBHOOK_SECRET`)
+> - Payload:
+>   ```json
+>   {
+>     "source": "hess-member-portal",
+>     "event": "registration_code_issued",
+>     "data": {
+>       "conference_slug": "hess2026",
+>       "organization_id": "uuid",
+>       "organization_name": "string",
+>       "registration_code": "HESS26-XXXXXXXX",
+>       "issued_at": "iso8601",
+>       "max_attendees": 1
+>     }
+>   }
+>   ```
+> - Upsert into a new table `conference_registration_codes` keyed by `(conference_slug, registration_code)` with columns: `organization_id`, `organization_name`, `max_attendees` (default 1), `attendees_registered` (default 0), `status` (`active|exhausted|revoked`), `issued_at`, plus standard timestamps. RLS: only service role writes; anon may `SELECT` a single row by code via a SECURITY DEFINER RPC `lookup_registration_code(code text)` that returns `{ valid, organization_name, seats_remaining }`.
+>
+> **2. Registration form changes for `/hess2026`**
+>
+> - Add a required first step: "Enter your HESS member organization's registration code." Field validates against `lookup_registration_code` on blur and on submit.
+> - When valid, lock the registration to that organization: prefill and disable the Organization field with `organization_name`, and show "Seats remaining: N" beneath it.
+> - Block submission when `seats_remaining <= 0` with message "Your institution has already registered its attendee. Please contact HESS to request additional seats."
+> - On successful submission, in the same transaction: increment `attendees_registered`, stamp `status = 'exhausted'` if it reaches `max_attendees`, and store `registration_code`, `organization_id`, `organization_name` on the attendee record. Reject with a friendly error if the increment would exceed `max_attendees` (race-safe via `UPDATE ... WHERE attendees_registered < max_attendees RETURNING ...`).
+>
+> **3. Outbound callback to HESS**
+>
+> - After a successful registration, POST to the HESS portal's `receive-registration-redemption` endpoint with `{ registration_code, attendee_name, attendee_email, registered_at }` so the member portal can show redemption status to the institution.
+>
+> **4. Admin tooling**
+>
+> - List view of all codes with org, seats remaining, attendee (if redeemed), and a "Revoke" / "Add extra seat" action that updates `max_attendees`.
+>
+> **5. Config**
+>
+> - Add `HESS_PORTAL_WEBHOOK_SECRET` (shared with HESS Portal) and `HESS_PORTAL_CALLBACK_URL` to project secrets.
+
+---
 
 ## Technical notes
 
-- Standard auth pattern for each edge function:
-  ```typescript
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return new Response(JSON.stringify({error:'Unauthorized'}), {status:401, headers: corsHeaders});
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { headers: { Authorization: authHeader } } });
-  const { data: claims } = await supabase.auth.getClaims(authHeader.replace('Bearer ',''));
-  if (!claims?.claims?.sub) return new Response(JSON.stringify({error:'Unauthorized'}), {status:401, headers: corsHeaders});
-  const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: claims.claims.sub, _role: 'admin' });
-  if (!isAdmin) return new Response(JSON.stringify({error:'Forbidden'}), {status:403, headers: corsHeaders});
-  ```
-- Service-role client (`supabaseAdmin`) is still used internally for the actual DB writes after authorization passes.
-- Migration for Batch C uses `ALTER PUBLICATION` and `DROP POLICY` / `CREATE POLICY` only — no table schema changes, no data loss.
-- After each batch, run `supabase--curl_edge_functions` smoke tests and check edge function logs.
+- Code format `HESS26-` + 8 chars from Crockford base32, retry on unique-constraint collision.
+- Both webhook directions reuse the existing `external_applications.conference-hub` row for the base URL.
+- Feature flag `conference_hub_registration_codes_enabled` defaults `false`; flip it on once the Conference Hub side ships `receive-registration-code`.
+- No changes to Stripe checkout, invoice schema, or the `notify-payment-status` contract — the new function runs alongside it.
