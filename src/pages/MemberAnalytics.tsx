@@ -189,6 +189,7 @@ const MemberAnalytics = () => {
       </div>
       
       <AnalyticsFeedbackDialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen} />
+      <TrendAnalyticsManager open={trendManagerOpen} onOpenChange={setTrendManagerOpen} />
     </SidebarProvider>;
 };
 export default MemberAnalytics;
