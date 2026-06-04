@@ -1,18 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  CheckCircle, 
-  AlertCircle, 
-  XCircle, 
-  RefreshCw, 
-  Database, 
-  Mail, 
+import {
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  RefreshCw,
+  Database,
+  Mail,
   Cloud,
   Activity,
-  Wifi
+  Wifi,
+  CalendarDays
 } from 'lucide-react';
+
+interface ConferenceHubError {
+  code: string;
+  organization_name?: string | null;
+  send_error: string | null;
+  created_at: string;
+}
 
 interface ServiceStatus {
   name: string;
@@ -20,6 +29,7 @@ interface ServiceStatus {
   message: string;
   icon: React.ComponentType<any>;
   latency?: number;
+  errors?: ConferenceHubError[];
 }
 
 export function SystemHealthStatus() {
