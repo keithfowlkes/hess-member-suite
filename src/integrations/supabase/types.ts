@@ -1848,6 +1848,39 @@ export type Database = {
         }
         Relationships: []
       }
+      trend_analytics_entries: {
+        Row: {
+          analytic_key: string
+          created_at: string
+          description: string | null
+          display_order: number
+          enabled: boolean
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          analytic_key: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          enabled?: boolean
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          analytic_key?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          enabled?: boolean
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_cohorts: {
         Row: {
           cohort: string
