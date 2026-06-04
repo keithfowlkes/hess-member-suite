@@ -2,13 +2,20 @@ import { format } from 'date-fns';
 import { useInvoiceTemplates } from '@/hooks/useInvoiceTemplates';
 import { Invoice } from '@/hooks/useInvoices';
 import { formatCurrency } from '@/lib/utils';
+import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
 
 interface ProfessionalInvoiceProps {
   invoice: Invoice;
   template?: any;
+  /**
+   * Optional override for the conference registration code block. When omitted,
+   * the component looks up the organization's issued code automatically. Pass a
+   * non-empty string (e.g. a placeholder) to force the block to render.
+   */
+  registrationCode?: string | null;
 }
 
-export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoiceProps) {
+export function ProfessionalInvoice({ invoice, template, registrationCode }: ProfessionalInvoiceProps) {
   const { getDefaultTemplate } = useInvoiceTemplates();
   const fallbackTemplate = {
     id: 'fallback',
@@ -332,6 +339,12 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
         </div>
       )}
 
+      {/* Conference registration code (shown when issued for this org, or when an override is provided for previews) */}
+      <ConferenceRegistrationCodeBlock
+        organizationId={(invoice as any).organization_id}
+        override={registrationCode}
+      />
+
       {/* Payment Information */}
       <div className="payment-info">
         <h3>Payment Information</h3>
@@ -348,6 +361,49 @@ export function ProfessionalInvoice({ invoice, template }: ProfessionalInvoicePr
         <br />
         <p>Thank you for being a valued member of the HESS Consortium community!</p>
       </div>
+    </div>
+  );
+}
+
+function ConferenceRegistrationCodeBlock({
+  organizationId,
+  override,
+}: {
+  organizationId?: string | null;
+  override?: string | null;
+}) {
+  const { data } = useConferenceRegistrationCode(organizationId);
+  const code = override || data?.code;
+  if (!code) return null;
+  return (
+    <div
+      style={{
+        margin: '1.5rem 0',
+        padding: '1rem 1.25rem',
+        border: '2px dashed #0c2340',
+        borderRadius: 6,
+        background: '#f3f6fb',
+      }}
+    >
+      <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0c2340', margin: 0 }}>
+        HESS 2026 Conference Registration Code
+      </h3>
+      <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.85rem', color: '#444' }}>
+        Use this unique code to register <strong>one attendee</strong> from your
+        institution for the HESS 2026 Conference:
+      </p>
+      <p
+        style={{
+          margin: '0.5rem 0 0 0',
+          fontFamily: 'Menlo, Consolas, monospace',
+          fontSize: '1.15rem',
+          fontWeight: 700,
+          letterSpacing: '0.05em',
+          color: '#0c2340',
+        }}
+      >
+        {code}
+      </p>
     </div>
   );
 }

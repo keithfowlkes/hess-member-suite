@@ -16,7 +16,7 @@ export const useResendInvoice = () => {
       // Fetch invoice and organization email
       const { data: invoice, error: invErr } = await supabase
         .from('invoices')
-        .select('id, invoice_number, amount, due_date, period_start_date, period_end_date, notes, organizations ( id, name, email )')
+        .select('id, invoice_number, amount, due_date, period_start_date, period_end_date, notes, organization_id, organizations ( id, name, email )')
         .eq('id', invoiceId)
         .maybeSingle();
       if (invErr) throw invErr;
@@ -27,6 +27,19 @@ export const useResendInvoice = () => {
       if (!toEmail) throw new Error('Organization has no email');
       const subject = `HESS Consortium - Invoice ${(invoice as any).invoice_number || ''}`.trim();
 
+      // Look up the organization's conference registration code (if issued)
+      const orgId = (invoice as any).organization_id || (invoice as any).organizations?.id;
+      let registrationCode: string | undefined;
+      if (orgId) {
+        const { data: codeRow } = await supabase
+          .from('conference_registration_codes')
+          .select('code')
+          .eq('organization_id', orgId)
+          .eq('conference_slug', 'hess2026')
+          .maybeSingle();
+        registrationCode = (codeRow as any)?.code || undefined;
+      }
+
       const invoiceEmailData = {
         organization_name: (invoice as any).organizations?.name || '',
         invoice_number: (invoice as any).invoice_number,
@@ -34,7 +47,9 @@ export const useResendInvoice = () => {
         due_date: (invoice as any).due_date,
         period_start_date: (invoice as any).period_start_date,
         period_end_date: (invoice as any).period_end_date,
-        notes: (invoice as any).notes || ''
+        notes: (invoice as any).notes || '',
+        registration_code: registrationCode,
+        conference_label: 'HESS 2026',
       };
 
       console.log('Resend invoice email data:', invoiceEmailData);
