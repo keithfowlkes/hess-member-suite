@@ -188,45 +188,8 @@ export default function Dashboards() {
                   </CardContent>
                 </Card>
               </TabsContent>
+              
 
-                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                          <div className="flex items-center gap-2">
-                            <ChartScatter className="h-5 w-5 text-primary" />
-                            <span>Organization Size vs LMS Choice</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <OrganizationSizeLMSCorrelation />
-                        </AccordionContent>
-                      </AccordionItem>
-                      
-                      <AccordionItem value="org-size-financial-correlation">
-                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                          <div className="flex items-center gap-2">
-                            <ChartScatter className="h-5 w-5 text-primary" />
-                            <span>Organization Size vs Financial System Choice</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <OrganizationSizeFinancialCorrelation />
-                        </AccordionContent>
-                      </AccordionItem>
-
-                      <AccordionItem value="hess-enrollment-trends">
-                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                          <div className="flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5 text-primary" />
-                            <span>HESS Member Institution Enrollment Trends</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <HessEnrollmentTrends />
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </CardContent>
-                </Card>
-              </TabsContent>
               
               <TabsContent value="security">
                 <ArcticSecurityDashboard />
