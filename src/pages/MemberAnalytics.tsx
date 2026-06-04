@@ -17,14 +17,39 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useAuth } from '@/hooks/useAuth';
-import { TrendAnalyticsManager, useTrendEntries } from '@/components/TrendAnalyticsManager';
-import { Settings } from 'lucide-react';
+import { TrendAnalyticsManager, useTrendEntries, TrendEntry } from '@/components/TrendAnalyticsManager';
+import { Settings, Pencil, Trash2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 const MemberAnalytics = () => {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [trendManagerOpen, setTrendManagerOpen] = useState(false);
+  const [editingTrendEntry, setEditingTrendEntry] = useState<TrendEntry | null>(null);
   const { isAdmin } = useAuth();
   const { data: trendEntries = [] } = useTrendEntries();
+  const queryClient = useQueryClient();
+
+  const handleDeleteTrendEntry = async (entry: TrendEntry) => {
+    if (!confirm(`Delete "${entry.title}"?`)) return;
+    const { error } = await supabase
+      .from('trend_analytics_entries' as any)
+      .delete()
+      .eq('id', entry.id);
+    if (error) {
+      toast.error(error.message || 'Failed to delete');
+    } else {
+      toast.success('Deleted');
+      queryClient.invalidateQueries({ queryKey: ['trend-analytics-entries'] });
+    }
+  };
+
+  const handleEditTrendEntry = (entry: TrendEntry) => {
+    setEditingTrendEntry(entry);
+    setTrendManagerOpen(true);
+  };
+
   const { data: arcticSetting } = useSystemSetting('arctic_scan_member_visible');
   const showArcticTab = arcticSetting?.setting_value !== 'false'; // default true
   return <SidebarProvider>
@@ -118,15 +143,37 @@ const MemberAnalytics = () => {
                           const Icon = entry.analytic_key === 'hess_enrollment' ? TrendingUp : ChartScatter;
                           return (
                             <AccordionItem key={entry.id} value={entry.id}>
-                              <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                                <div className="flex items-center gap-2">
-                                  <Icon className="h-5 w-5 text-primary" />
-                                  <span>{entry.title}</span>
-                                  {!entry.enabled && (
-                                    <span className="text-xs font-normal text-muted-foreground">(hidden)</span>
-                                  )}
-                                </div>
-                              </AccordionTrigger>
+                              <div className="flex items-center gap-2">
+                                <AccordionTrigger className="text-lg font-semibold hover:no-underline flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <Icon className="h-5 w-5 text-primary" />
+                                    <span>{entry.title}</span>
+                                    {!entry.enabled && (
+                                      <span className="text-xs font-normal text-muted-foreground">(hidden)</span>
+                                    )}
+                                  </div>
+                                </AccordionTrigger>
+                                {isAdmin && (
+                                  <div className="flex items-center gap-1 pr-2">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={(e) => { e.stopPropagation(); handleEditTrendEntry(entry); }}
+                                      aria-label="Edit analytic"
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={(e) => { e.stopPropagation(); handleDeleteTrendEntry(entry); }}
+                                      aria-label="Delete analytic"
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
                               <AccordionContent>
                                 {entry.analytic_key === 'org_size_erp' && <OrganizationSizeCorrelation />}
                                 {entry.analytic_key === 'org_size_lms' && <OrganizationSizeLMSCorrelation />}
@@ -189,7 +236,11 @@ const MemberAnalytics = () => {
       </div>
       
       <AnalyticsFeedbackDialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen} />
-      <TrendAnalyticsManager open={trendManagerOpen} onOpenChange={setTrendManagerOpen} />
+      <TrendAnalyticsManager
+        open={trendManagerOpen}
+        onOpenChange={(v) => { setTrendManagerOpen(v); if (!v) setEditingTrendEntry(null); }}
+        initialEntry={editingTrendEntry}
+      />
     </SidebarProvider>;
 };
 export default MemberAnalytics;

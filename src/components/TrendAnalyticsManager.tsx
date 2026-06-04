@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -47,13 +47,25 @@ export function useTrendEntries() {
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  initialEntry?: TrendEntry | null;
 }
 
-export function TrendAnalyticsManager({ open, onOpenChange }: Props) {
+export function TrendAnalyticsManager({ open, onOpenChange, initialEntry }: Props) {
   const qc = useQueryClient();
   const { data: entries = [] } = useTrendEntries();
   const [editing, setEditing] = useState<TrendEntry | null>(null);
   const [isNew, setIsNew] = useState(false);
+
+  // When the dialog is opened with a specific entry to edit, preload it
+  useEffect(() => {
+    if (open && initialEntry) {
+      setEditing(initialEntry);
+      setIsNew(false);
+    } else if (!open) {
+      setEditing(null);
+      setIsNew(false);
+    }
+  }, [open, initialEntry]);
 
   const save = useMutation({
     mutationFn: async (e: Partial<TrendEntry> & { id?: string }) => {
