@@ -448,7 +448,7 @@ const Index = () => {
                       Membership Fee
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                       <div className="text-sm text-muted-foreground">
                         Current status of your HESS Consortium annual membership dues.
@@ -476,6 +476,9 @@ const Index = () => {
                         )}
                       </div>
                     </div>
+                    {userOrganization?.id && !isAdministrator && (
+                      <ConferenceRegistrationCodeCard organizationId={userOrganization.id} />
+                    )}
                   </CardContent>
                 </Card>
               );
