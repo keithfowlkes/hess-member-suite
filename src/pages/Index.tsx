@@ -637,4 +637,48 @@ const Index = () => {
   );
 };
 
+function ConferenceRegistrationCodeCard({ organizationId }: { organizationId: string }) {
+  const { data, isLoading } = useConferenceRegistrationCode(organizationId);
+  const { toast } = useToast();
+  if (isLoading || !data?.code) return null;
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(data.code);
+      toast({ title: 'Copied', description: 'Registration code copied to clipboard.' });
+    } catch {
+      toast({ title: 'Copy failed', description: 'Please copy the code manually.', variant: 'destructive' });
+    }
+  };
+  return (
+    <div className="rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 p-4">
+      <div className="flex items-start gap-3 flex-wrap">
+        <Ticket className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+        <div className="flex-1 min-w-[240px]">
+          <h4 className="text-sm font-semibold text-foreground">
+            HESS 2026 Conference Registration Code
+          </h4>
+          <p className="text-xs text-muted-foreground mt-1">
+            Use this unique code to register <strong>one attendee</strong> from
+            your institution for the HESS 2026 Conference.
+            {data.redeemed_at ? (
+              <span className="ml-1 font-medium text-foreground">
+                (Redeemed{data.redeemed_attendee_name ? ` by ${data.redeemed_attendee_name}` : ''}.)
+              </span>
+            ) : null}
+          </p>
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
+            <code className="px-2 py-1 rounded bg-background border text-sm font-mono font-semibold tracking-wider text-foreground">
+              {data.code}
+            </code>
+            <Button variant="outline" size="sm" onClick={copy}>
+              <Copy className="h-3.5 w-3.5 mr-1.5" />
+              Copy
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default Index;
