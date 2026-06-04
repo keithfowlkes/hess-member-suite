@@ -477,7 +477,7 @@ const Index = () => {
                       </div>
                     </div>
                     {userOrganization?.id && !isAdministrator && (
-                      <ConferenceRegistrationCodeCard organizationId={userOrganization.id} />
+                      <ConferenceRegistrationCodeCard organizationId={userOrganization.id} organizationName={userOrganization.name} />
                     )}
                   </CardContent>
                 </Card>
