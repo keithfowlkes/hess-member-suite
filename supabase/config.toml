@@ -161,3 +161,6 @@ verify_jwt = true
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.receive-registration-redemption]
+verify_jwt = false
