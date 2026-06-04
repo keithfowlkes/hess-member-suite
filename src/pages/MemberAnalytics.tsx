@@ -96,65 +96,51 @@ const MemberAnalytics = () => {
                           Explore correlations and trends in member data
                         </p>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => setFeedbackDialogOpen(true)} className="gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        What would you like to see?
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        {isAdmin && (
+                          <Button variant="outline" size="sm" onClick={() => setTrendManagerOpen(true)} className="gap-2">
+                            <Settings className="h-4 w-4" />
+                            Manage Analytics
+                          </Button>
+                        )}
+                        <Button variant="outline" size="sm" onClick={() => setFeedbackDialogOpen(true)} className="gap-2">
+                          <MessageSquare className="h-4 w-4" />
+                          What would you like to see?
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <Accordion type="single" collapsible className="w-full">
-                      <AccordionItem value="org-size-correlation">
-                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                          <div className="flex items-center gap-2">
-                            <ChartScatter className="h-5 w-5 text-primary" />
-                            <span>Organization Size vs ERP System Choice</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <OrganizationSizeCorrelation />
-                        </AccordionContent>
-                      </AccordionItem>
-                      
-                      <AccordionItem value="org-size-lms-correlation">
-                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                          <div className="flex items-center gap-2">
-                            <ChartScatter className="h-5 w-5 text-primary" />
-                            <span>Organization Size vs LMS Choice</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <OrganizationSizeLMSCorrelation />
-                        </AccordionContent>
-                      </AccordionItem>
-                      
-                      <AccordionItem value="org-size-financial-correlation">
-                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                          <div className="flex items-center gap-2">
-                            <ChartScatter className="h-5 w-5 text-primary" />
-                            <span>Organization Size vs Financial System Choice</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <OrganizationSizeFinancialCorrelation />
-                        </AccordionContent>
-                      </AccordionItem>
-
-                      <AccordionItem value="hess-enrollment-trends">
-                        <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                          <div className="flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5 text-primary" />
-                            <span>HESS Member Institution Enrollment Trends</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <HessEnrollmentTrends />
-                        </AccordionContent>
-                      </AccordionItem>
+                      {trendEntries
+                        .filter((e) => e.enabled || isAdmin)
+                        .map((entry) => {
+                          const Icon = entry.analytic_key === 'hess_enrollment' ? TrendingUp : ChartScatter;
+                          return (
+                            <AccordionItem key={entry.id} value={entry.id}>
+                              <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                                <div className="flex items-center gap-2">
+                                  <Icon className="h-5 w-5 text-primary" />
+                                  <span>{entry.title}</span>
+                                  {!entry.enabled && (
+                                    <span className="text-xs font-normal text-muted-foreground">(hidden)</span>
+                                  )}
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent>
+                                {entry.analytic_key === 'org_size_erp' && <OrganizationSizeCorrelation />}
+                                {entry.analytic_key === 'org_size_lms' && <OrganizationSizeLMSCorrelation />}
+                                {entry.analytic_key === 'org_size_financial' && <OrganizationSizeFinancialCorrelation />}
+                                {entry.analytic_key === 'hess_enrollment' && <HessEnrollmentTrends />}
+                              </AccordionContent>
+                            </AccordionItem>
+                          );
+                        })}
                     </Accordion>
                   </CardContent>
                 </Card>
               </TabsContent>
+
 
               
               {showArcticTab && (
