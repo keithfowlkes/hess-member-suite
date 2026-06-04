@@ -122,7 +122,10 @@ export function InvoicePreviewModal({
         
         <div className="mt-4">
           <div ref={invoiceRef} className="border rounded-lg bg-white">
-            <ProfessionalInvoice invoice={mockInvoice} />
+            <ProfessionalInvoice
+              invoice={mockInvoice}
+              registrationCode="HESS2026-XXXXXXXX (issued upon payment)"
+            />
           </div>
         </div>
       </DialogContent>
