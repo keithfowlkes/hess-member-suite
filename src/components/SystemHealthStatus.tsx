@@ -51,6 +51,12 @@ export function SystemHealthStatus() {
       status: 'checking',
       message: 'Checking AWS services...',
       icon: Cloud
+    },
+    {
+      name: 'Conference Hub Integration',
+      status: 'checking',
+      message: 'Checking integration...',
+      icon: CalendarDays
     }
   ]);
 
