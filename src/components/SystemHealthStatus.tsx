@@ -207,18 +207,103 @@ export function SystemHealthStatus() {
     }
   };
 
+  const checkConferenceHubHealth = async (): Promise<ServiceStatus> => {
+    const startTime = Date.now();
+    try {
+      // 1. Verify the Conference Hub app is configured and active
+      const { data: app, error: appError } = await supabase
+        .from('external_applications')
+        .select('id, app_url, is_active')
+        .eq('app_identifier', 'conference-hub')
+        .maybeSingle();
+
+      if (appError) {
+        return {
+          name: 'Conference Hub Integration',
+          status: 'error',
+          message: `Configuration lookup failed: ${appError.message}`,
+          icon: CalendarDays,
+        };
+      }
+
+      if (!app) {
+        return {
+          name: 'Conference Hub Integration',
+          status: 'error',
+          message: 'Conference Hub app not configured',
+          icon: CalendarDays,
+        };
+      }
+
+      if (!app.is_active) {
+        return {
+          name: 'Conference Hub Integration',
+          status: 'warning',
+          message: 'Conference Hub integration is disabled',
+          icon: CalendarDays,
+        };
+      }
+
+      // 2. Pull recent failures from outbound code delivery
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: failures } = await supabase
+        .from('conference_registration_codes')
+        .select('code, send_error, created_at, organizations(name)')
+        .eq('sent_status', 'failed')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const errors: ConferenceHubError[] = (failures || []).map((f: any) => ({
+        code: f.code,
+        organization_name: f.organizations?.name ?? null,
+        send_error: f.send_error,
+        created_at: f.created_at,
+      }));
+
+      const latency = Date.now() - startTime;
+
+      if (errors.length > 0) {
+        return {
+          name: 'Conference Hub Integration',
+          status: 'warning',
+          message: `${errors.length} delivery failure${errors.length === 1 ? '' : 's'} in the last 30 days`,
+          icon: CalendarDays,
+          latency,
+          errors,
+        };
+      }
+
+      return {
+        name: 'Conference Hub Integration',
+        status: 'healthy',
+        message: `Connected to ${app.app_url}`,
+        icon: CalendarDays,
+        latency,
+      };
+    } catch (err: any) {
+      return {
+        name: 'Conference Hub Integration',
+        status: 'error',
+        message: `Health check failed: ${err.message}`,
+        icon: CalendarDays,
+      };
+    }
+  };
+
   const runHealthChecks = async () => {
     setServices(prev => prev.map(s => ({ ...s, status: 'checking' as const })));
     setOverallStatus('checking');
 
     try {
-      const [supabaseStatus, resendStatus, awsStatus] = await Promise.all([
+      const [supabaseStatus, resendStatus, awsStatus, conferenceHubStatus] = await Promise.all([
         checkSupabaseHealth(),
         checkResendHealth(),
-        checkAWSHealth()
+        checkAWSHealth(),
+        checkConferenceHubHealth(),
       ]);
 
-      const newServices = [supabaseStatus, resendStatus, awsStatus];
+      const newServices = [supabaseStatus, resendStatus, awsStatus, conferenceHubStatus];
       setServices(newServices);
 
       // Calculate overall status
