@@ -392,9 +392,24 @@ function ConferenceRegistrationCodeBlock({
         Use this unique code to register <strong>one attendee</strong> from your
         institution for the HESS 2026 Conference:
       </p>
+      <div
+        style={{
+          margin: '0.75rem 0 0 0',
+          padding: '0.5rem 0.75rem',
+          background: '#fffbea',
+          border: '1px solid #f59e0b',
+          borderRadius: 4,
+          fontSize: '0.8rem',
+          color: '#92400e',
+          fontWeight: 600,
+        }}
+      >
+        IMPORTANT: This code is valid for one attendee only from this
+        organization and may not be transferred to another institution.
+      </div>
       <p
         style={{
-          margin: '0.5rem 0 0 0',
+          margin: '0.75rem 0 0 0',
           fontFamily: 'Menlo, Consolas, monospace',
           fontSize: '1.15rem',
           fontWeight: 700,
