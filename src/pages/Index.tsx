@@ -666,6 +666,12 @@ function ConferenceRegistrationCodeCard({ organizationId }: { organizationId: st
               </span>
             ) : null}
           </p>
+          <div className="mt-2 rounded-md bg-amber-50 border border-amber-200 p-2 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-800 font-medium">
+              This code is valid for <strong>one attendee only</strong> from {userOrganization?.name || 'your institution'} and may not be transferred to another organization.
+            </p>
+          </div>
           <div className="mt-2 flex items-center gap-2 flex-wrap">
             <code className="px-2 py-1 rounded bg-background border text-sm font-mono font-semibold tracking-wider text-foreground">
               {data.code}
