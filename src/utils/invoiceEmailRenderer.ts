@@ -97,7 +97,10 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
         <p style="margin: 0.5rem 0 0.25rem 0; font-size: 0.9rem; color: #444;">
           Use this unique code to register <strong>one attendee</strong> from your institution for the ${data.conference_label || 'HESS 2026'} Conference:
         </p>
-        <p style="margin: 0.5rem 0 0 0; font-family: Menlo, Consolas, monospace; font-size: 1.15rem; font-weight: bold; letter-spacing: 0.05em; color: #0c2340;">
+        <div style="margin: 0.75rem 0 0 0; padding: 0.5rem 0.75rem; background: #fffbea; border: 1px solid #f59e0b; border-radius: 4px; font-size: 0.85rem; color: #92400e; font-weight: 600;">
+          IMPORTANT: This code is valid for one attendee only from this organization and may not be transferred to another institution.
+        </div>
+        <p style="margin: 0.75rem 0 0 0; font-family: Menlo, Consolas, monospace; font-size: 1.15rem; font-weight: bold; letter-spacing: 0.05em; color: #0c2340;">
           ${data.registration_code}
         </p>
       </div>
