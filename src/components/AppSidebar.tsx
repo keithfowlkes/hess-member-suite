@@ -36,6 +36,7 @@ export function AppSidebar() {
   const { isAdmin, isViewingAsAdmin, toggleViewMode, signOut, user } = useAuth();
   const { data: systemSettings } = useSystemSettings();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // State for user role
   const [userRole, setUserRole] = useState<string>('member');
