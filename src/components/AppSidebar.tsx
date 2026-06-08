@@ -309,7 +309,11 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <Button
                     variant="ghost"
-                    onClick={toggleViewMode}
+                    onClick={() => {
+                      toggleViewMode();
+                      // Navigate to the appropriate landing page for the new view
+                      navigate(isViewingAsAdmin ? '/dashboard' : '/');
+                    }}
                     className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
                   >
                     {isViewingAsAdmin ? 
