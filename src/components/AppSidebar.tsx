@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search, Map, MessageSquare, GraduationCap, FileQuestion } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
@@ -36,6 +36,7 @@ export function AppSidebar() {
   const { isAdmin, isViewingAsAdmin, toggleViewMode, signOut, user } = useAuth();
   const { data: systemSettings } = useSystemSettings();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // State for user role
   const [userRole, setUserRole] = useState<string>('member');
@@ -308,7 +309,11 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <Button
                     variant="ghost"
-                    onClick={toggleViewMode}
+                    onClick={() => {
+                      toggleViewMode();
+                      // Navigate to the appropriate landing page for the new view
+                      navigate(isViewingAsAdmin ? '/dashboard' : '/');
+                    }}
                     className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
                   >
                     {isViewingAsAdmin ? 
