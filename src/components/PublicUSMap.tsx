@@ -174,7 +174,7 @@ export function PublicUSMap() {
           )
         `)
         .eq('membership_status', 'active')
-        .or('organization_type.eq.member,organization_type.is.null')
+        .eq('organization_type', 'member')
         .not('state', 'is', null);
 
       if (error) throw error;
