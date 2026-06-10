@@ -131,7 +131,7 @@ export function RecentMemberSubmissionsTab() {
           )
         `)
         .eq('membership_status', 'active')
-        .or('organization_type.eq.member,organization_type.is.null')
+        .eq('organization_type', 'member')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
