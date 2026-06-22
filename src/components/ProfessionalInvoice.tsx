@@ -17,8 +17,29 @@ interface ProfessionalInvoiceProps {
   registrationCode?: string | null;
 }
 
-export function ProfessionalInvoice({ invoice, template, registrationCode }: ProfessionalInvoiceProps) {
+export function ProfessionalInvoice({ invoice: rawInvoice, template, registrationCode }: ProfessionalInvoiceProps) {
   const { getDefaultTemplate } = useInvoiceTemplates();
+  const { data: termEndSetting } = useSystemSetting('default_term_end_date');
+
+  // For non-paid invoices, override the displayed period to reflect the
+  // currently configured term end date (one-year window ending on that date).
+  // Paid invoices keep their stored historical period.
+  const invoice = useMemo(() => {
+    if (!rawInvoice) return rawInvoice;
+    if (rawInvoice.status === 'paid') return rawInvoice;
+    const termEndRaw = termEndSetting?.setting_value;
+    if (!termEndRaw) return rawInvoice;
+    const match = String(termEndRaw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return rawInvoice;
+    const endYear = parseInt(match[1], 10);
+    const monthDay = `${match[2]}-${match[3]}`;
+    return {
+      ...rawInvoice,
+      period_start_date: `${endYear - 1}-${monthDay}`,
+      period_end_date: `${endYear}-${monthDay}`,
+    };
+  }, [rawInvoice, termEndSetting?.setting_value]);
+
   const fallbackTemplate = {
     id: 'fallback',
     name: 'Default Template',
