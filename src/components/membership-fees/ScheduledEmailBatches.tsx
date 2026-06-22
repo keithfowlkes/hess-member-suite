@@ -148,9 +148,11 @@ export function ScheduledEmailBatches() {
         {batches.map((b) => {
           const total = b.pending + b.sent + b.failed + b.cancelled;
           const inProgress = b.pending > 0;
+          const completed = b.sent + b.failed + b.cancelled;
+          const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
           return (
-            <div key={b.batch_id} className="border rounded-md p-3 flex items-center justify-between gap-4">
-              <div className="min-w-0">
+            <div key={b.batch_id} className="border rounded-md p-3 flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-sm">
                     {b.email_type || 'bulk'} · {total} email{total === 1 ? '' : 's'}
@@ -161,20 +163,36 @@ export function ScheduledEmailBatches() {
                     <Badge variant="outline">Complete</Badge>
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1 space-x-3">
-                  <span>Sent: <strong>{b.sent}</strong></span>
-                  <span>Pending: <strong>{b.pending}</strong></span>
-                  {b.failed > 0 && <span>Failed: <strong>{b.failed}</strong></span>}
-                  {b.cancelled > 0 && <span>Cancelled: <strong>{b.cancelled}</strong></span>}
-                </div>
-                {inProgress && b.next_scheduled && (
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Next send: {format(new Date(b.next_scheduled), 'MMM d, h:mm a')}
-                    {b.last_scheduled && (
-                      <> · Window ends: {format(new Date(b.last_scheduled), 'MMM d, h:mm a')}</>
-                    )}
+
+                {/* Progress meter */}
+                <div className="mt-2">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>
+                      <strong className="text-foreground">{b.sent}</strong> sent of {total}
+                      {b.failed > 0 && <> · <span className="text-destructive">{b.failed} failed</span></>}
+                      {b.cancelled > 0 && <> · {b.cancelled} cancelled</>}
+                    </span>
+                    <span>{pct}%</span>
                   </div>
-                )}
+                  <div className="h-2 w-full bg-muted rounded overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
+                  {b.created_at && (
+                    <div>Started: {format(new Date(b.created_at), 'MMM d, yyyy h:mm a')}</div>
+                  )}
+                  {inProgress && b.next_scheduled && (
+                    <div>Next send: {format(new Date(b.next_scheduled), 'MMM d, h:mm a')}</div>
+                  )}
+                  {b.last_scheduled && (
+                    <div>Window ends: {format(new Date(b.last_scheduled), 'MMM d, h:mm a')}</div>
+                  )}
+                </div>
                 <div className="text-[10px] text-muted-foreground mt-1 font-mono truncate">
                   batch {b.batch_id}
                 </div>
