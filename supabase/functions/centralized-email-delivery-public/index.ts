@@ -260,16 +260,11 @@ serve(async (req: Request): Promise<Response> => {
     if (emailRequest.type === 'custom' && emailRequest.template) {
       finalHtml = await replaceLogoInTemplate(emailRequest.template);
     } else if (emailRequest.type === 'invoice' && templateData.invoice_content) {
-      // Enhanced invoice template that includes the full invoice HTML
-      const enhancedTemplate = `
-        <div style="margin: 20px 0;">
-          ${template?.html || ''}
-        </div>
-        <div style="margin-top: 30px; border: 1px solid {{primary_color}}50; border-radius: 8px; overflow: hidden;">
-          ${templateData.invoice_content}
-        </div>
-      `;
-      finalHtml = replaceTemplateVariables(enhancedTemplate, templateData);
+      // Invoice emails: send the styled invoice HTML on its own, with no branded
+      // wrapper/intro/footer. The invoice template already includes the HESS logo,
+      // company info, payment block, and footer.
+      const invoiceOnly = await replaceLogoInTemplate(templateData.invoice_content);
+      finalHtml = replaceTemplateVariables(invoiceOnly, templateData);
     } else if (template) {
       finalHtml = replaceTemplateVariables(template.html, templateData);
     } else {
