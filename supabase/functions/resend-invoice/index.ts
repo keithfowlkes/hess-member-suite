@@ -40,233 +40,96 @@ async function generateInvoiceHTML(template: any, templateData: Record<string, s
   const periodStart = formatDate(invoice.period_start_date);
   const periodEnd = formatDate(invoice.period_end_date);
   
+  const amountDisplay = invoice.proratedAmount
+    ? `$${Number(invoice.proratedAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : `$${Number(invoice.invoiceAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const totalDisplay = amountDisplay;
+  const invoiceNumber = templateData['{{INVOICE_NUMBER}}'];
+  const payLink = `https://members.hessconsortium.app/invoices?invoice=${invoiceId}`;
+
   let invoiceHtml = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.4; color: {{text_color}}; font-size: 14px; background: white; padding: 2rem; max-width: 800px; margin: 0 auto;">
-      <style>
-        .invoice-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 2rem;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid {{primary_color}};
-        }
-        
-        .logo-section img {
-          max-height: 80px;
-          width: auto;
-        }
-        
-        .invoice-title {
-          text-align: right;
-        }
-        
-        .invoice-title h1 {
-          font-size: 2rem;
-          font-weight: bold;
-          color: {{primary_color}};
-          margin: 0;
-          letter-spacing: 2px;
-        }
-        
-        .invoice-number {
-          font-size: 0.9rem;
-          color: {{primary_color}};
-          margin: 0.5rem 0 0 0;
-        }
-        
-        .company-info {
-          margin-bottom: 2rem;
-          line-height: 1.3;
-        }
-        
-        .company-info h3 {
-          font-size: 1rem;
-          font-weight: bold;
-          margin: 0 0 0.25rem 0;
-        }
-        
-        .company-info p {
-          margin: 0.1rem 0;
-          font-size: 0.9rem;
-          color: {{text_color}}CC;
-        }
-        
-        .invoice-details {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 3rem;
-          margin-bottom: 2rem;
-        }
-        
-        .detail-section h3 {
-          font-size: 1rem;
-          font-weight: bold;
-          color: {{text_color}};
-          margin-bottom: 0.75rem;
-        }
-        
-        .detail-section p {
-          margin: 0.25rem 0;
-          font-size: 0.9rem;
-        }
-        
-        .invoice-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 2rem 0;
-        }
-        
-        .invoice-table th {
-          background: {{primary_color}};
-          color: white;
-          padding: 0.75rem;
-          text-align: left;
-          font-weight: bold;
-          font-size: 0.9rem;
-        }
-        
-        .invoice-table td {
-          padding: 0.75rem;
-        }
-        
-        .invoice-table .amount-cell {
-          text-align: right;
-          font-weight: normal;
-        }
-        
-        .total-section {
-          text-align: right;
-          margin: 1rem 0;
-          font-weight: bold;
-          font-size: 1rem;
-        }
-        
-        .notes-section {
-          margin: 2rem 0;
-        }
-        
-        .notes-section h3 {
-          font-size: 1rem;
-          font-weight: bold;
-          margin-bottom: 0.5rem;
-        }
-        
-        .payment-info {
-          background: {{accent_color}}20;
-          padding: 1rem;
-          border-left: 4px solid {{primary_color}};
-          margin: 2rem 0;
-        }
-        
-        .payment-info h3 {
-          font-size: 1rem;
-          font-weight: bold;
-          color: {{text_color}};
-          margin-bottom: 0.5rem;
-        }
-        
-        .payment-info p {
-          margin: 0.25rem 0;
-          font-size: 0.9rem;
-        }
-        
-        .footer-section {
-          text-align: center;
-          margin-top: 3rem;
-          padding-top: 2rem;
-          font-size: 0.9rem;
-          color: {{text_color}}CC;
-        }
-        
-        .footer-section p {
-          margin: 0.25rem 0;
-        }
-      </style>
-      
-      <!-- Header with Logo and Invoice Title -->
-      <div class="invoice-header">
-        <div class="logo-section">
-          <img src="https://members.hessconsortium.app/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" alt="HESS Consortium Logo" style="width: 150px; height: auto;">
-          <div class="company-info">
-            <h3>HESS Consortium</h3>
-            <p>Higher Education Systems & Services Consortium</p>
-            <p>A consortium of private, non-profit colleges and universities</p>
-          </div>
-        </div>
-        <div class="invoice-title">
-          <h1>INVOICE</h1>
-          <p class="invoice-number">Invoice #${templateData['{{INVOICE_NUMBER}}']}</p>
-        </div>
-      </div>
-      
-      <!-- Bill To and Invoice Details -->
-      <div class="invoice-details">
-        <div class="detail-section">
-          <h3>Bill To:</h3>
-          <p><strong>${invoice.organizationName}</strong></p>
-          <p>Organization Address</p>
-          ${invoice.organizationEmail ? `<p>${invoice.organizationEmail}</p>` : ''}
-        </div>
-        <div class="detail-section">
-          <h3>Invoice Details:</h3>
-          <p><strong>Invoice Date:</strong> ${invoiceDate}</p>
-          <p><strong>Due Date:</strong> ${dueDate}</p>
-          <p><strong>Period:</strong> ${periodStart} - ${periodEnd}</p>
-        </div>
-      </div>
-      
-      <!-- Invoice Items Table -->  
-      <table class="invoice-table">
+    <div style="font-family: Arial, sans-serif; line-height: 1.4; color: {{text_color}}; font-size: 14px; background: #ffffff; padding: 24px; max-width: 800px; margin: 0 auto;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid {{primary_color}};">
+        <tr>
+          <td style="vertical-align: top; width: 60%;">
+            <img src="https://members.hessconsortium.app/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" alt="HESS Consortium Logo" style="max-height: 80px; width: auto; display: block; margin-bottom: 12px;">
+            <div style="line-height: 1.3;">
+              <h3 style="font-size: 16px; font-weight: bold; margin: 0 0 4px 0;">HESS Consortium</h3>
+              <p style="margin: 2px 0; font-size: 13px; color: {{text_color}}CC;">Higher Education Systems &amp; Services Consortium</p>
+              <p style="margin: 2px 0; font-size: 13px; color: {{text_color}}CC;">A consortium of private, non-profit colleges and universities</p>
+            </div>
+          </td>
+          <td style="vertical-align: top; text-align: right; width: 40%;">
+            <h1 style="font-size: 32px; font-weight: bold; color: {{primary_color}}; margin: 0; letter-spacing: 2px;">INVOICE</h1>
+            <p style="font-size: 13px; color: {{primary_color}}; margin: 8px 0 0 0;">Invoice #${invoiceNumber}</p>
+          </td>
+        </tr>
+      </table>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 24px;">
+        <tr>
+          <td style="vertical-align: top; width: 50%; padding-right: 24px;">
+            <h3 style="font-size: 16px; font-weight: bold; color: {{text_color}}; margin: 0 0 12px 0;">Bill To:</h3>
+            <p style="margin: 4px 0; font-size: 13px;"><strong>${invoice.organizationName}</strong></p>
+            ${invoice.organizationEmail ? `<p style="margin: 4px 0; font-size: 13px;">${invoice.organizationEmail}</p>` : ''}
+          </td>
+          <td style="vertical-align: top; width: 50%;">
+            <h3 style="font-size: 16px; font-weight: bold; color: {{text_color}}; margin: 0 0 12px 0;">Invoice Details:</h3>
+            <p style="margin: 4px 0; font-size: 13px;"><strong>Invoice Date:</strong> ${invoiceDate}</p>
+            <p style="margin: 4px 0; font-size: 13px;"><strong>Due Date:</strong> ${dueDate}</p>
+            <p style="margin: 4px 0; font-size: 13px;"><strong>Period:</strong> ${periodStart} - ${periodEnd}</p>
+          </td>
+        </tr>
+      </table>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 24px 0;">
         <thead>
           <tr>
-            <th>Description</th>
-            <th>Period</th>
-            <th class="amount-cell">Amount</th>
+            <th style="background: {{primary_color}}; color: #ffffff; padding: 12px; text-align: left; font-weight: bold; font-size: 13px;">Description</th>
+            <th style="background: {{primary_color}}; color: #ffffff; padding: 12px; text-align: left; font-weight: bold; font-size: 13px;">Period</th>
+            <th style="background: {{primary_color}}; color: #ffffff; padding: 12px; text-align: right; font-weight: bold; font-size: 13px;">Amount</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>
+            <td style="padding: 12px; vertical-align: top;">
               <strong>Annual Membership Fee</strong>
-              ${invoice.proratedAmount ? '<div style="font-size: 0.8rem; color: {{text_color}}CC; margin-top: 0.25rem;">Prorated from membership start date</div>' : ''}
+              <div style="font-size: 12px; color: {{text_color}}CC; margin-top: 4px;">includes Stripe Processing Fee</div>
+              ${invoice.proratedAmount ? '<div style="font-size: 12px; color: {{text_color}}CC; margin-top: 4px;">Prorated from membership start date</div>' : ''}
             </td>
-            <td>
-              ${periodStart} - ${periodEnd}
-            </td>
-            <td class="amount-cell">
-              ${invoice.proratedAmount ? 
-                `$${invoice.proratedAmount.toLocaleString()}` :
-                `$${invoice.invoiceAmount.toLocaleString()}`
-              }
-            </td>
+            <td style="padding: 12px; vertical-align: top;">${periodStart} - ${periodEnd}</td>
+            <td style="padding: 12px; vertical-align: top; text-align: right;">${amountDisplay}</td>
           </tr>
         </tbody>
       </table>
-      
-      <!-- Total Due -->
-      <div class="total-section">
-        <p><strong>Total Due: $${(invoice.proratedAmount || invoice.invoiceAmount).toLocaleString()}</strong></p>
+
+      <div style="text-align: right; margin: 16px 0; font-weight: bold; font-size: 16px;">
+        <p style="margin: 0;"><strong>Total Due: ${totalDisplay}</strong></p>
       </div>
-      
-      <!-- Notes -->
-      ${invoice.notes ? `<div class="notes-section"><h3>Notes:</h3><p>${invoice.notes}</p></div>` : ''}
-      
-      <!-- Payment Information -->
-      <div class="payment-info">
-        <h3>Payment Information</h3>
-        <p><strong>Payment Terms:</strong> Net 30 days</p>
-        <p><strong>Due Date:</strong> ${dueDate}</p>
-        <p>Please include invoice number ${templateData['{{INVOICE_NUMBER}}']} with your payment.</p>
+
+      ${invoice.notes ? `<div style="margin: 24px 0;"><h3 style="font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">Notes:</h3><p style="margin: 0; font-size: 13px;">${invoice.notes}</p></div>` : ''}
+
+      <div style="background: {{accent_color}}20; padding: 16px; border-left: 4px solid {{primary_color}}; margin: 24px 0;">
+        <h3 style="font-size: 16px; font-weight: bold; color: {{text_color}}; margin: 0 0 8px 0;">Payment Information</h3>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Payment Terms:</strong> Net 30 days</p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Due Date:</strong> ${dueDate}</p>
+        <p style="margin: 4px 0; font-size: 13px;">Please include invoice number ${invoiceNumber} with your payment.</p>
+        <p style="margin: 8px 0 0 0; font-size: 12px; color: #555;">
+          The amount shown includes the Stripe credit-card processing fee. Pay-by-check remits the same amount.
+        </p>
+        <div style="text-align: center; margin: 20px 0 4px 0;">
+          <a href="${payLink}" style="display: inline-block; background: {{primary_color}}; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: bold; font-size: 14px;">
+            Pay this invoice online
+          </a>
+          <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">Or copy this link: ${payLink}</p>
+        </div>
       </div>
-      
-      <!-- Footer -->
-      <div class="footer-section">
-        <p>Questions about your invoice?</p>
-        <p>Contact us at: billing@hessconsortium.org</p>
-        <p>Visit us online: www.hessconsortium.org</p>
-        <br />
-        <p>Thank you for being a valued member of the HESS Consortium community!</p>
+
+      <div style="text-align: center; margin-top: 40px; padding-top: 24px; font-size: 13px; color: {{text_color}}CC;">
+        <p style="margin: 4px 0;">Questions about your invoice?</p>
+        <p style="margin: 4px 0;">Contact us at: billing@hessconsortium.org</p>
+        <p style="margin: 4px 0;">Visit us online: www.hessconsortium.org</p>
+        <p style="margin: 16px 0 4px 0;">Thank you for being a valued member of the HESS Consortium community!</p>
       </div>
     </div>
   `;
