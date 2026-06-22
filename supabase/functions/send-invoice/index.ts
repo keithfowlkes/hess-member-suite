@@ -436,6 +436,7 @@ serve(async (req) => {
     const templateData = {
       '{{LOGO}}': '<img src="https://members.hessconsortium.app/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" alt="HESS Consortium Logo" style="max-height: 80px; width: auto;">',
       '{{INVOICE_NUMBER}}': invoiceNumber,
+      '{{INVOICE_ID}}': invoice.id,
       '{{INVOICE_DATE}}': formatDate(new Date().toISOString()),
       '{{DUE_DATE}}': formatDate(dueDate.toISOString()),
       '{{ORGANIZATION_NAME}}': organizationName,
