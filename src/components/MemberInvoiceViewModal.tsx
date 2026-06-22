@@ -71,7 +71,7 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
 
         <div className="mt-4">
           <div id="member-invoice-printable" className="border rounded-lg bg-white">
-            <ProfessionalInvoice invoice={displayInvoice} />
+            <ProfessionalInvoice invoice={invoice} />
           </div>
         </div>
       </DialogContent>
