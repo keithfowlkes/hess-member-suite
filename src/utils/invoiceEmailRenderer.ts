@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 interface InvoiceEmailData {
   organization_name: string;
   invoice_number: string;
+  invoice_id?: string;
   amount: string;
   prorated_amount?: string;
   due_date: string;
