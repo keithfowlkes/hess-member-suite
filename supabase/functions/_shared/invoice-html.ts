@@ -113,6 +113,12 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
       <p style="margin: 2px 0; font-size: 13px;"><strong>Payment Terms:</strong> Net 30 days</p>
       <p style="margin: 2px 0; font-size: 13px;"><strong>Due Date:</strong> ${due}</p>
       <p style="margin: 2px 0; font-size: 13px;">Please include invoice number ${invoiceNumber} with your payment.</p>
+      <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #d1d5db;">
+        <p style="margin: 0 0 2px 0; font-size: 13px; font-weight: bold;">Remit Check Payments To:</p>
+        <p style="margin: 1px 0; font-size: 13px;">The HESS Consortium</p>
+        <p style="margin: 1px 0; font-size: 13px;">952 Winchester Rd #1051</p>
+        <p style="margin: 1px 0; font-size: 13px;">Lexington, KY 40505</p>
+      </div>
       ${invoiceId ? `
       <div style="text-align: center; margin: 12px 0 2px 0;">
         <a href="${payLink}" style="display: inline-block; background: #6b7280; color: #ffffff; text-decoration: none; padding: 10px 22px; border-radius: 6px; font-weight: bold; font-size: 13px;">Pay this invoice online</a>
