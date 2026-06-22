@@ -25,6 +25,19 @@ export default function Invoices() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
+  // Auto-open the View modal when arriving from an emailed "Pay this invoice online" link
+  useEffect(() => {
+    if (loading) return;
+    const params = new URLSearchParams(window.location.search);
+    const targetId = params.get('invoice');
+    if (!targetId) return;
+    const match = invoices.find((inv) => inv.id === targetId);
+    if (match) {
+      setSelectedInvoice(match);
+      setIsViewModalOpen(true);
+    }
+  }, [loading, invoices]);
+
   // Filter invoices based on user role
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
