@@ -60,6 +60,7 @@ import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { ScheduledEmailBatches } from '@/components/membership-fees/ScheduledEmailBatches';
 
 interface FeesStats {
   totalOrganizations: number;
