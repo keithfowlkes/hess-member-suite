@@ -1,11 +1,10 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { Invoice } from '@/hooks/useInvoices';
 import { PayInvoiceButton } from '@/components/PayInvoiceButton';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
-import { useSystemSetting } from '@/hooks/useSystemSettings';
 
 interface MemberInvoiceViewModalProps {
   open: boolean;
@@ -14,25 +13,7 @@ interface MemberInvoiceViewModalProps {
 }
 
 export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberInvoiceViewModalProps) {
-  const { data: termEndSetting } = useSystemSetting('default_term_end_date');
-
-  const displayInvoice = useMemo(() => {
-    if (!invoice) return null;
-    const termEndRaw = termEndSetting?.setting_value;
-    if (!termEndRaw) return invoice;
-    const match = String(termEndRaw).match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (!match) return invoice;
-    const endYear = parseInt(match[1], 10);
-    const monthDay = `${match[2]}-${match[3]}`;
-    // Term period: one year ending at the configured term end date.
-    return {
-      ...invoice,
-      period_start_date: `${endYear - 1}-${monthDay}`,
-      period_end_date: `${endYear}-${monthDay}`,
-    };
-  }, [invoice, termEndSetting?.setting_value]);
-
-  if (!invoice || !displayInvoice) return null;
+  if (!invoice) return null;
 
   const isUnpaid = invoice.status !== 'paid';
 
