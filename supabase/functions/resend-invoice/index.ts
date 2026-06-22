@@ -40,7 +40,6 @@ async function generateInvoiceHTML(template: any, templateData: Record<string, s
   const periodStart = formatDate(invoice.period_start_date);
   const periodEnd = formatDate(invoice.period_end_date);
   
-  let invoiceHtml = `
   const amountDisplay = invoice.proratedAmount
     ? `$${Number(invoice.proratedAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     : `$${Number(invoice.invoiceAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
