@@ -838,9 +838,11 @@ export default function MembershipFees() {
                 variant: "destructive"
               });
             } else {
+              const count = (data as any)?.count ?? emailsToSend.length;
+              const windowHours = (data as any)?.windowHours ?? 12;
               toast({
-                title: "Invoices created and queued for sending",
-                description: `${successCount} invoice${successCount !== 1 ? 's' : ''} created and ${emailsToSend.length} email${emailsToSend.length !== 1 ? 's' : ''} queued for delivery with rate limiting.`
+                title: "Invoices created — emails scheduled",
+                description: `${successCount} invoice${successCount !== 1 ? 's' : ''} created. ${count} email${count !== 1 ? 's' : ''} will be sent evenly over the next ${windowHours} hours to protect deliverability.`
               });
             }
           } catch (emailError) {
