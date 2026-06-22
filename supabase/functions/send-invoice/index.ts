@@ -268,6 +268,20 @@ async function generateInvoiceHTML(template: any, templateData: Record<string, s
         <p><strong>Payment Terms:</strong> Net 30 days</p>
         <p><strong>Due Date:</strong> ${dueDate}</p>
         <p>Please include invoice number ${templateData['{{INVOICE_NUMBER}}']} with your payment.</p>
+        <p style="margin-top: 0.75rem; font-size: 0.85rem; color: #555;">
+          The amount shown includes the Stripe credit-card processing fee. Pay-by-check remits the same amount.
+        </p>
+        ${templateData['{{INVOICE_ID}}'] ? `
+        <div style="text-align: center; margin: 1.25rem 0 0.5rem 0;">
+          <a href="https://members.hessconsortium.app/invoices?invoice=${templateData['{{INVOICE_ID}}']}"
+             style="display: inline-block; background: #0c2340; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: bold; font-size: 1rem;">
+            Pay this invoice online
+          </a>
+          <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #666;">
+            Or copy this link: https://members.hessconsortium.app/invoices?invoice=${templateData['{{INVOICE_ID}}']}
+          </p>
+        </div>
+        ` : ''}
       </div>
       
       <!-- Footer -->
