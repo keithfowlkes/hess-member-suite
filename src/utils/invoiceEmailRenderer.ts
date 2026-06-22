@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 interface InvoiceEmailData {
   organization_name: string;
   invoice_number: string;
+  invoice_id?: string;
   amount: string;
   prorated_amount?: string;
   due_date: string;
@@ -112,6 +113,20 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
         <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong>Payment Terms:</strong> Net 30 days</p>
         <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong>Due Date:</strong> ${dueDate}</p>
         <p style="margin: 0.25rem 0; font-size: 0.9rem;">Please include invoice number ${data.invoice_number} with your payment.</p>
+        <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #555;">
+          The amount shown includes the Stripe credit-card processing fee. Pay-by-check remits the same amount.
+        </p>
+        ${data.invoice_id ? `
+        <div style="text-align: center; margin: 1.25rem 0 0.5rem 0;">
+          <a href="https://members.hessconsortium.app/invoices?invoice=${data.invoice_id}"
+             style="display: inline-block; background: #0c2340; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: bold; font-size: 1rem;">
+            Pay this invoice online
+          </a>
+          <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #666;">
+            Or copy this link: https://members.hessconsortium.app/invoices?invoice=${data.invoice_id}
+          </p>
+        </div>
+        ` : ''}
       </div>
 
       <!-- Footer -->

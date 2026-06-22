@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,19 @@ export default function Invoices() {
   const [dateSearch, setDateSearch] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  // Auto-open the View modal when arriving from an emailed "Pay this invoice online" link
+  useEffect(() => {
+    if (loading) return;
+    const params = new URLSearchParams(window.location.search);
+    const targetId = params.get('invoice');
+    if (!targetId) return;
+    const match = invoices.find((inv) => inv.id === targetId);
+    if (match) {
+      setSelectedInvoice(match);
+      setIsViewModalOpen(true);
+    }
+  }, [loading, invoices]);
 
   // Filter invoices based on user role
   const filteredInvoices = invoices.filter(invoice => {
