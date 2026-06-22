@@ -261,10 +261,11 @@ serve(async (req: Request): Promise<Response> => {
       finalHtml = await replaceLogoInTemplate(emailRequest.template);
     } else if (emailRequest.type === 'invoice' && templateData.invoice_content) {
       // Invoice emails: send the styled invoice HTML on its own, with no branded
-      // wrapper/intro/footer. The invoice template already includes the HESS logo,
-      // company info, payment block, and footer.
-      const invoiceOnly = await replaceLogoInTemplate(templateData.invoice_content);
-      finalHtml = replaceTemplateVariables(invoiceOnly, templateData);
+      // wrapper/header/intro/footer. The invoice template already includes the
+      // smaller HESS logo, company info, payment block, and footer.
+      // Do NOT run replaceLogoInTemplate — it wraps the content in the standard
+      // branded template (adds the large cream "The HESS Consortium" banner).
+      finalHtml = replaceTemplateVariables(templateData.invoice_content, templateData);
     } else if (template) {
       finalHtml = replaceTemplateVariables(template.html, templateData);
     } else {
