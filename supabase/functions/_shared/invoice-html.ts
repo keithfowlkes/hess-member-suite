@@ -120,7 +120,8 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
         <p style="margin: 1px 0; font-size: 13px;">Lexington, KY 40505</p>
       </div>
       ${invoiceId ? `
-      <div style="text-align: center; margin: 12px 0 2px 0;">
+      <p style="text-align: center; margin: 12px 0 6px 0; font-size: 14px; font-weight: bold; color: #333;">OR</p>
+      <div style="text-align: center; margin: 0 0 2px 0;">
         <a href="${payLink}" style="display: inline-block; background: #6b7280; color: #ffffff; text-decoration: none; padding: 10px 22px; border-radius: 6px; font-weight: bold; font-size: 13px;">Pay this invoice online</a>
       </div>` : ''}
     </div>
