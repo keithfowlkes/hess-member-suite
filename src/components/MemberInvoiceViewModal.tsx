@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { Invoice } from '@/hooks/useInvoices';
 import { PayInvoiceButton } from '@/components/PayInvoiceButton';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
+import { useSystemSetting } from '@/hooks/useSystemSettings';
 
 interface MemberInvoiceViewModalProps {
   open: boolean;
@@ -13,7 +14,26 @@ interface MemberInvoiceViewModalProps {
 }
 
 export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberInvoiceViewModalProps) {
-  if (!invoice) return null;
+  const { data: termEndSetting } = useSystemSetting('default_term_end_date');
+
+  const displayInvoice = useMemo(() => {
+    if (!invoice) return null;
+    const termEndRaw = termEndSetting?.setting_value;
+    if (!termEndRaw) return invoice;
+    const termEnd = new Date(termEndRaw);
+    if (isNaN(termEnd.getTime())) return invoice;
+    // Term period: Jan 1 of the term-end year through the configured term end date.
+    const termStart = new Date(termEnd.getFullYear(), 0, 1);
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return {
+      ...invoice,
+      period_start_date: fmt(termStart),
+      period_end_date: fmt(termEnd),
+    };
+  }, [invoice, termEndSetting?.setting_value]);
+
+  if (!invoice || !displayInvoice) return null;
 
   const isUnpaid = invoice.status !== 'paid';
 
@@ -71,7 +91,7 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
 
         <div className="mt-4">
           <div id="member-invoice-printable" className="border rounded-lg bg-white">
-            <ProfessionalInvoice invoice={invoice} />
+            <ProfessionalInvoice invoice={displayInvoice} />
           </div>
         </div>
       </DialogContent>
