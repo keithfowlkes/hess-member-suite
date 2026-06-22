@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { getEmailDesignSettings, replaceColorVariables } from '../_shared/email-design.ts';
 import { requireAdmin } from '../_shared/auth.ts';
+import { buildInvoiceEmailHtml } from '../_shared/invoice-html.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
