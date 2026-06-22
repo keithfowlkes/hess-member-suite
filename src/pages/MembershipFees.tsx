@@ -1741,6 +1741,7 @@ export default function MembershipFees() {
 
               <TabsContent value="invoices">
                 <div className="space-y-6">
+                  <ScheduledEmailBatches />
                   {/* Search and Filters */}
                   <div className="flex gap-4">
                     <div className="relative flex-1">
