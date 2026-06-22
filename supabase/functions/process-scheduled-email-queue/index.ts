@@ -15,10 +15,29 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Authorize: shared secret header set by pg_cron
-  const expectedSecret = Deno.env.get("SCHEDULED_EMAIL_CRON_SECRET") ?? "";
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
+
+  // Authorize: shared secret header set by pg_cron. Accept either env-provided
+  // value or one stored in system_settings (the latter is what pg_cron reads).
   const providedSecret = req.headers.get("x-cron-secret") ?? "";
-  if (!expectedSecret || providedSecret !== expectedSecret) {
+  const envSecret = Deno.env.get("SCHEDULED_EMAIL_CRON_SECRET") ?? "";
+  let dbSecret = "";
+  try {
+    const { data: s } = await supabaseAdmin
+      .from("system_settings")
+      .select("setting_value")
+      .eq("setting_key", "scheduled_email_cron_secret")
+      .maybeSingle();
+    dbSecret = s?.setting_value ?? "";
+  } catch (_e) { /* ignore */ }
+
+  const validSecret =
+    !!providedSecret && (providedSecret === envSecret || providedSecret === dbSecret);
+  if (!validSecret) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
