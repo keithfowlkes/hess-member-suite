@@ -127,8 +127,8 @@ Deno.serve(async (req) => {
     const successUrl = `${baseSuccess}${sep(baseSuccess)}payment=success&invoice=${invoice.id}&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseCancel}${sep(baseCancel)}payment=cancelled&invoice=${invoice.id}`;
 
-    const productName = `HESS Consortium Membership — Invoice ${invoice.invoice_number}`;
-    const productDesc = `Membership period ${invoice.period_start_date} to ${invoice.period_end_date}`;
+    const productName = `HESS Consortium 2026 Annual Membership Dues — Invoice ${invoice.invoice_number}`;
+    const productDesc = `Includes Stripe credit-card processing fee. Membership period ${invoice.period_start_date} to ${invoice.period_end_date}.`;
 
     const params: Record<string, string> = {
       mode: "payment",
