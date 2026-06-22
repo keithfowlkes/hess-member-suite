@@ -20,16 +20,15 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
     if (!invoice) return null;
     const termEndRaw = termEndSetting?.setting_value;
     if (!termEndRaw) return invoice;
-    const termEnd = new Date(termEndRaw);
-    if (isNaN(termEnd.getTime())) return invoice;
-    // Term period: Jan 1 of the term-end year through the configured term end date.
-    const termStart = new Date(termEnd.getFullYear(), 0, 1);
-    const fmt = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    // Parse YYYY-MM-DD as a plain date (avoid UTC parsing which shifts the day in local TZ).
+    const match = String(termEndRaw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return invoice;
+    const year = match[1];
+    const endMonthDay = `${match[2]}-${match[3]}`;
     return {
       ...invoice,
-      period_start_date: fmt(termStart),
-      period_end_date: fmt(termEnd),
+      period_start_date: `${year}-01-01`,
+      period_end_date: `${year}-${endMonthDay}`,
     };
   }, [invoice, termEndSetting?.setting_value]);
 
