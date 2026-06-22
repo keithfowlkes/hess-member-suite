@@ -172,9 +172,9 @@ Deno.serve(async (req) => {
         return json({ error: "Invalid invoice amount" }, 400);
       }
       productName =
-        `HESS Consortium Membership — Invoice ${invoice.invoice_number}`;
+        `HESS Consortium 2026 Annual Membership Dues — Invoice ${invoice.invoice_number}`;
       productDesc =
-        `Membership period ${invoice.period_start_date} to ${invoice.period_end_date}`;
+        `Includes Stripe credit-card processing fee. Membership period ${invoice.period_start_date} to ${invoice.period_end_date}.`;
       metadata = {
         invoice_id: invoice.id,
         organization_id: invoice.organization_id,
