@@ -39,7 +39,7 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
   const due = formatDate(dueDate);
   const pStart = formatDate(periodStart);
   const pEnd = formatDate(periodEnd);
-  const payLink = invoiceId ? `https://members.hessconsortium.app/invoices?invoice=${invoiceId}` : '';
+  const payLink = invoiceId ? `https://www.hessconsortium.org/new/hess-member-portal/` : '';
 
   // Sizing is tuned so the rendered email fits on a single 8.5" x 11" page.
   return `
