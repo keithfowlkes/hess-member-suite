@@ -1576,6 +1576,63 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_email_queue: {
+        Row: {
+          attempts: number
+          batch_id: string
+          created_at: string
+          email_type: string
+          id: string
+          invoice_id: string | null
+          last_error: string | null
+          organization_id: string | null
+          organization_name: string | null
+          recipient: string
+          scheduled_send_at: string
+          sent_at: string | null
+          status: string
+          subject: string
+          template_html: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          batch_id: string
+          created_at?: string
+          email_type?: string
+          id?: string
+          invoice_id?: string | null
+          last_error?: string | null
+          organization_id?: string | null
+          organization_name?: string | null
+          recipient: string
+          scheduled_send_at?: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          template_html: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          batch_id?: string
+          created_at?: string
+          email_type?: string
+          id?: string
+          invoice_id?: string | null
+          last_error?: string | null
+          organization_id?: string | null
+          organization_name?: string | null
+          recipient?: string
+          scheduled_send_at?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          template_html?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       simplelists_cohort_mappings: {
         Row: {
           created_at: string
