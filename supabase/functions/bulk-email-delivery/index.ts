@@ -13,26 +13,31 @@ interface BulkEmailRequest {
     subject: string;
     template: string;
     invoiceId?: string;
+    organizationId?: string;
     organizationName?: string;
   }>;
   type?: string;
+  /**
+   * If set (>0), schedule emails into the durable queue spread evenly across
+   * this many hours instead of sending in-process. Recommended for large
+   * batches (e.g. annual invoice runs) to avoid spam-trap flagging.
+   */
+  scheduleWindowHours?: number;
 }
 
-// Initialize Supabase client
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
 );
 
 serve(async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   if (req.method !== 'POST') {
     return new Response(
-      JSON.stringify({ error: 'Method not allowed' }), 
+      JSON.stringify({ error: 'Method not allowed' }),
       { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
@@ -40,114 +45,153 @@ serve(async (req: Request): Promise<Response> => {
   try {
     const bulkRequest: BulkEmailRequest = await req.json();
     const correlationId = crypto.randomUUID();
-    
-    console.log('[bulk-email-delivery] Processing bulk email request', {
+
+    console.log('[bulk-email-delivery] Request received', {
       correlationId,
-      emailCount: bulkRequest.emails.length,
-      type: bulkRequest.type
+      emailCount: bulkRequest.emails?.length ?? 0,
+      type: bulkRequest.type,
+      scheduleWindowHours: bulkRequest.scheduleWindowHours,
     });
 
-    // Get email rate limit delay from system settings
-    let delayMs = 550; // Default fallback
+    if (!Array.isArray(bulkRequest.emails) || bulkRequest.emails.length === 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'emails array required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    // Determine schedule window. Explicit param wins; otherwise consult system setting.
+    let windowHours = Number(bulkRequest.scheduleWindowHours ?? NaN);
+    if (!Number.isFinite(windowHours) || windowHours < 0) {
+      try {
+        const { data: setting } = await supabase
+          .from('system_settings')
+          .select('setting_value')
+          .eq('setting_key', 'bulk_email_window_hours')
+          .maybeSingle();
+        if (setting?.setting_value) {
+          windowHours = Number(setting.setting_value);
+        }
+      } catch (e) {
+        console.warn('[bulk-email-delivery] Could not fetch bulk_email_window_hours setting', e);
+      }
+    }
+    if (!Number.isFinite(windowHours) || windowHours < 0) windowHours = 12;
+
+    // ===== Scheduled (durable) path =====
+    if (windowHours > 0) {
+      const batchId = crypto.randomUUID();
+      const n = bulkRequest.emails.length;
+      const totalSeconds = windowHours * 3600;
+      const stepSeconds = n > 1 ? totalSeconds / (n - 1) : 0;
+      const now = Date.now();
+
+      const rows = bulkRequest.emails.map((email, i) => {
+        const baseOffset = stepSeconds * i;
+        // Jitter ±30s to avoid identical seconds
+        const jitter = (Math.random() - 0.5) * 60;
+        const sendAt = new Date(now + Math.max(0, baseOffset + jitter) * 1000).toISOString();
+        return {
+          batch_id: batchId,
+          email_type: bulkRequest.type === 'invoice_bulk' ? 'invoice' : (bulkRequest.type || 'custom'),
+          recipient: email.to,
+          subject: email.subject,
+          template_html: email.template,
+          invoice_id: email.invoiceId ?? null,
+          organization_id: email.organizationId ?? null,
+          organization_name: email.organizationName ?? null,
+          scheduled_send_at: sendAt,
+          status: 'pending',
+        };
+      });
+
+      // Insert in chunks to avoid payload limits
+      const chunkSize = 200;
+      for (let i = 0; i < rows.length; i += chunkSize) {
+        const chunk = rows.slice(i, i + chunkSize);
+        const { error } = await supabase.from('scheduled_email_queue').insert(chunk);
+        if (error) throw error;
+      }
+
+      const firstSendAt = rows[0]?.scheduled_send_at;
+      const lastSendAt = rows[rows.length - 1]?.scheduled_send_at;
+
+      console.log('[bulk-email-delivery] Scheduled batch enqueued', {
+        correlationId, batchId, count: rows.length, windowHours, firstSendAt, lastSendAt,
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          scheduled: true,
+          batchId,
+          count: rows.length,
+          windowHours,
+          firstSendAt,
+          lastSendAt,
+          message: `Scheduled ${rows.length} emails spread over ${windowHours}h`,
+          correlationId,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    // ===== Immediate (legacy) path — kept for non-bulk callers =====
+    let delayMs = 550;
     try {
       const { data: delaySetting } = await supabase
         .from('system_settings')
         .select('setting_value')
         .eq('setting_key', 'email_rate_limit_delay_ms')
         .single();
-      
       if (delaySetting?.setting_value) {
         delayMs = parseInt(delaySetting.setting_value, 10) || 550;
       }
-    } catch (error) {
-      console.warn('[bulk-email-delivery] Could not fetch rate limit delay, using default', { error });
-    }
+    } catch (_e) { /* fall back to default */ }
 
-    console.log('[bulk-email-delivery] Using email delay:', delayMs, 'ms');
-
-    // Process emails with rate limiting using background tasks
     const processEmails = async () => {
       let successCount = 0;
       let errorCount = 0;
-      
       for (let i = 0; i < bulkRequest.emails.length; i++) {
         const email = bulkRequest.emails[i];
-        
         try {
-          // Add progressive delay for rate limiting
-          if (i > 0) {
-            await new Promise(resolve => setTimeout(resolve, delayMs));
-          }
-          
-          // Call the centralized email delivery function
-          const { data, error } = await supabase.functions.invoke('centralized-email-delivery-public', {
-            body: {
-              type: 'custom',
-              to: email.to,
-              subject: email.subject,
-              template: email.template
-            }
+          if (i > 0) await new Promise((r) => setTimeout(r, delayMs));
+          const { error } = await supabase.functions.invoke('centralized-email-delivery-public', {
+            body: { type: 'custom', to: email.to, subject: email.subject, template: email.template },
           });
-          
-          if (error) {
-            console.error(`[bulk-email-delivery] Failed to send email to ${email.to}:`, error);
-            errorCount++;
-          } else {
-            console.log(`[bulk-email-delivery] Successfully sent email to ${email.organizationName || email.to}`);
-            successCount++;
-            
-            // If this is an invoice email, mark it as sent
-            if (email.invoiceId) {
-              try {
-                await supabase
-                  .from('invoices')
-                  .update({ 
-                    status: 'sent',
-                    sent_date: new Date().toISOString()
-                  })
-                  .eq('id', email.invoiceId);
-              } catch (updateError) {
-                console.error(`[bulk-email-delivery] Failed to update invoice ${email.invoiceId}:`, updateError);
-              }
-            }
+          if (error) { errorCount++; continue; }
+          successCount++;
+          if (email.invoiceId) {
+            await supabase
+              .from('invoices')
+              .update({ status: 'sent', sent_date: new Date().toISOString() })
+              .eq('id', email.invoiceId);
           }
         } catch (sendError) {
-          console.error(`[bulk-email-delivery] Error processing email for ${email.organizationName || email.to}:`, sendError);
+          console.error(`[bulk-email-delivery] Error for ${email.organizationName || email.to}:`, sendError);
           errorCount++;
         }
       }
-      
-      console.log('[bulk-email-delivery] Bulk email processing completed', {
-        correlationId,
-        successCount,
-        errorCount,
-        totalProcessed: successCount + errorCount
-      });
+      console.log('[bulk-email-delivery] Immediate batch complete', { correlationId, successCount, errorCount });
     };
 
-    // Use EdgeRuntime.waitUntil to process emails in background
-    // Use any type for EdgeRuntime to avoid strict checking
     if (typeof (globalThis as any).EdgeRuntime !== 'undefined' && (globalThis as any).EdgeRuntime.waitUntil) {
       (globalThis as any).EdgeRuntime.waitUntil(processEmails());
     } else {
-      // Fallback for local development
-      processEmails().catch(error => {
-        console.error('[bulk-email-delivery] Background processing failed:', error);
-      });
+      processEmails().catch((e) => console.error('[bulk-email-delivery] Background failed:', e));
     }
 
-    // Return immediate response
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Bulk email processing started',
+      JSON.stringify({
+        success: true,
+        scheduled: false,
+        message: 'Immediate bulk email processing started',
         emailCount: bulkRequest.emails.length,
         delayMs,
-        correlationId
+        correlationId,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
-
   } catch (error: any) {
     console.error('[bulk-email-delivery] Error:', error);
     return new Response(
@@ -155,9 +199,4 @@ serve(async (req: Request): Promise<Response> => {
       { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
-});
-
-// Handle function shutdown
-addEventListener('beforeunload', (ev) => {
-  console.log('[bulk-email-delivery] Function shutdown due to:', (ev as any).detail?.reason);
 });

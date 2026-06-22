@@ -1,67 +1,65 @@
-## Audit findings
+## Goal
+When the admin generates invoices in bulk (Membership Fees → Generate Invoices), the resulting emails must not all blast out in a few minutes. They should be spread evenly across a configurable window (default **12 hours**) so Resend/Stripe-bearing messages don't get flagged as spam.
 
-**Stripe configuration (system_settings)**
-- `stripe_enabled` = `false` — online payments are currently OFF
-- `stripe_mode` = `live` — but no test/live secret or publishable keys verified
-- `stripe_success_url` / `stripe_cancel_url` are empty (functions fall back to request origin)
-- Embedded checkout already redirects on completion to `/payment/success`, which works on `members.hessconsortium.app`
+## Why the current code can't do this
+`bulk-email-delivery` runs the send loop in `EdgeRuntime.waitUntil` with a 550 ms in-process delay. An Edge Function can't stay alive for 12 hours, so any long delay has to live outside the function call.
 
-**Membership fee consistency**
-- `full_member_fee` = **$309.27** (calculated to absorb Stripe ~2.9% + $0.30)
-- `affiliate_member_fee` = `0`, `additional_fee_tiers` = `[]`
-- Existing invoices in DB: 15 at **$300.00** and 5 at **$309.27** — inconsistent
-- 524 active member organizations, 3 system orgs (excluded)
+## Approach
+Introduce a durable **scheduled email queue** that pg_cron drains on a fixed cadence. The bulk flow enqueues all invoice emails with staggered `scheduled_send_at` timestamps; a cron-triggered worker picks up rows whose time has come and sends them one by one through `centralized-email-delivery-public`.
 
-**Invoice email (`send-invoice` edge function + `invoiceEmailRenderer`)**
-- No "Pay Online" button or link back to `members.hessconsortium.app`
-- No mention that the fee includes Stripe processing
-- On-screen `ProfessionalInvoice.tsx` already shows "includes Stripe Processing Fee", but the **emailed** version does not
+```text
+[Bulk Generate Invoices]
+        │ enqueue N rows, scheduled_send_at spread across 12h
+        ▼
+ scheduled_email_queue ──── pg_cron (every minute)
+        │                         │ POST
+        ▼                         ▼
+   status updates       process-scheduled-email-queue
+                                  │ for each due row:
+                                  ▼
+                   centralized-email-delivery-public
+```
 
-**Stripe checkout page (`create-stripe-embedded-session`)**
-- Line item description is generic ("Membership period X to Y") — does not call out that the amount already includes the processing fee
-- No public `stripe_success_url` configured, so confirmation links may resolve to whatever origin called the function instead of the custom domain
+## Changes
 
-## Plan
+### 1. New table `public.scheduled_email_queue` (migration)
+Columns: `id uuid pk`, `email_type text`, `recipient text`, `subject text`, `template_html text`, `invoice_id uuid null`, `organization_id uuid null`, `organization_name text`, `scheduled_send_at timestamptz`, `status text default 'pending'` (`pending|sending|sent|failed`), `attempts int default 0`, `last_error text`, `batch_id uuid`, `created_at`, `sent_at`. Indexes on `(status, scheduled_send_at)` and `batch_id`. RLS: admin read; service_role full. Standard GRANTs.
 
-### 1. Standardize the membership fee at $309.27 across all member orgs
-- Confirm with you that **$309.27** (single tier, includes Stripe fee) is the official 2026 dues amount before any data changes
-- Update the 15 existing **unpaid** invoices currently at `$300.00` to `$309.27` (skip any already `paid`); log each change to `audit_log`
-- Leave `full_member_fee` setting at `309.27` and add a short inline note in Admin → Membership Fees explaining the fee includes Stripe processing
-- Remove/zero out the unused `affiliate_member_fee` tier from the picker so admins cannot accidentally pick a different amount when generating invoices
+### 2. New setting `bulk_email_window_hours` (default `12`) in `system_settings`
+Admin-editable; falls back to 12 if unset. (Keeps existing `email_rate_limit_delay_ms` for legacy non-bulk flows.)
 
-### 2. Add a "Pay Online" link in the emailed invoice
-- In `supabase/functions/send-invoice/index.ts` and `src/utils/invoiceEmailRenderer.ts`, add a prominent button in the Payment Information block:
-  - Label: **"Pay this invoice online"**
-  - URL: `https://members.hessconsortium.app/invoices?invoice=<invoiceId>` (deep-links into the member portal Invoices page, which already auto-opens the View modal containing the Pay-with-card button)
-  - Fallback plain-text link below the button for email clients that strip styling
-- Add a one-line note: *"The amount shown includes the Stripe credit-card processing fee. Pay-by-check remits the same amount."*
+### 3. Update `bulk-email-delivery`
+Add optional `scheduleWindowHours` to the request (and read setting as default). When set:
+- compute evenly spaced `scheduled_send_at` (`now() + i * windowHours*3600 / N` seconds, with a small jitter ±30 s to avoid identical-second batching)
+- insert all rows into `scheduled_email_queue` in one batch
+- return `{ scheduled: true, batchId, count, windowHours, firstSendAt, lastSendAt }`
+- do NOT send anything in-process
 
-### 3. Call out the processing fee on the Stripe checkout page
-- In `create-stripe-embedded-session` (and `create-stripe-checkout` for parity), change the line-item description from
-  `"Membership period X to Y"`
-  to
-  `"HESS Consortium 2026 Annual Membership Dues (includes Stripe credit-card processing fee). Period: X – Y."`
-- This is the text Stripe shows to the cardholder in the embedded UI and on the receipt
+Existing immediate-send behavior is preserved when `scheduleWindowHours` is omitted/0.
 
-### 4. Set the canonical return URLs on the custom domain
-- Set `stripe_success_url` = `https://members.hessconsortium.app/payment/success`
-- Set `stripe_cancel_url` = `https://members.hessconsortium.app/invoices`
-- These are read by `create-stripe-checkout`; the embedded flow already returns to `/payment/success`
+### 4. New edge function `process-scheduled-email-queue`
+- Called by pg_cron every minute (no JWT, validates a shared secret header from settings/Vault).
+- `SELECT ... FOR UPDATE SKIP LOCKED LIMIT 25 WHERE status='pending' AND scheduled_send_at <= now()`.
+- For each row: mark `sending`, invoke `centralized-email-delivery-public`, on success mark `sent` + flip invoice `status='sent'`/`sent_date`, on failure increment `attempts`, set `last_error`; after 3 attempts → `failed`.
+- Hard wall-time cap (~120 s); leftovers picked up next minute. Throughput cap = 25/min ≈ 1500/hr, easily enough for 524 invoices over 12 h.
 
-### 5. Enable Stripe live payments (manual / confirm-only step)
-- `stripe_enabled` is currently `false`. After steps 1–4 are verified in test mode, you flip the toggle in **Admin Panel → Online Payments**. I will not toggle it automatically.
-- Pre-flight checklist I will surface in chat: live secret key + live publishable key set, statement descriptor set ("HESS CONSORTIUM"), success/cancel URLs set, at least one test invoice paid end-to-end in test mode.
+### 5. pg_cron job (via supabase--insert, not migration, since it embeds project URL + anon key)
+Schedule `process-scheduled-email-queue` every minute with `net.http_post`.
 
-### Out of scope (will not change unless you ask)
-- Switching to Lovable's seamless Stripe — you're on the BYOK Stripe integration intentionally
-- Re-architecting fees to charge the processing fee as a separate Stripe line item rather than baking it in (current "absorb the fee in the dues amount" is simpler and what the math at $309.27 already does)
-- Any change to paid invoices
+### 6. Wire it into `MembershipFees.tsx` bulk invoice generator
+The existing `bulk-email-delivery` invoke call (around line 825) gets `scheduleWindowHours: 12` added. Update the success toast to say something like *"312 invoices scheduled — sending evenly over the next 12 hours."* Add a small admin-facing field above the Generate button: "Send window (hours)" defaulting to 12.
 
-### Technical notes
-- Files I will edit: `supabase/functions/send-invoice/index.ts`, `supabase/functions/create-stripe-embedded-session/index.ts`, `supabase/functions/create-stripe-checkout/index.ts`, `src/utils/invoiceEmailRenderer.ts`, `src/pages/MembershipFees.tsx` (small copy update), `src/hooks/useFeeTiers.tsx` (drop the $0 affiliate tier from the UI list, or hide when amount = 0).
-- Data updates done via `supabase--insert` (UPDATE on `invoices` and `system_settings`), not migrations.
+### 7. New admin view (small): "Scheduled invoice deliveries"
+Add a collapsible card under the bulk-generate panel listing the most recent batch: counts of pending/sent/failed, first/last scheduled time, and a "Send remaining now" button (sets all pending rows in the batch to `scheduled_send_at = now()`). Keeps admin in control without manual SQL.
 
-### Confirm before I build
-1. Is **$309.27** the correct, final per-organization amount for every member for this billing cycle? (If not, give me the right number and I'll use that.)
-2. OK to bring the 15 existing unpaid `$300.00` invoices up to the standardized amount?
-3. OK to drop the affiliate / additional tiers from the fee picker, or do you want them kept for future use?
+## Out of scope
+- Per-recipient timezone targeting (sends are evenly spread in wall-clock time).
+- Reworking single-invoice send/resend flows — they remain immediate.
+- Changing the email design (just done).
+
+## Verification
+- Generate a small test batch (e.g. 6 invoices, window = 1 h) → confirm rows land in `scheduled_email_queue` with 10-min gaps, cron picks them up, invoice statuses flip to `sent`, audit log entries are written.
+- Re-run with the full 524-org list at window = 12 h → spot-check `first_send_at` ≈ now, `last_send_at` ≈ now + 12 h, average gap ≈ 82 s.
+
+## Question before I build
+Should the "Send window (hours)" be admin-editable per bulk run (default 12), or do you want it locked at 12 h with no UI control?
