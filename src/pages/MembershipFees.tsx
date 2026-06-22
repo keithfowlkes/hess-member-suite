@@ -825,7 +825,8 @@ export default function MembershipFees() {
             const { data, error } = await supabase.functions.invoke('bulk-email-delivery', {
               body: {
                 emails: emailsToSend,
-                type: 'invoice_bulk'
+                type: 'invoice_bulk',
+                scheduleWindowHours: 12,
               }
             });
 
