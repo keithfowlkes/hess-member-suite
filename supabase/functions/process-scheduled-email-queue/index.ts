@@ -57,7 +57,7 @@ serve(async (req) => {
 
   try {
     // Fetch a batch of due rows. Using update with returning to atomically claim them.
-    const { data: claimed, error: claimError } = await supabase.rpc("claim_scheduled_emails", {
+    const { data: claimed, error: claimError } = await supabaseAdmin.rpc("claim_scheduled_emails", {
       _limit: MAX_PER_RUN,
     });
 
@@ -114,7 +114,7 @@ serve(async (req) => {
 
       processed++;
       try {
-        const { error: sendError } = await supabase.functions.invoke(
+        const { error: sendError } = await supabaseAdmin.functions.invoke(
           "centralized-email-delivery-public",
           {
             body: {
