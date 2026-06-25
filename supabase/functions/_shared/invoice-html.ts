@@ -15,6 +15,7 @@ export interface InvoiceHtmlInput {
   proratedAmount?: number | null;
   notes?: string | null;
   invoiceId?: string | null; // when provided, renders the "Pay this invoice online" button
+  paidDate?: string | null;  // when provided, renders a "PAID" stamp with this date
 }
 
 function formatDate(value: string): string {
