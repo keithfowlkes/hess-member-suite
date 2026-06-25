@@ -293,8 +293,17 @@ export default function Auth() {
 
   // Only redirect if user exists and we're not in the middle of a sign out process
   if (user && !loading) {
-    return <Navigate to="/" replace />;
+    let redirectTo = '/';
+    try {
+      const stored = sessionStorage.getItem('post_auth_redirect');
+      if (stored && stored.startsWith('/') && !stored.startsWith('//')) {
+        redirectTo = stored;
+        sessionStorage.removeItem('post_auth_redirect');
+      }
+    } catch {}
+    return <Navigate to={redirectTo} replace />;
   }
+
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

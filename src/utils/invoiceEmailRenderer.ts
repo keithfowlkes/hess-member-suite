@@ -118,15 +118,19 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
         </p>
         ${data.invoice_id ? `
         <div style="text-align: center; margin: 1.25rem 0 0.5rem 0;">
-          <a href="https://members.hessconsortium.app/invoices?invoice=${data.invoice_id}"
+          <a href="https://members.hessconsortium.app/?invoice=${data.invoice_id}"
              style="display: inline-block; background: #0c2340; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: bold; font-size: 1rem;">
             Pay this invoice online
           </a>
           <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #666;">
-            Or copy this link: https://members.hessconsortium.app/invoices?invoice=${data.invoice_id}
+            Or copy this link: https://members.hessconsortium.app/?invoice=${data.invoice_id}
+          </p>
+          <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; color: #666;">
+            You'll be taken to your Member Portal Dashboard. Sign in if prompted, and your invoice will open automatically with a "Pay Now" option.
           </p>
         </div>
         ` : ''}
+
       </div>
 
       <!-- Footer -->

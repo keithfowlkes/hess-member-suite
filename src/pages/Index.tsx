@@ -43,6 +43,25 @@ const Index = () => {
   const [unansweredSurveys, setUnansweredSurveys] = useState<number>(0);
   const [surveyAlertDismissed, setSurveyAlertDismissed] = useState(false);
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const [deepLinkedInvoice, setDeepLinkedInvoice] = useState<any>(null);
+
+  // Handle emailed "Pay this invoice online" deep link: ?invoice=<id> opens the
+  // invoice modal automatically once invoices have loaded.
+  useEffect(() => {
+    if (invoicesLoading) return;
+    const params = new URLSearchParams(window.location.search);
+    const targetId = params.get('invoice');
+    if (!targetId) return;
+    const match = invoices.find((inv) => inv.id === targetId);
+    if (match) {
+      setDeepLinkedInvoice(match);
+      setInvoiceModalOpen(true);
+      const url = new URL(window.location.href);
+      url.searchParams.delete('invoice');
+      window.history.replaceState({}, '', url.pathname + url.search);
+    }
+  }, [invoicesLoading, invoices]);
+
 
   // Handle Stripe success/cancel redirect
   useEffect(() => {
@@ -504,9 +523,13 @@ const Index = () => {
             })()}
             <MemberInvoiceViewModal
               open={invoiceModalOpen}
-              onOpenChange={setInvoiceModalOpen}
-              invoice={currentPeriodUnpaidInvoice ?? null}
+              onOpenChange={(open) => {
+                setInvoiceModalOpen(open);
+                if (!open) setDeepLinkedInvoice(null);
+              }}
+              invoice={deepLinkedInvoice ?? currentPeriodUnpaidInvoice ?? null}
             />
+
 
 
             {/* Stats Grid */}

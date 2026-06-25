@@ -22,8 +22,17 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!user) {
+    // Preserve the deep link (e.g. ?invoice=<id> from emailed pay links) so we
+    // can return the user to the same place after sign-in.
+    try {
+      const target = window.location.pathname + window.location.search;
+      if (target && target !== '/auth') {
+        sessionStorage.setItem('post_auth_redirect', target);
+      }
+    } catch {}
     return <Navigate to="/auth" replace />;
   }
+
 
   // Allow admins to access regardless of organization status
   if (isAdmin) {
