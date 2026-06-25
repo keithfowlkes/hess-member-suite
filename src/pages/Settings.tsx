@@ -36,6 +36,7 @@ import { ResendApiConfig } from '@/components/ResendApiConfig';
 import { EmailDesignManager } from '@/components/EmailDesignManager';
 import { IntegrationsManagement } from '@/components/IntegrationsManagement';
 import { StripeSettings } from '@/components/StripeSettings';
+import { HelpModal } from '@/components/HelpModal';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
