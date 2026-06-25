@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useAuth } from '@/hooks/useAuth';
 import { useResendInvoice } from '@/hooks/useResendInvoice';
-import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, Download, Mail, Trash2 } from 'lucide-react';
+import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, Download, Mail, Trash2, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -184,6 +184,16 @@ export default function Invoices() {
           </div>
           
           <div className="space-y-6">
+            {!isViewingAsAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.href = '/'}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            )}
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
@@ -205,6 +215,7 @@ export default function Invoices() {
                 </Button>
               )}
             </div>
+
 
             {/* Search */}
             <div className="flex gap-4">
