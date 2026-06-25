@@ -36,6 +36,7 @@ import { ResendApiConfig } from '@/components/ResendApiConfig';
 import { EmailDesignManager } from '@/components/EmailDesignManager';
 import { IntegrationsManagement } from '@/components/IntegrationsManagement';
 import { StripeSettings } from '@/components/StripeSettings';
+import { HelpModal } from '@/components/HelpModal';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, 
@@ -1420,6 +1421,51 @@ export default function Settings() {
                       <h2 className="text-2xl font-semibold flex items-center gap-2">
                         <CreditCard className="h-6 w-6" />
                         Online Payments
+                        <HelpModal title="About Online Payments" ariaLabel="Online Payments help">
+                          <p>
+                            This page configures the Stripe integration used to collect
+                            member organization payments (primarily annual membership
+                            fees) directly through the Member Portal.
+                          </p>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>
+                              <strong>Enable online payments</strong> — master switch.
+                              When off, member-facing Pay Now buttons and the Membership
+                              Fee block payment controls are hidden.
+                            </li>
+                            <li>
+                              <strong>Publishable / Secret keys</strong> — paste from your
+                              Stripe Dashboard. Use <em>test</em> keys (<code>pk_test_…</code> /{' '}
+                              <code>sk_test_…</code>) for sandbox testing; switch to{' '}
+                              <em>live</em> keys (<code>pk_live_…</code> /{' '}
+                              <code>sk_live_…</code>) only when you're ready to charge
+                              real money. The publishable key is safe in the browser; the
+                              secret key is stored securely server-side.
+                            </li>
+                            <li>
+                              <strong>Webhook signing secret</strong> — required so that
+                              Stripe-confirmed payments mark invoices as PAID
+                              automatically. Configure the endpoint{' '}
+                              <code>/functions/v1/stripe-webhook</code> in your Stripe
+                              Dashboard and paste the resulting <code>whsec_…</code>{' '}
+                              signing secret here.
+                            </li>
+                            <li>
+                              <strong>Test checkout</strong> — runs a sandbox checkout
+                              against your saved test keys to verify the full pay → mark
+                              paid → email receipt loop before going live.
+                            </li>
+                          </ul>
+                          <p>
+                            When a member pays online, the webhook updates the invoice to{' '}
+                            <strong>paid</strong>, the dashboard Membership Fee badge
+                            flips from <strong>UNPAID</strong> to <strong>PAID</strong>,
+                            and a receipt is emailed automatically.
+                          </p>
+                          <p className="text-muted-foreground">
+                            Always save changes after switching between test and live keys.
+                          </p>
+                        </HelpModal>
                       </h2>
                       <p className="text-muted-foreground mt-2">
                         Configure Stripe payments so member organizations can pay their membership fees online.
