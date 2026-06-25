@@ -261,6 +261,29 @@ serve(async (req) => {
       status,
     });
 
+    // After recording the inbound payment as paid, send the PAID-stamped
+    // receipt and issue the conference registration code. Both are
+    // idempotent so re-deliveries are safe.
+    if (matchedInvoiceId && matchedOrgId) {
+      try {
+        await supabase.functions.invoke("send-paid-invoice-receipt", {
+          body: { invoiceId: matchedInvoiceId },
+        });
+      } catch (e) {
+        console.warn("receive-membership-payment: receipt email failed", e);
+      }
+      try {
+        await supabase.functions.invoke("issue-conference-registration-code", {
+          body: { invoice_id: matchedInvoiceId, organization_id: matchedOrgId },
+        });
+      } catch (e) {
+        console.warn(
+          "receive-membership-payment: registration code issue failed",
+          e,
+        );
+      }
+    }
+
     return ok({
       success: true,
       matched: !!matchedOrgId,
