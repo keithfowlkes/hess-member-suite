@@ -458,6 +458,41 @@ const Index = () => {
                     <CardTitle className="flex items-center gap-2">
                       <Building2 className="h-5 w-5" />
                       Membership Fee
+                      <HelpModal title="About the Membership Fee block" ariaLabel="Membership Fee help">
+                        <p>
+                          This block shows the current status of your institution's
+                          annual HESS Consortium membership dues for the active fee period.
+                        </p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>
+                            <strong>PAID</strong> badge — your most recent membership
+                            invoice has been paid (online or recorded manually by an
+                            administrator). No action needed.
+                          </li>
+                          <li>
+                            <strong>UNPAID</strong> badge — an open membership invoice
+                            exists for the current period. Use <em>View Invoice</em> to
+                            review it or <em>Pay Now</em> to pay securely online via Stripe.
+                          </li>
+                          <li>
+                            <strong>Outstanding Balance</strong> — the total amount due
+                            across all of your unpaid invoices. Click <em>View Invoices</em>{' '}
+                            to see your full invoice history for this organization.
+                          </li>
+                        </ul>
+                        <p>
+                          When you complete an online payment, the badge updates to{' '}
+                          <strong>PAID</strong> automatically as soon as Stripe confirms
+                          the transaction. If it does not refresh, reload the page.
+                        </p>
+                        <p className="text-muted-foreground">
+                          Questions about a charge? Contact{' '}
+                          <a className="underline" href="mailto:support@hessconsortium.org">
+                            support@hessconsortium.org
+                          </a>
+                          .
+                        </p>
+                      </HelpModal>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
