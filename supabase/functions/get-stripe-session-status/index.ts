@@ -119,6 +119,27 @@ Deno.serve(async (req) => {
                 e,
               );
             }
+            // Issue the conference registration code (idempotent — reuses
+            // any existing code for this org + conference).
+            try {
+              const { data: invDetails } = await admin
+                .from("invoices")
+                .select("organization_id")
+                .eq("id", invoiceId)
+                .maybeSingle();
+              const orgId = (invDetails as any)?.organization_id;
+              if (orgId) {
+                await admin.functions.invoke(
+                  "issue-conference-registration-code",
+                  { body: { invoice_id: invoiceId, organization_id: orgId } },
+                );
+              }
+            } catch (e) {
+              console.warn(
+                "get-stripe-session-status: registration code issue failed",
+                e,
+              );
+            }
           }
         }
       } catch (e) {

@@ -172,6 +172,25 @@ serve(async (req) => {
     })
     .eq("id", notif.id);
 
+  // When we just marked an invoice paid via inbound payment matching,
+  // also send the PAID receipt and issue the conference registration code.
+  if (matchedInvoiceId && matchedOrgId) {
+    try {
+      await admin.functions.invoke("send-paid-invoice-receipt", {
+        body: { invoiceId: matchedInvoiceId },
+      });
+    } catch (e) {
+      console.warn("retry-payment-match: receipt email failed", e);
+    }
+    try {
+      await admin.functions.invoke("issue-conference-registration-code", {
+        body: { invoice_id: matchedInvoiceId, organization_id: matchedOrgId },
+      });
+    } catch (e) {
+      console.warn("retry-payment-match: registration code issue failed", e);
+    }
+  }
+
   return new Response(
     JSON.stringify({
       success: true,
