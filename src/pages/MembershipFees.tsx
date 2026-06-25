@@ -1463,18 +1463,6 @@ export default function MembershipFees() {
                         <CalendarIcon className="h-5 w-5" />
                         Membership Term Settings
                       </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="member-view-toggle" className="text-sm">Show Member Fees Information</Label>
-                        <div 
-                          className="cursor-pointer"
-                          onClick={() => handleToggleMemberViewItems(!showMemberViewItems)}
-                        >
-                          <Switch
-                            id="member-view-toggle"
-                            checked={showMemberViewItems}
-                          />
-                        </div>
-                      </div>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Set the default membership term end date for billing calculations. This affects prorated fee calculations for new members.

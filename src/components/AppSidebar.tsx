@@ -93,8 +93,9 @@ export function AppSidebar() {
   // Check if user can access cohort information
   const canAccessCohortInfo = userRole === 'admin' || userRole === 'cohort_leader';
   
-  // Check if member fee information should be shown in member view (controls both blocks and menu)
-  const showMemberFeeInfo = systemSettings?.find(s => s.setting_key === 'show_member_view_items')?.setting_value === 'true';
+  // Member fee information visibility is now driven by the "Enable online payments"
+  // toggle in Admin Panel → Settings → Online Payments.
+  const showMemberFeeInfo = systemSettings?.find(s => s.setting_key === 'stripe_enabled')?.setting_value === 'true';
   
   console.log('AppSidebar: RENDER - userRole:', userRole, 'canAccessCohortInfo:', canAccessCohortInfo);
   console.log('AppSidebar: RENDER - current user:', user?.email, 'isViewingAsAdmin:', isViewingAsAdmin);
