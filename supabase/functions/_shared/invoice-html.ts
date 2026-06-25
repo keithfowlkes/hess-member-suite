@@ -121,8 +121,12 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
     ${notes ? `<div style="margin: 12px 0;"><h3 style="font-size: 14px; font-weight: bold; margin: 0 0 4px 0; color: #333;">Notes:</h3><p style="margin: 0; font-size: 13px;">${notes}</p></div>` : ''}
 
     <!-- Payment information (matches preview: #f8f9fa background, #6b7280 left border) -->
-    <div style="background: #f8f9fa; padding: 12px 14px; border-left: 4px solid #6b7280; margin: 16px 0;">
+    <div style="background: ${isPaid ? '#f0fdf4' : '#f8f9fa'}; padding: 12px 14px; border-left: 4px solid ${isPaid ? '#16a34a' : '#6b7280'}; margin: 16px 0;">
       <h3 style="font-size: 14px; font-weight: bold; color: #333; margin: 0 0 6px 0;">Payment Information</h3>
+      ${isPaid ? `
+      <p style="margin: 2px 0; font-size: 14px; color: #15803d; font-weight: bold;">Paid in full on ${paidOn}</p>
+      <p style="margin: 4px 0; font-size: 13px;">Thank you for your payment. This receipt confirms invoice ${invoiceNumber} has been paid in full.</p>
+      ` : `
       <p style="margin: 2px 0; font-size: 13px;"><strong>Payment Terms:</strong> Net 30 days</p>
       <p style="margin: 2px 0; font-size: 13px;"><strong>Due Date:</strong> ${due}</p>
       <p style="margin: 2px 0; font-size: 13px;">Please include invoice number ${invoiceNumber} with your payment.</p>
@@ -137,6 +141,7 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
       <div style="text-align: center; margin: 0 0 2px 0;">
         <a href="${payLink}" style="display: inline-block; background: #6b7280; color: #ffffff; text-decoration: none; padding: 10px 22px; border-radius: 6px; font-weight: bold; font-size: 13px;">Pay this invoice online</a>
       </div>` : ''}
+      `}
     </div>
 
     <!-- Footer -->
