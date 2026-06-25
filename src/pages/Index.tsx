@@ -150,8 +150,9 @@ const Index = () => {
 
   const hasOutstandingBalance = outstandingBalance > 0;
 
-  // Check if member view items should be shown (only for non-admin view)
-  const showMemberViewItems = !isViewingAsAdmin && systemSettings?.find(s => s.setting_key === 'show_member_view_items')?.setting_value === 'true';
+  // Member fee blocks are gated by the "Enable online payments" toggle in
+  // Admin Panel → Settings → Online Payments (only for non-admin view).
+  const showMemberViewItems = !isViewingAsAdmin && systemSettings?.find(s => s.setting_key === 'stripe_enabled')?.setting_value === 'true';
 
   // Check for missing organization information
   const checkMissingInfo = (org: any) => {
