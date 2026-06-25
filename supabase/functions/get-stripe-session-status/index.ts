@@ -74,15 +74,58 @@ Deno.serve(async (req) => {
       );
     }
 
+    const invoiceId =
+      session.metadata?.invoice_id ?? session.client_reference_id ?? null;
+    const paid =
+      session.payment_status === "paid" ||
+      session.payment_status === "no_payment_required";
+    const autoMark = settings.stripe_auto_mark_invoice_paid !== "false";
+
+    // Fallback to the webhook: if Stripe reports the session as paid, ensure
+    // the invoice is marked paid here too. This keeps the member dashboard
+    // PAID badge in sync even when the webhook is not yet configured.
+    if (paid && autoMark && invoiceId) {
+      try {
+        const { data: existing } = await admin
+          .from("invoices")
+          .select("id, status")
+          .eq("id", invoiceId)
+          .maybeSingle();
+        if (existing && existing.status !== "paid") {
+          const { error: updateErr } = await admin
+            .from("invoices")
+            .update({
+              status: "paid",
+              paid_date: new Date().toISOString(),
+              payment_source: "stripe",
+              external_reference: session.payment_intent ?? session.id,
+            })
+            .eq("id", invoiceId);
+          if (updateErr) {
+            console.error(
+              "get-stripe-session-status: invoice update failed",
+              updateErr,
+            );
+          }
+        }
+      } catch (e) {
+        console.warn(
+          "get-stripe-session-status: auto-mark fallback failed",
+          e,
+        );
+      }
+    }
+
     return json({
       status: session.status,
       paymentStatus: session.payment_status,
       amountTotal: session.amount_total,
       currency: session.currency,
       customerEmail: session.customer_details?.email ?? session.customer_email,
-      invoiceId: session.metadata?.invoice_id ?? session.client_reference_id,
+      invoiceId,
       testMode: session.metadata?.test_mode === "true",
     });
+
   } catch (err: any) {
     console.error("get-stripe-session-status failure:", err);
     return json({ error: err?.message ?? "Internal error" }, 500);
