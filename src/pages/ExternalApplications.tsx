@@ -805,6 +805,145 @@ function MyComponent() {
                       <li>Data is always up-to-date since all apps read from the same database</li>
                     </ul>
                   </div>
+
+                  <div className="border-t pt-6 mt-6">
+                    <h3 className="font-semibold mb-2 text-lg">
+                      Step 4: Conference Hub Webhook Integration (optional)
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Apps that issue or redeem conference registration codes (e.g. Conference Hub for{" "}
+                      <code className="bg-muted px-1 rounded">hess2026</code>) exchange signed webhooks
+                      with the portal. Two flows, one shared secret.
+                    </p>
+
+                    <h4 className="font-semibold mb-2">Outbound: portal → external app</h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      When a member's invoice is marked paid, the portal calls{" "}
+                      <code className="bg-muted px-1 rounded">issue-conference-registration-code</code>{" "}
+                      which POSTs to your app's registered <code className="bg-muted px-1 rounded">app_url</code>.
+                      <strong className="block mt-1">
+                        Register the Supabase functions base URL, not a friendly hostname.
+                      </strong>
+                      Example for a Hub project with ref <code className="bg-muted px-1 rounded">nzpjiesxqtecpxmnoqud</code>:
+                    </p>
+                    <pre className="bg-muted p-4 rounded-lg text-xs overflow-x-auto mb-2">
+{`app_identifier:  conference-hub
+app_url:         https://nzpjiesxqtecpxmnoqud.supabase.co
+is_active:       true
+
+# Portal appends /functions/v1/receive-registration-code at call time.`}
+                    </pre>
+                    <p className="text-sm text-muted-foreground mb-2">Headers the portal sends:</p>
+                    <pre className="bg-muted p-4 rounded-lg text-xs overflow-x-auto mb-2">
+{`Content-Type:      application/json
+X-Source:          hess-member-portal
+X-Event:           registration_code_issued
+X-Webhook-Secret:  <MEDIUS_EVENTS_WEBHOOK_SECRET>`}
+                    </pre>
+                    <p className="text-sm text-muted-foreground mb-2">Body:</p>
+                    <pre className="bg-muted p-4 rounded-lg text-xs overflow-x-auto mb-4">
+{`{
+  "source":   "hess-member-portal",
+  "event":    "registration_code_issued",
+  "timestamp": "2026-06-25T19:12:18Z",
+  "data": {
+    "conference_slug":    "hess2026",
+    "organization_id":    "uuid",
+    "organization_name":  "Acme University",
+    "registration_code":  "HESS2026-ABCD1234",
+    "issued_at":          "2026-06-25T19:12:18Z",
+    "max_attendees":      1
+  }
+}`}
+                    </pre>
+
+                    <h4 className="font-semibold mb-2">Inbound: external app → portal (redemption)</h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      When an attendee redeems a code, POST back to:
+                    </p>
+                    <pre className="bg-muted p-4 rounded-lg text-xs overflow-x-auto mb-2">
+{`POST https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1/receive-registration-redemption
+
+Headers:
+  Content-Type:      application/json
+  X-Webhook-Secret:  <shared secret>
+
+Body:
+  {
+    "registration_code":  "HESS2026-ABCD1234",
+    "attendee_email":     "person@school.edu",
+    "attendee_name":      "Jane Doe",
+    "attendee_title":     "Director of IT",      // optional
+    "redeemed_at":        "2026-06-25T20:00:00Z", // optional, ISO8601
+    "conference_registration_id": "hub-internal-id" // optional
+  }`}
+                    </pre>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Responses: <code className="bg-muted px-1 rounded">200</code> on success or idempotent
+                      replay, <code className="bg-muted px-1 rounded">404</code> if the code is unknown,{" "}
+                      <code className="bg-muted px-1 rounded">409</code> if already redeemed by a different
+                      attendee, <code className="bg-muted px-1 rounded">401</code> on bad secret.
+                    </p>
+
+                    <h4 className="font-semibold mb-2">Shared secret</h4>
+                    <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mb-4">
+                      <li>
+                        Portal stores it as <code className="bg-muted px-1 rounded">MEDIUS_EVENTS_WEBHOOK_SECRET</code>.
+                      </li>
+                      <li>
+                        Conference Hub stores the same value as{" "}
+                        <code className="bg-muted px-1 rounded">HESS_PORTAL_WEBHOOK_SECRET</code>{" "}
+                        (legacy alias <code className="bg-muted px-1 rounded">HESS_MEMBER_PORTAL_WEBHOOK_SECRET</code> also accepted).
+                      </li>
+                      <li>
+                        The exact same string must live in both vaults. A mismatch produces{" "}
+                        <code className="bg-muted px-1 rounded">401 unauthorized</code> on both directions.
+                      </li>
+                      <li>
+                        The same secret authenticates Medius Events → portal payment webhooks
+                        (<code className="bg-muted px-1 rounded">receive-membership-payment</code>),
+                        so rotating it requires updating both apps simultaneously.
+                      </li>
+                    </ul>
+
+                    <h4 className="font-semibold mb-2">Feature flags</h4>
+                    <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mb-4">
+                      <li>
+                        <code className="bg-muted px-1 rounded">conference_hub_registration_codes_enabled</code>{" "}
+                        must be <code className="bg-muted px-1 rounded">true</code> for the portal to issue
+                        codes on paid invoices.
+                      </li>
+                      <li>
+                        <code className="bg-muted px-1 rounded">conference_hub_fee_notifications</code>{" "}
+                        controls outbound fee-payment notifications and is independent of the
+                        registration-code flow.
+                      </li>
+                    </ul>
+
+                    <h4 className="font-semibold mb-2">End-to-end smoke test</h4>
+                    <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1">
+                      <li>
+                        Enable <code className="bg-muted px-1 rounded">conference_hub_registration_codes_enabled</code>.
+                      </li>
+                      <li>
+                        Call <code className="bg-muted px-1 rounded">issue-conference-registration-code</code>{" "}
+                        with a real <code className="bg-muted px-1 rounded">organization_id</code> and{" "}
+                        <code className="bg-muted px-1 rounded">conference_slug: "hess2026"</code>.
+                      </li>
+                      <li>
+                        Verify a row appears in{" "}
+                        <code className="bg-muted px-1 rounded">conference_registration_codes</code> with{" "}
+                        <code className="bg-muted px-1 rounded">sent_status='sent'</code>.
+                      </li>
+                      <li>Redeem the code in the Conference Hub.</li>
+                      <li>
+                        Confirm the redemption row updates with{" "}
+                        <code className="bg-muted px-1 rounded">redeemed_at</code>,{" "}
+                        <code className="bg-muted px-1 rounded">redeemed_attendee_email</code>, and{" "}
+                        <code className="bg-muted px-1 rounded">sent_status='redeemed'</code>.
+                      </li>
+                    </ol>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
