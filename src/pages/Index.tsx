@@ -23,6 +23,7 @@ import { PayInvoiceButton } from '@/components/PayInvoiceButton';
 import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
 import { Copy, Ticket } from 'lucide-react';
 import { MemberInvoiceViewModal } from '@/components/MemberInvoiceViewModal';
+import { HelpModal } from '@/components/HelpModal';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
