@@ -15,15 +15,20 @@ import html2canvas from 'html2canvas';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { MemberInvoiceViewModal } from '@/components/MemberInvoiceViewModal';
 import { Invoice } from '@/hooks/useInvoices';
+import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
+
 
 export default function Invoices() {
   const { invoices, loading, markAsPaid, sendInvoice, deleteInvoice } = useInvoices();
   const { isViewingAsAdmin } = useAuth();
+  const { data: unifiedProfileData } = useUnifiedProfile();
   const resendInvoice = useResendInvoice();
   const [searchTerm, setSearchTerm] = useState('');
   const [dateSearch, setDateSearch] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  const userOrganizationId = unifiedProfileData?.organization?.id;
 
   // Auto-open the View modal when arriving from an emailed "Pay this invoice online" link
   useEffect(() => {
@@ -40,21 +45,23 @@ export default function Invoices() {
 
   // Filter invoices based on user role
   const filteredInvoices = invoices.filter(invoice => {
+    // Members can only see their own organization's invoices (current and past)
+    if (!isViewingAsAdmin) {
+      if (!userOrganizationId || invoice.organization_id !== userOrganizationId) {
+        return false;
+      }
+    }
+
     const matchesSearch = invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.organizations?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesDate = !dateSearch || 
+
+    const matchesDate = !dateSearch ||
       format(new Date(invoice.invoice_date), 'yyyy-MM-dd') === dateSearch ||
       format(new Date(invoice.due_date), 'yyyy-MM-dd') === dateSearch;
-    
-    // Members can only see their own invoices
-    if (!isViewingAsAdmin) {
-      // Add user organization filtering logic here if needed
-      return matchesSearch && matchesDate;
-    }
-    
+
     return matchesSearch && matchesDate;
   });
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
