@@ -186,27 +186,18 @@ const Index = () => {
     ...(showMemberViewItems ? [{ title: 'Next Renewal', value: 'Dec 2024', icon: FileText, color: 'text-blue-600', isClickable: false, hasAlert: false, onClick: undefined }] : [])
   ];
 
-  // Define member stats for second row - conditionally include fee information
-  const secondRowStats = showMemberViewItems ? [
-    {
-      title: 'Annual Member Fee',
-      value: userOrganization?.annual_fee_amount ? `$${userOrganization.annual_fee_amount.toFixed(2)}` : '$0.00',
-      icon: DollarSign,
-      color: 'text-blue-600',
-      isClickable: false,
-      hasAlert: false,
-      onClick: undefined
-    },
-    { 
-      title: 'Outstanding Balance', 
-      value: `$${outstandingBalance.toFixed(2)}`, 
-      icon: DollarSign, 
-      color: hasOutstandingBalance ? 'text-red-600' : 'text-green-600',
-      isClickable: true,
-      hasAlert: hasOutstandingBalance,
-      onClick: () => navigate('/invoices')
-    },
-  ] : [];
+  // Second-row stat cards (Annual Member Fee, Outstanding Balance) were removed.
+  // Outstanding balance is now surfaced inside the Membership Fee card below.
+  const secondRowStats: Array<{
+    title: string;
+    value: string;
+    icon: typeof DollarSign;
+    color: string;
+    isClickable: boolean;
+    hasAlert: boolean;
+    onClick: (() => void) | undefined;
+  }> = [];
+
 
   return (
     <SidebarProvider>
@@ -477,10 +468,37 @@ const Index = () => {
                         )}
                       </div>
                     </div>
+                    {showMemberViewItems && (
+                      <div
+                        className={`flex items-center justify-between gap-4 flex-wrap rounded-md border p-3 ${
+                          hasOutstandingBalance ? 'border-destructive/40 bg-destructive/5' : 'border-border bg-muted/30'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <DollarSign className={`h-4 w-4 ${hasOutstandingBalance ? 'text-red-600' : 'text-green-600'}`} />
+                          Outstanding Balance
+                          {hasOutstandingBalance && (
+                            <Badge variant="destructive" className="flex items-center gap-1 text-xs">
+                              <AlertTriangle className="h-3 w-3" />
+                              Alert
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className={`text-xl font-bold ${hasOutstandingBalance ? 'text-red-600' : 'text-green-600'}`}>
+                            {invoicesLoading ? '...' : `$${outstandingBalance.toFixed(2)}`}
+                          </div>
+                          <Button variant="outline" size="sm" onClick={() => navigate('/invoices')}>
+                            View Invoices
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                     {userOrganization?.id && !isAdministrator && (
                       <ConferenceRegistrationCodeCard organizationId={userOrganization.id} organizationName={userOrganization.name} />
                     )}
                   </CardContent>
+
                 </Card>
               );
             })()}
