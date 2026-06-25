@@ -15,6 +15,7 @@ export interface InvoiceHtmlInput {
   proratedAmount?: number | null;
   notes?: string | null;
   invoiceId?: string | null; // when provided, renders the "Pay this invoice online" button
+  paidDate?: string | null;  // when provided, renders a "PAID" stamp with this date
 }
 
 function formatDate(value: string): string {
@@ -30,7 +31,7 @@ function formatCurrency(n: number): string {
 export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
   const {
     invoiceNumber, invoiceDate, dueDate, periodStart, periodEnd,
-    organizationName, organizationEmail, amount, proratedAmount, notes, invoiceId,
+    organizationName, organizationEmail, amount, proratedAmount, notes, invoiceId, paidDate,
   } = input;
 
   const totalAmount = proratedAmount ?? amount;
@@ -39,11 +40,23 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
   const due = formatDate(dueDate);
   const pStart = formatDate(periodStart);
   const pEnd = formatDate(periodEnd);
-  const payLink = invoiceId ? `https://www.hessconsortium.org/new/hess-member-portal/` : '';
+  const isPaid = !!paidDate;
+  const paidOn = paidDate ? formatDate(paidDate) : '';
+  const payLink = !isPaid && invoiceId ? `https://www.hessconsortium.org/new/hess-member-portal/` : '';
+
+  // A diagonal "PAID" stamp anchored top-right of the invoice body when paidDate is set.
+  const paidStamp = isPaid ? `
+    <div style="position: relative; height: 0;">
+      <div style="position: absolute; top: -4px; right: 8px; transform: rotate(-14deg); border: 4px solid #16a34a; color: #16a34a; padding: 6px 18px; font-size: 32px; font-weight: 900; letter-spacing: 4px; font-family: Arial, sans-serif; border-radius: 6px; background: rgba(255,255,255,0.85); box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
+        PAID
+        <div style="font-size: 11px; font-weight: bold; letter-spacing: 1px; text-align: center; margin-top: 2px;">${paidOn}</div>
+      </div>
+    </div>` : '';
 
   // Sizing is tuned so the rendered email fits on a single 8.5" x 11" page.
   return `
   <div style="font-family: Arial, sans-serif; line-height: 1.4; color: #333; font-size: 14px; background: #ffffff; padding: 16px 20px; max-width: 760px; margin: 0 auto;">
+    ${paidStamp}
     <!-- Header: logo/company info + INVOICE title -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #666;">
       <tr>
@@ -108,8 +121,12 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
     ${notes ? `<div style="margin: 12px 0;"><h3 style="font-size: 14px; font-weight: bold; margin: 0 0 4px 0; color: #333;">Notes:</h3><p style="margin: 0; font-size: 13px;">${notes}</p></div>` : ''}
 
     <!-- Payment information (matches preview: #f8f9fa background, #6b7280 left border) -->
-    <div style="background: #f8f9fa; padding: 12px 14px; border-left: 4px solid #6b7280; margin: 16px 0;">
+    <div style="background: ${isPaid ? '#f0fdf4' : '#f8f9fa'}; padding: 12px 14px; border-left: 4px solid ${isPaid ? '#16a34a' : '#6b7280'}; margin: 16px 0;">
       <h3 style="font-size: 14px; font-weight: bold; color: #333; margin: 0 0 6px 0;">Payment Information</h3>
+      ${isPaid ? `
+      <p style="margin: 2px 0; font-size: 14px; color: #15803d; font-weight: bold;">Paid in full on ${paidOn}</p>
+      <p style="margin: 4px 0; font-size: 13px;">Thank you for your payment. This receipt confirms invoice ${invoiceNumber} has been paid in full.</p>
+      ` : `
       <p style="margin: 2px 0; font-size: 13px;"><strong>Payment Terms:</strong> Net 30 days</p>
       <p style="margin: 2px 0; font-size: 13px;"><strong>Due Date:</strong> ${due}</p>
       <p style="margin: 2px 0; font-size: 13px;">Please include invoice number ${invoiceNumber} with your payment.</p>
@@ -124,6 +141,7 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
       <div style="text-align: center; margin: 0 0 2px 0;">
         <a href="${payLink}" style="display: inline-block; background: #6b7280; color: #ffffff; text-decoration: none; padding: 10px 22px; border-radius: 6px; font-weight: bold; font-size: 13px;">Pay this invoice online</a>
       </div>` : ''}
+      `}
     </div>
 
     <!-- Footer -->

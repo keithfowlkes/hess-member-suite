@@ -106,6 +106,19 @@ Deno.serve(async (req) => {
               "get-stripe-session-status: invoice update failed",
               updateErr,
             );
+          } else {
+            // Webhook may not be configured; send the PAID-stamped receipt
+            // here too. The receipt function is idempotent via audit_log.
+            try {
+              await admin.functions.invoke("send-paid-invoice-receipt", {
+                body: { invoiceId },
+              });
+            } catch (e) {
+              console.warn(
+                "get-stripe-session-status: receipt email failed",
+                e,
+              );
+            }
           }
         }
       } catch (e) {
