@@ -155,6 +155,15 @@ serve(async (req) => {
 
     try {
       const webhookSecret = Deno.env.get("MEDIUS_EVENTS_WEBHOOK_SECRET") ?? "";
+      const secretFingerprint = webhookSecret
+        ? `len=${webhookSecret.length} prefix=${webhookSecret.slice(0, 12)} suffix=${webhookSecret.slice(-6)}`
+        : "MISSING";
+      console.log("Conference Hub request:", JSON.stringify({
+        url: webhookUrl,
+        headerNames: ["Content-Type", "X-Source", "X-Event", "X-Webhook-Secret"],
+        secretFingerprint,
+        code: row.code,
+      }));
       const resp = await fetch(webhookUrl, {
         method: "POST",
         headers: {
