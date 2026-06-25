@@ -31,7 +31,7 @@ function formatCurrency(n: number): string {
 export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
   const {
     invoiceNumber, invoiceDate, dueDate, periodStart, periodEnd,
-    organizationName, organizationEmail, amount, proratedAmount, notes, invoiceId,
+    organizationName, organizationEmail, amount, proratedAmount, notes, invoiceId, paidDate,
   } = input;
 
   const totalAmount = proratedAmount ?? amount;
@@ -40,11 +40,23 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
   const due = formatDate(dueDate);
   const pStart = formatDate(periodStart);
   const pEnd = formatDate(periodEnd);
-  const payLink = invoiceId ? `https://www.hessconsortium.org/new/hess-member-portal/` : '';
+  const isPaid = !!paidDate;
+  const paidOn = paidDate ? formatDate(paidDate) : '';
+  const payLink = !isPaid && invoiceId ? `https://www.hessconsortium.org/new/hess-member-portal/` : '';
+
+  // A diagonal "PAID" stamp anchored top-right of the invoice body when paidDate is set.
+  const paidStamp = isPaid ? `
+    <div style="position: relative; height: 0;">
+      <div style="position: absolute; top: -4px; right: 8px; transform: rotate(-14deg); border: 4px solid #16a34a; color: #16a34a; padding: 6px 18px; font-size: 32px; font-weight: 900; letter-spacing: 4px; font-family: Arial, sans-serif; border-radius: 6px; background: rgba(255,255,255,0.85); box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
+        PAID
+        <div style="font-size: 11px; font-weight: bold; letter-spacing: 1px; text-align: center; margin-top: 2px;">${paidOn}</div>
+      </div>
+    </div>` : '';
 
   // Sizing is tuned so the rendered email fits on a single 8.5" x 11" page.
   return `
   <div style="font-family: Arial, sans-serif; line-height: 1.4; color: #333; font-size: 14px; background: #ffffff; padding: 16px 20px; max-width: 760px; margin: 0 auto;">
+    ${paidStamp}
     <!-- Header: logo/company info + INVOICE title -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #666;">
       <tr>
