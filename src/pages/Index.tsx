@@ -523,9 +523,13 @@ const Index = () => {
             })()}
             <MemberInvoiceViewModal
               open={invoiceModalOpen}
-              onOpenChange={setInvoiceModalOpen}
-              invoice={currentPeriodUnpaidInvoice ?? null}
+              onOpenChange={(open) => {
+                setInvoiceModalOpen(open);
+                if (!open) setDeepLinkedInvoice(null);
+              }}
+              invoice={deepLinkedInvoice ?? currentPeriodUnpaidInvoice ?? null}
             />
+
 
 
             {/* Stats Grid */}
