@@ -154,12 +154,14 @@ serve(async (req) => {
     };
 
     try {
+      const webhookSecret = Deno.env.get("MEDIUS_EVENTS_WEBHOOK_SECRET") ?? "";
       const resp = await fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-Source": "hess-member-portal",
           "X-Event": "registration_code_issued",
+          "X-Webhook-Secret": webhookSecret,
         },
         body: JSON.stringify(payload),
       });
