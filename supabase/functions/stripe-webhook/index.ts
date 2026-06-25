@@ -197,6 +197,11 @@ Deno.serve(async (req) => {
             },
           });
         }
+        // Email the member a receipt: the invoice rendered with a PAID stamp
+        // and the date it was paid.
+        await admin.functions.invoke("send-paid-invoice-receipt", {
+          body: { invoiceId },
+        });
         if (orgId) {
           await admin.functions.invoke("issue-conference-registration-code", {
             body: { invoice_id: invoiceId, organization_id: orgId },
