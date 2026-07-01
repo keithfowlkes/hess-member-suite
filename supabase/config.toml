@@ -164,3 +164,6 @@ verify_jwt = false
 
 [functions.receive-registration-redemption]
 verify_jwt = false
+
+[functions.list-member-institutions]
+verify_jwt = false
