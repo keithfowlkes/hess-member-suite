@@ -109,16 +109,32 @@ serve(async (req) => {
 
       processed++;
       try {
+        const emailType = row.email_type || "custom";
+        // For invoice emails, the pre-rendered invoice HTML lives in
+        // `template_html`. Pass it through as `data.invoice_content` so
+        // centralized-email-delivery-public sends the styled invoice on its
+        // own (with the PAID stamp / payment details) instead of falling
+        // back to the generic wrapped "Please find your membership invoice
+        // attached..." template with unreplaced {{invoice_number}}
+        // placeholders.
+        const isInvoice = emailType === "invoice";
+        const invokeBody: Record<string, unknown> = {
+          type: emailType,
+          to: row.recipient,
+          subject: row.subject,
+        };
+        if (isInvoice) {
+          invokeBody.data = {
+            invoice_content: row.template_html,
+            organization_name: row.organization_name ?? undefined,
+          };
+        } else {
+          invokeBody.template = row.template_html;
+        }
+
         const { error: sendError } = await supabaseAdmin.functions.invoke(
           "centralized-email-delivery-public",
-          {
-            body: {
-              type: row.email_type || "custom",
-              to: row.recipient,
-              subject: row.subject,
-              template: row.template_html,
-            },
-          }
+          { body: invokeBody },
         );
 
         if (sendError) throw sendError;
