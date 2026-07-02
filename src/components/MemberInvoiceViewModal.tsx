@@ -64,13 +64,31 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
     setDownloading(true);
     try {
       // Render at high scale for crisp text; use white background to match on-screen preview.
+      // Force normal letter/word spacing on the clone to prevent html2canvas from
+      // collapsing whitespace (which caused "HESSConsortium", "BillTo", etc.).
       const canvas = await html2canvas(node, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         windowWidth: node.scrollWidth,
-      });
+        letterRendering: true,
+        onclone: (doc) => {
+          const style = doc.createElement('style');
+          style.textContent = `
+            #member-invoice-printable, #member-invoice-printable * {
+              letter-spacing: normal !important;
+              word-spacing: normal !important;
+              font-kerning: none !important;
+              font-feature-settings: normal !important;
+              text-rendering: geometricPrecision !important;
+              font-family: Arial, Helvetica, sans-serif !important;
+              white-space: normal;
+            }
+          `;
+          doc.head.appendChild(style);
+        },
+      } as any);
 
       const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'letter' });
       const pageWidth = pdf.internal.pageSize.getWidth();
