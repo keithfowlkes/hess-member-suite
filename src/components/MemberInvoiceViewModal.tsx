@@ -156,7 +156,7 @@ async function drawInvoicePdf(
     pdf.addImage(logo.dataUrl, logo.format, margin, 48, logo.width * ratio, logo.height * ratio, undefined, 'FAST');
   }
 
-  setPdfText(pdf, 26, 'bold', 88, 88, 'INVOICE', { align: 'right', color: [96, 96, 96] });
+  setPdfText(pdf, 26, 'bold', right, 88, 'INVOICE', { align: 'right', color: [96, 96, 96] });
   setPdfText(pdf, 10, 'normal', right, 106, `Invoice #${invoice.invoice_number}`, { align: 'right', color: [96, 96, 96] });
 
   setPdfText(pdf, 12, 'bold', margin, 124, 'HESS Consortium');
