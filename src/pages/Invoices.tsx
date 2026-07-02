@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useAuth } from '@/hooks/useAuth';
 import { useResendInvoice } from '@/hooks/useResendInvoice';
-import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, Download, Mail, Trash2, ArrowLeft } from 'lucide-react';
+import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, Mail, Trash2, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -340,14 +340,6 @@ export default function Invoices() {
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               View Invoice
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => generatePDF(invoice, e)}
-                            >
-                              <Download className="h-4 w-4 mr-1" />
-                              Download PDF
                             </Button>
                           </div>
                         )}
