@@ -506,8 +506,13 @@ const Index = () => {
                       <div className="flex items-center gap-3 flex-wrap">
                         <MembershipDuesBadge
                           invoices={isAdministrator ? [] : invoices}
-                          showUnpaidFallback={showFallback}
+                          showUnpaidFallback={isAdministrator}
                         />
+                        {!isAdministrator && !duesPaidForCurrentPeriod && !currentPeriodUnpaidInvoice && (
+                          <Badge className="bg-slate-500 hover:bg-slate-500 text-white font-semibold tracking-wide px-3 py-1">
+                            INVOICE PENDING
+                          </Badge>
+                        )}
                         {currentPeriodUnpaidInvoice && (
                           <>
                             <Button
@@ -526,6 +531,17 @@ const Index = () => {
                         )}
                       </div>
                     </div>
+                    {!isAdministrator && !duesPaidForCurrentPeriod && !currentPeriodUnpaidInvoice && (
+                      <div className="rounded-md border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+                        Your membership invoice for the current period has not yet been
+                        issued. It will appear here as soon as it is generated. Questions?
+                        Email{' '}
+                        <a className="underline" href="mailto:support@hessconsortium.org">
+                          support@hessconsortium.org
+                        </a>
+                        .
+                      </div>
+                    )}
                     {showMemberViewItems && (
                       <div
                         className={`flex items-center justify-between gap-4 flex-wrap rounded-md border p-3 ${
