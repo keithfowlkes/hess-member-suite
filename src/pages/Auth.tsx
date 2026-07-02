@@ -3388,7 +3388,18 @@ export default function Auth() {
             <AlertDialogDescription className="text-center pt-2">
               You have exceeded the maximum number of login attempts.
               <br /><br />
-              Please wait 15 minutes before trying again.
+              {isLockedOut ? (
+                <>
+                  Try again in{' '}
+                  <span className="font-mono text-2xl font-bold tabular-nums text-red-700">
+                    {lockoutCountdown}
+                  </span>
+                  <br />
+                  <span className="text-sm">Unlocks at <strong>{lockoutUnlockTime}</strong></span>
+                </>
+              ) : (
+                <>Please wait 15 minutes before trying again.</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
