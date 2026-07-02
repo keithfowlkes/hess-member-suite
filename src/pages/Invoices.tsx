@@ -341,14 +341,6 @@ export default function Invoices() {
                               <Eye className="h-4 w-4 mr-1" />
                               View Invoice
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => generatePDF(invoice, e)}
-                            >
-                              <Download className="h-4 w-4 mr-1" />
-                              Download PDF
-                            </Button>
                           </div>
                         )}
                       </div>
