@@ -121,22 +121,38 @@ export default function Auth() {
     }
   }, [])
   
-  // Clear lockout when time expires
+  // Live-ticking clock used to render the lockout countdown
+  const [nowTick, setNowTick] = useState(Date.now());
   useEffect(() => {
-    if (lockoutUntil > 0) {
+    if (lockoutUntil <= 0) return;
+    if (lockoutUntil <= Date.now()) {
+      setLockoutUntil(0);
+      localStorage.removeItem('lockoutUntil');
+      setLoginAttempts(0);
+      localStorage.removeItem('loginAttempts');
+      return;
+    }
+    const intervalId = setInterval(() => {
       const now = Date.now();
+      setNowTick(now);
       if (lockoutUntil <= now) {
         setLockoutUntil(0);
         localStorage.removeItem('lockoutUntil');
-      } else {
-        const timeoutId = setTimeout(() => {
-          setLockoutUntil(0);
-          localStorage.removeItem('lockoutUntil');
-        }, lockoutUntil - now);
-        return () => clearTimeout(timeoutId);
+        setLoginAttempts(0);
+        localStorage.removeItem('loginAttempts');
       }
-    }
+    }, 1000);
+    return () => clearInterval(intervalId);
   }, [lockoutUntil]);
+
+  const lockoutRemainingMs = Math.max(0, lockoutUntil - nowTick);
+  const isLockedOut = lockoutRemainingMs > 0;
+  const lockoutMinutes = Math.floor(lockoutRemainingMs / 60000);
+  const lockoutSeconds = Math.floor((lockoutRemainingMs % 60000) / 1000);
+  const lockoutCountdown = `${lockoutMinutes}:${lockoutSeconds.toString().padStart(2, '0')}`;
+  const lockoutUnlockTime = isLockedOut
+    ? new Date(lockoutUntil).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : '';
   const [emailNotFoundAddress, setEmailNotFoundAddress] = useState('');
   const signInCaptchaRef = useRef<ReCAPTCHA>(null);
   const signUpCaptchaRef = useRef<ReCAPTCHA>(null);
