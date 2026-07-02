@@ -268,7 +268,7 @@ async function drawInvoicePdf(
   setPdfText(pdf, 10, 'normal', margin + 176, paymentBoxTop + 121, '952 Winchester Rd #1051');
   setPdfText(pdf, 10, 'normal', margin + 340, paymentBoxTop + 121, 'Lexington, KY 40505');
 
-  const footerTop = 704;
+  const footerTop = 692;
   setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop, 'Questions about your invoice?', { align: 'center', color: [96, 96, 96] });
   setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 16, 'Contact us at: billing@hessconsortium.org', { align: 'center', color: [96, 96, 96] });
   setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 32, 'Visit us online: www.hessconsortium.org', { align: 'center', color: [96, 96, 96] });
