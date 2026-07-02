@@ -284,14 +284,21 @@ function setPdfText(
   text: string | string[],
   options: { align?: 'left' | 'center' | 'right'; color?: [number, number, number] } = {},
 ) {
-  pdf.setFont(INVOICE_PDF_FONT_FAMILY, style);
+  const fontStyle = activeInvoicePdfFontFamily === INVOICE_PDF_FONT_FAMILY ? style : 'normal';
+  pdf.setFont(activeInvoicePdfFontFamily, fontStyle);
   pdf.setFontSize(size);
   const [r, g, b] = options.color || [51, 51, 51];
   pdf.setTextColor(r, g, b);
-  pdf.text(text, x, y, { align: options.align || 'left' });
+  const align = options.align || 'left';
+  pdf.text(text, x, y, { align });
+
+  if (style === 'bold' && activeInvoicePdfFontFamily !== INVOICE_PDF_FONT_FAMILY) {
+    pdf.text(text, x + 0.35, y, { align });
+  }
 }
 
 const INVOICE_PDF_FONT_FAMILY = 'LiberationSans';
+let activeInvoicePdfFontFamily = 'helvetica';
 let invoicePdfFontPromise: Promise<{ regular: string; bold: string }> | null = null;
 
 async function registerInvoicePdfFonts(pdf: jsPDF) {
@@ -301,8 +308,10 @@ async function registerInvoicePdfFonts(pdf: jsPDF) {
     pdf.addFont('LiberationSans-Regular.ttf', INVOICE_PDF_FONT_FAMILY, 'normal');
     pdf.addFileToVFS('LiberationSans-Bold.ttf', fonts.bold);
     pdf.addFont('LiberationSans-Bold.ttf', INVOICE_PDF_FONT_FAMILY, 'bold');
+    activeInvoicePdfFontFamily = INVOICE_PDF_FONT_FAMILY;
     pdf.setFont(INVOICE_PDF_FONT_FAMILY, 'normal');
   } catch (error) {
+    activeInvoicePdfFontFamily = 'helvetica';
     console.warn('Failed to load embedded invoice PDF fonts; falling back to built-in font.', error);
   }
 }
