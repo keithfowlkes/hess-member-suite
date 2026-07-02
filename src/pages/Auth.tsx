@@ -1283,8 +1283,22 @@ export default function Auth() {
                       </div>
                     )}
                   </div>
-                  <Button type="submit" className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" disabled={isSubmitting || (recaptchaEnabled && !signInCaptcha)}>
-                    {isSubmitting ? 'Signing in...' : 'Sign In'}
+                  {isLockedOut && (
+                    <div className="rounded-md border border-red-200 bg-red-50 p-4 text-center">
+                      <div className="font-semibold text-red-800">Account temporarily locked</div>
+                      <div className="mt-1 text-sm text-red-700">
+                        Too many failed sign-in attempts. Please try again in
+                      </div>
+                      <div className="mt-2 font-mono text-3xl font-bold tabular-nums text-red-800">
+                        {lockoutCountdown}
+                      </div>
+                      <div className="mt-1 text-xs text-red-700">
+                        Unlocks at <strong>{lockoutUnlockTime}</strong>
+                      </div>
+                    </div>
+                  )}
+                  <Button type="submit" className="w-full bg-auth-button hover:bg-auth-button/90 text-auth-button-foreground py-3" disabled={isSubmitting || isLockedOut || (recaptchaEnabled && !signInCaptcha)}>
+                    {isSubmitting ? 'Signing in...' : isLockedOut ? `Locked — try again in ${lockoutCountdown}` : 'Sign In'}
                   </Button>
                   <div className="text-center">
                     <button
