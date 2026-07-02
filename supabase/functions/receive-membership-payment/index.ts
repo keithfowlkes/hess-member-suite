@@ -48,6 +48,35 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+// Normalize a secret string so trivial formatting differences on the sender
+// side (whitespace, surrounding quotes, "Bearer " prefix, accidental double
+// concatenation of the same secret) don't cause a 401. The receiver still
+// requires the caller to know the actual secret.
+function normalizeSecret(raw: string): string[] {
+  const variants = new Set<string>();
+  const base = (raw ?? "").trim().replace(/^["']|["']$/g, "");
+  if (base) variants.add(base);
+  const noBearer = base.replace(/^Bearer\s+/i, "").trim();
+  if (noBearer) variants.add(noBearer);
+  // Duplicate-concatenation case (observed in production: sender posted the
+  // secret twice back-to-back, producing a 2x-length header).
+  if (noBearer.length % 2 === 0) {
+    const half = noBearer.length / 2;
+    const a = noBearer.slice(0, half);
+    const b = noBearer.slice(half);
+    if (a === b && a) variants.add(a);
+  }
+  return [...variants];
+}
+
+function secretMatches(provided: string, expected: string): boolean {
+  const normalizedExpected = expected.trim();
+  for (const v of normalizeSecret(provided)) {
+    if (timingSafeEqual(v, normalizedExpected)) return true;
+  }
+  return false;
+}
+
 function ok(body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
     status: 200,
@@ -76,28 +105,64 @@ serve(async (req) => {
     });
   }
 
-  const providedSecret = req.headers.get("x-webhook-secret") ?? "";
-  if (!timingSafeEqual(providedSecret, expectedSecret)) {
-    // SAFE DEBUG: log only lengths + first/last 2 chars (never full secret).
-    // Remove this block once the conference→portal handshake is confirmed.
+  // Accept the secret from the primary header OR from a Bearer token in
+  // Authorization, which some senders default to.
+  const providedSecret =
+    req.headers.get("x-webhook-secret") ??
+    req.headers.get("authorization") ??
+    "";
+
+  if (!secretMatches(providedSecret, expectedSecret)) {
     const peek = (s: string) =>
       s.length === 0
         ? "(empty)"
         : `${s.slice(0, 2)}…${s.slice(-2)} (len=${s.length})`;
-    const headerNames = [...req.headers.keys()].filter((h) =>
-      h.toLowerCase().includes("secret") || h.toLowerCase().includes("webhook")
-    );
     console.warn("[receive-membership-payment] 401 secret mismatch", {
       provided: peek(providedSecret),
       expected: peek(expectedSecret),
       provided_header_present: req.headers.has("x-webhook-secret"),
-      secret_like_headers_received: headerNames,
+      authorization_header_present: req.headers.has("authorization"),
     });
+
+    // Persist the failed delivery so an admin can retry via the Inbound
+    // Payments screen once the sender's secret is corrected. Without this,
+    // rejected webhooks were invisible and led to silent sync gaps.
+    try {
+      const supabaseLog = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      let payload: unknown = null;
+      try {
+        payload = await req.json();
+      } catch {
+        payload = { raw: await req.text().catch(() => "") };
+      }
+      const d =
+        (payload as any)?.data && typeof (payload as any).data === "object"
+          ? (payload as any).data
+          : {};
+      await supabaseLog.from("inbound_payment_notifications").insert({
+        payload: payload as Record<string, unknown>,
+        organization_name: d.organization_name ?? null,
+        contact_email: d.contact_email ?? null,
+        amount_paid: typeof d.amount_paid === "number" ? d.amount_paid : null,
+        currency: d.currency ?? null,
+        paid_at: d.paid_at ? new Date(d.paid_at).toISOString() : null,
+        external_reference: d.stripe_session_id ?? null,
+        status: "error",
+        error_message: "Webhook secret mismatch — payload preserved for retry",
+      });
+    } catch (logErr) {
+      console.error("Failed to log rejected webhook", logErr);
+    }
+
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
