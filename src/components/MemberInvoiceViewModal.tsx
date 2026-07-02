@@ -281,11 +281,21 @@ function setPdfText(
   text: string | string[],
   options: { align?: 'left' | 'center' | 'right'; color?: [number, number, number] } = {},
 ) {
-  pdf.setFont('helvetica', style);
+  // jsPDF's built-in bold font can render with collapsed spacing in some PDF
+  // viewers/rasterizers. Use the regular font for all text and create a very
+  // small faux-bold overprint instead; this keeps the invoice text readable and
+  // preserves the exact layout of the on-screen invoice.
+  pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(size);
   const [r, g, b] = options.color || [51, 51, 51];
   pdf.setTextColor(r, g, b);
-  pdf.text(text, x, y, { align: options.align || 'left' });
+  const align = options.align || 'left';
+  pdf.text(text, x, y, { align });
+
+  if (style === 'bold') {
+    const overprintOffset = Math.max(0.08, Math.min(size * 0.012, 0.18));
+    pdf.text(text, x + overprintOffset, y, { align });
+  }
 }
 
 function safeFormat(value: string | undefined, pattern: string) {
