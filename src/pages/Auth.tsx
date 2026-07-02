@@ -3358,7 +3358,7 @@ export default function Auth() {
             <AlertDialogDescription className="text-center pt-2">
               You have exceeded the maximum number of login attempts.
               <br /><br />
-              Please wait 30 minutes before trying again.
+              Please wait 15 minutes before trying again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
