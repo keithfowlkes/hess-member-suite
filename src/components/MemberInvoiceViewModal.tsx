@@ -10,6 +10,8 @@ import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
+import liberationSansRegularUrl from '@/assets/fonts/LiberationSans-Regular.ttf?url';
+import liberationSansBoldUrl from '@/assets/fonts/LiberationSans-Bold.ttf?url';
 
 interface MemberInvoiceViewModalProps {
   open: boolean;
@@ -89,6 +91,7 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
     setDownloading(true);
     try {
       const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'letter' });
+      await registerInvoicePdfFonts(pdf);
       await drawInvoicePdf(pdf, displayInvoice, node, registrationCodeData?.code || null);
 
       pdf.save(`Invoice_${displayInvoice.invoice_number}.pdf`);
@@ -281,21 +284,50 @@ function setPdfText(
   text: string | string[],
   options: { align?: 'left' | 'center' | 'right'; color?: [number, number, number] } = {},
 ) {
-  // jsPDF's built-in bold font can render with collapsed spacing in some PDF
-  // viewers/rasterizers. Use the regular font for all text and create a very
-  // small faux-bold overprint instead; this keeps the invoice text readable and
-  // preserves the exact layout of the on-screen invoice.
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont(INVOICE_PDF_FONT_FAMILY, style);
   pdf.setFontSize(size);
   const [r, g, b] = options.color || [51, 51, 51];
   pdf.setTextColor(r, g, b);
-  const align = options.align || 'left';
-  pdf.text(text, x, y, { align });
+  pdf.text(text, x, y, { align: options.align || 'left' });
+}
 
-  if (style === 'bold') {
-    const overprintOffset = Math.max(0.08, Math.min(size * 0.012, 0.18));
-    pdf.text(text, x + overprintOffset, y, { align });
+const INVOICE_PDF_FONT_FAMILY = 'LiberationSans';
+let invoicePdfFontPromise: Promise<{ regular: string; bold: string }> | null = null;
+
+async function registerInvoicePdfFonts(pdf: jsPDF) {
+  try {
+    const fonts = await getInvoicePdfFonts();
+    pdf.addFileToVFS('LiberationSans-Regular.ttf', fonts.regular);
+    pdf.addFont('LiberationSans-Regular.ttf', INVOICE_PDF_FONT_FAMILY, 'normal');
+    pdf.addFileToVFS('LiberationSans-Bold.ttf', fonts.bold);
+    pdf.addFont('LiberationSans-Bold.ttf', INVOICE_PDF_FONT_FAMILY, 'bold');
+    pdf.setFont(INVOICE_PDF_FONT_FAMILY, 'normal');
+  } catch (error) {
+    console.warn('Failed to load embedded invoice PDF fonts; falling back to built-in font.', error);
   }
+}
+
+function getInvoicePdfFonts() {
+  if (!invoicePdfFontPromise) {
+    invoicePdfFontPromise = Promise.all([
+      fetchFontAsBase64(liberationSansRegularUrl),
+      fetchFontAsBase64(liberationSansBoldUrl),
+    ]).then(([regular, bold]) => ({ regular, bold }));
+  }
+  return invoicePdfFontPromise;
+}
+
+async function fetchFontAsBase64(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Unable to load font: ${url}`);
+  const buffer = await response.arrayBuffer();
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
 }
 
 function safeFormat(value: string | undefined, pattern: string) {
