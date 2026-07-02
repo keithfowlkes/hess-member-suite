@@ -163,10 +163,18 @@ const Index = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Calculate outstanding balance from invoices
-  const outstandingBalance = organizationInvoices
-    .filter(invoice => invoice.status !== 'paid')
-    .reduce((total, invoice) => total + (invoice.prorated_amount || invoice.amount), 0);
+  // Calculate outstanding balance from invoices. When an organization has no
+  // invoice generated yet, fall back to the configured standard membership fee
+  // so every unpaid org sees the same expected balance rather than $0.
+  const standardFee = parseFloat(
+    systemSettings?.find(s => s.setting_key === 'full_member_fee')?.setting_value || '0'
+  ) || 0;
+  const hasAnyInvoice = organizationInvoices.length > 0;
+  const outstandingBalance = hasAnyInvoice
+    ? organizationInvoices
+        .filter(invoice => invoice.status !== 'paid')
+        .reduce((total, invoice) => total + (invoice.prorated_amount || invoice.amount), 0)
+    : (duesPaidForCurrentPeriod ? 0 : standardFee);
 
   const hasOutstandingBalance = outstandingBalance > 0;
 
