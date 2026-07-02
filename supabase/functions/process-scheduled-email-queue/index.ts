@@ -61,7 +61,7 @@ serve(async (req) => {
       // Fallback path: no RPC available — claim via two-step update.
       console.warn("[process-scheduled-email-queue] claim_scheduled_emails RPC unavailable, using fallback", claimError);
 
-      const { data: due, error: dueErr } = await supabase
+      const { data: due, error: dueErr } = await supabaseAdmin
         .from("scheduled_email_queue")
         .select("id")
         .eq("status", "pending")
@@ -77,7 +77,7 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const { data: updated, error: updErr } = await supabase
+      const { data: updated, error: updErr } = await supabaseAdmin
         .from("scheduled_email_queue")
         .update({ status: "sending", attempts: 0 })
         .in("id", ids)
@@ -99,7 +99,7 @@ serve(async (req) => {
     for (const row of rows) {
       if (Date.now() - startedAt > WALL_TIME_BUDGET_MS) {
         // Out of time — release remaining claimed rows back to pending
-        await supabase
+        await supabaseAdmin
           .from("scheduled_email_queue")
           .update({ status: "pending" })
           .eq("id", row.id)
@@ -123,7 +123,7 @@ serve(async (req) => {
 
         if (sendError) throw sendError;
 
-        await supabase
+        await supabaseAdmin
           .from("scheduled_email_queue")
           .update({
             status: "sent",
@@ -133,7 +133,7 @@ serve(async (req) => {
           .eq("id", row.id);
 
         if (row.invoice_id) {
-          await supabase
+          await supabaseAdmin
             .from("invoices")
             .update({
               status: "sent",
@@ -149,7 +149,7 @@ serve(async (req) => {
           finalStatus === "pending"
             ? new Date(Date.now() + 5 * 60 * 1000).toISOString() // retry in 5 min
             : row.scheduled_send_at;
-        await supabase
+        await supabaseAdmin
           .from("scheduled_email_queue")
           .update({
             status: finalStatus,
