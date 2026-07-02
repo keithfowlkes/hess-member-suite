@@ -449,7 +449,10 @@ const Index = () => {
             {/* Membership Fee Status */}
             {(() => {
               const isAdministrator = !!userOrganization?.name?.toLowerCase().includes('administrator');
-              const showFallback = isAdministrator;
+              // Always show the Membership Fee block for member organizations, even when
+              // no invoice has been generated yet — fall back to an UNPAID/Pending state
+              // so users always see their dues status and can contact support.
+              const showFallback = isAdministrator || (!duesPaidForCurrentPeriod && !currentPeriodUnpaidInvoice);
               const hasAnyBadge = duesPaidForCurrentPeriod || currentPeriodUnpaidInvoice || showFallback;
               if (!hasAnyBadge) return null;
               return (
