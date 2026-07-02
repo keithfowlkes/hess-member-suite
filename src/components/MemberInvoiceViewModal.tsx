@@ -15,6 +15,9 @@ interface MemberInvoiceViewModalProps {
 }
 
 export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberInvoiceViewModalProps) {
+  const invoiceRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
+
   if (!invoice) return null;
 
   const isUnpaid = invoice.status !== 'paid';
@@ -55,6 +58,64 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
     }, 300);
   };
 
+  const handleDownloadPDF = async () => {
+    const node = invoiceRef.current;
+    if (!node) return;
+    setDownloading(true);
+    try {
+      // Render at high scale for crisp text; use white background to match on-screen preview.
+      const canvas = await html2canvas(node, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        windowWidth: node.scrollWidth,
+      });
+
+      const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'letter' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 24;
+      const usableWidth = pageWidth - margin * 2;
+      const usableHeight = pageHeight - margin * 2;
+
+      // Scale image to fit page width; paginate vertically if it overflows.
+      const imgWidth = usableWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      if (imgHeight <= usableHeight) {
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, margin, imgWidth, imgHeight, undefined, 'FAST');
+      } else {
+        // Multi-page: slice source canvas by page height in source pixels.
+        const pxPerPage = (usableHeight * canvas.width) / imgWidth;
+        let offsetY = 0;
+        let pageIndex = 0;
+        while (offsetY < canvas.height) {
+          const sliceHeight = Math.min(pxPerPage, canvas.height - offsetY);
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sliceHeight;
+          const ctx = pageCanvas.getContext('2d');
+          if (!ctx) break;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+          ctx.drawImage(canvas, 0, offsetY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+          const sliceImgHeight = (sliceHeight * imgWidth) / canvas.width;
+          if (pageIndex > 0) pdf.addPage();
+          pdf.addImage(pageCanvas.toDataURL('image/png'), 'PNG', margin, margin, imgWidth, sliceImgHeight, undefined, 'FAST');
+          offsetY += sliceHeight;
+          pageIndex += 1;
+        }
+      }
+
+      pdf.save(`Invoice_${invoice.invoice_number}.pdf`);
+    } catch (err) {
+      console.error('Failed to generate invoice PDF:', err);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -62,6 +123,10 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <DialogTitle>Invoice {invoice.invoice_number}</DialogTitle>
             <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={downloading}>
+                {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                {downloading ? 'Preparing…' : 'Download PDF'}
+              </Button>
               <Button variant="outline" size="sm" onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-2" />
                 Print
@@ -72,7 +137,7 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
         </DialogHeader>
 
         <div className="mt-4">
-          <div id="member-invoice-printable" className="border rounded-lg bg-white">
+          <div ref={invoiceRef} id="member-invoice-printable" className="border rounded-lg bg-white">
             <ProfessionalInvoice invoice={invoice} />
           </div>
         </div>
@@ -80,3 +145,4 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
     </Dialog>
   );
 }
+
