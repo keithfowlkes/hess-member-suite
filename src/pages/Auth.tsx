@@ -341,8 +341,8 @@ export default function Auth() {
         localStorage.setItem('loginAttempts', newAttempts.toString());
         
         if (newAttempts >= 3) {
-          // Lock out for 30 minutes
-          const lockoutTime = now + (30 * 60 * 1000);
+          // Lock out for 15 minutes
+          const lockoutTime = now + (15 * 60 * 1000);
           setLockoutUntil(lockoutTime);
           localStorage.setItem('lockoutUntil', lockoutTime.toString());
           setShowTooManyAttemptsModal(true);
@@ -3358,7 +3358,7 @@ export default function Auth() {
             <AlertDialogDescription className="text-center pt-2">
               You have exceeded the maximum number of login attempts.
               <br /><br />
-              Please wait 30 minutes before trying again.
+              Please wait 15 minutes before trying again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
