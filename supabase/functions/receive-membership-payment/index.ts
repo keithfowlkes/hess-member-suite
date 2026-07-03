@@ -116,13 +116,17 @@ serve(async (req) => {
     const peek = (s: string) =>
       s.length === 0
         ? "(empty)"
-        : `${s.slice(0, 2)}…${s.slice(-2)} (len=${s.length})`;
+        : s.length <= 10
+          ? `${s.slice(0, 2)}…${s.slice(-2)} (len=${s.length})`
+          : `${s.slice(0, 6)}…${s.slice(-4)} (len=${s.length})`;
     console.warn("[receive-membership-payment] 401 secret mismatch", {
+      x_source: req.headers.get("x-source") ?? "(missing)",
       provided: peek(providedSecret),
-      expected: peek(expectedSecret),
+      expected: peek(expectedSecret.trim()),
       provided_header_present: req.headers.has("x-webhook-secret"),
       authorization_header_present: req.headers.has("authorization"),
     });
+
 
     // Persist the failed delivery so an admin can retry via the Inbound
     // Payments screen once the sender's secret is corrected. Without this,
