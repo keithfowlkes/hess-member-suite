@@ -77,6 +77,16 @@ function secretMatches(provided: string, expected: string): boolean {
   return false;
 }
 
+function findMatchingSecret(
+  provided: string,
+  expectedSecrets: Array<{ name: string; value: string }>,
+): string | null {
+  for (const secret of expectedSecrets) {
+    if (secretMatches(provided, secret.value)) return secret.name;
+  }
+  return null;
+}
+
 function ok(body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
     status: 200,
@@ -96,9 +106,17 @@ serve(async (req) => {
     });
   }
 
-  const expectedSecret = Deno.env.get("MEDIUS_EVENTS_WEBHOOK_SECRET");
-  if (!expectedSecret) {
-    console.error("MEDIUS_EVENTS_WEBHOOK_SECRET not configured");
+  const expectedSecrets = [
+    "MEDIUS_EVENTS_WEBHOOK_SECRET_V2",
+    "MEDIUS_EVENTS_WEBHOOK_SECRET",
+    "HESS_PORTAL_WEBHOOK_SECRET",
+    "HESS_MEMBER_PORTAL_WEBHOOK_SECRET",
+  ]
+    .map((name) => ({ name, value: Deno.env.get(name)?.trim() ?? "" }))
+    .filter((secret) => secret.value.length > 0);
+
+  if (expectedSecrets.length === 0) {
+    console.error("No Medius webhook secret configured");
     return new Response(JSON.stringify({ error: "Server misconfigured" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -111,8 +129,9 @@ serve(async (req) => {
     req.headers.get("x-webhook-secret") ??
     req.headers.get("authorization") ??
     "";
+  const matchedSecretName = findMatchingSecret(providedSecret, expectedSecrets);
 
-  if (!secretMatches(providedSecret, expectedSecret)) {
+  if (!matchedSecretName) {
     const peek = (s: string) =>
       s.length === 0
         ? "(empty)"
@@ -122,7 +141,10 @@ serve(async (req) => {
     console.warn("[receive-membership-payment] 401 secret mismatch", {
       x_source: req.headers.get("x-source") ?? "(missing)",
       provided: peek(providedSecret),
-      expected: peek(expectedSecret.trim()),
+      expected: expectedSecrets.map((secret) => ({
+        name: secret.name,
+        fingerprint: peek(secret.value),
+      })),
       provided_header_present: req.headers.has("x-webhook-secret"),
       authorization_header_present: req.headers.has("authorization"),
     });
