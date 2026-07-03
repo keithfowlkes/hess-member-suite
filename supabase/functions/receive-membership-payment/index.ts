@@ -66,6 +66,16 @@ function normalizeSecret(raw: string): string[] {
     const b = noBearer.slice(half);
     if (a === b && a) variants.add(a);
   }
+  // Multiple identical X-Webhook-Secret headers can be coalesced by the
+  // platform as "secret, secret". Accept only when every comma-separated
+  // value is the same known secret, not arbitrary alternate values.
+  const commaParts = noBearer
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (commaParts.length > 1 && commaParts.every((part) => part === commaParts[0])) {
+    variants.add(commaParts[0]);
+  }
   return [...variants];
 }
 
