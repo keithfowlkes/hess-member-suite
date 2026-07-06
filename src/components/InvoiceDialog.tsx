@@ -40,8 +40,7 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
 
 const invoiceSchema = z.object({
   organization_id: z.string().min(1, 'Organization is required').optional(),
@@ -79,41 +78,16 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
 
   // Function to download invoice as PDF
   const downloadPDF = async () => {
-    if (!invoiceRef.current || !invoice) return;
+    if (!invoice) return;
 
     try {
-      // Capture the invoice element as canvas
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2, // Higher quality
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff'
+      const logoImg = invoiceRef.current?.querySelector('.logo-section img') as HTMLImageElement | null;
+      const pdf = await generateInvoicePdf({
+        invoice,
+        logoSrc: logoImg?.currentSrc || logoImg?.src || null,
       });
-
-      // Create PDF
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgData = canvas.toDataURL('image/png');
-      
-      // Calculate dimensions to fit A4
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const finalWidth = imgWidth * ratio;
-      const finalHeight = imgHeight * ratio;
-      
-      // Center the image on the page
-      const x = (pdfWidth - finalWidth) / 2;
-      const y = (pdfHeight - finalHeight) / 2;
-      
-      pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
-      
-      // Generate filename
       const organizationName = invoice.organizations?.name || 'Unknown';
       const fileName = `Invoice_${invoice.invoice_number}_${organizationName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-      
-      // Download the PDF
       pdf.save(fileName);
     } catch (error) {
       console.error('Error generating PDF:', error);
