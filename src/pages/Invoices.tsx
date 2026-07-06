@@ -97,58 +97,11 @@ export default function Invoices() {
 
   const generatePDF = async (invoice: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    
     try {
-      // Create a hidden container for the invoice component
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.top = '-9999px';
-      container.style.width = '800px';
-      container.style.background = 'white';
-      document.body.appendChild(container);
-
-      // Create and render the ProfessionalInvoice component
-      const { createRoot } = await import('react-dom/client');
-      const root = createRoot(container);
-      
-      await new Promise<void>((resolve) => {
-        root.render(
-          <ProfessionalInvoice invoice={invoice} />
-        );
-        // Give React time to render
-        setTimeout(resolve, 500);
-      });
-
-      // Convert to canvas
-      const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff'
-      });
-
-      // Create PDF
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-
-      const imgWidth = 210; // A4 width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
-      
-      // Clean up
-      root.unmount();
-      document.body.removeChild(container);
-      
-      // Download the PDF
+      const pdf = await generateInvoicePdf({ invoice });
       pdf.save(`${invoice.invoice_number}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      // Fallback: open print dialog
       window.print();
     }
   };
