@@ -11,7 +11,7 @@ import { useResendInvoice } from '@/hooks/useResendInvoice';
 import { Plus, Search, FileText, Send, DollarSign, Calendar, Building2, Eye, Mail, Trash2, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
-import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
+
 import { MemberInvoiceViewModal } from '@/components/MemberInvoiceViewModal';
 import { Invoice } from '@/hooks/useInvoices';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
