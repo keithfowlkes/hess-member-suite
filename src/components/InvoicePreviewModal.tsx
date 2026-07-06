@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { format } from 'date-fns';
 import { Download } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
 
 interface InvoicePreviewModalProps {
   open: boolean;
