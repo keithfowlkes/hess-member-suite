@@ -40,8 +40,7 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
 
 const invoiceSchema = z.object({
   organization_id: z.string().min(1, 'Organization is required').optional(),
