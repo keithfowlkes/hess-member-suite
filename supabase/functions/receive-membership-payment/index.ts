@@ -290,6 +290,28 @@ serve(async (req) => {
 
     let matchedInvoiceId: string | null = null;
 
+    // For annual membership dues, always use the portal's configured
+    // full_member_fee (which includes the Stripe processing fee) so the
+    // invoice matches what direct-Stripe payers are charged. This prevents
+    // Medius-side base-price payments (e.g. $300) from producing invoices
+    // that don't reflect the fee-inclusive amount ($309.27) shown elsewhere.
+    let invoiceAmount = data.amount_paid;
+    try {
+      const { data: feeSetting } = await supabase
+        .from("system_settings")
+        .select("setting_value")
+        .eq("setting_key", "full_member_fee")
+        .maybeSingle();
+      const configuredFee = feeSetting?.setting_value
+        ? Number(feeSetting.setting_value)
+        : NaN;
+      if (Number.isFinite(configuredFee) && configuredFee > 0) {
+        invoiceAmount = configuredFee;
+      }
+    } catch (e) {
+      console.warn("receive-membership-payment: fee lookup failed, using amount_paid", e);
+    }
+
     if (matchedOrgId) {
       const periodStart = `${periodYear}-01-01`;
       const periodEnd = `${periodYear}-12-31`;
@@ -312,7 +334,7 @@ serve(async (req) => {
           .update({
             status: "paid",
             paid_date: paidAtIso,
-            amount: data.amount_paid,
+            amount: invoiceAmount,
             payment_source: "medius-events",
             external_reference: data.stripe_session_id,
           })
@@ -327,7 +349,8 @@ serve(async (req) => {
             {
               organization_id: matchedOrgId,
               invoice_number: invoiceNumber,
-              amount: data.amount_paid,
+              amount: invoiceAmount,
+
               status: "paid",
               invoice_date: paidAtIso.slice(0, 10),
               due_date: paidAtIso.slice(0, 10),
