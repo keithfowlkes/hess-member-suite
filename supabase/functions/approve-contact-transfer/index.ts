@@ -226,14 +226,39 @@ Deno.serve(async (req) => {
       .eq('id', transferRequest.current_contact_id)
       .single();
 
-    // ONLY update contact_person_id - NO other org fields touched
+    // Update contact_person_id AND contact email so the org card reflects the new primary contact
     const { error: updateError } = await adminClient
       .from('organizations')
       .update({ 
         contact_person_id: newContactProfile.id,
+        email: transferRequest.new_contact_email.toLowerCase(),
         updated_at: new Date().toISOString()
       })
       .eq('id', transferRequest.organization_id);
+
+    // If the new contact profile has no name yet, best-effort parse from the email local part
+    // (e.g. "carvell_regina@wheatoncollege.edu" -> first: Regina, last: Carvell)
+    if (!newContactProfile.first_name && !newContactProfile.last_name) {
+      const local = transferRequest.new_contact_email.split('@')[0] || '';
+      const parts = local.split(/[._-]+/).filter(Boolean);
+      let first = '', last = '';
+      if (parts.length >= 2) {
+        // common convention: lastname_firstname
+        last = parts[0];
+        first = parts[1];
+      } else if (parts.length === 1) {
+        first = parts[0];
+      }
+      const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
+      const guessedFirst = cap(first);
+      const guessedLast = cap(last);
+      if (guessedFirst || guessedLast) {
+        await adminClient
+          .from('profiles')
+          .update({ first_name: guessedFirst, last_name: guessedLast, updated_at: new Date().toISOString() })
+          .eq('id', newContactProfile.id);
+      }
+    }
 
     if (updateError) {
       console.error('[approve-contact-transfer] Update error:', updateError);
