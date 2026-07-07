@@ -2535,11 +2535,17 @@ const MasterDashboard = () => {
                 Reject
               </Button>
               <Button
-                onClick={() => {
+                onClick={async () => {
                   if (selectedTransferRequest) {
-                    approveTransfer.mutate({ id: selectedTransferRequest.id });
-                    setShowTransferApprovalDialog(false);
-                    setSelectedTransferRequest(null);
+                    try {
+                      await approveTransfer.mutateAsync({ id: selectedTransferRequest.id });
+                    } catch (e) {
+                      // error toast already shown by mutation
+                    } finally {
+                      await refetchTransferRequests();
+                      setShowTransferApprovalDialog(false);
+                      setSelectedTransferRequest(null);
+                    }
                   }
                 }}
                 disabled={approveTransfer.isPending}
