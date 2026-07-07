@@ -146,9 +146,6 @@ export const useApproveTransferRequest = () => {
       return data;
     },
 
-      
-      return data;
-    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transfer-requests'] });
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
