@@ -124,12 +124,28 @@ export const useApproveTransferRequest = () => {
 
   return useMutation({
     mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
+      const { FunctionsHttpError } = await import('@supabase/supabase-js');
       const { data, error } = await supabase.functions.invoke('approve-contact-transfer', {
         body: { transfer_id: id, admin_notes: notes }
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error) {
+        let message = error.message;
+        if (error instanceof FunctionsHttpError) {
+          try {
+            const body = await error.context.json();
+            message = body?.message || body?.error || message;
+          } catch {
+            try { message = await error.context.text(); } catch {}
+          }
+        }
+        throw new Error(message);
+      }
+      if (data?.error) throw new Error(data.message || data.error);
+
+      return data;
+    },
+
       
       return data;
     },
