@@ -282,9 +282,12 @@ Deno.serve(async (req) => {
           to: transferRequest.new_contact_email,
           data: {
             organization_name: organization.name,
-            is_new_contact: true
+            new_contact_email: transferRequest.new_contact_email,
+            is_new_contact: true,
+            set_password_link: setPasswordLink || ''
           }
         }
+
       });
 
       if (oldContactProfile?.email) {
