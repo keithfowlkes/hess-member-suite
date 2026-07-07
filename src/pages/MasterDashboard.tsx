@@ -2542,9 +2542,10 @@ const MasterDashboard = () => {
                     setSelectedTransferRequest(null);
                   }
                 }}
-                disabled={approveTransfer.isPending || !selectedTransferRequest?.new_contact_profile || selectedTransferRequest?.status !== 'ready_for_approval'}
+                disabled={approveTransfer.isPending || !selectedTransferRequest?.new_contact_profile}
                 className="bg-green-600 hover:bg-green-700 text-white"
-                title={selectedTransferRequest?.status !== 'ready_for_approval' ? 'The new contact must update the organization record before approval' : ''}
+                title={!selectedTransferRequest?.new_contact_profile ? 'The new contact must create an account before the transfer can be approved' : 'Approve this transfer (admin override available before new contact updates the org record)'}
+
               >
                 {approveTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
                 Approve Transfer
