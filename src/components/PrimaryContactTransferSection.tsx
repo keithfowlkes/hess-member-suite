@@ -143,6 +143,28 @@ export const PrimaryContactTransferSection: React.FC<PrimaryContactTransferSecti
             </Alert>
 
             <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="new_contact_first_name">First Name</Label>
+                  <Input
+                    id="new_contact_first_name"
+                    type="text"
+                    placeholder="First name"
+                    value={newContactFirstName}
+                    onChange={(e) => setNewContactFirstName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="new_contact_last_name">Last Name</Label>
+                  <Input
+                    id="new_contact_last_name"
+                    type="text"
+                    placeholder="Last name"
+                    value={newContactLastName}
+                    onChange={(e) => setNewContactLastName(e.target.value)}
+                  />
+                </div>
+              </div>
               <Label htmlFor="new_contact_email">New Primary Contact Email</Label>
               <div className="flex gap-2">
                 <Input
@@ -171,7 +193,13 @@ export const PrimaryContactTransferSection: React.FC<PrimaryContactTransferSecti
               {newContactEmail.toLowerCase() === currentContactEmail.toLowerCase() && (
                 <p className="text-xs text-destructive">Cannot transfer to yourself</p>
               )}
+              {(!newContactFirstName.trim() || !newContactLastName.trim()) && (
+                <p className="text-xs text-muted-foreground">
+                  Enter the new contact's first and last name so their account is created correctly.
+                </p>
+              )}
             </div>
+
           </div>
         )}
       </div>
