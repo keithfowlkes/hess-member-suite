@@ -128,13 +128,16 @@ Deno.serve(async (req) => {
         (u: any) => (u.email || '').toLowerCase() === transferRequest.new_contact_email.toLowerCase()
       )?.id || null;
 
+      const providedFirst = (transferRequest.new_contact_first_name || '').trim();
+      const providedLast = (transferRequest.new_contact_last_name || '').trim();
+
       if (!authUserId) {
         const { data: created, error: createErr } = await adminClient.auth.admin.createUser({
           email: transferRequest.new_contact_email,
           email_confirm: true,
           user_metadata: {
-            first_name: '',
-            last_name: '',
+            first_name: providedFirst,
+            last_name: providedLast,
             organization: organization.name,
           },
         });
@@ -168,8 +171,8 @@ Deno.serve(async (req) => {
           .insert({
             user_id: authUserId,
             email: transferRequest.new_contact_email.toLowerCase(),
-            first_name: '',
-            last_name: '',
+            first_name: providedFirst,
+            last_name: providedLast,
             organization: organization.name,
           })
           .select('*')
@@ -183,6 +186,7 @@ Deno.serve(async (req) => {
         }
         newContactProfile = inserted;
       }
+
 
       // Generate a password-set/recovery link the user can click from the email
       try {
