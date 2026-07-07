@@ -106,22 +106,103 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if new contact has a profile
-    const { data: newContactProfile } = await adminClient
+    // Check if new contact has a profile; if not, create the auth user + profile
+    let { data: newContactProfile } = await adminClient
       .from('profiles')
       .select('*')
       .eq('email', transferRequest.new_contact_email.toLowerCase())
       .maybeSingle();
 
+    let setPasswordLink: string | null = null;
+    let accountJustCreated = false;
+
     if (!newContactProfile) {
-      return new Response(JSON.stringify({ 
-        error: 'New contact must register an account first',
-        message: `The new contact (${transferRequest.new_contact_email}) needs to create an account before the transfer can be completed.`
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      console.log(`[approve-contact-transfer] No profile for ${transferRequest.new_contact_email} — creating account`);
+
+      // Check if an auth user already exists (profile could be missing/orphaned)
+      const { data: existingUsersList } = await adminClient.auth.admin.listUsers({
+        page: 1,
+        perPage: 200,
       });
+      let authUserId = existingUsersList?.users?.find(
+        (u: any) => (u.email || '').toLowerCase() === transferRequest.new_contact_email.toLowerCase()
+      )?.id || null;
+
+      if (!authUserId) {
+        const { data: created, error: createErr } = await adminClient.auth.admin.createUser({
+          email: transferRequest.new_contact_email,
+          email_confirm: true,
+          user_metadata: {
+            first_name: '',
+            last_name: '',
+            organization: organization.name,
+          },
+        });
+        if (createErr || !created?.user) {
+          console.error('[approve-contact-transfer] createUser error:', createErr);
+          return new Response(JSON.stringify({
+            error: 'Failed to create account for new contact',
+            message: createErr?.message || 'Unknown error creating auth user'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        authUserId = created.user.id;
+        accountJustCreated = true;
+      }
+
+      // Fetch profile (trigger handle_new_user should have created it)
+      const { data: refetchedProfile } = await adminClient
+        .from('profiles')
+        .select('*')
+        .eq('user_id', authUserId)
+        .maybeSingle();
+
+      if (refetchedProfile) {
+        newContactProfile = refetchedProfile;
+      } else {
+        // Fallback: create profile record directly
+        const { data: inserted, error: insertErr } = await adminClient
+          .from('profiles')
+          .insert({
+            user_id: authUserId,
+            email: transferRequest.new_contact_email.toLowerCase(),
+            first_name: '',
+            last_name: '',
+            organization: organization.name,
+          })
+          .select('*')
+          .single();
+        if (insertErr || !inserted) {
+          console.error('[approve-contact-transfer] Profile insert error:', insertErr);
+          return new Response(JSON.stringify({ error: 'Failed to create profile for new contact' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        newContactProfile = inserted;
+      }
+
+      // Generate a password-set/recovery link the user can click from the email
+      try {
+        const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
+          type: 'recovery',
+          email: transferRequest.new_contact_email,
+          options: {
+            redirectTo: 'https://members.hessconsortium.app/reset-password',
+          },
+        });
+        if (linkErr) {
+          console.error('[approve-contact-transfer] generateLink error:', linkErr);
+        } else {
+          setPasswordLink = linkData?.properties?.action_link || null;
+        }
+      } catch (linkErr) {
+        console.error('[approve-contact-transfer] generateLink threw:', linkErr);
+      }
     }
+
 
     // DATA LOSS PREVENTION: Snapshot the full organization record before transfer
     console.log(`[approve-contact-transfer] Creating pre-transfer org snapshot for data safety`);
@@ -201,9 +282,12 @@ Deno.serve(async (req) => {
           to: transferRequest.new_contact_email,
           data: {
             organization_name: organization.name,
-            is_new_contact: true
+            new_contact_email: transferRequest.new_contact_email,
+            is_new_contact: true,
+            set_password_link: setPasswordLink || ''
           }
         }
+
       });
 
       if (oldContactProfile?.email) {

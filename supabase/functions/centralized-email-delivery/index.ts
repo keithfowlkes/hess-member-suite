@@ -283,21 +283,35 @@ const handler = async (req: Request): Promise<Response> => {
       const isNewContact = templateData.is_new_contact === 'true' || templateData.is_new_contact === true;
       finalSubject = `Primary Contact Transfer ${isNewContact ? 'Accepted' : 'Completed'} - ${templateData.organization_name}`;
       const designSettings = await getEmailDesignSettings();
+      const setPasswordLink = templateData.set_password_link || '';
+      const isBrandNewAccount = !!setPasswordLink;
       let completeTemplate = isNewContact ? `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
           <h2 style="color: {{primary_color}};">You Are Now the Primary Contact</h2>
           <p>Congratulations! You are now the primary contact for <strong>${templateData.organization_name}</strong> in the HESS Consortium Member Portal.</p>
-          <p>As the primary contact, you can:</p>
-          <ul>
-            <li>Update your organization's profile information</li>
-            <li>Manage software system information</li>
-            <li>Transfer primary contact to another person if needed</li>
-          </ul>
-          <div style="margin: 30px 0; text-align: center;">
-            <a href="https://members.hessconsortium.app/profile" style="background-color: {{primary_color}}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">View Your Profile</a>
-          </div>
+          ${isBrandNewAccount ? `
+            <div style="background-color: #f5f3ff; border-left: 4px solid {{primary_color}}; padding: 15px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0;"><strong>An account has been created for you</strong> using this email address (${templateData.new_contact_email || ''}).</p>
+              <p style="margin: 0;">To finish setting up your account, click the button below to create your password. This link is valid for 24 hours.</p>
+            </div>
+            <div style="margin: 30px 0; text-align: center;">
+              <a href="${setPasswordLink}" style="background-color: {{primary_color}}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Set Your Password</a>
+            </div>
+            <p style="font-size: 13px; color: #666;">After setting your password, sign in at <a href="https://members.hessconsortium.app/auth" style="color: {{primary_color}};">members.hessconsortium.app</a> to review and update your organization's information.</p>
+          ` : `
+            <p>As the primary contact, you can:</p>
+            <ul>
+              <li>Update your organization's profile information</li>
+              <li>Manage software system information</li>
+              <li>Transfer primary contact to another person if needed</li>
+            </ul>
+            <div style="margin: 30px 0; text-align: center;">
+              <a href="https://members.hessconsortium.app/profile" style="background-color: {{primary_color}}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">View Your Profile</a>
+            </div>
+          `}
           <p>Best regards,<br><span style="color: {{primary_color}};">HESS Consortium Team</span></p>
         </div>
+
       ` : `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: {{text_color}};">
           <h2 style="color: {{primary_color}};">Primary Contact Transfer Complete</h2>
