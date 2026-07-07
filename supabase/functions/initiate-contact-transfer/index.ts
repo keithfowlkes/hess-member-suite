@@ -122,12 +122,15 @@ Deno.serve(async (req) => {
         current_contact_id: profile.id,
         new_contact_email: new_contact_email.toLowerCase(),
         new_contact_id: newContactProfile?.id || null,
+        new_contact_first_name: (new_contact_first_name || '').trim() || null,
+        new_contact_last_name: (new_contact_last_name || '').trim() || null,
         transfer_token: transferToken,
         expires_at: expiresAt.toISOString(),
         status: 'pending'
       })
       .select()
       .single();
+
 
     if (insertError) {
       console.error('[initiate-contact-transfer] Insert error:', insertError);
