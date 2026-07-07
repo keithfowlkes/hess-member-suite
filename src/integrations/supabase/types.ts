@@ -951,7 +951,9 @@ export type Database = {
           expires_at: string
           id: string
           new_contact_email: string
+          new_contact_first_name: string | null
           new_contact_id: string | null
+          new_contact_last_name: string | null
           org_updated_at: string | null
           organization_id: string
           requested_by: string
@@ -966,7 +968,9 @@ export type Database = {
           expires_at: string
           id?: string
           new_contact_email: string
+          new_contact_first_name?: string | null
           new_contact_id?: string | null
+          new_contact_last_name?: string | null
           org_updated_at?: string | null
           organization_id: string
           requested_by: string
@@ -981,7 +985,9 @@ export type Database = {
           expires_at?: string
           id?: string
           new_contact_email?: string
+          new_contact_first_name?: string | null
           new_contact_id?: string | null
+          new_contact_last_name?: string | null
           org_updated_at?: string | null
           organization_id?: string
           requested_by?: string

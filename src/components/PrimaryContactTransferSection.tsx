@@ -30,14 +30,16 @@ export const PrimaryContactTransferSection: React.FC<PrimaryContactTransferSecti
   isEditing
 }) => {
   const [newContactEmail, setNewContactEmail] = useState('');
+  const [newContactFirstName, setNewContactFirstName] = useState('');
+  const [newContactLastName, setNewContactLastName] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const { 
-    initiateTransfer, 
-    cancelTransfer, 
-    pendingTransfer, 
-    loading, 
+  const {
+    initiateTransfer,
+    cancelTransfer,
+    pendingTransfer,
+    loading,
     isInitiating,
-    isCancelling 
+    isCancelling
   } = useContactTransfer(organizationId);
 
   const validateEmail = (email: string) => {
@@ -49,14 +51,21 @@ export const PrimaryContactTransferSection: React.FC<PrimaryContactTransferSecti
     if (!validateEmail(newContactEmail)) {
       return;
     }
-    
+
     if (newContactEmail.toLowerCase() === currentContactEmail.toLowerCase()) {
       return;
     }
 
-    const success = await initiateTransfer(newContactEmail, organizationName);
+    const success = await initiateTransfer(
+      newContactEmail,
+      organizationName,
+      newContactFirstName,
+      newContactLastName,
+    );
     if (success) {
       setNewContactEmail('');
+      setNewContactFirstName('');
+      setNewContactLastName('');
       setShowConfirmDialog(false);
     }
   };
@@ -67,8 +76,12 @@ export const PrimaryContactTransferSection: React.FC<PrimaryContactTransferSecti
     }
   };
 
-  const canInitiate = validateEmail(newContactEmail) && 
-    newContactEmail.toLowerCase() !== currentContactEmail.toLowerCase();
+  const canInitiate =
+    validateEmail(newContactEmail) &&
+    newContactEmail.toLowerCase() !== currentContactEmail.toLowerCase() &&
+    newContactFirstName.trim().length > 0 &&
+    newContactLastName.trim().length > 0;
+
 
   if (!isEditing) {
     return null;
@@ -130,6 +143,28 @@ export const PrimaryContactTransferSection: React.FC<PrimaryContactTransferSecti
             </Alert>
 
             <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="new_contact_first_name">First Name</Label>
+                  <Input
+                    id="new_contact_first_name"
+                    type="text"
+                    placeholder="First name"
+                    value={newContactFirstName}
+                    onChange={(e) => setNewContactFirstName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="new_contact_last_name">Last Name</Label>
+                  <Input
+                    id="new_contact_last_name"
+                    type="text"
+                    placeholder="Last name"
+                    value={newContactLastName}
+                    onChange={(e) => setNewContactLastName(e.target.value)}
+                  />
+                </div>
+              </div>
               <Label htmlFor="new_contact_email">New Primary Contact Email</Label>
               <div className="flex gap-2">
                 <Input
@@ -158,7 +193,13 @@ export const PrimaryContactTransferSection: React.FC<PrimaryContactTransferSecti
               {newContactEmail.toLowerCase() === currentContactEmail.toLowerCase() && (
                 <p className="text-xs text-destructive">Cannot transfer to yourself</p>
               )}
+              {(!newContactFirstName.trim() || !newContactLastName.trim()) && (
+                <p className="text-xs text-muted-foreground">
+                  Enter the new contact's first and last name so their account is created correctly.
+                </p>
+              )}
             </div>
+
           </div>
         )}
       </div>
