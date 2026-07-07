@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { organization_id, new_contact_email, organization_name } = await req.json();
+    const { organization_id, new_contact_email, organization_name, new_contact_first_name, new_contact_last_name } = await req.json();
 
     if (!organization_id || !new_contact_email || !organization_name) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
 
     console.log(`[initiate-contact-transfer] User ${user.id} initiating transfer for org ${organization_id} to ${new_contact_email}`);
 
