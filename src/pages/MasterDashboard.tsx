@@ -2444,14 +2444,16 @@ const MasterDashboard = () => {
                       )}
                       {selectedTransferRequest.new_contact_profile && selectedTransferRequest.status !== 'ready_for_approval' && (
                         <div className="text-amber-600 text-xs mt-2">
-                          ⚠️ The new contact has an account but hasn't updated the organization record yet. They must review and update the organization's information before approval.
+                          ⚠️ The new contact has an account but hasn't updated the organization record yet.
+                          Normally they must review and update the organization before approval, but as an admin you can override and approve now. Both the previous and new primary contact will be notified by email.
                         </div>
                       )}
                       {selectedTransferRequest.status === 'ready_for_approval' && (
                         <div className="text-green-600 text-xs mt-2">
-                          ✅ The new contact has registered and updated the organization record. This transfer is ready for approval.
+                          ✅ The new contact has registered and updated the organization record. This transfer is ready for approval. Both the previous and new primary contact will receive a confirmation email.
                         </div>
                       )}
+
                     </div>
                   </>
                 )}
@@ -2540,9 +2542,10 @@ const MasterDashboard = () => {
                     setSelectedTransferRequest(null);
                   }
                 }}
-                disabled={approveTransfer.isPending || !selectedTransferRequest?.new_contact_profile || selectedTransferRequest?.status !== 'ready_for_approval'}
+                disabled={approveTransfer.isPending || !selectedTransferRequest?.new_contact_profile}
                 className="bg-green-600 hover:bg-green-700 text-white"
-                title={selectedTransferRequest?.status !== 'ready_for_approval' ? 'The new contact must update the organization record before approval' : ''}
+                title={!selectedTransferRequest?.new_contact_profile ? 'The new contact must create an account before the transfer can be approved' : 'Approve this transfer (admin override available before new contact updates the org record)'}
+
               >
                 {approveTransfer.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
                 Approve Transfer
