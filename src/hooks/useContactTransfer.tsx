@@ -41,14 +41,21 @@ export function useContactTransfer(organizationId: string) {
     }
   };
 
-  const initiateTransfer = async (newContactEmail: string, organizationName: string) => {
+  const initiateTransfer = async (
+    newContactEmail: string,
+    organizationName: string,
+    newContactFirstName?: string,
+    newContactLastName?: string,
+  ) => {
     setIsInitiating(true);
     try {
       const { data, error } = await supabase.functions.invoke('initiate-contact-transfer', {
         body: {
           organization_id: organizationId,
           new_contact_email: newContactEmail,
-          organization_name: organizationName
+          organization_name: organizationName,
+          new_contact_first_name: newContactFirstName,
+          new_contact_last_name: newContactLastName,
         }
       });
 
@@ -74,6 +81,7 @@ export function useContactTransfer(organizationId: string) {
       setIsInitiating(false);
     }
   };
+
 
   const cancelTransfer = async (requestId: string) => {
     setIsCancelling(true);
