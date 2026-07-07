@@ -148,7 +148,7 @@ const MasterDashboard = () => {
   const { pendingRegistrations, loading: pendingRegistrationsLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
   const { registrationUpdates, isLoading: registrationUpdatesLoading, processRegistrationUpdate, isProcessing: isProcessingRegistrationUpdate } = useMemberRegistrationUpdates();
   const { invoices, loading: invoicesLoading } = useInvoices();
-  const { data: transferRequests = [], isLoading: transferRequestsLoading } = useTransferRequests();
+  const { data: transferRequests = [], isLoading: transferRequestsLoading, refetch: refetchTransferRequests } = useTransferRequests();
   const approveTransfer = useApproveTransferRequest();
   const rejectTransfer = useRejectTransferRequest();
   
