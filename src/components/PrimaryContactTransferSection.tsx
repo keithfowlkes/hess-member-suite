@@ -30,14 +30,16 @@ export const PrimaryContactTransferSection: React.FC<PrimaryContactTransferSecti
   isEditing
 }) => {
   const [newContactEmail, setNewContactEmail] = useState('');
+  const [newContactFirstName, setNewContactFirstName] = useState('');
+  const [newContactLastName, setNewContactLastName] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const { 
-    initiateTransfer, 
-    cancelTransfer, 
-    pendingTransfer, 
-    loading, 
+  const {
+    initiateTransfer,
+    cancelTransfer,
+    pendingTransfer,
+    loading,
     isInitiating,
-    isCancelling 
+    isCancelling
   } = useContactTransfer(organizationId);
 
   const validateEmail = (email: string) => {
@@ -49,14 +51,21 @@ export const PrimaryContactTransferSection: React.FC<PrimaryContactTransferSecti
     if (!validateEmail(newContactEmail)) {
       return;
     }
-    
+
     if (newContactEmail.toLowerCase() === currentContactEmail.toLowerCase()) {
       return;
     }
 
-    const success = await initiateTransfer(newContactEmail, organizationName);
+    const success = await initiateTransfer(
+      newContactEmail,
+      organizationName,
+      newContactFirstName,
+      newContactLastName,
+    );
     if (success) {
       setNewContactEmail('');
+      setNewContactFirstName('');
+      setNewContactLastName('');
       setShowConfirmDialog(false);
     }
   };
@@ -67,8 +76,12 @@ export const PrimaryContactTransferSection: React.FC<PrimaryContactTransferSecti
     }
   };
 
-  const canInitiate = validateEmail(newContactEmail) && 
-    newContactEmail.toLowerCase() !== currentContactEmail.toLowerCase();
+  const canInitiate =
+    validateEmail(newContactEmail) &&
+    newContactEmail.toLowerCase() !== currentContactEmail.toLowerCase() &&
+    newContactFirstName.trim().length > 0 &&
+    newContactLastName.trim().length > 0;
+
 
   if (!isEditing) {
     return null;
