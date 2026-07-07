@@ -1,0 +1,1 @@
+ALTER TABLE public.organization_transfer_requests ADD COLUMN IF NOT EXISTS new_contact_first_name text, ADD COLUMN IF NOT EXISTS new_contact_last_name text;
