@@ -148,7 +148,7 @@ const MasterDashboard = () => {
   const { pendingRegistrations, loading: pendingRegistrationsLoading, approveRegistration, rejectRegistration } = usePendingRegistrations();
   const { registrationUpdates, isLoading: registrationUpdatesLoading, processRegistrationUpdate, isProcessing: isProcessingRegistrationUpdate } = useMemberRegistrationUpdates();
   const { invoices, loading: invoicesLoading } = useInvoices();
-  const { data: transferRequests = [], isLoading: transferRequestsLoading } = useTransferRequests();
+  const { data: transferRequests = [], isLoading: transferRequestsLoading, refetch: refetchTransferRequests } = useTransferRequests();
   const approveTransfer = useApproveTransferRequest();
   const rejectTransfer = useRejectTransferRequest();
   
@@ -2535,11 +2535,17 @@ const MasterDashboard = () => {
                 Reject
               </Button>
               <Button
-                onClick={() => {
+                onClick={async () => {
                   if (selectedTransferRequest) {
-                    approveTransfer.mutate({ id: selectedTransferRequest.id });
-                    setShowTransferApprovalDialog(false);
-                    setSelectedTransferRequest(null);
+                    try {
+                      await approveTransfer.mutateAsync({ id: selectedTransferRequest.id });
+                    } catch (e) {
+                      // error toast already shown by mutation
+                    } finally {
+                      await refetchTransferRequests();
+                      setShowTransferApprovalDialog(false);
+                      setSelectedTransferRequest(null);
+                    }
                   }
                 }}
                 disabled={approveTransfer.isPending}
