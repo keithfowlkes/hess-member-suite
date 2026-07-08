@@ -390,7 +390,7 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
         <p style={{ margin: '0.75rem 0 0 0', fontSize: '0.9rem' }}>
           Need our W-9?{' '}
           <a
-            href={hessW9Asset.url}
+            href={`https://members.hessconsortium.app${hessW9Asset.url}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: '#0c2340', textDecoration: 'underline', fontWeight: 'bold' }}
