@@ -49,11 +49,6 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
             <p style="margin: 0.1rem 0; font-size: 0.9rem; color: #555;">A consortium of private, non-profit colleges and universities</p>
           </div>
         </div>
-            <h3 style="font-size: 1rem; font-weight: bold; margin: 0 0 0.25rem 0;">HESS Consortium</h3>
-            <p style="margin: 0.1rem 0; font-size: 0.9rem; color: #555;">Higher Education Systems & Services Consortium</p>
-            <p style="margin: 0.1rem 0; font-size: 0.9rem; color: #555;">A consortium of private, non-profit colleges and universities</p>
-          </div>
-        </div>
         <div style="text-align: right;">
           <h1 style="font-size: 2rem; font-weight: bold; color: #666; margin: 0; letter-spacing: 2px;">INVOICE</h1>
           <p style="font-size: 0.9rem; color: #666; margin: 0.5rem 0 0 0;">Invoice #${data.invoice_number}</p>
