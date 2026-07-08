@@ -374,11 +374,18 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
         <p><strong>Payment Terms:</strong> Net 30 days</p>
         <p><strong>Due Date:</strong> {format(new Date(invoice.due_date), 'MMM dd, yyyy')}</p>
         <p>Please include invoice number {invoice.invoice_number} with your payment.</p>
-        <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #d1d5db' }}>
-          <p style={{ margin: '0 0 0.25rem 0', fontWeight: 'bold' }}>Remit Check Payments To:</p>
-          <p style={{ margin: '0.1rem 0' }}>The HESS Consortium</p>
-          <p style={{ margin: '0.1rem 0' }}>952 Winchester Rd #1051</p>
-          <p style={{ margin: '0.1rem 0' }}>Lexington, KY 40505</p>
+        <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #d1d5db', display: 'flex', gap: '1rem' }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: '0 0 0.25rem 0', fontWeight: 'bold' }}>Remit Check Payments To:</p>
+            <p style={{ margin: '0.1rem 0' }}>The HESS Consortium</p>
+            <p style={{ margin: '0.1rem 0' }}>952 Winchester Rd #1051</p>
+            <p style={{ margin: '0.1rem 0' }}>Lexington, KY 40505</p>
+          </div>
+          <div style={{ flex: 1, borderLeft: '1px solid #d1d5db', paddingLeft: '1rem' }}>
+            <p style={{ margin: '0 0 0.25rem 0', fontWeight: 'bold' }}>HESS ACH Payment Information:</p>
+            <p style={{ margin: '0.1rem 0' }}><strong>Account number:</strong> 837993307</p>
+            <p style={{ margin: '0.1rem 0' }}><strong>Routing number:</strong> 083000137</p>
+          </div>
         </div>
       </div>
 
