@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import hessW9Asset from '@/assets/HESS_W9.pdf.asset.json';
 import { useMemo } from 'react';
 import { useInvoiceTemplates } from '@/hooks/useInvoiceTemplates';
 import { Invoice } from '@/hooks/useInvoices';
