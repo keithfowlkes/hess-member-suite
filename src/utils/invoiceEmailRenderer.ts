@@ -133,6 +133,9 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
             </tr>
           </table>
         </div>
+        <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem;">
+          Need our W-9? <a href="https://members.hessconsortium.app/__l5e/assets-v1/fd85b32a-a3bb-4874-84bf-84b01c9d0969/HESS_W9.pdf" style="color: #0c2340; text-decoration: underline; font-weight: bold;">Download the HESS Consortium W-9 (PDF)</a>.
+        </p>
         ${data.invoice_id ? `
         <div style="text-align: center; margin: 1.25rem 0 0.5rem 0;">
           <a href="https://members.hessconsortium.app/?invoice=${data.invoice_id}"
