@@ -22,8 +22,8 @@ export const useResendInvoice = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ invoiceId, overrideEmail }: ResendInvoiceParams) => {
-      console.log('Resending invoice:', invoiceId, 'overrideEmail:', overrideEmail || '(none)');
+    mutationFn: async ({ invoiceId, overrideEmail, forwardComment }: ResendInvoiceParams) => {
+      console.log('Resending invoice:', invoiceId, 'overrideEmail:', overrideEmail || '(none)', 'forwardComment:', forwardComment ? '(set)' : '(none)');
       // Fetch invoice and organization email
       const { data: invoice, error: invErr } = await supabase
         .from('invoices')
