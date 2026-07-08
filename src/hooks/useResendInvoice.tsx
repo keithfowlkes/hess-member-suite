@@ -11,14 +11,19 @@ export interface ResendInvoiceParams {
    * record itself is not modified.
    */
   overrideEmail?: string;
+  /**
+   * Optional personal message rendered as a highlighted block at the top of
+   * the forwarded invoice email.
+   */
+  forwardComment?: string;
 }
 
 export const useResendInvoice = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ invoiceId, overrideEmail }: ResendInvoiceParams) => {
-      console.log('Resending invoice:', invoiceId, 'overrideEmail:', overrideEmail || '(none)');
+    mutationFn: async ({ invoiceId, overrideEmail, forwardComment }: ResendInvoiceParams) => {
+      console.log('Resending invoice:', invoiceId, 'overrideEmail:', overrideEmail || '(none)', 'forwardComment:', forwardComment ? '(set)' : '(none)');
       // Fetch invoice and organization email
       const { data: invoice, error: invErr } = await supabase
         .from('invoices')
@@ -57,6 +62,7 @@ export const useResendInvoice = () => {
         notes: (invoice as any).notes || '',
         registration_code: registrationCode,
         conference_label: 'HESS 2026',
+        forward_comment: forwardComment && forwardComment.trim() ? forwardComment.trim() : undefined,
       };
 
       console.log('Resend invoice email data:', invoiceEmailData);

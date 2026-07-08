@@ -1,10 +1,11 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { Invoice } from '@/hooks/useInvoices';
 import { PayInvoiceButton } from '@/components/PayInvoiceButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Printer, Download, Loader2, Forward } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -28,6 +29,21 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
   const [downloading, setDownloading] = useState(false);
   const [forwardOpen, setForwardOpen] = useState(false);
   const [forwardEmail, setForwardEmail] = useState('');
+  const [forwardComment, setForwardComment] = useState('');
+
+  // Persist the forwarding comment across invoices/organizations for the session.
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('forward-invoice-comment');
+      if (stored) setForwardComment(stored);
+    } catch { /* ignore */ }
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem('forward-invoice-comment', forwardComment);
+    } catch { /* ignore */ }
+  }, [forwardComment]);
+
 
   const { data: termEndSetting } = useSystemSetting('default_term_end_date');
   const { data: registrationCodeData } = useConferenceRegistrationCode(invoice?.organization_id);
@@ -166,16 +182,31 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
               The invoice on file is not changed.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="forward-email">Recipient email</Label>
-            <Input
-              id="forward-email"
-              type="email"
-              placeholder="name@example.com"
-              value={forwardEmail}
-              onChange={(e) => setForwardEmail(e.target.value)}
-              autoFocus
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="forward-email">Recipient email</Label>
+              <Input
+                id="forward-email"
+                type="email"
+                placeholder="name@example.com"
+                value={forwardEmail}
+                onChange={(e) => setForwardEmail(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="forward-comment">Message (optional)</Label>
+              <Textarea
+                id="forward-comment"
+                placeholder="Add a short note to appear at the top of the emailed invoice…"
+                value={forwardComment}
+                onChange={(e) => setForwardComment(e.target.value)}
+                rows={4}
+              />
+              <p className="text-xs text-muted-foreground">
+                This message is remembered between forwards so you can reuse it across invoices.
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setForwardOpen(false)} disabled={resendInvoice.isPending}>
@@ -186,7 +217,7 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
                 const email = forwardEmail.trim();
                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
                 resendInvoice.mutate(
-                  { invoiceId: displayInvoice.id, overrideEmail: email },
+                  { invoiceId: displayInvoice.id, overrideEmail: email, forwardComment },
                   { onSuccess: () => setForwardOpen(false) },
                 );
               }}

@@ -12,6 +12,16 @@ interface InvoiceEmailData {
   notes?: string;
   registration_code?: string;
   conference_label?: string;
+  forward_comment?: string;
+}
+
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
@@ -22,6 +32,13 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white; color: #333; font-size: 14px; line-height: 1.4;">
+      ${data.forward_comment && data.forward_comment.trim() ? `
+      <!-- Forwarded comment -->
+      <div style="margin: 0 0 1.5rem 0; padding: 1rem 1.25rem; background: #fffbea; border-left: 4px solid #f59e0b; border-radius: 4px;">
+        <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; font-weight: bold; color: #92400e; text-transform: uppercase; letter-spacing: 0.05em;">Message from sender</p>
+        <p style="margin: 0; font-size: 0.95rem; color: #333; white-space: pre-wrap;">${escapeHtml(data.forward_comment.trim())}</p>
+      </div>
+      ` : ''}
       <!-- Header with Logo and Invoice Title -->
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #666;">
         <div>
