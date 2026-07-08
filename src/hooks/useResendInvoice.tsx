@@ -62,6 +62,7 @@ export const useResendInvoice = () => {
         notes: (invoice as any).notes || '',
         registration_code: registrationCode,
         conference_label: 'HESS 2026',
+        forward_comment: forwardComment && forwardComment.trim() ? forwardComment.trim() : undefined,
       };
 
       console.log('Resend invoice email data:', invoiceEmailData);
