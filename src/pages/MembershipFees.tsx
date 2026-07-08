@@ -1866,12 +1866,34 @@ export default function MembershipFees() {
                                     </Button>
                                     <Button
                                       size="sm"
+                                      variant="outline"
+                                      onClick={(e) => openSendToDialog(invoice, e)}
+                                      disabled={resendInvoice.isPending}
+                                      title="Send this invoice to a different email address"
+                                    >
+                                      <Send className="h-4 w-4 mr-1" />
+                                      Send to…
+                                    </Button>
+                                    <Button
+                                      size="sm"
                                       onClick={(e) => handleMarkAsPaid(invoice.id, e)}
                                     >
                                       <DollarSign className="h-4 w-4 mr-1" />
                                       Mark Paid
                                     </Button>
                                   </>
+                                )}
+                                {invoice.status === 'draft' && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={(e) => openSendToDialog(invoice, e)}
+                                    disabled={resendInvoice.isPending}
+                                    title="Send this invoice to an alternate email address"
+                                  >
+                                    <Send className="h-4 w-4 mr-1" />
+                                    Send to…
+                                  </Button>
                                 )}
                                 <Button
                                   size="sm"
