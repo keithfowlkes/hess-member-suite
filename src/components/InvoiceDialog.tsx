@@ -512,16 +512,33 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
                   Edit Details
                 </TabsTrigger>
               </TabsList>
-              <Button 
-                onClick={downloadPDF}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Download PDF
-              </Button>
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <Button
+                    onClick={() => {
+                      setForwardEmail('');
+                      setForwardOpen(true);
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Forward className="h-4 w-4" />
+                    Forward
+                  </Button>
+                )}
+                <Button
+                  onClick={downloadPDF}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Download PDF
+                </Button>
+              </div>
             </div>
+
             
             <TabsContent value="view" className="mt-4">
               <div ref={invoiceRef}>
