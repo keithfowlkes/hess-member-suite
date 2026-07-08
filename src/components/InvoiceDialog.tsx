@@ -562,6 +562,55 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
           </Form>
         )}
       </DialogContent>
+
+      {invoice && (
+        <Dialog open={forwardOpen} onOpenChange={setForwardOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Forward invoice</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              Send a copy of invoice {invoice.invoice_number} to another email address. The invoice on file is not changed.
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="admin-forward-email">Recipient email</Label>
+              <Input
+                id="admin-forward-email"
+                type="email"
+                placeholder="name@example.com"
+                value={forwardEmail}
+                onChange={(e) => setForwardEmail(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setForwardOpen(false)} disabled={resendInvoice.isPending}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  const email = forwardEmail.trim();
+                  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+                  resendInvoice.mutate(
+                    { invoiceId: invoice.id, overrideEmail: email },
+                    { onSuccess: () => setForwardOpen(false) },
+                  );
+                }}
+                disabled={resendInvoice.isPending || !forwardEmail.trim()}
+              >
+                {resendInvoice.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Sending…
+                  </>
+                ) : (
+                  'Send'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 }
