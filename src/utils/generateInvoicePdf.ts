@@ -165,6 +165,25 @@ async function drawInvoicePdf(
   setPdfText(pdf, 10, 'bold', colRightX, paymentBoxTop + 134, 'Routing number:');
   setPdfText(pdf, 10, 'normal', colRightX + 100, paymentBoxTop + 134, '083000137');
 
+
+  // W-9 download link
+  const w9Url = 'https://members.hessconsortium.app/__l5e/assets-v1/fd85b32a-a3bb-4874-84bf-84b01c9d0969/HESS_W9.pdf';
+  const w9Y = paymentBoxTop + paymentBoxHeight + 18;
+  const w9Prefix = 'Need our W-9? ';
+  const w9Link = 'Download the HESS Consortium W-9 (PDF)';
+  pdf.setFont(activeInvoicePdfFontFamily, 'normal');
+  pdf.setFontSize(10);
+  pdf.setTextColor(51, 51, 51);
+  pdf.text(w9Prefix, margin, w9Y);
+  const prefixWidth = pdf.getTextWidth(w9Prefix);
+  pdf.setTextColor(12, 35, 64);
+  pdf.textWithLink(w9Link, margin + prefixWidth, w9Y, { url: w9Url });
+  const linkWidth = pdf.getTextWidth(w9Link);
+  // underline the link
+  pdf.setDrawColor(12, 35, 64);
+  pdf.setLineWidth(0.6);
+  pdf.line(margin + prefixWidth, w9Y + 1.5, margin + prefixWidth + linkWidth, w9Y + 1.5);
+
   const footerTop = 692;
   setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop, 'Questions about your invoice?', { align: 'center', color: [96, 96, 96] });
   setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 16, 'Contact us at: billing@hessconsortium.org', { align: 'center', color: [96, 96, 96] });
