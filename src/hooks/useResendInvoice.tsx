@@ -5,14 +5,20 @@ import { renderInvoiceEmailHTML } from '@/utils/invoiceEmailRenderer';
 
 export interface ResendInvoiceParams {
   invoiceId: string;
+  /**
+   * Optional alternate recipient. When provided, the invoice email is sent
+   * to this address instead of the organization's email on file. The invoice
+   * record itself is not modified.
+   */
+  overrideEmail?: string;
 }
 
 export const useResendInvoice = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ invoiceId }: ResendInvoiceParams) => {
-      console.log('Resending invoice:', invoiceId);
+    mutationFn: async ({ invoiceId, overrideEmail }: ResendInvoiceParams) => {
+      console.log('Resending invoice:', invoiceId, 'overrideEmail:', overrideEmail || '(none)');
       // Fetch invoice and organization email
       const { data: invoice, error: invErr } = await supabase
         .from('invoices')
@@ -21,10 +27,11 @@ export const useResendInvoice = () => {
         .maybeSingle();
       if (invErr) throw invErr;
       if (!invoice) throw new Error('Invoice not found');
-      
+
       console.log('Found invoice for resend:', invoice);
-      const toEmail = (invoice as any).organizations?.email as string | undefined;
-      if (!toEmail) throw new Error('Organization has no email');
+      const orgEmail = (invoice as any).organizations?.email as string | undefined;
+      const toEmail = (overrideEmail && overrideEmail.trim()) || orgEmail;
+      if (!toEmail) throw new Error('No recipient email available');
       const subject = `HESS Consortium - Invoice ${(invoice as any).invoice_number || ''}`.trim();
 
       // Look up the organization's conference registration code (if issued)
@@ -75,12 +82,14 @@ export const useResendInvoice = () => {
       console.log('Resend email function response:', { data, error });
 
       if (error) throw error;
-      return data;
+      return { data, sentTo: toEmail, overrideEmail: overrideEmail || null };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       toast({
-        title: "Invoice email sent",
-        description: "The invoice was emailed using centralized delivery.",
+        title: result?.overrideEmail ? 'Invoice sent to alternate email' : 'Invoice email sent',
+        description: result?.sentTo
+          ? `Invoice emailed to ${result.sentTo}.`
+          : 'The invoice was emailed using centralized delivery.',
       });
     },
     onError: (error: any) => {
