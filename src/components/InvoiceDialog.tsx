@@ -586,16 +586,31 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
             <p className="text-sm text-muted-foreground">
               Send a copy of invoice {invoice.invoice_number} to another email address. The invoice on file is not changed.
             </p>
-            <div className="space-y-2">
-              <Label htmlFor="admin-forward-email">Recipient email</Label>
-              <Input
-                id="admin-forward-email"
-                type="email"
-                placeholder="name@example.com"
-                value={forwardEmail}
-                onChange={(e) => setForwardEmail(e.target.value)}
-                autoFocus
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="admin-forward-email">Recipient email</Label>
+                <Input
+                  id="admin-forward-email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={forwardEmail}
+                  onChange={(e) => setForwardEmail(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="admin-forward-comment">Message (optional)</Label>
+                <Textarea
+                  id="admin-forward-comment"
+                  placeholder="Add a short note to appear at the top of the emailed invoice…"
+                  value={forwardComment}
+                  onChange={(e) => setForwardComment(e.target.value)}
+                  rows={4}
+                />
+                <p className="text-xs text-muted-foreground">
+                  This message is remembered between forwards so you can reuse it across organizations.
+                </p>
+              </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setForwardOpen(false)} disabled={resendInvoice.isPending}>
@@ -606,7 +621,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
                   const email = forwardEmail.trim();
                   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
                   resendInvoice.mutate(
-                    { invoiceId: invoice.id, overrideEmail: email },
+                    { invoiceId: invoice.id, overrideEmail: email, forwardComment },
                     { onSuccess: () => setForwardOpen(false) },
                   );
                 }}
