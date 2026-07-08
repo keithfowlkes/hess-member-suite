@@ -1,15 +1,19 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { Invoice } from '@/hooks/useInvoices';
 import { PayInvoiceButton } from '@/components/PayInvoiceButton';
 import { Button } from '@/components/ui/button';
-import { Printer, Download, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Printer, Download, Loader2, Forward } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
+import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
+import { useResendInvoice } from '@/hooks/useResendInvoice';
 import liberationSansRegularUrl from '@/assets/fonts/LiberationSans-Regular.ttf?url';
 import liberationSansBoldUrl from '@/assets/fonts/LiberationSans-Bold.ttf?url';
 
