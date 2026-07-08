@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import hessW9Asset from '@/assets/HESS_W9.pdf.asset.json';
 import { useMemo } from 'react';
 import { useInvoiceTemplates } from '@/hooks/useInvoiceTemplates';
 import { Invoice } from '@/hooks/useInvoices';
@@ -385,8 +386,20 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
             <p style={{ margin: '0 0 0.25rem 0', fontWeight: 'bold' }}>HESS ACH Payment Information:</p>
             <p style={{ margin: '0.1rem 0' }}><strong>Account number:</strong> 837993307</p>
             <p style={{ margin: '0.1rem 0' }}><strong>Routing number:</strong> 083000137</p>
-          </div>
         </div>
+        <p style={{ margin: '0.75rem 0 0 0', fontSize: '0.9rem' }}>
+          Need our W-9?{' '}
+          <a
+            href={hessW9Asset.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#0c2340', textDecoration: 'underline', fontWeight: 'bold' }}
+          >
+            Download the HESS Consortium W-9 (PDF)
+          </a>
+          .
+        </p>
+      </div>
       </div>
 
       {/* Footer */}

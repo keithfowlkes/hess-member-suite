@@ -145,6 +145,9 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
           </td>
         </tr>
       </table>
+      <p style="margin: 10px 0 0 0; font-size: 13px;">
+        Need our W-9? <a href="https://members.hessconsortium.app/__l5e/assets-v1/fd85b32a-a3bb-4874-84bf-84b01c9d0969/HESS_W9.pdf" style="color: #0c2340; text-decoration: underline; font-weight: bold;">Download the HESS Consortium W-9 (PDF)</a>.
+      </p>
       ${invoiceId ? `
       <p style="text-align: center; margin: 12px 0 6px 0; font-size: 14px; font-weight: bold; color: #333;">OR</p>
       <div style="text-align: center; margin: 0 0 2px 0;">
