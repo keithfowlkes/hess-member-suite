@@ -942,6 +942,38 @@ export default function MembershipFees() {
     resendInvoice.mutate({ invoiceId });
   };
 
+  // Send invoice to an alternate email address (does not change the invoice recipient on file)
+  const [altEmailInvoice, setAltEmailInvoice] = useState<{ id: string; organizationName?: string; defaultEmail?: string } | null>(null);
+  const [altEmail, setAltEmail] = useState('');
+  const openSendToDialog = (invoice: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAltEmailInvoice({
+      id: invoice.id,
+      organizationName: invoice.organizations?.name,
+      defaultEmail: invoice.organizations?.email,
+    });
+    setAltEmail('');
+  };
+  const submitSendToAltEmail = async () => {
+    const email = altEmail.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({
+        title: 'Invalid email',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!altEmailInvoice) return;
+    try {
+      await resendInvoice.mutateAsync({ invoiceId: altEmailInvoice.id, overrideEmail: email });
+      setAltEmailInvoice(null);
+      setAltEmail('');
+    } catch {
+      // toast handled inside the hook
+    }
+  };
+
   const handleDeleteInvoice = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
@@ -1834,12 +1866,34 @@ export default function MembershipFees() {
                                     </Button>
                                     <Button
                                       size="sm"
+                                      variant="outline"
+                                      onClick={(e) => openSendToDialog(invoice, e)}
+                                      disabled={resendInvoice.isPending}
+                                      title="Send this invoice to a different email address"
+                                    >
+                                      <Send className="h-4 w-4 mr-1" />
+                                      Send to…
+                                    </Button>
+                                    <Button
+                                      size="sm"
                                       onClick={(e) => handleMarkAsPaid(invoice.id, e)}
                                     >
                                       <DollarSign className="h-4 w-4 mr-1" />
                                       Mark Paid
                                     </Button>
                                   </>
+                                )}
+                                {invoice.status === 'draft' && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={(e) => openSendToDialog(invoice, e)}
+                                    disabled={resendInvoice.isPending}
+                                    title="Send this invoice to an alternate email address"
+                                  >
+                                    <Send className="h-4 w-4 mr-1" />
+                                    Send to…
+                                  </Button>
                                 )}
                                 <Button
                                   size="sm"
@@ -3332,6 +3386,53 @@ export default function MembershipFees() {
                 
                 <div className="flex justify-end pt-2">
                   <Button onClick={() => setFeeTierUpdateResults(null)}>Close</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Send invoice to alternate email dialog */}
+          <Dialog open={!!altEmailInvoice} onOpenChange={(open) => { if (!open) { setAltEmailInvoice(null); setAltEmail(''); } }}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Send Invoice to Another Email</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Send this invoice to an alternate recipient. The organization's email on file will not be changed.
+                </p>
+                {altEmailInvoice?.organizationName && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Organization: </span>
+                    <span className="font-medium">{altEmailInvoice.organizationName}</span>
+                  </div>
+                )}
+                {altEmailInvoice?.defaultEmail && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">On file: </span>
+                    <span>{altEmailInvoice.defaultEmail}</span>
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <Label htmlFor="alt-email">Send to email address</Label>
+                  <Input
+                    id="alt-email"
+                    type="email"
+                    autoFocus
+                    placeholder="name@example.com"
+                    value={altEmail}
+                    onChange={(e) => setAltEmail(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') submitSendToAltEmail(); }}
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => { setAltEmailInvoice(null); setAltEmail(''); }}>
+                    Cancel
+                  </Button>
+                  <Button onClick={submitSendToAltEmail} disabled={resendInvoice.isPending || !altEmail.trim()}>
+                    <Mail className="h-4 w-4 mr-1" />
+                    {resendInvoice.isPending ? 'Sending…' : 'Send Invoice'}
+                  </Button>
                 </div>
               </div>
             </DialogContent>

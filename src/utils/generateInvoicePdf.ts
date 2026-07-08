@@ -137,8 +137,8 @@ async function drawInvoicePdf(
     y += 78;
   }
 
-  const paymentBoxTop = Math.min(y, 538);
-  const paymentBoxHeight = 130;
+  const paymentBoxTop = Math.min(y, 520);
+  const paymentBoxHeight = 150;
   pdf.setFillColor(248, 249, 250);
   pdf.rect(margin, paymentBoxTop, contentWidth, paymentBoxHeight, 'F');
   pdf.setFillColor(107, 114, 128);
@@ -151,10 +151,19 @@ async function drawInvoicePdf(
   setPdfText(pdf, 10, 'normal', margin + 16, paymentBoxTop + 78, `Please include invoice number ${invoice.invoice_number} with your payment.`);
   pdf.setDrawColor(209, 213, 219);
   pdf.line(margin + 16, paymentBoxTop + 88, right - 16, paymentBoxTop + 88);
-  setPdfText(pdf, 10, 'bold', margin + 16, paymentBoxTop + 106, 'Remit Check Payments To:');
-  setPdfText(pdf, 10, 'normal', margin + 176, paymentBoxTop + 106, 'The HESS Consortium');
-  setPdfText(pdf, 10, 'normal', margin + 176, paymentBoxTop + 121, '952 Winchester Rd #1051');
-  setPdfText(pdf, 10, 'normal', margin + 340, paymentBoxTop + 121, 'Lexington, KY 40505');
+  // Two-column remit info: left = check, right = ACH
+  const colLeftX = margin + 16;
+  const colRightX = margin + contentWidth / 2 + 8;
+  pdf.line(margin + contentWidth / 2, paymentBoxTop + 92, margin + contentWidth / 2, paymentBoxTop + paymentBoxHeight - 8);
+  setPdfText(pdf, 10, 'bold', colLeftX, paymentBoxTop + 106, 'Remit Check Payments To:');
+  setPdfText(pdf, 10, 'normal', colLeftX, paymentBoxTop + 121, 'The HESS Consortium');
+  setPdfText(pdf, 10, 'normal', colLeftX, paymentBoxTop + 134, '952 Winchester Rd #1051');
+  setPdfText(pdf, 10, 'normal', colLeftX, paymentBoxTop + 147, 'Lexington, KY 40505');
+  setPdfText(pdf, 10, 'bold', colRightX, paymentBoxTop + 106, 'HESS ACH Payment Information:');
+  setPdfText(pdf, 10, 'bold', colRightX, paymentBoxTop + 121, 'Account number:');
+  setPdfText(pdf, 10, 'normal', colRightX + 100, paymentBoxTop + 121, '837993307');
+  setPdfText(pdf, 10, 'bold', colRightX, paymentBoxTop + 134, 'Routing number:');
+  setPdfText(pdf, 10, 'normal', colRightX + 100, paymentBoxTop + 134, '083000137');
 
   const footerTop = 692;
   setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop, 'Questions about your invoice?', { align: 'center', color: [96, 96, 96] });

@@ -130,12 +130,21 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
       <p style="margin: 2px 0; font-size: 13px;"><strong>Payment Terms:</strong> Net 30 days</p>
       <p style="margin: 2px 0; font-size: 13px;"><strong>Due Date:</strong> ${due}</p>
       <p style="margin: 2px 0; font-size: 13px;">Please include invoice number ${invoiceNumber} with your payment.</p>
-      <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #d1d5db;">
-        <p style="margin: 0 0 2px 0; font-size: 13px; font-weight: bold;">Remit Check Payments To:</p>
-        <p style="margin: 1px 0; font-size: 13px;">The HESS Consortium</p>
-        <p style="margin: 1px 0; font-size: 13px;">952 Winchester Rd #1051</p>
-        <p style="margin: 1px 0; font-size: 13px;">Lexington, KY 40505</p>
-      </div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 10px; padding-top: 8px; border-top: 1px solid #d1d5db;">
+        <tr>
+          <td style="vertical-align: top; width: 50%; padding-right: 12px;">
+            <p style="margin: 0 0 2px 0; font-size: 13px; font-weight: bold;">Remit Check Payments To:</p>
+            <p style="margin: 1px 0; font-size: 13px;">The HESS Consortium</p>
+            <p style="margin: 1px 0; font-size: 13px;">952 Winchester Rd #1051</p>
+            <p style="margin: 1px 0; font-size: 13px;">Lexington, KY 40505</p>
+          </td>
+          <td style="vertical-align: top; width: 50%; padding-left: 12px; border-left: 1px solid #d1d5db;">
+            <p style="margin: 0 0 2px 0; font-size: 13px; font-weight: bold;">HESS ACH Payment Information:</p>
+            <p style="margin: 1px 0; font-size: 13px;"><strong>Account number:</strong> 837993307</p>
+            <p style="margin: 1px 0; font-size: 13px;"><strong>Routing number:</strong> 083000137</p>
+          </td>
+        </tr>
+      </table>
       ${invoiceId ? `
       <p style="text-align: center; margin: 12px 0 6px 0; font-size: 14px; font-weight: bold; color: #333;">OR</p>
       <div style="text-align: center; margin: 0 0 2px 0;">
