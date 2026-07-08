@@ -29,6 +29,21 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
   const [downloading, setDownloading] = useState(false);
   const [forwardOpen, setForwardOpen] = useState(false);
   const [forwardEmail, setForwardEmail] = useState('');
+  const [forwardComment, setForwardComment] = useState('');
+
+  // Persist the forwarding comment across invoices/organizations for the session.
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('forward-invoice-comment');
+      if (stored) setForwardComment(stored);
+    } catch { /* ignore */ }
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem('forward-invoice-comment', forwardComment);
+    } catch { /* ignore */ }
+  }, [forwardComment]);
+
 
   const { data: termEndSetting } = useSystemSetting('default_term_end_date');
   const { data: registrationCodeData } = useConferenceRegistrationCode(invoice?.organization_id);
