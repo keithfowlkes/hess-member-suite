@@ -1,15 +1,19 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { Invoice } from '@/hooks/useInvoices';
 import { PayInvoiceButton } from '@/components/PayInvoiceButton';
 import { Button } from '@/components/ui/button';
-import { Printer, Download, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Printer, Download, Loader2, Forward } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
+import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
+import { useResendInvoice } from '@/hooks/useResendInvoice';
 import liberationSansRegularUrl from '@/assets/fonts/LiberationSans-Regular.ttf?url';
 import liberationSansBoldUrl from '@/assets/fonts/LiberationSans-Bold.ttf?url';
 
@@ -22,9 +26,20 @@ interface MemberInvoiceViewModalProps {
 export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberInvoiceViewModalProps) {
   const invoiceRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
+  const [forwardOpen, setForwardOpen] = useState(false);
+  const [forwardEmail, setForwardEmail] = useState('');
 
   const { data: termEndSetting } = useSystemSetting('default_term_end_date');
   const { data: registrationCodeData } = useConferenceRegistrationCode(invoice?.organization_id);
+  const { data: unifiedProfile } = useUnifiedProfile();
+  const resendInvoice = useResendInvoice();
+
+  const isPrimaryContactForInvoice = Boolean(
+    invoice &&
+      unifiedProfile?.organization &&
+      unifiedProfile.organization.id === invoice.organization_id &&
+      unifiedProfile.organization.contact_person_id === unifiedProfile.profile?.id,
+  );
 
   const displayInvoice = useMemo(() => {
     if (!invoice) return null;
@@ -117,6 +132,19 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
                 <Printer className="h-4 w-4 mr-2" />
                 Print
               </Button>
+              {isPrimaryContactForInvoice && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setForwardEmail('');
+                    setForwardOpen(true);
+                  }}
+                >
+                  <Forward className="h-4 w-4 mr-2" />
+                  Forward
+                </Button>
+              )}
               {isUnpaid && <PayInvoiceButton invoiceId={displayInvoice.id} size="sm" label="Pay online" />}
             </div>
           </div>
@@ -128,6 +156,54 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
           </div>
         </div>
       </DialogContent>
+
+      <Dialog open={forwardOpen} onOpenChange={setForwardOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Forward invoice</DialogTitle>
+            <DialogDescription>
+              Send a copy of invoice {displayInvoice.invoice_number} to another email address (e.g. your business office).
+              The invoice on file is not changed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="forward-email">Recipient email</Label>
+            <Input
+              id="forward-email"
+              type="email"
+              placeholder="name@example.com"
+              value={forwardEmail}
+              onChange={(e) => setForwardEmail(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setForwardOpen(false)} disabled={resendInvoice.isPending}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                const email = forwardEmail.trim();
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+                resendInvoice.mutate(
+                  { invoiceId: displayInvoice.id, overrideEmail: email },
+                  { onSuccess: () => setForwardOpen(false) },
+                );
+              }}
+              disabled={resendInvoice.isPending || !forwardEmail.trim()}
+            >
+              {resendInvoice.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending…
+                </>
+              ) : (
+                'Send'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
