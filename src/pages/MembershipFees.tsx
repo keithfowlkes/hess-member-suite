@@ -942,6 +942,38 @@ export default function MembershipFees() {
     resendInvoice.mutate({ invoiceId });
   };
 
+  // Send invoice to an alternate email address (does not change the invoice recipient on file)
+  const [altEmailInvoice, setAltEmailInvoice] = useState<{ id: string; organizationName?: string; defaultEmail?: string } | null>(null);
+  const [altEmail, setAltEmail] = useState('');
+  const openSendToDialog = (invoice: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAltEmailInvoice({
+      id: invoice.id,
+      organizationName: invoice.organizations?.name,
+      defaultEmail: invoice.organizations?.email,
+    });
+    setAltEmail('');
+  };
+  const submitSendToAltEmail = async () => {
+    const email = altEmail.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({
+        title: 'Invalid email',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!altEmailInvoice) return;
+    try {
+      await resendInvoice.mutateAsync({ invoiceId: altEmailInvoice.id, overrideEmail: email });
+      setAltEmailInvoice(null);
+      setAltEmail('');
+    } catch {
+      // toast handled inside the hook
+    }
+  };
+
   const handleDeleteInvoice = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
