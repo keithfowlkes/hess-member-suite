@@ -1,10 +1,11 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { Invoice } from '@/hooks/useInvoices';
 import { PayInvoiceButton } from '@/components/PayInvoiceButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Printer, Download, Loader2, Forward } from 'lucide-react';
 import jsPDF from 'jspdf';
