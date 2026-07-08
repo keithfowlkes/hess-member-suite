@@ -26,9 +26,20 @@ interface MemberInvoiceViewModalProps {
 export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberInvoiceViewModalProps) {
   const invoiceRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
+  const [forwardOpen, setForwardOpen] = useState(false);
+  const [forwardEmail, setForwardEmail] = useState('');
 
   const { data: termEndSetting } = useSystemSetting('default_term_end_date');
   const { data: registrationCodeData } = useConferenceRegistrationCode(invoice?.organization_id);
+  const { data: unifiedProfile } = useUnifiedProfile();
+  const resendInvoice = useResendInvoice();
+
+  const isPrimaryContactForInvoice = Boolean(
+    invoice &&
+      unifiedProfile?.organization &&
+      unifiedProfile.organization.id === invoice.organization_id &&
+      unifiedProfile.organization.contact_person_id === unifiedProfile.profile?.id,
+  );
 
   const displayInvoice = useMemo(() => {
     if (!invoice) return null;
