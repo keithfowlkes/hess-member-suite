@@ -80,6 +80,20 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
   const resendInvoice = useResendInvoice();
   const [forwardOpen, setForwardOpen] = useState(false);
   const [forwardEmail, setForwardEmail] = useState('');
+  const [forwardComment, setForwardComment] = useState('');
+
+  // Persist the forwarding comment across invoices/organizations for the admin session.
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('forward-invoice-comment');
+      if (stored) setForwardComment(stored);
+    } catch { /* ignore */ }
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem('forward-invoice-comment', forwardComment);
+    } catch { /* ignore */ }
+  }, [forwardComment]);
 
   // Function to download invoice as PDF
   const downloadPDF = async () => {
