@@ -77,6 +77,9 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
   const { isAdmin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const resendInvoice = useResendInvoice();
+  const [forwardOpen, setForwardOpen] = useState(false);
+  const [forwardEmail, setForwardEmail] = useState('');
 
   // Function to download invoice as PDF
   const downloadPDF = async () => {
