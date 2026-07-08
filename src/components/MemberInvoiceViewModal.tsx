@@ -132,6 +132,19 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
                 <Printer className="h-4 w-4 mr-2" />
                 Print
               </Button>
+              {isPrimaryContactForInvoice && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setForwardEmail('');
+                    setForwardOpen(true);
+                  }}
+                >
+                  <Forward className="h-4 w-4 mr-2" />
+                  Forward
+                </Button>
+              )}
               {isUnpaid && <PayInvoiceButton invoiceId={displayInvoice.id} size="sm" label="Pay online" />}
             </div>
           </div>
@@ -143,6 +156,54 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
           </div>
         </div>
       </DialogContent>
+
+      <Dialog open={forwardOpen} onOpenChange={setForwardOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Forward invoice</DialogTitle>
+            <DialogDescription>
+              Send a copy of invoice {displayInvoice.invoice_number} to another email address (e.g. your business office).
+              The invoice on file is not changed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="forward-email">Recipient email</Label>
+            <Input
+              id="forward-email"
+              type="email"
+              placeholder="name@example.com"
+              value={forwardEmail}
+              onChange={(e) => setForwardEmail(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setForwardOpen(false)} disabled={resendInvoice.isPending}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                const email = forwardEmail.trim();
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+                resendInvoice.mutate(
+                  { invoiceId: displayInvoice.id, overrideEmail: email },
+                  { onSuccess: () => setForwardOpen(false) },
+                );
+              }}
+              disabled={resendInvoice.isPending || !forwardEmail.trim()}
+            >
+              {resendInvoice.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending…
+                </>
+              ) : (
+                'Send'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
