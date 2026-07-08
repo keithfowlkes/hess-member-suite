@@ -12,6 +12,16 @@ interface InvoiceEmailData {
   notes?: string;
   registration_code?: string;
   conference_label?: string;
+  forward_comment?: string;
+}
+
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
