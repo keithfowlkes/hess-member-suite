@@ -116,6 +116,23 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
         <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #555;">
           The amount shown includes the Stripe credit-card processing fee. Pay-by-check remits the same amount.
         </p>
+        <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #d1d5db;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+            <tr>
+              <td style="vertical-align: top; width: 50%; padding-right: 12px;">
+                <p style="margin: 0 0 0.25rem 0; font-size: 0.9rem; font-weight: bold;">Remit Check Payments To:</p>
+                <p style="margin: 0.1rem 0; font-size: 0.9rem;">The HESS Consortium</p>
+                <p style="margin: 0.1rem 0; font-size: 0.9rem;">952 Winchester Rd #1051</p>
+                <p style="margin: 0.1rem 0; font-size: 0.9rem;">Lexington, KY 40505</p>
+              </td>
+              <td style="vertical-align: top; width: 50%; padding-left: 12px; border-left: 1px solid #d1d5db;">
+                <p style="margin: 0 0 0.25rem 0; font-size: 0.9rem; font-weight: bold;">HESS ACH Payment Information:</p>
+                <p style="margin: 0.1rem 0; font-size: 0.9rem;"><strong>Account number:</strong> 837993307</p>
+                <p style="margin: 0.1rem 0; font-size: 0.9rem;"><strong>Routing number:</strong> 083000137</p>
+              </td>
+            </tr>
+          </table>
+        </div>
         ${data.invoice_id ? `
         <div style="text-align: center; margin: 1.25rem 0 0.5rem 0;">
           <a href="https://members.hessconsortium.app/?invoice=${data.invoice_id}"
