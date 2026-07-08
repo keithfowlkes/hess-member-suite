@@ -11,6 +11,11 @@ export interface ResendInvoiceParams {
    * record itself is not modified.
    */
   overrideEmail?: string;
+  /**
+   * Optional personal message rendered as a highlighted block at the top of
+   * the forwarded invoice email.
+   */
+  forwardComment?: string;
 }
 
 export const useResendInvoice = () => {
