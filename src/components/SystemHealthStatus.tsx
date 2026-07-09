@@ -70,7 +70,48 @@ export function SystemHealthStatus() {
   const [overallStatus, setOverallStatus] = useState<'healthy' | 'warning' | 'error' | 'checking'>('checking');
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [retryingAll, setRetryingAll] = useState(false);
+  const [retryAllSummary, setRetryAllSummary] = useState<{ total: number; succeeded: number; failed: number; details: { code: string; org: string; ok: boolean; message: string }[] } | null>(null);
   const { toast } = useToast();
+
+  const retryAllConferenceHubDeliveries = async (errors: ConferenceHubError[]) => {
+    setRetryingAll(true);
+    setRetryAllSummary(null);
+    const details: { code: string; org: string; ok: boolean; message: string }[] = [];
+    let succeeded = 0;
+    let failed = 0;
+    for (const err of errors) {
+      if (!err.organization_id) {
+        failed++;
+        details.push({ code: err.code, org: err.organization_name || 'Unknown', ok: false, message: 'Missing organization id' });
+        continue;
+      }
+      try {
+        const { data, error } = await supabase.functions.invoke('issue-conference-registration-code', {
+          body: { organization_id: err.organization_id, conference_slug: 'hess2026' },
+        });
+        if (error) throw error;
+        if (data?.delivered) {
+          succeeded++;
+          details.push({ code: data.code || err.code, org: err.organization_name || 'Unknown', ok: true, message: 'Delivered successfully' });
+        } else {
+          failed++;
+          details.push({ code: err.code, org: err.organization_name || 'Unknown', ok: false, message: data?.error || data?.reason || 'Delivery did not succeed' });
+        }
+      } catch (e: any) {
+        failed++;
+        details.push({ code: err.code, org: err.organization_name || 'Unknown', ok: false, message: e.message || 'Unknown error' });
+      }
+    }
+    setRetryAllSummary({ total: errors.length, succeeded, failed, details });
+    toast({
+      title: `Retry complete: ${succeeded}/${errors.length} delivered`,
+      description: failed > 0 ? `${failed} still failing. See details below.` : 'All errors resolved.',
+      variant: failed > 0 ? 'destructive' : 'default',
+    });
+    setRetryingAll(false);
+    await runHealthChecks();
+  };
 
   const retryConferenceHubDelivery = async (err: ConferenceHubError) => {
     if (!err.organization_id) {
