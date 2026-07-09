@@ -174,7 +174,7 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
                   Forward
                 </Button>
               )}
-              {isUnpaid && <PayInvoiceButton invoiceId={displayInvoice.id} size="sm" label="Pay online" />}
+              {isUnpaid && paymentMode === 'card' && <PayInvoiceButton invoiceId={displayInvoice.id} size="sm" label="Pay online" />}
             </div>
           </div>
         </DialogHeader>
