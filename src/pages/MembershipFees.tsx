@@ -61,6 +61,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { ScheduledEmailBatches } from '@/components/membership-fees/ScheduledEmailBatches';
+import { getCurrentInvoicePeriod, parseInvoiceDate, toInvoiceDateString } from '@/utils/invoicePeriod';
 
 interface FeesStats {
   totalOrganizations: number;
@@ -125,8 +126,9 @@ export default function MembershipFees() {
   const [pendingModalOpen, setPendingModalOpen] = useState(false);
 
   // Prorated fee states
-  const [defaultTermEndDate, setDefaultTermEndDate] = useState<Date>(new Date(new Date().getFullYear(), 11, 31)); // Dec 31st by default
-  const [standardRenewalDate, setStandardRenewalDate] = useState<Date>(new Date(new Date().getFullYear(), 11, 31)); // Dec 31st by default
+  const initialInvoicePeriod = getCurrentInvoicePeriod();
+  const [defaultTermEndDate, setDefaultTermEndDate] = useState<Date>(initialInvoicePeriod.startDate);
+  const [standardRenewalDate, setStandardRenewalDate] = useState<Date>(initialInvoicePeriod.startDate);
   const [proratedOrganizations, setProratedOrganizations] = useState<any[]>([]);
   const [updatingProrated, setUpdatingProrated] = useState<Set<string>>(new Set());
   const [prorationEnabled, setProrationEnabled] = useState(true);
@@ -215,7 +217,7 @@ export default function MembershipFees() {
         }
       }
       if (defaultTermEnd) {
-        const termEndDate = new Date(defaultTermEnd);
+        const termEndDate = parseInvoiceDate(defaultTermEnd) || new Date(defaultTermEnd);
         setDefaultTermEndDate(termEndDate);
         setStandardRenewalDate(termEndDate);
       }
@@ -228,10 +230,7 @@ export default function MembershipFees() {
     const dueDate = new Date();
     dueDate.setDate(today.getDate() + 30);
     
-    // Period starts on the configured default term end date and runs for 1 year
-    const periodStart = new Date(defaultTermEndDate);
-    const periodEnd = new Date(defaultTermEndDate);
-    periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+    const invoicePeriod = getCurrentInvoicePeriod(defaultTermEndDate);
 
     // Get prorated amount for this organization from the interface
     const proratedAmount = getProratedAmount(organization.id);
@@ -248,8 +247,8 @@ export default function MembershipFees() {
       prorated_amount: proratedAmount, // Include prorated amount for preview
       invoice_date: format(today, 'yyyy-MM-dd'),
       due_date: format(dueDate, 'yyyy-MM-dd'),
-      period_start_date: format(periodStart, 'yyyy-MM-dd'),
-      period_end_date: format(periodEnd, 'yyyy-MM-dd'),
+      period_start_date: invoicePeriod.start,
+      period_end_date: invoicePeriod.end,
       status: 'draft' as const,
       notes: proratedAmount 
         ? `Prorated membership fee for ${organization.name} (${Math.round((proratedAmount / (tierAmount || organization.annual_fee_amount || 1000)) * 100)}% of annual fee)`
@@ -569,7 +568,7 @@ export default function MembershipFees() {
     try {
       await updateSystemSetting.mutateAsync({
         settingKey: 'default_term_end_date',
-        settingValue: defaultTermEndDate.toISOString(),
+        settingValue: toInvoiceDateString(defaultTermEndDate),
         description: 'Default membership term end date for billing calculations'
       });
       
@@ -765,10 +764,7 @@ export default function MembershipFees() {
         const dueDate = new Date();
         dueDate.setDate(today.getDate() + 30); // 30 days from now
 
-        // Period starts on the configured default term end date and runs for 1 year
-        const periodStart = new Date(defaultTermEndDate);
-        const periodEnd = new Date(defaultTermEndDate);
-        periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+        const invoicePeriod = getCurrentInvoicePeriod(defaultTermEndDate);
 
         let successCount = 0;
         let errorCount = 0;
@@ -792,8 +788,8 @@ export default function MembershipFees() {
               amount: invoiceAmount,
               prorated_amount: proratedAmount,
               due_date: format(dueDate, 'yyyy-MM-dd'),
-              period_start_date: format(periodStart, 'yyyy-MM-dd'),
-              period_end_date: format(periodEnd, 'yyyy-MM-dd'),
+              period_start_date: invoicePeriod.start,
+              period_end_date: invoicePeriod.end,
               notes: proratedAmount 
                 ? `Prorated membership fee for ${organization.name} (${Math.round((proratedAmount / (organization.annual_fee_amount || 1000)) * 100)}% of annual fee)`
                 : `Annual membership fee for ${organization.name}`
@@ -813,8 +809,8 @@ export default function MembershipFees() {
                 amount: `$${(invoiceAmount || 0).toLocaleString()}`,
                 prorated_amount: proratedAmount ? `$${proratedAmount.toLocaleString()}` : undefined,
                 due_date: format(dueDate, 'yyyy-MM-dd'),
-                period_start_date: format(periodStart, 'yyyy-MM-dd'),
-                period_end_date: format(periodEnd, 'yyyy-MM-dd'),
+                period_start_date: invoicePeriod.start,
+                period_end_date: invoicePeriod.end,
                 notes: newInvoice?.notes || ''
               };
 
@@ -2212,6 +2208,7 @@ export default function MembershipFees() {
                             const failures: string[] = [];
                             const nowIso = new Date().toISOString();
                             const today = nowIso.slice(0, 10);
+                            const invoicePeriod = getCurrentInvoicePeriod(defaultTermEndDate);
 
                             const BATCH_SIZE = 10;
 
@@ -2241,8 +2238,8 @@ export default function MembershipFees() {
                                   amount,
                                   invoice_date: today,
                                   due_date: today,
-                                  period_start_date: today,
-                                  period_end_date: today,
+                                  period_start_date: invoicePeriod.start,
+                                  period_end_date: invoicePeriod.end,
                                   status: 'paid' as const,
                                   paid_date: nowIso,
                                   payment_source: 'external_gateway',

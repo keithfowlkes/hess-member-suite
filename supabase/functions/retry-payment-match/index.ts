@@ -8,6 +8,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const CURRENT_INVOICE_PERIOD_START = "2026-07-30";
+const CURRENT_INVOICE_PERIOD_END = "2027-07-30";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -136,7 +139,6 @@ serve(async (req) => {
       }).eq("id", invoice.id);
       matchedInvoiceId = invoice.id;
     } else if (stripeRef) {
-      const year = new Date(paidAtIso).getUTCFullYear();
       const { data: created } = await admin
         .from("invoices")
         .upsert(
@@ -148,8 +150,8 @@ serve(async (req) => {
             invoice_date: paidAtIso.slice(0, 10),
             due_date: paidAtIso.slice(0, 10),
             paid_date: paidAtIso,
-            period_start_date: `${year}-01-01`,
-            period_end_date: `${year}-12-31`,
+            period_start_date: CURRENT_INVOICE_PERIOD_START,
+            period_end_date: CURRENT_INVOICE_PERIOD_END,
             payment_source: "medius-events",
             external_reference: stripeRef,
             notes: `Re-matched from Medius Events webhook`,

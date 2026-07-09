@@ -1,4 +1,3 @@
-import { format } from 'date-fns';
 import hessW9Asset from '@/assets/HESS_W9.pdf.asset.json';
 import { useMemo } from 'react';
 import { useInvoiceTemplates } from '@/hooks/useInvoiceTemplates';
@@ -6,6 +5,7 @@ import { Invoice } from '@/hooks/useInvoices';
 import { formatCurrency } from '@/lib/utils';
 import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
 import { useSystemSetting } from '@/hooks/useSystemSettings';
+import { applyCurrentInvoicePeriod, formatInvoiceDate } from '@/utils/invoicePeriod';
 
 interface ProfessionalInvoiceProps {
   invoice: Invoice;
@@ -34,23 +34,11 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
     n == null ? n : Math.max(0, Number(n) - (isAch ? stripeFee : 0));
 
 
-  // For non-paid invoices, override the displayed period to reflect the
-  // currently configured term end date (one-year window ending on that date).
-  // Paid invoices keep their stored historical period.
+  // The current HESS billing period starts on the configured membership term
+  // date and runs one year forward.
   const invoice = useMemo(() => {
     if (!rawInvoice) return rawInvoice;
-    if (rawInvoice.status === 'paid') return rawInvoice;
-    const termEndRaw = termEndSetting?.setting_value;
-    if (!termEndRaw) return rawInvoice;
-    const match = String(termEndRaw).match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (!match) return rawInvoice;
-    const endYear = parseInt(match[1], 10);
-    const monthDay = `${match[2]}-${match[3]}`;
-    return {
-      ...rawInvoice,
-      period_start_date: `${endYear - 1}-${monthDay}`,
-      period_end_date: `${endYear}-${monthDay}`,
-    };
+    return applyCurrentInvoicePeriod(rawInvoice, termEndSetting?.setting_value);
   }, [rawInvoice, termEndSetting?.setting_value]);
 
   const fallbackTemplate = {
@@ -69,16 +57,16 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
   const templateData = {
     '{{LOGO}}': activeTemplate.logo_url ? `<img src="${activeTemplate.logo_url}" alt="Logo" style="max-height: 80px;" />` : '',
     '{{INVOICE_NUMBER}}': invoice.invoice_number,
-    '{{INVOICE_DATE}}': format(new Date(invoice.invoice_date), 'MMM dd, yyyy'),
-    '{{DUE_DATE}}': format(new Date(invoice.due_date), 'MMM dd, yyyy'),
+    '{{INVOICE_DATE}}': formatInvoiceDate(invoice.invoice_date),
+    '{{DUE_DATE}}': formatInvoiceDate(invoice.due_date),
     '{{ORGANIZATION_NAME}}': invoice.organizations?.name || '',
     '{{ORGANIZATION_ADDRESS}}': getOrganizationAddress(invoice),
     '{{ORGANIZATION_EMAIL}}': invoice.organizations?.email || '',
     '{{ORGANIZATION_PHONE}}': '', // Add phone field to organizations if needed
     '{{AMOUNT}}': formatCurrency(invoice.amount),
     '{{PRORATED_AMOUNT}}': invoice.prorated_amount ? formatCurrency(invoice.prorated_amount) : '',
-    '{{PERIOD_START}}': format(new Date(invoice.period_start_date), 'MMM dd, yyyy'),
-    '{{PERIOD_END}}': format(new Date(invoice.period_end_date), 'MMM dd, yyyy'),
+    '{{PERIOD_START}}': formatInvoiceDate(invoice.period_start_date),
+    '{{PERIOD_END}}': formatInvoiceDate(invoice.period_end_date),
     '{{PAYMENT_TERMS}}': '30',
     '{{CONTACT_EMAIL}}': 'billing@hessconsortium.org',
     '{{NOTES}}': invoice.notes || ''
@@ -284,7 +272,7 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
           Paid
           {invoice.paid_date && (
             <div style={{ fontSize: '0.75rem', letterSpacing: '1px', fontWeight: 600, textAlign: 'center', marginTop: '4px' }}>
-              {format(new Date(invoice.paid_date), 'MMM dd, yyyy')}
+              {formatInvoiceDate(invoice.paid_date)}
             </div>
           )}
         </div>
@@ -324,9 +312,9 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
         </div>
         <div className="detail-section">
           <h3>Invoice Details:</h3>
-          <p><strong>Invoice Date:</strong> {format(new Date(invoice.invoice_date), 'MMM dd, yyyy')}</p>
-          <p><strong>Due Date:</strong> {format(new Date(invoice.due_date), 'MMM dd, yyyy')}</p>
-          <p><strong>Period:</strong> {format(new Date(invoice.period_start_date), 'MMM dd, yyyy')} - {format(new Date(invoice.period_end_date), 'MMM dd, yyyy')}</p>
+          <p><strong>Invoice Date:</strong> {formatInvoiceDate(invoice.invoice_date)}</p>
+          <p><strong>Due Date:</strong> {formatInvoiceDate(invoice.due_date)}</p>
+          <p><strong>Period:</strong> {formatInvoiceDate(invoice.period_start_date)} - {formatInvoiceDate(invoice.period_end_date)}</p>
         </div>
       </div>
 
@@ -353,7 +341,7 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
               )}
             </td>
             <td>
-              {format(new Date(invoice.period_start_date), 'MMM dd, yyyy')} - {format(new Date(invoice.period_end_date), 'MMM dd, yyyy')}
+              {formatInvoiceDate(invoice.period_start_date)} - {formatInvoiceDate(invoice.period_end_date)}
             </td>
             <td className="amount-cell">
               {invoice.prorated_amount ? (
@@ -392,7 +380,7 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
       <div className="payment-info">
         <h3>Payment Information</h3>
         <p><strong>Payment Terms:</strong> Net 30 days</p>
-        <p><strong>Due Date:</strong> {format(new Date(invoice.due_date), 'MMM dd, yyyy')}</p>
+        <p><strong>Due Date:</strong> {formatInvoiceDate(invoice.due_date)}</p>
         <p>Please include invoice number {invoice.invoice_number} with your payment.</p>
         <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #d1d5db', display: 'flex', gap: '1rem' }}>
           <div style={{ flex: 1 }}>

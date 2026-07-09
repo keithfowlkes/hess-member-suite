@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Printer, Download, Loader2, Forward } from 'lucide-react';
 import jsPDF from 'jspdf';
-import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
@@ -17,6 +16,7 @@ import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useResendInvoice } from '@/hooks/useResendInvoice';
 import liberationSansRegularUrl from '@/assets/fonts/LiberationSans-Regular.ttf?url';
 import liberationSansBoldUrl from '@/assets/fonts/LiberationSans-Bold.ttf?url';
+import { applyCurrentInvoicePeriod, formatInvoiceDate } from '@/utils/invoicePeriod';
 
 interface MemberInvoiceViewModalProps {
   open: boolean;
@@ -70,21 +70,7 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
 
   const displayInvoice = useMemo(() => {
     if (!invoice) return null;
-    if (invoice.status === 'paid') return invoice;
-
-    const termEndRaw = termEndSetting?.setting_value;
-    if (!termEndRaw) return invoice;
-
-    const match = String(termEndRaw).match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (!match) return invoice;
-
-    const endYear = parseInt(match[1], 10);
-    const monthDay = `${match[2]}-${match[3]}`;
-    return {
-      ...invoice,
-      period_start_date: `${endYear - 1}-${monthDay}`,
-      period_end_date: `${endYear}-${monthDay}`,
-    };
+    return applyCurrentInvoicePeriod(invoice, termEndSetting?.setting_value);
   }, [invoice, termEndSetting?.setting_value]);
 
   if (!displayInvoice) return null;
@@ -506,9 +492,7 @@ async function fetchFontAsBase64(url: string) {
 }
 
 function safeFormat(value: string | undefined, pattern: string) {
-  if (!value) return '';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : format(parsed, pattern);
+  return formatInvoiceDate(value, pattern);
 }
 
 async function imageToPdfData(src: string): Promise<{ dataUrl: string; width: number; height: number; format: 'PNG' | 'JPEG' } | null> {

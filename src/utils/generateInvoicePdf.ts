@@ -1,9 +1,9 @@
 import jsPDF from 'jspdf';
-import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import { Invoice } from '@/hooks/useInvoices';
 import liberationSansRegularUrl from '@/assets/fonts/LiberationSans-Regular.ttf?url';
 import liberationSansBoldUrl from '@/assets/fonts/LiberationSans-Bold.ttf?url';
+import { formatInvoiceDate } from '@/utils/invoicePeriod';
 
 const INVOICE_PDF_FONT_FAMILY = 'LiberationSans';
 let activeInvoicePdfFontFamily = 'helvetica';
@@ -273,9 +273,7 @@ async function fetchFontAsBase64(url: string) {
 }
 
 function safeFormat(value: string | undefined, pattern: string) {
-  if (!value) return '';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : format(parsed, pattern);
+  return formatInvoiceDate(value, pattern);
 }
 
 async function imageToPdfData(src: string): Promise<{ dataUrl: string; width: number; height: number; format: 'PNG' | 'JPEG' } | null> {

@@ -44,6 +44,7 @@ import {
 import { cn } from '@/lib/utils';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
+import { getCurrentInvoicePeriod, parseInvoiceDate, toInvoiceDateString } from '@/utils/invoicePeriod';
 
 
 const invoiceSchema = z.object({
@@ -92,7 +93,9 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
     try { localStorage.setItem('invoice-view-mode', paymentMode); } catch { /* ignore */ }
   }, [paymentMode]);
   const { data: stripeFeeSetting } = useSystemSetting('stripe_processing_fee');
+  const { data: termStartSetting } = useSystemSetting('default_term_end_date');
   const stripeFee = Math.max(0, parseFloat(stripeFeeSetting?.setting_value || '9.27') || 0);
+  const currentInvoicePeriod = getCurrentInvoicePeriod(termStartSetting?.setting_value);
 
   // Persist the forwarding comment across invoices/organizations for the admin session.
   useEffect(() => {
@@ -170,15 +173,13 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
         organization_id: invoice.organization_id,
         amount: invoice.amount,
         prorated_amount: invoice.prorated_amount || undefined,
-        due_date: new Date(invoice.due_date),
-        period_start_date: new Date(invoice.period_start_date),
-        period_end_date: new Date(invoice.period_end_date),
+        due_date: parseInvoiceDate(invoice.due_date) || new Date(invoice.due_date),
+        period_start_date: parseInvoiceDate(invoice.period_start_date) || new Date(invoice.period_start_date),
+        period_end_date: parseInvoiceDate(invoice.period_end_date) || new Date(invoice.period_end_date),
         notes: invoice.notes || '',
       });
     } else {
       const now = new Date();
-      const startOfYear = new Date(now.getFullYear(), 0, 1);
-      const endOfYear = new Date(now.getFullYear(), 11, 31);
       const dueDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
       form.reset({
@@ -186,12 +187,12 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
         amount: 1000,
         prorated_amount: undefined,
         due_date: dueDate,
-        period_start_date: startOfYear,
-        period_end_date: endOfYear,
+        period_start_date: currentInvoicePeriod.startDate,
+        period_end_date: currentInvoicePeriod.endDate,
         notes: '',
       });
     }
-  }, [invoice, form, bulkMode]);
+  }, [invoice, form, bulkMode, currentInvoicePeriod.start, currentInvoicePeriod.end]);
 
   const onSubmit = async (data: InvoiceFormData) => {
     setIsSubmitting(true);
@@ -200,8 +201,8 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
         const updateData = {
           ...data,
           due_date: data.due_date.toISOString().split('T')[0],
-          period_start_date: data.period_start_date.toISOString().split('T')[0],
-          period_end_date: data.period_end_date.toISOString().split('T')[0],
+          period_start_date: toInvoiceDateString(data.period_start_date),
+          period_end_date: toInvoiceDateString(data.period_end_date),
           notes: data.notes || null,
           prorated_amount: data.prorated_amount || null,
         };
@@ -211,8 +212,8 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
           const bulkData = {
             amount: data.amount,
             due_date: data.due_date.toISOString().split('T')[0],
-            period_start_date: data.period_start_date.toISOString().split('T')[0],
-            period_end_date: data.period_end_date.toISOString().split('T')[0],
+            period_start_date: toInvoiceDateString(data.period_start_date),
+            period_end_date: toInvoiceDateString(data.period_end_date),
             notes: data.notes || undefined,
           };
           await createBulkInvoices(bulkData);
@@ -222,8 +223,8 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
             amount: data.amount,
             prorated_amount: data.prorated_amount || undefined,
             due_date: data.due_date.toISOString().split('T')[0],
-            period_start_date: data.period_start_date.toISOString().split('T')[0],
-            period_end_date: data.period_end_date.toISOString().split('T')[0],
+            period_start_date: toInvoiceDateString(data.period_start_date),
+            period_end_date: toInvoiceDateString(data.period_end_date),
             notes: data.notes || undefined,
           };
           await createInvoice(createData);
