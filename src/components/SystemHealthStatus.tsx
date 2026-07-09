@@ -488,6 +488,15 @@ export function SystemHealthStatus() {
     }
   };
 
+  const warningCount = services.filter(s => s.status === 'warning').length;
+  const errorCount = services.filter(s => s.status === 'error').length;
+  const overallSummary =
+    overallStatus === 'healthy'
+      ? 'All monitored services are operational.'
+      : overallStatus === 'checking'
+        ? 'Running health checks...'
+        : `${errorCount} error${errorCount === 1 ? '' : 's'}, ${warningCount} warning${warningCount === 1 ? '' : 's'} across monitored services. See details below.`;
+
   return (
     <div className="space-y-4">
       {/* Overall System Health */}
@@ -498,13 +507,24 @@ export function SystemHealthStatus() {
           </div>
           <div>
             <h3 className="font-semibold text-foreground">System Health</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">{overallSummary}</p>
+            <p className="text-xs text-muted-foreground/80 mt-0.5">
               {lastChecked ? `Last checked: ${lastChecked.toLocaleTimeString()}` : 'Checking...'}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {getStatusBadge(overallStatus)}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={runHealthChecks}
+            disabled={overallStatus === 'checking'}
+            className="gap-1"
+          >
+            <RefreshCw className={`h-3 w-3 ${overallStatus === 'checking' ? 'animate-spin' : ''}`} />
+            Re-check
+          </Button>
         </div>
       </div>
 
@@ -515,9 +535,9 @@ export function SystemHealthStatus() {
           return (
             <div
               key={service.name}
-              className="flex items-center justify-between p-4 bg-card rounded-lg border border-border hover:shadow-md transition-shadow"
+              className="flex items-start justify-between p-4 bg-card rounded-lg border border-border hover:shadow-md transition-shadow"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3 flex-1">
                 <div className="p-2 bg-muted rounded-lg">
                   <IconComponent className="h-5 w-5 text-muted-foreground" />
                 </div>
@@ -530,7 +550,31 @@ export function SystemHealthStatus() {
                       <span className="text-xs text-muted-foreground">{service.latency}ms</span>
                     </div>
                   )}
-                  
+
+                  {/* Additional details (fingerprint / endpoint / config) */}
+                  {service.details && service.details.length > 0 && (
+                    <ul className="mt-2 text-xs text-muted-foreground space-y-0.5">
+                      {service.details.map((d, i) => (
+                        <li key={i} className="break-words">• {d}</li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Recommended remediation when status is not healthy */}
+                  {service.remediation && service.status !== 'healthy' && service.status !== 'checking' && (
+                    <div className="mt-2 p-2 rounded border border-yellow-300/60 bg-yellow-50 dark:border-yellow-800/60 dark:bg-yellow-950/20">
+                      <div className="flex items-center gap-1 text-xs font-medium text-yellow-800 dark:text-yellow-200">
+                        <Lightbulb className="h-3 w-3" />
+                        {service.remediation.title}
+                      </div>
+                      <ol className="mt-1 ml-4 list-decimal text-xs text-yellow-900/90 dark:text-yellow-100/90 space-y-0.5">
+                        {service.remediation.steps.map((step, i) => (
+                          <li key={i}>{step}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
                   {/* Show detailed configuration info for Resend */}
                   {service.name === 'Resend Email Service' && (
                     <div className="mt-2 text-xs space-y-1">
@@ -550,21 +594,36 @@ export function SystemHealthStatus() {
                         </AccordionTrigger>
                         <AccordionContent>
                           <ul className="space-y-2 mt-2">
-                            {service.errors.map((e, idx) => (
-                              <li key={idx} className="text-xs p-2 rounded border border-destructive/30 bg-destructive/5">
-                                <div className="flex justify-between gap-2">
-                                  <span className="font-medium">
-                                    {e.organization_name || 'Unknown org'} — <code>{e.code}</code>
-                                  </span>
-                                  <span className="text-muted-foreground whitespace-nowrap">
-                                    {new Date(e.created_at).toLocaleString()}
-                                  </span>
-                                </div>
-                                <div className="mt-1 text-destructive break-words">
-                                  {e.send_error || 'No error message recorded'}
-                                </div>
-                              </li>
-                            ))}
+                            {service.errors.map((e, idx) => {
+                              const rid = e.id ?? e.code;
+                              return (
+                                <li key={idx} className="text-xs p-2 rounded border border-destructive/30 bg-destructive/5">
+                                  <div className="flex justify-between gap-2">
+                                    <span className="font-medium">
+                                      {e.organization_name || 'Unknown org'} — <code>{e.code}</code>
+                                    </span>
+                                    <span className="text-muted-foreground whitespace-nowrap">
+                                      {new Date(e.created_at).toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <div className="mt-1 text-destructive break-words">
+                                    {e.send_error || 'No error message recorded'}
+                                  </div>
+                                  <div className="mt-2 flex justify-end">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 px-2 text-xs gap-1"
+                                      disabled={retryingId === rid || !e.organization_id}
+                                      onClick={() => retryConferenceHubDelivery(e)}
+                                    >
+                                      <RefreshCw className={`h-3 w-3 ${retryingId === rid ? 'animate-spin' : ''}`} />
+                                      Retry delivery
+                                    </Button>
+                                  </div>
+                                </li>
+                              );
+                            })}
                           </ul>
                         </AccordionContent>
                       </AccordionItem>
@@ -572,7 +631,7 @@ export function SystemHealthStatus() {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pt-1">
                 {getStatusIcon(service.status)}
               </div>
             </div>
