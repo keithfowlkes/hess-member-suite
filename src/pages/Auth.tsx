@@ -95,6 +95,7 @@ export default function Auth() {
     return stored ? parseInt(stored) : 0;
   });
   const [showUserNotFoundModal, setShowUserNotFoundModal] = useState(false);
+  const [loginErrorType, setLoginErrorType] = useState<'not_found' | 'password' | null>(null);
   const [showTooManyAttemptsModal, setShowTooManyAttemptsModal] = useState(false);
   const initialTab = React.useMemo(() => {
     try {
@@ -341,17 +342,58 @@ export default function Auth() {
     }
     
     setIsSubmitting(true);
+    setLoginErrorType(null);
     
+    // First determine whether the email is registered so we can show a specific message
+    let emailExists = false;
+    try {
+      const { data: existsData, error: existsError } = await supabase.rpc('email_exists', {
+        p_email: signInForm.email.trim().toLowerCase()
+      });
+      
+      if (!existsError) {
+        emailExists = !!existsData;
+      }
+    } catch (checkError) {
+      console.error('Error checking email existence:', checkError);
+    }
+    
+    // Email not registered — show account-not-found message immediately
+    if (!emailExists) {
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      localStorage.setItem('loginAttempts', newAttempts.toString());
+      
+      if (newAttempts >= 3) {
+        const lockoutTime = now + (15 * 60 * 1000);
+        setLockoutUntil(lockoutTime);
+        localStorage.setItem('lockoutUntil', lockoutTime.toString());
+        setShowTooManyAttemptsModal(true);
+      } else {
+        setLoginErrorType('not_found');
+        setShowUserNotFoundModal(true);
+      }
+      
+      if (recaptchaEnabled) {
+        signInCaptchaRef.current?.reset();
+        setSignInCaptcha(null);
+      }
+      
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Email exists — attempt sign-in; a failure here means the password was wrong
     const { error } = await signIn(signInForm.email, signInForm.password);
     
     if (error) {
-      const isUserNotFound = 
+      const isCredentialError = 
         error.message?.includes('Invalid login credentials') ||
         error.message?.includes('User not found') ||
         error.message?.includes('Email not confirmed') ||
         error.message?.includes('not found in the membership database');
       
-      if (isUserNotFound) {
+      if (isCredentialError) {
         const newAttempts = loginAttempts + 1;
         setLoginAttempts(newAttempts);
         localStorage.setItem('loginAttempts', newAttempts.toString());
@@ -363,6 +405,7 @@ export default function Auth() {
           localStorage.setItem('lockoutUntil', lockoutTime.toString());
           setShowTooManyAttemptsModal(true);
         } else {
+          setLoginErrorType('password');
           setShowUserNotFoundModal(true);
         }
       } else {
@@ -3352,19 +3395,29 @@ export default function Auth() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* User Not Found Modal */}
+      {/* User Not Found / Password Incorrect Modal */}
       <AlertDialog open={showUserNotFoundModal} onOpenChange={setShowUserNotFoundModal}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold text-center">
-              User Not Found
+              {loginErrorType === 'password' ? 'Password Incorrect' : 'Account Not Found'}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center pt-2">
-              This user is not found in our membership database.
+              {loginErrorType === 'password' ? (
+                <>
+                  The password you entered is incorrect for <strong>{signInForm.email}</strong>.
+                  <br /><br />
+                  Please try again, or use the "Forgot your password?" link to reset it.
+                </>
+              ) : (
+                <>
+                  The email address <strong>{signInForm.email}</strong> is not found in our membership database.
+                  <br /><br />
+                  If this is in error, please contact <strong>info@hessconsortium.org</strong>.
+                </>
+              )}
               <br /><br />
-              If this is in error, please contact <strong>info@hessconsortium.org</strong>.
-              <br /><br />
-              You have <strong>{3 - loginAttempts}</strong> attempts remaining.
+              You have <strong>{Math.max(0, 3 - loginAttempts)}</strong> attempts remaining.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
