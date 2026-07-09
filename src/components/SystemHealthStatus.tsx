@@ -103,87 +103,121 @@ export function SystemHealthStatus() {
 
   const checkResendHealth = async (): Promise<ServiceStatus> => {
     try {
-      // Use the same verification approach as the ResendApiConfig component
       const { data, error } = await supabase.functions.invoke('verify-email-config');
-      
+
       if (error) {
         return {
           name: 'Resend Email Service',
           status: 'error',
           message: 'Connection test failed',
-          icon: Mail
+          icon: Mail,
+          details: [error.message || 'verify-email-config did not respond'],
+          remediation: {
+            title: 'How to fix',
+            steps: [
+              'Confirm the verify-email-config edge function is deployed.',
+              'Check Supabase Edge Function logs for verify-email-config.',
+            ],
+          },
         };
       }
-      
+
       if (data?.success && data?.configuration) {
         const config = data.configuration;
-        
-        // Check for critical issues first
+        const details: string[] = [];
+        if (config.fromAddress) details.push(`From: ${config.fromAddress}`);
+        if (config.domain) details.push(`Domain: ${config.domain}`);
+        if (typeof config.hasApiKey === 'boolean') details.push(`API key: ${config.hasApiKey ? 'configured' : 'missing'}`);
+
         if (!config.hasApiKey) {
           return {
             name: 'Resend Email Service',
             status: 'error',
-            message: 'API key not configured',
-            icon: Mail
+            message: 'RESEND_API_KEY not configured',
+            icon: Mail,
+            details,
+            remediation: {
+              title: 'How to fix',
+              steps: ['Add the RESEND_API_KEY secret in Supabase Edge Function settings.'],
+            },
           };
         }
-        
+
         if (!config.hasFromAddress) {
           return {
             name: 'Resend Email Service',
             status: 'error',
-            message: 'From address not configured',
-            icon: Mail
+            message: 'RESEND_FROM (from address) not configured',
+            icon: Mail,
+            details,
+            remediation: {
+              title: 'How to fix',
+              steps: ['Add the RESEND_FROM secret with a verified sender email.'],
+            },
           };
         }
-        
-        // Check for warnings (domain verification issues)
+
         if (config.recommendations && config.recommendations.length > 0) {
-          // Check if it's just domain verification issues vs more serious problems
-          const hasApiErrors = config.recommendations.some((rec: string) => 
+          const hasApiErrors = config.recommendations.some((rec: string) =>
             rec.includes('API connection failed') || rec.includes('API error')
           );
-          
+
           if (hasApiErrors) {
             return {
               name: 'Resend Email Service',
               status: 'error',
-              message: 'API connection failed',
-              icon: Mail
+              message: 'Resend API connection failed',
+              icon: Mail,
+              details: [...details, ...config.recommendations],
+              remediation: {
+                title: 'How to fix',
+                steps: [
+                  'Verify the RESEND_API_KEY value in Resend dashboard.',
+                  'Rotate the key if it was revoked, then update the secret.',
+                ],
+              },
             };
           }
-          
+
           return {
             name: 'Resend Email Service',
             status: 'warning',
             message: 'Domain verification needed',
-            icon: Mail
+            icon: Mail,
+            details: [...details, ...config.recommendations],
+            remediation: {
+              title: 'How to fix',
+              steps: [
+                'Open Resend → Domains and complete the DNS verification records.',
+                'After DNS propagates, re-run this health check.',
+              ],
+            },
           };
         }
-        
-        // All good
+
         return {
           name: 'Resend Email Service',
           status: 'healthy',
           message: 'Service operational',
-          icon: Mail
+          icon: Mail,
+          details,
         };
       }
-      
-      // If we get here, something unexpected happened
+
       return {
         name: 'Resend Email Service',
         status: 'warning',
         message: 'Status verification incomplete',
-        icon: Mail
+        icon: Mail,
       };
-      
+
     } catch (err: any) {
       return {
         name: 'Resend Email Service',
         status: 'error',
         message: 'Health check failed',
-        icon: Mail
+        icon: Mail,
+        details: [err.message],
       };
     }
   };
