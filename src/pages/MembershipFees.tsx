@@ -228,8 +228,9 @@ export default function MembershipFees() {
     const dueDate = new Date();
     dueDate.setDate(today.getDate() + 30);
     
-    const periodStart = new Date();
-    const periodEnd = new Date();
+    // Period starts on the configured default term end date and runs for 1 year
+    const periodStart = new Date(defaultTermEndDate);
+    const periodEnd = new Date(defaultTermEndDate);
     periodEnd.setFullYear(periodEnd.getFullYear() + 1);
 
     // Get prorated amount for this organization from the interface
@@ -764,9 +765,10 @@ export default function MembershipFees() {
         const dueDate = new Date();
         dueDate.setDate(today.getDate() + 30); // 30 days from now
 
-        const periodStart = new Date();
-        const periodEnd = new Date();
-        periodEnd.setFullYear(periodEnd.getFullYear() + 1); // 1 year period
+        // Period starts on the configured default term end date and runs for 1 year
+        const periodStart = new Date(defaultTermEndDate);
+        const periodEnd = new Date(defaultTermEndDate);
+        periodEnd.setFullYear(periodEnd.getFullYear() + 1);
 
         let successCount = 0;
         let errorCount = 0;
