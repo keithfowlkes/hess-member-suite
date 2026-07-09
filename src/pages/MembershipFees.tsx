@@ -765,10 +765,10 @@ export default function MembershipFees() {
         const dueDate = new Date();
         dueDate.setDate(today.getDate() + 30); // 30 days from now
 
-        // Period ends on the configured default term end date; starts exactly 1 year prior
-        const periodEnd = new Date(defaultTermEndDate);
+        // Period starts on the configured default term end date and runs for 1 year
         const periodStart = new Date(defaultTermEndDate);
-        periodStart.setFullYear(periodStart.getFullYear() - 1);
+        const periodEnd = new Date(defaultTermEndDate);
+        periodEnd.setFullYear(periodEnd.getFullYear() + 1);
 
         let successCount = 0;
         let errorCount = 0;
