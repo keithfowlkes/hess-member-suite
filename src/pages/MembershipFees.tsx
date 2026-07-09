@@ -228,9 +228,10 @@ export default function MembershipFees() {
     const dueDate = new Date();
     dueDate.setDate(today.getDate() + 30);
     
-    const periodStart = new Date();
-    const periodEnd = new Date();
-    periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+    // Period ends on the configured default term end date; starts exactly 1 year prior
+    const periodEnd = new Date(defaultTermEndDate);
+    const periodStart = new Date(defaultTermEndDate);
+    periodStart.setFullYear(periodStart.getFullYear() - 1);
 
     // Get prorated amount for this organization from the interface
     const proratedAmount = getProratedAmount(organization.id);
