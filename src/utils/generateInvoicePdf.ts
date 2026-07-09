@@ -13,12 +13,14 @@ export interface GenerateInvoicePdfOptions {
   invoice: Invoice;
   registrationCode?: string | null;
   logoSrc?: string | null;
+  paymentMode?: 'card' | 'ach';
+  stripeFee?: number;
 }
 
-export async function generateInvoicePdf({ invoice, registrationCode, logoSrc }: GenerateInvoicePdfOptions): Promise<jsPDF> {
+export async function generateInvoicePdf({ invoice, registrationCode, logoSrc, paymentMode = 'card', stripeFee = 9.27 }: GenerateInvoicePdfOptions): Promise<jsPDF> {
   const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'letter' });
   await registerInvoicePdfFonts(pdf);
-  await drawInvoicePdf(pdf, invoice, registrationCode || null, logoSrc || null);
+  await drawInvoicePdf(pdf, invoice, registrationCode || null, logoSrc || null, paymentMode, stripeFee);
   return pdf;
 }
 
@@ -27,7 +29,10 @@ async function drawInvoicePdf(
   invoice: Invoice,
   registrationCode: string | null,
   logoSrc: string | null,
+  paymentMode: 'card' | 'ach' = 'card',
+  stripeFee: number = 9.27,
 ) {
+
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 36;
@@ -50,6 +55,13 @@ async function drawInvoicePdf(
 
   setPdfText(pdf, 26, 'bold', right, 88, 'INVOICE', { align: 'right', color: [96, 96, 96] });
   setPdfText(pdf, 10, 'normal', right, 106, `Invoice #${invoice.invoice_number}`, { align: 'right', color: [96, 96, 96] });
+  const isAch = paymentMode === 'ach';
+  const adjustAmt = (n: number | null | undefined) =>
+    n == null ? 0 : Math.max(0, Number(n) - (isAch ? stripeFee : 0));
+  if (isAch) {
+    setPdfText(pdf, 9, 'bold', right, 120, 'ACH / CHECK VERSION', { align: 'right', color: [22, 101, 52] });
+  }
+
 
   setPdfText(pdf, 12, 'bold', margin, 124, 'HESS Consortium');
   setPdfText(pdf, 10, 'normal', margin, 140, 'Higher Education Systems & Services Consortium', { color: [75, 85, 99] });
@@ -108,15 +120,24 @@ async function drawInvoicePdf(
   pdf.setDrawColor(229, 231, 235);
   pdf.rect(tableX, y, tableWidth, 64);
   setPdfText(pdf, 11, 'bold', tableX + 10, y + 22, 'Annual Membership Fee');
-  setPdfText(pdf, 9, 'normal', tableX + 10, y + 38, 'includes Stripe Processing Fee', { color: [96, 96, 96] });
+  setPdfText(
+    pdf,
+    9,
+    isAch ? 'bold' : 'normal',
+    tableX + 10,
+    y + 38,
+    isAch ? 'ACH / Check payment — no processing fee' : 'includes Stripe Processing Fee',
+    { color: isAch ? [22, 101, 52] : [96, 96, 96] },
+  );
   if (invoice.prorated_amount) {
     setPdfText(pdf, 9, 'normal', tableX + 10, y + 52, 'Prorated from membership start date', { color: [96, 96, 96] });
   }
   setPdfText(pdf, 10, 'normal', tableX + descWidth + 10, y + 31, `${safeFormat(invoice.period_start_date, 'MMM dd, yyyy')} - ${safeFormat(invoice.period_end_date, 'MMM dd, yyyy')}`);
-  setPdfText(pdf, 10, 'normal', right - 10, y + 31, formatCurrency(invoice.prorated_amount || invoice.amount), { align: 'right' });
+  setPdfText(pdf, 10, 'normal', right - 10, y + 31, formatCurrency(adjustAmt(invoice.prorated_amount || invoice.amount)), { align: 'right' });
 
   y += 92;
-  setPdfText(pdf, 13, 'bold', right, y, `Total Due: ${formatCurrency(invoice.prorated_amount || invoice.amount)}`, { align: 'right' });
+  setPdfText(pdf, 13, 'bold', right, y, `Total Due: ${formatCurrency(adjustAmt(invoice.prorated_amount || invoice.amount))}`, { align: 'right' });
+
 
   y += 34;
   if (invoice.notes) {

@@ -30,9 +30,10 @@ import { Button } from '@/components/ui/button';
 import { useInvoices, Invoice, CreateInvoiceData } from '@/hooks/useInvoices';
 import { useMembers } from '@/hooks/useMembers';
 import { useAuth } from '@/hooks/useAuth';
-import { CalendarIcon, FileText, Edit, Download, Forward, Loader2 } from 'lucide-react';
+import { CalendarIcon, FileText, Edit, Download, Forward, Loader2, Printer } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useResendInvoice } from '@/hooks/useResendInvoice';
+import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -43,6 +44,7 @@ import {
 import { cn } from '@/lib/utils';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
+
 
 const invoiceSchema = z.object({
   organization_id: z.string().min(1, 'Organization is required').optional(),
@@ -81,6 +83,16 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
   const [forwardOpen, setForwardOpen] = useState(false);
   const [forwardEmail, setForwardEmail] = useState('');
   const [forwardComment, setForwardComment] = useState('');
+  const [paymentMode, setPaymentMode] = useState<'card' | 'ach'>(() => {
+    try {
+      return (localStorage.getItem('invoice-view-mode') as 'card' | 'ach') || 'card';
+    } catch { return 'card'; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('invoice-view-mode', paymentMode); } catch { /* ignore */ }
+  }, [paymentMode]);
+  const { data: stripeFeeSetting } = useSystemSetting('stripe_processing_fee');
+  const stripeFee = Math.max(0, parseFloat(stripeFeeSetting?.setting_value || '9.27') || 0);
 
   // Persist the forwarding comment across invoices/organizations for the admin session.
   useEffect(() => {
@@ -95,6 +107,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
     } catch { /* ignore */ }
   }, [forwardComment]);
 
+
   // Function to download invoice as PDF
   const downloadPDF = async () => {
     if (!invoice) return;
@@ -104,14 +117,42 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
       const pdf = await generateInvoicePdf({
         invoice,
         logoSrc: logoImg?.currentSrc || logoImg?.src || null,
+        paymentMode,
+        stripeFee,
       });
       const organizationName = invoice.organizations?.name || 'Unknown';
-      const fileName = `Invoice_${invoice.invoice_number}_${organizationName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      const suffix = paymentMode === 'ach' ? '_ACH' : '';
+      const fileName = `Invoice_${invoice.invoice_number}_${organizationName.replace(/[^a-zA-Z0-9]/g, '_')}${suffix}.pdf`;
       pdf.save(fileName);
     } catch (error) {
       console.error('Error generating PDF:', error);
     }
   };
+
+  const handlePrint = () => {
+    const node = invoiceRef.current;
+    if (!node) { window.print(); return; }
+    const printWindow = window.open('', '_blank', 'width=900,height=1000');
+    if (!printWindow) { window.print(); return; }
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+      .map((el) => el.outerHTML)
+      .join('\n');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice ${invoice?.invoice_number || ''}</title>
+          ${styles}
+          <style>body { margin: 0; padding: 24px; background: white; } @media print { @page { margin: 0.5in; } }</style>
+        </head>
+        <body>${node.outerHTML}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 300);
+  };
+
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(bulkMode ? bulkInvoiceSchema : invoiceSchema),
@@ -542,6 +583,15 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
                   </Button>
                 )}
                 <Button
+                  onClick={handlePrint}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print
+                </Button>
+                <Button
                   onClick={downloadPDF}
                   variant="outline"
                   size="sm"
@@ -553,12 +603,37 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
               </div>
             </div>
 
-            
+            <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 p-2 text-sm">
+              <span className="font-medium">Payment method:</span>
+              <div className="inline-flex overflow-hidden rounded-md border">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode('card')}
+                  className={`px-3 py-1 text-xs font-medium transition-colors ${paymentMode === 'card' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+                >
+                  Credit Card
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode('ach')}
+                  className={`px-3 py-1 text-xs font-medium transition-colors ${paymentMode === 'ach' ? 'bg-green-700 text-white' : 'bg-background hover:bg-muted'}`}
+                >
+                  ACH / Check — no processing fee
+                </button>
+              </div>
+              {paymentMode === 'ach' && (
+                <span className="text-xs text-muted-foreground">
+                  ${stripeFee.toFixed(2)} card fee removed. Download, print, or forward reflects the ACH version.
+                </span>
+              )}
+            </div>
+
             <TabsContent value="view" className="mt-4">
               <div ref={invoiceRef}>
-                <ProfessionalInvoice invoice={invoice} />
+                <ProfessionalInvoice invoice={invoice} paymentMode={paymentMode} />
               </div>
             </TabsContent>
+
             
             <TabsContent value="edit" className="mt-4">
               <Form {...form}>
@@ -621,7 +696,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
                   const email = forwardEmail.trim();
                   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
                   resendInvoice.mutate(
-                    { invoiceId: invoice.id, overrideEmail: email, forwardComment },
+                    { invoiceId: invoice.id, overrideEmail: email, forwardComment, paymentMode },
                     { onSuccess: () => setForwardOpen(false) },
                   );
                 }}

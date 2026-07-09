@@ -16,11 +16,23 @@ interface ProfessionalInvoiceProps {
    * non-empty string (e.g. a placeholder) to force the block to render.
    */
   registrationCode?: string | null;
+  /**
+   * When 'ach', the on-screen invoice subtracts the configured Stripe fee from
+   * the displayed amounts, removes the "includes Stripe Processing Fee" line,
+   * and shows an "ACH / Check version" badge. The stored invoice is unchanged.
+   */
+  paymentMode?: 'card' | 'ach';
 }
 
-export function ProfessionalInvoice({ invoice: rawInvoice, template, registrationCode }: ProfessionalInvoiceProps) {
+export function ProfessionalInvoice({ invoice: rawInvoice, template, registrationCode, paymentMode = 'card' }: ProfessionalInvoiceProps) {
   const { getDefaultTemplate } = useInvoiceTemplates();
   const { data: termEndSetting } = useSystemSetting('default_term_end_date');
+  const { data: stripeFeeSetting } = useSystemSetting('stripe_processing_fee');
+  const stripeFee = Math.max(0, parseFloat(stripeFeeSetting?.setting_value || '9.27') || 0);
+  const isAch = paymentMode === 'ach';
+  const adjust = (n: number | null | undefined) =>
+    n == null ? n : Math.max(0, Number(n) - (isAch ? stripeFee : 0));
+
 
   // For non-paid invoices, override the displayed period to reflect the
   // currently configured term end date (one-year window ending on that date).
@@ -293,7 +305,13 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
         <div className="invoice-title">
           <h1>INVOICE</h1>
           <p className="invoice-number">Invoice #{invoice.invoice_number}</p>
+          {isAch && (
+            <p style={{ marginTop: '0.4rem', display: 'inline-block', padding: '2px 8px', background: '#f0fdf4', color: '#166534', border: '1px solid #16a34a', borderRadius: 4, fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.03em' }}>
+              ACH / CHECK VERSION
+            </p>
+          )}
         </div>
+
       </div>
 
       {/* Bill To and Invoice Details */}
@@ -325,8 +343,8 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
           <tr>
             <td>
               <strong>Annual Membership Fee</strong>
-              <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.25rem' }}>
-                includes Stripe Processing Fee
+              <div style={{ fontSize: '0.8rem', color: isAch ? '#166534' : '#666', marginTop: '0.25rem', fontWeight: isAch ? 600 : 'normal' }}>
+                {isAch ? 'ACH / Check payment — no processing fee' : 'includes Stripe Processing Fee'}
               </div>
               {invoice.prorated_amount && (
                 <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.25rem' }}>
@@ -340,10 +358,10 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
             <td className="amount-cell">
               {invoice.prorated_amount ? (
                 <>
-                  <div>{formatCurrency(invoice.prorated_amount)}</div>
+                  <div>{formatCurrency(adjust(invoice.prorated_amount) as number)}</div>
                 </>
               ) : (
-                formatCurrency(invoice.amount)
+                formatCurrency(adjust(invoice.amount) as number)
               )}
             </td>
           </tr>
@@ -352,8 +370,9 @@ export function ProfessionalInvoice({ invoice: rawInvoice, template, registratio
 
       {/* Total Due */}
       <div className="total-section">
-        <p><strong>Total Due: {formatCurrency(invoice.prorated_amount || invoice.amount)}</strong></p>
+        <p><strong>Total Due: {formatCurrency(adjust(invoice.prorated_amount || invoice.amount) as number)}</strong></p>
       </div>
+
 
       {/* Notes */}
       {invoice.notes && (
