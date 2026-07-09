@@ -61,7 +61,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { ScheduledEmailBatches } from '@/components/membership-fees/ScheduledEmailBatches';
-import { getCurrentInvoicePeriod, toInvoiceDateString } from '@/utils/invoicePeriod';
+import { getCurrentInvoicePeriod, parseInvoiceDate, toInvoiceDateString } from '@/utils/invoicePeriod';
 
 interface FeesStats {
   totalOrganizations: number;
@@ -217,7 +217,7 @@ export default function MembershipFees() {
         }
       }
       if (defaultTermEnd) {
-        const termEndDate = new Date(defaultTermEnd);
+        const termEndDate = parseInvoiceDate(defaultTermEnd) || new Date(defaultTermEnd);
         setDefaultTermEndDate(termEndDate);
         setStandardRenewalDate(termEndDate);
       }

@@ -1,4 +1,5 @@
 import type { Invoice } from '@/hooks/useInvoices';
+import { parseInvoiceDate } from '@/utils/invoicePeriod';
 
 /**
  * Shared helpers for determining an organization's membership-dues status
@@ -11,8 +12,8 @@ const isOpenStatus = (status: Invoice['status']) =>
 
 const periodCoversToday = (inv: Invoice, today: Date) => {
   if (!inv.period_start_date || !inv.period_end_date) return false;
-  const start = new Date(inv.period_start_date);
-  const end = new Date(inv.period_end_date);
+  const start = parseInvoiceDate(inv.period_start_date) || new Date(inv.period_start_date);
+  const end = parseInvoiceDate(inv.period_end_date) || new Date(inv.period_end_date);
   return today >= start && today <= end;
 };
 

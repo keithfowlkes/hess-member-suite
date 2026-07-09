@@ -44,7 +44,7 @@ import {
 import { cn } from '@/lib/utils';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
-import { getCurrentInvoicePeriod, toInvoiceDateString } from '@/utils/invoicePeriod';
+import { getCurrentInvoicePeriod, parseInvoiceDate, toInvoiceDateString } from '@/utils/invoicePeriod';
 
 
 const invoiceSchema = z.object({
@@ -173,9 +173,9 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
         organization_id: invoice.organization_id,
         amount: invoice.amount,
         prorated_amount: invoice.prorated_amount || undefined,
-        due_date: new Date(invoice.due_date),
-        period_start_date: new Date(invoice.period_start_date),
-        period_end_date: new Date(invoice.period_end_date),
+        due_date: parseInvoiceDate(invoice.due_date) || new Date(invoice.due_date),
+        period_start_date: parseInvoiceDate(invoice.period_start_date) || new Date(invoice.period_start_date),
+        period_end_date: parseInvoiceDate(invoice.period_end_date) || new Date(invoice.period_end_date),
         notes: invoice.notes || '',
       });
     } else {
