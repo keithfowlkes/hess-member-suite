@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Printer, Download, Loader2, Forward } from 'lucide-react';
 import jsPDF from 'jspdf';
-import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';

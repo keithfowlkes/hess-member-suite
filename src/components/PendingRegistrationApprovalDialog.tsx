@@ -17,6 +17,8 @@ import { InvoicePreviewModal } from '@/components/InvoicePreviewModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useSystemSetting } from '@/hooks/useSystemSettings';
+import { getCurrentInvoicePeriod } from '@/utils/invoicePeriod';
 
 interface PendingRegistrationApprovalDialogProps {
   open: boolean;
@@ -48,6 +50,8 @@ export function PendingRegistrationApprovalDialog({
   const { user } = useAuth();
   const sendInvoiceMutation = useSendInvoice();
   const { feeTiers } = useFeeTiers();
+  const { data: termStartSetting } = useSystemSetting('default_term_end_date');
+  const invoicePeriod = getCurrentInvoicePeriod(termStartSetting?.setting_value);
 
   const handleAIVerification = async () => {
     if (!registration) return;
@@ -108,9 +112,8 @@ export function PendingRegistrationApprovalDialog({
     if (!membershipStartDate || !invoiceAmount) return null;
     
     const membershipStart = new Date(membershipStartDate);
-    const currentYear = new Date().getFullYear();
-    const yearEnd = new Date(currentYear, 11, 31); // December 31st
-    const yearStart = new Date(currentYear, 0, 1); // January 1st
+    const yearEnd = invoicePeriod.endDate;
+    const yearStart = invoicePeriod.startDate;
     
     if (membershipStart <= yearStart) return null; // No proration needed
     
@@ -132,8 +135,8 @@ export function PendingRegistrationApprovalDialog({
       membershipStartDate,
       invoiceAmount: parseFloat(invoiceAmount),
       proratedAmount: proratedAmount,
-      periodStartDate: new Date(membershipStartDate).toISOString().split('T')[0],
-      periodEndDate: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0],
+      periodStartDate: invoicePeriod.start,
+      periodEndDate: invoicePeriod.end,
       notes: invoiceNotes || undefined
     });
   };

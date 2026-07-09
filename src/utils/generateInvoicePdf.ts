@@ -1,5 +1,4 @@
 import jsPDF from 'jspdf';
-import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import { Invoice } from '@/hooks/useInvoices';
 import liberationSansRegularUrl from '@/assets/fonts/LiberationSans-Regular.ttf?url';

@@ -10,6 +10,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const CURRENT_INVOICE_PERIOD_START = "2026-07-30";
+
+function currentInvoicePeriod(termStartRaw?: string | null) {
+  const start = String(termStartRaw || CURRENT_INVOICE_PERIOD_START).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const startDate = start
+    ? new Date(Date.UTC(Number(start[1]), Number(start[2]) - 1, Number(start[3])))
+    : new Date(Date.UTC(2026, 6, 30));
+  const endDate = new Date(startDate);
+  endDate.setUTCFullYear(endDate.getUTCFullYear() + 1);
+  return {
+    start: startDate.toISOString().slice(0, 10),
+    end: endDate.toISOString().slice(0, 10),
+  };
+}
+
 interface SendInvoiceRequest {
   organizationId: string;
   organizationName: string;
@@ -67,8 +82,8 @@ serve(async (req) => {
       membershipStartDate,
       proratedAmount,
       invoiceAmount,
-      periodStartDate,
-      periodEndDate,
+      periodStartDate: requestedPeriodStartDate,
+      periodEndDate: requestedPeriodEndDate,
       notes
     }: SendInvoiceRequest = await req.json();
 
@@ -87,6 +102,14 @@ serve(async (req) => {
     
     // Get design settings for color replacement
     const designSettings = await getEmailDesignSettings();
+    const { data: termSetting } = await supabase
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_key', 'default_term_end_date')
+      .maybeSingle();
+    const invoicePeriod = currentInvoicePeriod(termSetting?.setting_value);
+    const periodStartDate = invoicePeriod.start || requestedPeriodStartDate;
+    const periodEndDate = invoicePeriod.end || requestedPeriodEndDate;
     
     if (membershipStartDate && !proratedAmount) {
       const membershipStart = new Date(membershipStartDate);

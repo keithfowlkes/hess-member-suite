@@ -38,6 +38,9 @@ const PayloadSchema = z.object({
   data: DataSchema,
 });
 
+const CURRENT_INVOICE_PERIOD_START = "2026-07-30";
+const CURRENT_INVOICE_PERIOD_END = "2027-07-30";
+
 function timingSafeEqual(a: string, b: string): boolean {
   const enc = new TextEncoder();
   const ab = enc.encode(a);
@@ -313,8 +316,8 @@ serve(async (req) => {
     }
 
     if (matchedOrgId) {
-      const periodStart = `${periodYear}-01-01`;
-      const periodEnd = `${periodYear}-12-31`;
+      const periodStart = CURRENT_INVOICE_PERIOD_START;
+      const periodEnd = CURRENT_INVOICE_PERIOD_END;
       const paidDateOnly = paidAtIso.slice(0, 10);
 
       // Find invoice whose period contains paid_at
