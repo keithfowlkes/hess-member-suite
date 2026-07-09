@@ -70,7 +70,48 @@ export function SystemHealthStatus() {
   const [overallStatus, setOverallStatus] = useState<'healthy' | 'warning' | 'error' | 'checking'>('checking');
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [retryingAll, setRetryingAll] = useState(false);
+  const [retryAllSummary, setRetryAllSummary] = useState<{ total: number; succeeded: number; failed: number; details: { code: string; org: string; ok: boolean; message: string }[] } | null>(null);
   const { toast } = useToast();
+
+  const retryAllConferenceHubDeliveries = async (errors: ConferenceHubError[]) => {
+    setRetryingAll(true);
+    setRetryAllSummary(null);
+    const details: { code: string; org: string; ok: boolean; message: string }[] = [];
+    let succeeded = 0;
+    let failed = 0;
+    for (const err of errors) {
+      if (!err.organization_id) {
+        failed++;
+        details.push({ code: err.code, org: err.organization_name || 'Unknown', ok: false, message: 'Missing organization id' });
+        continue;
+      }
+      try {
+        const { data, error } = await supabase.functions.invoke('issue-conference-registration-code', {
+          body: { organization_id: err.organization_id, conference_slug: 'hess2026' },
+        });
+        if (error) throw error;
+        if (data?.delivered) {
+          succeeded++;
+          details.push({ code: data.code || err.code, org: err.organization_name || 'Unknown', ok: true, message: 'Delivered successfully' });
+        } else {
+          failed++;
+          details.push({ code: err.code, org: err.organization_name || 'Unknown', ok: false, message: data?.error || data?.reason || 'Delivery did not succeed' });
+        }
+      } catch (e: any) {
+        failed++;
+        details.push({ code: err.code, org: err.organization_name || 'Unknown', ok: false, message: e.message || 'Unknown error' });
+      }
+    }
+    setRetryAllSummary({ total: errors.length, succeeded, failed, details });
+    toast({
+      title: `Retry complete: ${succeeded}/${errors.length} delivered`,
+      description: failed > 0 ? `${failed} still failing. See details below.` : 'All errors resolved.',
+      variant: failed > 0 ? 'destructive' : 'default',
+    });
+    setRetryingAll(false);
+    await runHealthChecks();
+  };
 
   const retryConferenceHubDelivery = async (err: ConferenceHubError) => {
     if (!err.organization_id) {
@@ -551,28 +592,126 @@ export function SystemHealthStatus() {
                     </div>
                   )}
 
-                  {/* Additional details (fingerprint / endpoint / config) */}
-                  {service.details && service.details.length > 0 && (
+                  {/* Diagnostic accordion - only when not healthy and there's content to show */}
+                  {service.status !== 'healthy' && service.status !== 'checking' &&
+                    ((service.details && service.details.length > 0) || service.remediation || (service.errors && service.errors.length > 0)) && (
+                    <Accordion type="single" collapsible className="mt-2">
+                      <AccordionItem value="diagnostics" className="border-none">
+                        <AccordionTrigger className="py-1 text-xs font-medium hover:no-underline">
+                          View diagnostics{service.errors && service.errors.length > 0 ? ` (${service.errors.length} error${service.errors.length === 1 ? '' : 's'})` : ''}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          {/* Additional details (fingerprint / endpoint / config) */}
+                          {service.details && service.details.length > 0 && (
+                            <ul className="mt-2 text-xs text-muted-foreground space-y-0.5">
+                              {service.details.map((d, i) => (
+                                <li key={i} className="break-words">• {d}</li>
+                              ))}
+                            </ul>
+                          )}
+
+                          {/* Recommended remediation */}
+                          {service.remediation && (
+                            <div className="mt-2 p-2 rounded border border-yellow-300/60 bg-yellow-50 dark:border-yellow-800/60 dark:bg-yellow-950/20">
+                              <div className="flex items-center gap-1 text-xs font-medium text-yellow-800 dark:text-yellow-200">
+                                <Lightbulb className="h-3 w-3" />
+                                {service.remediation.title}
+                              </div>
+                              <ol className="mt-1 ml-4 list-decimal text-xs text-yellow-900/90 dark:text-yellow-100/90 space-y-0.5">
+                                {service.remediation.steps.map((step, i) => (
+                                  <li key={i}>{step}</li>
+                                ))}
+                              </ol>
+                            </div>
+                          )}
+
+                          {/* Conference Hub error list + retry-all */}
+                          {service.name === 'Conference Hub Integration' && service.errors && service.errors.length > 0 && (
+                            <div className="mt-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-medium text-destructive">
+                                  Recent delivery failures ({service.errors.length})
+                                </span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs gap-1"
+                                  disabled={retryingAll}
+                                  onClick={() => retryAllConferenceHubDeliveries(service.errors!)}
+                                >
+                                  <RefreshCw className={`h-3 w-3 ${retryingAll ? 'animate-spin' : ''}`} />
+                                  {retryingAll ? 'Retrying all...' : 'Retry all'}
+                                </Button>
+                              </div>
+
+                              {retryAllSummary && (
+                                <div className="mb-2 p-2 rounded border border-border bg-muted/40 text-xs">
+                                  <div className="font-medium mb-1">
+                                    Retry summary: {retryAllSummary.succeeded} delivered, {retryAllSummary.failed} failed (of {retryAllSummary.total})
+                                  </div>
+                                  <ul className="space-y-0.5 max-h-40 overflow-y-auto">
+                                    {retryAllSummary.details.map((d, i) => (
+                                      <li key={i} className="flex items-start gap-1">
+                                        {d.ok ? (
+                                          <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
+                                        ) : (
+                                          <XCircle className="h-3 w-3 text-destructive mt-0.5 flex-shrink-0" />
+                                        )}
+                                        <span className="break-words">
+                                          <code>{d.code}</code> — {d.org}: {d.message}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              <ul className="space-y-2">
+                                {service.errors.map((e, idx) => {
+                                  const rid = e.id ?? e.code;
+                                  return (
+                                    <li key={idx} className="text-xs p-2 rounded border border-destructive/30 bg-destructive/5">
+                                      <div className="flex justify-between gap-2">
+                                        <span className="font-medium">
+                                          {e.organization_name || 'Unknown org'} — <code>{e.code}</code>
+                                        </span>
+                                        <span className="text-muted-foreground whitespace-nowrap">
+                                          {new Date(e.created_at).toLocaleString()}
+                                        </span>
+                                      </div>
+                                      <div className="mt-1 text-destructive break-words">
+                                        {e.send_error || 'No error message recorded'}
+                                      </div>
+                                      <div className="mt-2 flex justify-end">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-7 px-2 text-xs gap-1"
+                                          disabled={retryingId === rid || retryingAll || !e.organization_id}
+                                          onClick={() => retryConferenceHubDelivery(e)}
+                                        >
+                                          <RefreshCw className={`h-3 w-3 ${retryingId === rid ? 'animate-spin' : ''}`} />
+                                          Retry
+                                        </Button>
+                                      </div>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  )}
+
+                  {/* Healthy-state details shown inline (no accordion) */}
+                  {service.status === 'healthy' && service.details && service.details.length > 0 && (
                     <ul className="mt-2 text-xs text-muted-foreground space-y-0.5">
                       {service.details.map((d, i) => (
                         <li key={i} className="break-words">• {d}</li>
                       ))}
                     </ul>
-                  )}
-
-                  {/* Recommended remediation when status is not healthy */}
-                  {service.remediation && service.status !== 'healthy' && service.status !== 'checking' && (
-                    <div className="mt-2 p-2 rounded border border-yellow-300/60 bg-yellow-50 dark:border-yellow-800/60 dark:bg-yellow-950/20">
-                      <div className="flex items-center gap-1 text-xs font-medium text-yellow-800 dark:text-yellow-200">
-                        <Lightbulb className="h-3 w-3" />
-                        {service.remediation.title}
-                      </div>
-                      <ol className="mt-1 ml-4 list-decimal text-xs text-yellow-900/90 dark:text-yellow-100/90 space-y-0.5">
-                        {service.remediation.steps.map((step, i) => (
-                          <li key={i}>{step}</li>
-                        ))}
-                      </ol>
-                    </div>
                   )}
 
                   {/* Show detailed configuration info for Resend */}
@@ -583,51 +722,6 @@ export function SystemHealthStatus() {
                         <Badge variant="outline" className="text-xs">Resend</Badge>
                       </div>
                     </div>
-                  )}
-
-                  {/* Conference Hub error details */}
-                  {service.name === 'Conference Hub Integration' && service.errors && service.errors.length > 0 && (
-                    <Accordion type="single" collapsible className="mt-2">
-                      <AccordionItem value="errors" className="border-none">
-                        <AccordionTrigger className="py-1 text-xs text-destructive hover:no-underline">
-                          View {service.errors.length} recent error{service.errors.length === 1 ? '' : 's'}
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <ul className="space-y-2 mt-2">
-                            {service.errors.map((e, idx) => {
-                              const rid = e.id ?? e.code;
-                              return (
-                                <li key={idx} className="text-xs p-2 rounded border border-destructive/30 bg-destructive/5">
-                                  <div className="flex justify-between gap-2">
-                                    <span className="font-medium">
-                                      {e.organization_name || 'Unknown org'} — <code>{e.code}</code>
-                                    </span>
-                                    <span className="text-muted-foreground whitespace-nowrap">
-                                      {new Date(e.created_at).toLocaleString()}
-                                    </span>
-                                  </div>
-                                  <div className="mt-1 text-destructive break-words">
-                                    {e.send_error || 'No error message recorded'}
-                                  </div>
-                                  <div className="mt-2 flex justify-end">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-7 px-2 text-xs gap-1"
-                                      disabled={retryingId === rid || !e.organization_id}
-                                      onClick={() => retryConferenceHubDelivery(e)}
-                                    >
-                                      <RefreshCw className={`h-3 w-3 ${retryingId === rid ? 'animate-spin' : ''}`} />
-                                      Retry delivery
-                                    </Button>
-                                  </div>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
                   )}
                 </div>
               </div>
