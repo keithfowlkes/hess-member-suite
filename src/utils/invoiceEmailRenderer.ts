@@ -13,7 +13,10 @@ interface InvoiceEmailData {
   registration_code?: string;
   conference_label?: string;
   forward_comment?: string;
+  /** 'ach' hides the online-pay link and swaps the fee sub-line. */
+  payment_mode?: 'card' | 'ach';
 }
+
 
 function escapeHtml(input: string): string {
   return input
@@ -52,7 +55,9 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
         <div style="text-align: right;">
           <h1 style="font-size: 2rem; font-weight: bold; color: #666; margin: 0; letter-spacing: 2px;">INVOICE</h1>
           <p style="font-size: 0.9rem; color: #666; margin: 0.5rem 0 0 0;">Invoice #${data.invoice_number}</p>
+          ${data.payment_mode === 'ach' ? '<p style="margin: 0.4rem 0 0 0; display: inline-block; padding: 2px 8px; background: #f0fdf4; color: #166534; border: 1px solid #16a34a; border-radius: 4px; font-size: 0.7rem; font-weight: bold; letter-spacing: 0.05em;">ACH / CHECK VERSION</p>' : ''}
         </div>
+
       </div>
 
       <!-- Bill To and Invoice Details -->
@@ -83,8 +88,12 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
           <tr>
             <td style="padding: 0.75rem;">
               <strong>Annual Membership Fee</strong>
+              <div style="font-size: 0.8rem; color: ${data.payment_mode === 'ach' ? '#166534' : '#666'}; margin-top: 0.25rem; font-weight: ${data.payment_mode === 'ach' ? 'bold' : 'normal'};">
+                ${data.payment_mode === 'ach' ? 'ACH / Check payment — no processing fee' : 'includes Stripe Processing Fee'}
+              </div>
               ${data.prorated_amount ? '<div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">Prorated from membership start date</div>' : ''}
             </td>
+
             <td style="padding: 0.75rem;">
               ${periodStart} - ${periodEnd}
             </td>
@@ -153,7 +162,7 @@ export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
         <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem;">
           Need our W-9? <a href="https://members.hessconsortium.app/__l5e/assets-v1/fd85b32a-a3bb-4874-84bf-84b01c9d0969/HESS_W9.pdf" style="color: #0c2340; text-decoration: underline; font-weight: bold;">Download the HESS Consortium W-9 (PDF)</a>.
         </p>
-        ${data.invoice_id ? `
+        ${data.invoice_id && data.payment_mode !== 'ach' ? `
         <div style="text-align: center; margin: 1.25rem 0 0.5rem 0;">
           <a href="https://members.hessconsortium.app/?invoice=${data.invoice_id}"
              style="display: inline-block; background: #0c2340; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: bold; font-size: 1rem;">

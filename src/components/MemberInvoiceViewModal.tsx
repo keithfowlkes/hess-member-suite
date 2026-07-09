@@ -30,6 +30,14 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
   const [forwardOpen, setForwardOpen] = useState(false);
   const [forwardEmail, setForwardEmail] = useState('');
   const [forwardComment, setForwardComment] = useState('');
+  const [paymentMode, setPaymentMode] = useState<'card' | 'ach'>(() => {
+    try {
+      return (localStorage.getItem('invoice-view-mode') as 'card' | 'ach') || 'card';
+    } catch { return 'card'; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('invoice-view-mode', paymentMode); } catch { /* ignore */ }
+  }, [paymentMode]);
 
   // Persist the forwarding comment across invoices/organizations for the session.
   useEffect(() => {
@@ -46,9 +54,12 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
 
 
   const { data: termEndSetting } = useSystemSetting('default_term_end_date');
+  const { data: stripeFeeSetting } = useSystemSetting('stripe_processing_fee');
+  const stripeFee = Math.max(0, parseFloat(stripeFeeSetting?.setting_value || '9.27') || 0);
   const { data: registrationCodeData } = useConferenceRegistrationCode(invoice?.organization_id);
   const { data: unifiedProfile } = useUnifiedProfile();
   const resendInvoice = useResendInvoice();
+
 
   const isPrimaryContactForInvoice = Boolean(
     invoice &&
@@ -123,15 +134,17 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
     try {
       const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'letter' });
       await registerInvoicePdfFonts(pdf);
-      await drawInvoicePdf(pdf, displayInvoice, node, registrationCodeData?.code || null);
+      await drawInvoicePdf(pdf, displayInvoice, node, registrationCodeData?.code || null, paymentMode, stripeFee);
 
-      pdf.save(`Invoice_${displayInvoice.invoice_number}.pdf`);
+      const suffix = paymentMode === 'ach' ? '_ACH' : '';
+      pdf.save(`Invoice_${displayInvoice.invoice_number}${suffix}.pdf`);
     } catch (err) {
       console.error('Failed to generate invoice PDF:', err);
     } finally {
       setDownloading(false);
     }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -166,12 +179,38 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
           </div>
         </DialogHeader>
 
+        <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 p-2 text-sm">
+          <span className="font-medium">Payment method:</span>
+          <div className="inline-flex overflow-hidden rounded-md border">
+            <button
+              type="button"
+              onClick={() => setPaymentMode('card')}
+              className={`px-3 py-1 text-xs font-medium transition-colors ${paymentMode === 'card' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+            >
+              Credit Card
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMode('ach')}
+              className={`px-3 py-1 text-xs font-medium transition-colors ${paymentMode === 'ach' ? 'bg-green-700 text-white' : 'bg-background hover:bg-muted'}`}
+            >
+              ACH / Check — no processing fee
+            </button>
+          </div>
+          {paymentMode === 'ach' && (
+            <span className="text-xs text-muted-foreground">
+              ${stripeFee.toFixed(2)} card fee removed. Download, print, or forward this ACH version.
+            </span>
+          )}
+        </div>
+
         <div className="mt-4">
           <div ref={invoiceRef} id="member-invoice-printable" className="border rounded-lg bg-white">
-            <ProfessionalInvoice invoice={displayInvoice} registrationCode={registrationCodeData?.code || null} />
+            <ProfessionalInvoice invoice={displayInvoice} registrationCode={registrationCodeData?.code || null} paymentMode={paymentMode} />
           </div>
         </div>
       </DialogContent>
+
 
       <Dialog open={forwardOpen} onOpenChange={setForwardOpen}>
         <DialogContent className="max-w-md">
@@ -217,9 +256,10 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
                 const email = forwardEmail.trim();
                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
                 resendInvoice.mutate(
-                  { invoiceId: displayInvoice.id, overrideEmail: email, forwardComment },
+                  { invoiceId: displayInvoice.id, overrideEmail: email, forwardComment, paymentMode },
                   { onSuccess: () => setForwardOpen(false) },
                 );
+
               }}
               disabled={resendInvoice.isPending || !forwardEmail.trim()}
             >
@@ -244,7 +284,13 @@ async function drawInvoicePdf(
   invoice: Invoice,
   sourceNode: HTMLElement,
   registrationCode: string | null,
+  paymentMode: 'card' | 'ach' = 'card',
+  stripeFee: number = 9.27,
 ) {
+  const isAch = paymentMode === 'ach';
+  const adjustAmt = (n: number | null | undefined) =>
+    n == null ? 0 : Math.max(0, Number(n) - (isAch ? stripeFee : 0));
+
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 36;
@@ -268,6 +314,10 @@ async function drawInvoicePdf(
 
   setPdfText(pdf, 26, 'bold', right, 88, 'INVOICE', { align: 'right', color: [96, 96, 96] });
   setPdfText(pdf, 10, 'normal', right, 106, `Invoice #${invoice.invoice_number}`, { align: 'right', color: [96, 96, 96] });
+  if (isAch) {
+    setPdfText(pdf, 9, 'bold', right, 120, 'ACH / CHECK VERSION', { align: 'right', color: [22, 101, 52] });
+  }
+
 
   setPdfText(pdf, 12, 'bold', margin, 124, 'HESS Consortium');
   setPdfText(pdf, 10, 'normal', margin, 140, 'Higher Education Systems & Services Consortium', { color: [75, 85, 99] });
@@ -327,15 +377,24 @@ async function drawInvoicePdf(
   pdf.setDrawColor(229, 231, 235);
   pdf.rect(tableX, y, tableWidth, 64);
   setPdfText(pdf, 11, 'bold', tableX + 10, y + 22, 'Annual Membership Fee');
-  setPdfText(pdf, 9, 'normal', tableX + 10, y + 38, 'includes Stripe Processing Fee', { color: [96, 96, 96] });
+  setPdfText(
+    pdf,
+    9,
+    isAch ? 'bold' : 'normal',
+    tableX + 10,
+    y + 38,
+    isAch ? 'ACH / Check payment — no processing fee' : 'includes Stripe Processing Fee',
+    { color: isAch ? [22, 101, 52] : [96, 96, 96] },
+  );
   if (invoice.prorated_amount) {
     setPdfText(pdf, 9, 'normal', tableX + 10, y + 52, 'Prorated from membership start date', { color: [96, 96, 96] });
   }
   setPdfText(pdf, 10, 'normal', tableX + descWidth + 10, y + 31, `${safeFormat(invoice.period_start_date, 'MMM dd, yyyy')} - ${safeFormat(invoice.period_end_date, 'MMM dd, yyyy')}`);
-  setPdfText(pdf, 10, 'normal', right - 10, y + 31, formatCurrency(invoice.prorated_amount || invoice.amount), { align: 'right' });
+  setPdfText(pdf, 10, 'normal', right - 10, y + 31, formatCurrency(adjustAmt(invoice.prorated_amount || invoice.amount)), { align: 'right' });
 
   y += 92;
-  setPdfText(pdf, 13, 'bold', right, y, `Total Due: ${formatCurrency(invoice.prorated_amount || invoice.amount)}`, { align: 'right' });
+  setPdfText(pdf, 13, 'bold', right, y, `Total Due: ${formatCurrency(adjustAmt(invoice.prorated_amount || invoice.amount))}`, { align: 'right' });
+
 
   y += 34;
   if (invoice.notes) {

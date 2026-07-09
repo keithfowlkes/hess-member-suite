@@ -134,8 +134,10 @@ export default function MembershipFees() {
   // Fee tier states
   const [fullMemberFee, setFullMemberFee] = useState<string>('1000');
   const [affiliateMemberFee, setAffiliateMemberFee] = useState<string>('500');
+  const [stripeProcessingFee, setStripeProcessingFee] = useState<string>('9.27');
   const [organizationFeeTiers, setOrganizationFeeTiers] = useState<Record<string, string>>({});
   const [additionalFeeTiers, setAdditionalFeeTiers] = useState<Array<{id: string, name: string, amount: string}>>([]);
+
   const [addTierModalOpen, setAddTierModalOpen] = useState(false);
   const [newTierName, setNewTierName] = useState('');
   const [newTierAmount, setNewTierAmount] = useState('');
@@ -199,10 +201,13 @@ export default function MembershipFees() {
       const affiliateFee = systemSettings.find(s => s.setting_key === 'affiliate_member_fee')?.setting_value;
       const additionalTiers = systemSettings.find(s => s.setting_key === 'additional_fee_tiers')?.setting_value;
       const defaultTermEnd = systemSettings.find(s => s.setting_key === 'default_term_end_date')?.setting_value;
-      
+      const stripeFee = systemSettings.find(s => s.setting_key === 'stripe_processing_fee')?.setting_value;
+
       if (fullFee) setFullMemberFee(fullFee);
       if (affiliateFee) setAffiliateMemberFee(affiliateFee);
+      if (stripeFee) setStripeProcessingFee(stripeFee);
       if (additionalTiers) {
+
         try {
           setAdditionalFeeTiers(JSON.parse(additionalTiers));
         } catch (error) {
@@ -404,12 +409,19 @@ export default function MembershipFees() {
         description: 'Annual fee amount for affiliate members'
       });
 
+      await updateSystemSetting.mutateAsync({
+        settingKey: 'stripe_processing_fee',
+        settingValue: stripeProcessingFee,
+        description: 'Amount subtracted from invoice total for the ACH/Check version of an invoice'
+      });
+
       // Always save additional fee tiers to persist deletions
       await updateSystemSetting.mutateAsync({
         settingKey: 'additional_fee_tiers',
         settingValue: JSON.stringify(additionalFeeTiers),
         description: 'Additional custom fee tiers'
       });
+
 
       toast({
         title: "Success",
@@ -1588,6 +1600,24 @@ export default function MembershipFees() {
                           </p>
                         </div>
                       </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="stripe-processing-fee">Stripe Processing Fee ($)</Label>
+                          <Input
+                            id="stripe-processing-fee"
+                            type="number"
+                            step="0.01"
+                            placeholder="e.g., 9.27"
+                            value={stripeProcessingFee}
+                            onChange={(e) => setStripeProcessingFee(e.target.value)}
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            Amount subtracted from the invoice total when viewing, downloading, printing, or forwarding the ACH/Check version of an invoice.
+                          </p>
+                        </div>
+                      </div>
+
 
                       {/* Additional Fee Tiers */}
                       {additionalFeeTiers.length > 0 && (
