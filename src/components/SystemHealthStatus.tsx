@@ -17,7 +17,9 @@ import {
 } from 'lucide-react';
 
 interface ConferenceHubError {
+  id?: string;
   code: string;
+  organization_id?: string | null;
   organization_name?: string | null;
   send_error: string | null;
   created_at: string;
@@ -30,6 +32,8 @@ interface ServiceStatus {
   icon: React.ComponentType<any>;
   latency?: number;
   errors?: ConferenceHubError[];
+  details?: string[];
+  remediation?: { title: string; steps: string[] };
 }
 
 export function SystemHealthStatus() {
