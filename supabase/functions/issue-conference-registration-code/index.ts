@@ -154,7 +154,14 @@ serve(async (req) => {
     };
 
     try {
-      const webhookSecret = Deno.env.get("MEDIUS_EVENTS_WEBHOOK_SECRET") ?? "";
+      // Outbound auth to Conference Hub uses the portal's outbound webhook
+      // secret. MEDIUS_EVENTS_WEBHOOK_SECRET is the INBOUND secret used to
+      // verify payment webhooks coming INTO the portal — using it here caused
+      // HTTP 401 Unauthorized responses from Conference Hub.
+      const webhookSecret =
+        Deno.env.get("HESS_MEMBER_PORTAL_WEBHOOK_SECRET") ??
+        Deno.env.get("MEDIUS_EVENTS_WEBHOOK_SECRET") ??
+        "";
       const secretFingerprint = webhookSecret
         ? `len=${webhookSecret.length} prefix=${webhookSecret.slice(0, 12)} suffix=${webhookSecret.slice(-6)}`
         : "MISSING";

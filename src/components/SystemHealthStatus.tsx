@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import {
   CheckCircle,
   AlertCircle,
@@ -13,11 +15,14 @@ import {
   Cloud,
   Activity,
   Wifi,
-  CalendarDays
+  CalendarDays,
+  Lightbulb
 } from 'lucide-react';
 
 interface ConferenceHubError {
+  id?: string;
   code: string;
+  organization_id?: string | null;
   organization_name?: string | null;
   send_error: string | null;
   created_at: string;
@@ -30,6 +35,8 @@ interface ServiceStatus {
   icon: React.ComponentType<any>;
   latency?: number;
   errors?: ConferenceHubError[];
+  details?: string[];
+  remediation?: { title: string; steps: string[] };
 }
 
 export function SystemHealthStatus() {
@@ -62,6 +69,36 @@ export function SystemHealthStatus() {
 
   const [overallStatus, setOverallStatus] = useState<'healthy' | 'warning' | 'error' | 'checking'>('checking');
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const retryConferenceHubDelivery = async (err: ConferenceHubError) => {
+    if (!err.organization_id) {
+      toast({ title: 'Missing organization', description: 'Cannot retry without an organization id.', variant: 'destructive' });
+      return;
+    }
+    setRetryingId(err.id ?? err.code);
+    try {
+      const { data, error } = await supabase.functions.invoke('issue-conference-registration-code', {
+        body: { organization_id: err.organization_id, conference_slug: 'hess2026' },
+      });
+      if (error) throw error;
+      if (data?.delivered) {
+        toast({ title: 'Retry succeeded', description: `Code ${data.code || err.code} delivered to Conference Hub.` });
+      } else {
+        toast({
+          title: 'Retry still failing',
+          description: data?.error || data?.reason || 'Delivery did not succeed. See error details.',
+          variant: 'destructive',
+        });
+      }
+      await runHealthChecks();
+    } catch (e: any) {
+      toast({ title: 'Retry failed', description: e.message || 'Unknown error', variant: 'destructive' });
+    } finally {
+      setRetryingId(null);
+    }
+  };
 
   const checkSupabaseHealth = async (): Promise<ServiceStatus> => {
     const startTime = Date.now();
@@ -99,87 +136,121 @@ export function SystemHealthStatus() {
 
   const checkResendHealth = async (): Promise<ServiceStatus> => {
     try {
-      // Use the same verification approach as the ResendApiConfig component
       const { data, error } = await supabase.functions.invoke('verify-email-config');
-      
+
       if (error) {
         return {
           name: 'Resend Email Service',
           status: 'error',
           message: 'Connection test failed',
-          icon: Mail
+          icon: Mail,
+          details: [error.message || 'verify-email-config did not respond'],
+          remediation: {
+            title: 'How to fix',
+            steps: [
+              'Confirm the verify-email-config edge function is deployed.',
+              'Check Supabase Edge Function logs for verify-email-config.',
+            ],
+          },
         };
       }
-      
+
       if (data?.success && data?.configuration) {
         const config = data.configuration;
-        
-        // Check for critical issues first
+        const details: string[] = [];
+        if (config.fromAddress) details.push(`From: ${config.fromAddress}`);
+        if (config.domain) details.push(`Domain: ${config.domain}`);
+        if (typeof config.hasApiKey === 'boolean') details.push(`API key: ${config.hasApiKey ? 'configured' : 'missing'}`);
+
         if (!config.hasApiKey) {
           return {
             name: 'Resend Email Service',
             status: 'error',
-            message: 'API key not configured',
-            icon: Mail
+            message: 'RESEND_API_KEY not configured',
+            icon: Mail,
+            details,
+            remediation: {
+              title: 'How to fix',
+              steps: ['Add the RESEND_API_KEY secret in Supabase Edge Function settings.'],
+            },
           };
         }
-        
+
         if (!config.hasFromAddress) {
           return {
             name: 'Resend Email Service',
             status: 'error',
-            message: 'From address not configured',
-            icon: Mail
+            message: 'RESEND_FROM (from address) not configured',
+            icon: Mail,
+            details,
+            remediation: {
+              title: 'How to fix',
+              steps: ['Add the RESEND_FROM secret with a verified sender email.'],
+            },
           };
         }
-        
-        // Check for warnings (domain verification issues)
+
         if (config.recommendations && config.recommendations.length > 0) {
-          // Check if it's just domain verification issues vs more serious problems
-          const hasApiErrors = config.recommendations.some((rec: string) => 
+          const hasApiErrors = config.recommendations.some((rec: string) =>
             rec.includes('API connection failed') || rec.includes('API error')
           );
-          
+
           if (hasApiErrors) {
             return {
               name: 'Resend Email Service',
               status: 'error',
-              message: 'API connection failed',
-              icon: Mail
+              message: 'Resend API connection failed',
+              icon: Mail,
+              details: [...details, ...config.recommendations],
+              remediation: {
+                title: 'How to fix',
+                steps: [
+                  'Verify the RESEND_API_KEY value in Resend dashboard.',
+                  'Rotate the key if it was revoked, then update the secret.',
+                ],
+              },
             };
           }
-          
+
           return {
             name: 'Resend Email Service',
             status: 'warning',
             message: 'Domain verification needed',
-            icon: Mail
+            icon: Mail,
+            details: [...details, ...config.recommendations],
+            remediation: {
+              title: 'How to fix',
+              steps: [
+                'Open Resend → Domains and complete the DNS verification records.',
+                'After DNS propagates, re-run this health check.',
+              ],
+            },
           };
         }
-        
-        // All good
+
         return {
           name: 'Resend Email Service',
           status: 'healthy',
           message: 'Service operational',
-          icon: Mail
+          icon: Mail,
+          details,
         };
       }
-      
-      // If we get here, something unexpected happened
+
       return {
         name: 'Resend Email Service',
         status: 'warning',
         message: 'Status verification incomplete',
-        icon: Mail
+        icon: Mail,
       };
-      
+
     } catch (err: any) {
       return {
         name: 'Resend Email Service',
         status: 'error',
         message: 'Health check failed',
-        icon: Mail
+        icon: Mail,
+        details: [err.message],
       };
     }
   };
@@ -248,14 +319,16 @@ export function SystemHealthStatus() {
       const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const { data: failures } = await supabase
         .from('conference_registration_codes')
-        .select('code, send_error, created_at, organizations(name)')
+        .select('id, code, send_error, created_at, organization_id, organizations(name)')
         .eq('sent_status', 'failed')
         .gte('created_at', since)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(20);
 
       const errors: ConferenceHubError[] = (failures || []).map((f: any) => ({
+        id: f.id,
         code: f.code,
+        organization_id: f.organization_id,
         organization_name: f.organizations?.name ?? null,
         send_error: f.send_error,
         created_at: f.created_at,
@@ -264,13 +337,56 @@ export function SystemHealthStatus() {
       const latency = Date.now() - startTime;
 
       if (errors.length > 0) {
+        // Group by root cause to give admins a clear diagnosis.
+        const sample = (errors[0].send_error || '').toLowerCase();
+        let remediation = {
+          title: 'How to fix',
+          steps: [
+            'Review each failed delivery in the list below.',
+            'Retry delivery from the row action once the underlying cause is resolved.',
+          ],
+        };
+        let message = `${errors.length} delivery failure${errors.length === 1 ? '' : 's'} in the last 30 days`;
+
+        if (sample.includes('401') || sample.includes('unauthorized')) {
+          message = `Conference Hub rejected ${errors.length} delivery attempt${errors.length === 1 ? '' : 's'} as Unauthorized (HTTP 401)`;
+          remediation = {
+            title: 'Likely cause: shared webhook secret mismatch',
+            steps: [
+              'Confirm the HESS_MEMBER_PORTAL_WEBHOOK_SECRET secret in Supabase Edge Function settings matches the value stored by Conference Hub.',
+              'If Conference Hub was recently redeployed or rotated its secret, update HESS_MEMBER_PORTAL_WEBHOOK_SECRET here to match.',
+              'After updating, use "Retry" on a failed code below to re-issue delivery.',
+            ],
+          };
+        } else if (sample.includes('404')) {
+          message = `Conference Hub webhook endpoint returned 404 for ${errors.length} attempt${errors.length === 1 ? '' : 's'}`;
+          remediation = {
+            title: 'Likely cause: webhook path or app URL wrong',
+            steps: [
+              'Verify the app_url on the conference-hub row in external_applications.',
+              'Confirm the receive-registration-code edge function is deployed on Conference Hub.',
+            ],
+          };
+        } else if (sample.includes('fetch error') || sample.includes('network') || sample.includes('timeout')) {
+          message = `Conference Hub unreachable for ${errors.length} attempt${errors.length === 1 ? '' : 's'}`;
+          remediation = {
+            title: 'Likely cause: network / downtime',
+            steps: [
+              'Check that Conference Hub is online and the app_url is reachable.',
+              'Retry delivery once connectivity is restored.',
+            ],
+          };
+        }
+
         return {
           name: 'Conference Hub Integration',
           status: 'warning',
-          message: `${errors.length} delivery failure${errors.length === 1 ? '' : 's'} in the last 30 days`,
+          message,
           icon: CalendarDays,
           latency,
           errors,
+          details: [`Endpoint: ${app.app_url}`],
+          remediation,
         };
       }
 
@@ -280,6 +396,7 @@ export function SystemHealthStatus() {
         message: `Connected to ${app.app_url}`,
         icon: CalendarDays,
         latency,
+        details: [`Endpoint: ${app.app_url}`],
       };
     } catch (err: any) {
       return {
@@ -371,6 +488,15 @@ export function SystemHealthStatus() {
     }
   };
 
+  const warningCount = services.filter(s => s.status === 'warning').length;
+  const errorCount = services.filter(s => s.status === 'error').length;
+  const overallSummary =
+    overallStatus === 'healthy'
+      ? 'All monitored services are operational.'
+      : overallStatus === 'checking'
+        ? 'Running health checks...'
+        : `${errorCount} error${errorCount === 1 ? '' : 's'}, ${warningCount} warning${warningCount === 1 ? '' : 's'} across monitored services. See details below.`;
+
   return (
     <div className="space-y-4">
       {/* Overall System Health */}
@@ -381,13 +507,24 @@ export function SystemHealthStatus() {
           </div>
           <div>
             <h3 className="font-semibold text-foreground">System Health</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">{overallSummary}</p>
+            <p className="text-xs text-muted-foreground/80 mt-0.5">
               {lastChecked ? `Last checked: ${lastChecked.toLocaleTimeString()}` : 'Checking...'}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {getStatusBadge(overallStatus)}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={runHealthChecks}
+            disabled={overallStatus === 'checking'}
+            className="gap-1"
+          >
+            <RefreshCw className={`h-3 w-3 ${overallStatus === 'checking' ? 'animate-spin' : ''}`} />
+            Re-check
+          </Button>
         </div>
       </div>
 
@@ -398,9 +535,9 @@ export function SystemHealthStatus() {
           return (
             <div
               key={service.name}
-              className="flex items-center justify-between p-4 bg-card rounded-lg border border-border hover:shadow-md transition-shadow"
+              className="flex items-start justify-between p-4 bg-card rounded-lg border border-border hover:shadow-md transition-shadow"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3 flex-1">
                 <div className="p-2 bg-muted rounded-lg">
                   <IconComponent className="h-5 w-5 text-muted-foreground" />
                 </div>
@@ -413,7 +550,31 @@ export function SystemHealthStatus() {
                       <span className="text-xs text-muted-foreground">{service.latency}ms</span>
                     </div>
                   )}
-                  
+
+                  {/* Additional details (fingerprint / endpoint / config) */}
+                  {service.details && service.details.length > 0 && (
+                    <ul className="mt-2 text-xs text-muted-foreground space-y-0.5">
+                      {service.details.map((d, i) => (
+                        <li key={i} className="break-words">• {d}</li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Recommended remediation when status is not healthy */}
+                  {service.remediation && service.status !== 'healthy' && service.status !== 'checking' && (
+                    <div className="mt-2 p-2 rounded border border-yellow-300/60 bg-yellow-50 dark:border-yellow-800/60 dark:bg-yellow-950/20">
+                      <div className="flex items-center gap-1 text-xs font-medium text-yellow-800 dark:text-yellow-200">
+                        <Lightbulb className="h-3 w-3" />
+                        {service.remediation.title}
+                      </div>
+                      <ol className="mt-1 ml-4 list-decimal text-xs text-yellow-900/90 dark:text-yellow-100/90 space-y-0.5">
+                        {service.remediation.steps.map((step, i) => (
+                          <li key={i}>{step}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
                   {/* Show detailed configuration info for Resend */}
                   {service.name === 'Resend Email Service' && (
                     <div className="mt-2 text-xs space-y-1">
@@ -433,21 +594,36 @@ export function SystemHealthStatus() {
                         </AccordionTrigger>
                         <AccordionContent>
                           <ul className="space-y-2 mt-2">
-                            {service.errors.map((e, idx) => (
-                              <li key={idx} className="text-xs p-2 rounded border border-destructive/30 bg-destructive/5">
-                                <div className="flex justify-between gap-2">
-                                  <span className="font-medium">
-                                    {e.organization_name || 'Unknown org'} — <code>{e.code}</code>
-                                  </span>
-                                  <span className="text-muted-foreground whitespace-nowrap">
-                                    {new Date(e.created_at).toLocaleString()}
-                                  </span>
-                                </div>
-                                <div className="mt-1 text-destructive break-words">
-                                  {e.send_error || 'No error message recorded'}
-                                </div>
-                              </li>
-                            ))}
+                            {service.errors.map((e, idx) => {
+                              const rid = e.id ?? e.code;
+                              return (
+                                <li key={idx} className="text-xs p-2 rounded border border-destructive/30 bg-destructive/5">
+                                  <div className="flex justify-between gap-2">
+                                    <span className="font-medium">
+                                      {e.organization_name || 'Unknown org'} — <code>{e.code}</code>
+                                    </span>
+                                    <span className="text-muted-foreground whitespace-nowrap">
+                                      {new Date(e.created_at).toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <div className="mt-1 text-destructive break-words">
+                                    {e.send_error || 'No error message recorded'}
+                                  </div>
+                                  <div className="mt-2 flex justify-end">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 px-2 text-xs gap-1"
+                                      disabled={retryingId === rid || !e.organization_id}
+                                      onClick={() => retryConferenceHubDelivery(e)}
+                                    >
+                                      <RefreshCw className={`h-3 w-3 ${retryingId === rid ? 'animate-spin' : ''}`} />
+                                      Retry delivery
+                                    </Button>
+                                  </div>
+                                </li>
+                              );
+                            })}
                           </ul>
                         </AccordionContent>
                       </AccordionItem>
@@ -455,7 +631,7 @@ export function SystemHealthStatus() {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pt-1">
                 {getStatusIcon(service.status)}
               </div>
             </div>
