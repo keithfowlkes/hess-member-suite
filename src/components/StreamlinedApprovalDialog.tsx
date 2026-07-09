@@ -17,6 +17,8 @@ import { useFeeTiers } from '@/hooks/useFeeTiers';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AIVerificationResult } from '@/components/AIVerificationResult';
+import { useSystemSetting } from '@/hooks/useSystemSettings';
+import { getCurrentInvoicePeriod } from '@/utils/invoicePeriod';
 import { 
   CheckCircle, 
   XCircle, 
@@ -74,6 +76,8 @@ export function StreamlinedApprovalDialog({
   const { user } = useAuth();
   const sendInvoiceMutation = useSendInvoice();
   const { feeTiers } = useFeeTiers();
+  const { data: termStartSetting } = useSystemSetting('default_term_end_date');
+  const invoicePeriod = getCurrentInvoicePeriod(termStartSetting?.setting_value);
 
   // Reset form when dialog closes
   React.useEffect(() => {
@@ -142,9 +146,8 @@ export function StreamlinedApprovalDialog({
     if (!membershipStartDate || !invoiceAmount) return null;
     
     const membershipStart = new Date(membershipStartDate);
-    const currentYear = new Date().getFullYear();
-    const yearEnd = new Date(currentYear, 11, 31);
-    const yearStart = new Date(currentYear, 0, 1);
+    const yearEnd = invoicePeriod.endDate;
+    const yearStart = invoicePeriod.startDate;
     
     if (membershipStart <= yearStart) return null;
     
@@ -178,8 +181,8 @@ export function StreamlinedApprovalDialog({
             membershipStartDate,
             invoiceAmount: parseFloat(invoiceAmount),
             proratedAmount: calculateProratedAmount(),
-            periodStartDate: new Date(membershipStartDate).toISOString().split('T')[0],
-            periodEndDate: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0],
+            periodStartDate: invoicePeriod.start,
+            periodEndDate: invoicePeriod.end,
             notes: invoiceNotes || undefined
           });
         }
