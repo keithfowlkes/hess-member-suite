@@ -158,6 +158,13 @@ const MasterDashboard = () => {
   const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length + pendingRegistrationUpdatesCount + pendingTransfersCount;
   const activeInvitationsCount = invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length;
   const totalOrganizationActions = pendingApprovalsCount + activeInvitationsCount;
+
+  // Revenue collected to date from paid invoices
+  const collectedRevenue = useMemo(() => {
+    return invoices
+      .filter(inv => inv.status === 'paid')
+      .reduce((sum, inv) => sum + (inv.prorated_amount || inv.amount || 0), 0);
+  }, [invoices]);
   const approveMemberInfoUpdate = useApproveReassignmentRequest();
   const rejectMemberInfoUpdate = useRejectReassignmentRequest();
   const deleteMemberInfoUpdate = useDeleteReassignmentRequest();
