@@ -69,6 +69,36 @@ export function SystemHealthStatus() {
 
   const [overallStatus, setOverallStatus] = useState<'healthy' | 'warning' | 'error' | 'checking'>('checking');
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const retryConferenceHubDelivery = async (err: ConferenceHubError) => {
+    if (!err.organization_id) {
+      toast({ title: 'Missing organization', description: 'Cannot retry without an organization id.', variant: 'destructive' });
+      return;
+    }
+    setRetryingId(err.id ?? err.code);
+    try {
+      const { data, error } = await supabase.functions.invoke('issue-conference-registration-code', {
+        body: { organization_id: err.organization_id, conference_slug: 'hess2026' },
+      });
+      if (error) throw error;
+      if (data?.delivered) {
+        toast({ title: 'Retry succeeded', description: `Code ${data.code || err.code} delivered to Conference Hub.` });
+      } else {
+        toast({
+          title: 'Retry still failing',
+          description: data?.error || data?.reason || 'Delivery did not succeed. See error details.',
+          variant: 'destructive',
+        });
+      }
+      await runHealthChecks();
+    } catch (e: any) {
+      toast({ title: 'Retry failed', description: e.message || 'Unknown error', variant: 'destructive' });
+    } finally {
+      setRetryingId(null);
+    }
+  };
 
   const checkSupabaseHealth = async (): Promise<ServiceStatus> => {
     const startTime = Date.now();
