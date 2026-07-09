@@ -158,6 +158,13 @@ const MasterDashboard = () => {
   const pendingApprovalsCount = pendingOrganizations.length + pendingRegistrations.length + memberInfoUpdateRequests.length + profileEditRequests.length + pendingRegistrationUpdatesCount + pendingTransfersCount;
   const activeInvitationsCount = invitations.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).length;
   const totalOrganizationActions = pendingApprovalsCount + activeInvitationsCount;
+
+  // Revenue collected to date from paid invoices
+  const collectedRevenue = useMemo(() => {
+    return invoices
+      .filter(inv => inv.status === 'paid')
+      .reduce((sum, inv) => sum + (inv.prorated_amount || inv.amount || 0), 0);
+  }, [invoices]);
   const approveMemberInfoUpdate = useApproveReassignmentRequest();
   const rejectMemberInfoUpdate = useRejectReassignmentRequest();
   const deleteMemberInfoUpdate = useDeleteReassignmentRequest();
@@ -2053,10 +2060,19 @@ const MasterDashboard = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <Card className="p-4">
-                <h4 className="font-medium mb-2">Total Revenue</h4>
+                <h4 className="font-medium mb-2">Total Projected Revenue</h4>
                 <p className="text-2xl font-bold text-green-600">${dashboardStats.totalRevenue.toLocaleString()}</p>
+              </Card>
+              <Card className="p-4">
+                <h4 className="font-medium mb-2">Revenue Collected to Date</h4>
+                <p className="text-2xl font-bold text-blue-600">${collectedRevenue.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">
+                  {dashboardStats.totalRevenue > 0
+                    ? `${Math.round((collectedRevenue / dashboardStats.totalRevenue) * 100)}% of projected revenue`
+                    : 'No projected revenue'}
+                </p>
               </Card>
               <Card className="p-4">
                 <h4 className="font-medium mb-2">Active Organizations</h4>
@@ -2070,6 +2086,16 @@ const MasterDashboard = () => {
                 <div className="flex justify-between">
                   <span className="text-sm">Membership Fees</span>
                   <span className="text-sm font-medium">${dashboardStats.totalRevenue.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Collected to Date</span>
+                  <span className="text-sm font-medium text-blue-600">${collectedRevenue.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span className="text-sm">Outstanding Revenue</span>
+                  <span className="text-sm">
+                    ${Math.max(0, dashboardStats.totalRevenue - collectedRevenue).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span className="text-sm">Average per Organization</span>
