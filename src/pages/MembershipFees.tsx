@@ -1601,6 +1601,24 @@ export default function MembershipFees() {
                         </div>
                       </div>
 
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="stripe-processing-fee">Stripe Processing Fee ($)</Label>
+                          <Input
+                            id="stripe-processing-fee"
+                            type="number"
+                            step="0.01"
+                            placeholder="e.g., 9.27"
+                            value={stripeProcessingFee}
+                            onChange={(e) => setStripeProcessingFee(e.target.value)}
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            Amount subtracted from the invoice total when viewing, downloading, printing, or forwarding the ACH/Check version of an invoice.
+                          </p>
+                        </div>
+                      </div>
+
+
                       {/* Additional Fee Tiers */}
                       {additionalFeeTiers.length > 0 && (
                         <div className="space-y-4">
