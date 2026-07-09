@@ -286,14 +286,16 @@ export function SystemHealthStatus() {
       const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const { data: failures } = await supabase
         .from('conference_registration_codes')
-        .select('code, send_error, created_at, organizations(name)')
+        .select('id, code, send_error, created_at, organization_id, organizations(name)')
         .eq('sent_status', 'failed')
         .gte('created_at', since)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(20);
 
       const errors: ConferenceHubError[] = (failures || []).map((f: any) => ({
+        id: f.id,
         code: f.code,
+        organization_id: f.organization_id,
         organization_name: f.organizations?.name ?? null,
         send_error: f.send_error,
         created_at: f.created_at,
@@ -302,13 +304,56 @@ export function SystemHealthStatus() {
       const latency = Date.now() - startTime;
 
       if (errors.length > 0) {
+        // Group by root cause to give admins a clear diagnosis.
+        const sample = (errors[0].send_error || '').toLowerCase();
+        let remediation = {
+          title: 'How to fix',
+          steps: [
+            'Review each failed delivery in the list below.',
+            'Retry delivery from the row action once the underlying cause is resolved.',
+          ],
+        };
+        let message = `${errors.length} delivery failure${errors.length === 1 ? '' : 's'} in the last 30 days`;
+
+        if (sample.includes('401') || sample.includes('unauthorized')) {
+          message = `Conference Hub rejected ${errors.length} delivery attempt${errors.length === 1 ? '' : 's'} as Unauthorized (HTTP 401)`;
+          remediation = {
+            title: 'Likely cause: shared webhook secret mismatch',
+            steps: [
+              'Confirm the HESS_MEMBER_PORTAL_WEBHOOK_SECRET secret in Supabase Edge Function settings matches the value stored by Conference Hub.',
+              'If Conference Hub was recently redeployed or rotated its secret, update HESS_MEMBER_PORTAL_WEBHOOK_SECRET here to match.',
+              'After updating, use "Retry" on a failed code below to re-issue delivery.',
+            ],
+          };
+        } else if (sample.includes('404')) {
+          message = `Conference Hub webhook endpoint returned 404 for ${errors.length} attempt${errors.length === 1 ? '' : 's'}`;
+          remediation = {
+            title: 'Likely cause: webhook path or app URL wrong',
+            steps: [
+              'Verify the app_url on the conference-hub row in external_applications.',
+              'Confirm the receive-registration-code edge function is deployed on Conference Hub.',
+            ],
+          };
+        } else if (sample.includes('fetch error') || sample.includes('network') || sample.includes('timeout')) {
+          message = `Conference Hub unreachable for ${errors.length} attempt${errors.length === 1 ? '' : 's'}`;
+          remediation = {
+            title: 'Likely cause: network / downtime',
+            steps: [
+              'Check that Conference Hub is online and the app_url is reachable.',
+              'Retry delivery once connectivity is restored.',
+            ],
+          };
+        }
+
         return {
           name: 'Conference Hub Integration',
           status: 'warning',
-          message: `${errors.length} delivery failure${errors.length === 1 ? '' : 's'} in the last 30 days`,
+          message,
           icon: CalendarDays,
           latency,
           errors,
+          details: [`Endpoint: ${app.app_url}`],
+          remediation,
         };
       }
 
@@ -318,6 +363,7 @@ export function SystemHealthStatus() {
         message: `Connected to ${app.app_url}`,
         icon: CalendarDays,
         latency,
+        details: [`Endpoint: ${app.app_url}`],
       };
     } catch (err: any) {
       return {
