@@ -31,14 +31,24 @@ export const useResendInvoice = () => {
   return useMutation({
     mutationFn: async ({ invoiceId, overrideEmail, forwardComment, paymentMode = 'card' }: ResendInvoiceParams) => {
       console.log('Resending invoice:', invoiceId, 'overrideEmail:', overrideEmail || '(none)', 'forwardComment:', forwardComment ? '(set)' : '(none)', 'paymentMode:', paymentMode);
-      // Fetch invoice and organization email
+      // Fetch invoice (avoid embedded resource join so RLS/embed issues don't hide the row)
       const { data: invoice, error: invErr } = await supabase
         .from('invoices')
-        .select('id, invoice_number, amount, due_date, period_start_date, period_end_date, notes, organization_id, organizations ( id, name, email )')
+        .select('id, invoice_number, amount, due_date, period_start_date, period_end_date, notes, organization_id')
         .eq('id', invoiceId)
         .maybeSingle();
       if (invErr) throw invErr;
       if (!invoice) throw new Error('Invoice not found');
+
+      // Fetch organization separately
+      const { data: orgRow, error: orgErr } = await supabase
+        .from('organizations')
+        .select('id, name, email')
+        .eq('id', (invoice as any).organization_id)
+        .maybeSingle();
+      if (orgErr) throw orgErr;
+      (invoice as any).organizations = orgRow || null;
+
 
       // Look up ACH fee subtraction amount
       let stripeFee = 9.27;
