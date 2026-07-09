@@ -437,7 +437,7 @@ const Index = () => {
                         <div>
                           <h4 className="font-medium text-foreground mb-1">Keep Your Profile Current</h4>
                           <p className="text-sm text-muted-foreground mb-3">
-                            Update your organization and contact information
+                            Update your organization, contact information or password
                           </p>
                         </div>
                         <Button 
