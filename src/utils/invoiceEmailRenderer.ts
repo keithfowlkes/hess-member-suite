@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { formatInvoiceDate } from '@/utils/invoicePeriod';
 
 interface InvoiceEmailData {
   organization_name: string;
@@ -29,9 +30,9 @@ function escapeHtml(input: string): string {
 
 export function renderInvoiceEmailHTML(data: InvoiceEmailData): string {
   const invoiceDate = format(new Date(), 'MMM dd, yyyy');
-  const dueDate = format(new Date(data.due_date), 'MMM dd, yyyy');
-  const periodStart = format(new Date(data.period_start_date), 'MMM dd, yyyy');
-  const periodEnd = format(new Date(data.period_end_date), 'MMM dd, yyyy');
+  const dueDate = formatInvoiceDate(data.due_date);
+  const periodStart = formatInvoiceDate(data.period_start_date);
+  const periodEnd = formatInvoiceDate(data.period_end_date);
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white; color: #333; font-size: 14px; line-height: 1.4;">

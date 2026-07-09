@@ -5,6 +5,7 @@ import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { format } from 'date-fns';
 import { Download } from 'lucide-react';
 import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
+import { CURRENT_INVOICE_PERIOD_END, CURRENT_INVOICE_PERIOD_START } from '@/utils/invoicePeriod';
 
 interface InvoicePreviewModalProps {
   open: boolean;
@@ -53,8 +54,8 @@ export function InvoicePreviewModal({
     prorated_amount: proratedAmount,
     invoice_date: new Date().toISOString(),
     due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-    period_start_date: membershipStartDate,
-    period_end_date: new Date(new Date().getFullYear(), 11, 31).toISOString(), // End of current year
+    period_start_date: CURRENT_INVOICE_PERIOD_START,
+    period_end_date: CURRENT_INVOICE_PERIOD_END,
     status: 'draft' as const,
     notes: notes || '',
     organizations: {

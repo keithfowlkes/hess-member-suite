@@ -11,6 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { UnifiedComparisonModal } from './UnifiedComparisonModal';
+import { useSystemSetting } from '@/hooks/useSystemSettings';
+import { getCurrentInvoicePeriod } from '@/utils/invoicePeriod';
 
 interface OrganizationApprovalDialogProps {
   open: boolean;
@@ -36,6 +38,7 @@ export const OrganizationApprovalDialog = ({
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [originalData, setOriginalData] = useState<any>(null);
   const { toast } = useToast();
+  const { data: termStartSetting } = useSystemSetting('default_term_end_date');
 
   // Fetch original organization data for comparison when dialog opens
   React.useEffect(() => {
@@ -197,7 +200,7 @@ export const OrganizationApprovalDialog = ({
       const today = new Date();
       const dueDate = new Date();
       dueDate.setDate(today.getDate() + 30);
-      const periodEnd = new Date(today.getFullYear() + 1, 5, 30);
+      const invoicePeriod = getCurrentInvoicePeriod(termStartSetting?.setting_value);
       
       const invoiceNumber = `INV-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${Date.now().toString().slice(-4)}`;
       
@@ -209,8 +212,8 @@ export const OrganizationApprovalDialog = ({
           amount: proratedAmount,
           prorated_amount: proratedAmount,
           due_date: format(dueDate, 'yyyy-MM-dd'),
-          period_start_date: format(today, 'yyyy-MM-dd'),
-          period_end_date: format(periodEnd, 'yyyy-MM-dd'),
+          period_start_date: invoicePeriod.start,
+          period_end_date: invoicePeriod.end,
           notes: `Prorated membership fee for ${organization.name} (${Math.round((proratedAmount / (organization.annual_fee_amount || 1000)) * 100)}% of annual fee)`
         });
 
