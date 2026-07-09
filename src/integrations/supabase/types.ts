@@ -2244,6 +2244,7 @@ export type Database = {
         Args: { _profile_id: string }
         Returns: boolean
       }
+      email_exists: { Args: { p_email: string }; Returns: boolean }
       fix_user_password_from_registration: { Args: never; Returns: string }
       generate_secure_token: { Args: never; Returns: string }
       get_user_organization: { Args: { _user_id: string }; Returns: string }
