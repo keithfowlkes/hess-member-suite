@@ -28,6 +28,7 @@ import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { InvoiceDialog } from '@/components/InvoiceDialog';
 import { InvoiceTemplateEditor } from '@/components/InvoiceTemplateEditor';
 import { PendingOrganizationsModal } from '@/components/PendingOrganizationsModal';
+import { FeeStatsDrilldownModal } from '@/components/FeeStatsDrilldownModal';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   DollarSign, 
