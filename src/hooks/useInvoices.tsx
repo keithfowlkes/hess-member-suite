@@ -66,30 +66,34 @@ export function useInvoices() {
           .eq('user_id', user?.id)
           .maybeSingle();
 
-        let userOrg = null;
+        const orgIds: string[] = [];
 
         if (profileData?.id) {
-          const { data: primaryOrg } = await supabase
+          // Use list query (no .maybeSingle) so duplicate primary-contact
+          // assignments don't silently return null via PGRST116.
+          const { data: primaryOrgs } = await supabase
             .from('organizations')
             .select('id')
-            .eq('contact_person_id', profileData.id)
-            .maybeSingle();
+            .eq('contact_person_id', profileData.id);
 
-          userOrg = primaryOrg;
+          if (primaryOrgs?.length) {
+            orgIds.push(...primaryOrgs.map(o => o.id));
+          }
         }
 
-        if (!userOrg && profileData?.organization) {
-          const { data: memberOrg } = await supabase
+        if (orgIds.length === 0 && profileData?.organization) {
+          const { data: memberOrgs } = await supabase
             .from('organizations')
             .select('id')
-            .eq('name', profileData.organization)
-            .maybeSingle();
+            .eq('name', profileData.organization);
 
-          userOrg = memberOrg;
+          if (memberOrgs?.length) {
+            orgIds.push(...memberOrgs.map(o => o.id));
+          }
         }
 
-        if (userOrg?.id) {
-          query = query.eq('organization_id', userOrg.id);
+        if (orgIds.length > 0) {
+          query = query.in('organization_id', orgIds);
         } else {
           query = query.eq('organization_id', '__no_matching_organization__');
         }
