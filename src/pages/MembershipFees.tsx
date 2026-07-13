@@ -1392,7 +1392,10 @@ export default function MembershipFees() {
               </Card>
               
               {/* Revenue Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-green-50 border-emerald-100/50 hover:shadow-md hover:shadow-emerald-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card
+                className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-green-50 border-emerald-100/50 hover:shadow-md hover:shadow-emerald-100/20 transition-all duration-300 hover:scale-105 group cursor-pointer"
+                onClick={() => setDrilldownType('revenue')}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/10"></div>
                 <CardContent className="relative p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -1400,7 +1403,7 @@ export default function MembershipFees() {
                       <DollarSign className="h-4 w-4 text-white" />
                     </div>
                     <div className="text-xs font-medium text-emerald-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      Annual Total
+                      Click to View
                     </div>
                   </div>
                   <div>
