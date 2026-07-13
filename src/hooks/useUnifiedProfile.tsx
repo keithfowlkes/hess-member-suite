@@ -107,26 +107,28 @@ export function useUnifiedProfile(userId?: string) {
       // Get organization data if user is a primary contact OR organization member
       let orgData = null;
       
-      // First, try to get organization where user is primary contact
-      const { data: primaryOrgData } = await supabase
+      // First, try to get organization(s) where user is primary contact.
+      // Use a list query (not .maybeSingle) so a duplicate contact_person_id
+      // assignment doesn't silently return null via PGRST116.
+      const { data: primaryOrgs } = await supabase
         .from('organizations')
         .select('*')
         .eq('contact_person_id', profileData.id)
-        .maybeSingle();
-      
-      if (primaryOrgData) {
-        orgData = primaryOrgData;
+        .order('created_at', { ascending: true });
+
+      if (primaryOrgs && primaryOrgs.length > 0) {
+        orgData = primaryOrgs[0];
       } else {
         // If not primary contact, check if user belongs to an organization by profile.organization field
         if (profileData.organization) {
-          const { data: memberOrgData } = await supabase
+          const { data: memberOrgs } = await supabase
             .from('organizations')
             .select('*')
             .eq('name', profileData.organization)
-            .maybeSingle();
-          
-          if (memberOrgData) {
-            orgData = memberOrgData;
+            .order('created_at', { ascending: true });
+
+          if (memberOrgs && memberOrgs.length > 0) {
+            orgData = memberOrgs[0];
           }
         }
       }
