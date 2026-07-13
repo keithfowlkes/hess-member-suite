@@ -126,6 +126,9 @@ export default function MembershipFees() {
   // Pending modal states
   const [pendingModalOpen, setPendingModalOpen] = useState(false);
 
+  // Drill-down modals for stat cards
+  const [drilldownType, setDrilldownType] = useState<null | 'organizations' | 'revenue' | 'active' | 'average'>(null);
+
   // Prorated fee states
   const initialInvoicePeriod = getCurrentInvoicePeriod();
   const [defaultTermEndDate, setDefaultTermEndDate] = useState<Date>(initialInvoicePeriod.startDate);
