@@ -268,55 +268,61 @@ export default function MembershipFees() {
     };
   };
 
-  // Calculate prorated fee based on membership start date to default term end date
+  // Calculate prorated fee based on membership start date to default term end date.
+  // The billing period runs from (termEndDate - 1 year) → termEndDate (365 days).
   const calculateProratedFee = (membershipStartDate: string, annualFee: number, termEndDate: Date = defaultTermEndDate): number => {
     const startDate = new Date(membershipStartDate);
-    const endDate = new Date(termEndDate);
-    
-    // If start date is after term end date, use next year's term end date
+    let endDate = new Date(termEndDate);
+
+    // If start date is after this term's end date, bump to the next term
     if (startDate > endDate) {
+      endDate = new Date(endDate);
       endDate.setFullYear(endDate.getFullYear() + 1);
     }
-    
-    // Calculate days from start to term end
-    const remainingDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    
-    // Calculate total days in the billing period (from Jan 1 to term end date)
-    const yearStart = new Date(endDate.getFullYear(), 0, 1);
-    const totalDaysInPeriod = Math.ceil((endDate.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24));
-    
-    // Calculate prorated amount based on remaining days (minimum 25% of annual fee)
+
+    // The period runs from one year before the term end to the term end
+    const periodStart = new Date(endDate);
+    periodStart.setFullYear(periodStart.getFullYear() - 1);
+
+    // Days from the registration date to the term end date
+    const remainingDays = Math.max(
+      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)),
+      0
+    );
+
+    // Total days in the billing period (should be 365)
+    const totalDaysInPeriod = Math.ceil((endDate.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
+
+    // If they registered before the period started, they owe the full annual fee
+    if (startDate <= periodStart) return Math.round(annualFee);
+
+    // Prorated amount (minimum 25% of the annual fee)
     const proratedAmount = Math.max((remainingDays / totalDaysInPeriod) * annualFee, annualFee * 0.25);
-    
+
     return Math.round(proratedAmount);
   };
 
   // Get organizations that need prorated calculation
   const getOrganizationsNeedingProration = () => {
-    const currentYear = new Date().getFullYear();
-    const termEndYear = defaultTermEndDate.getFullYear();
-    
+    // The period runs from (termEnd - 1 year) → termEnd
+    const periodStart = new Date(defaultTermEndDate);
+    periodStart.setFullYear(periodStart.getFullYear() - 1);
+
     return organizations.filter(org => {
       if (!org.membership_start_date || !org.annual_fee_amount) return false;
-      
+
       const startDate = new Date(org.membership_start_date);
-      const startYear = startDate.getFullYear();
-      
-      // Check if they joined mid-year (after January 1st)
-      const yearStart = new Date(startYear, 0, 1);
-      const isNewMember = startDate > yearStart;
-      
-      // Check if they joined in current billing period
-      const isCurrentPeriod = startYear === currentYear || startYear === termEndYear;
-      
-      return isNewMember && isCurrentPeriod;
+
+      // Only include members who joined after the current billing period started
+      // and before the term end date.
+      return startDate > periodStart && startDate < defaultTermEndDate;
     }).map(org => {
       const calculatedProrated = calculateProratedFee(
-        org.membership_start_date!, 
-        org.annual_fee_amount!, 
+        org.membership_start_date!,
+        org.annual_fee_amount!,
         defaultTermEndDate
       );
-      
+
       return {
         ...org,
         calculatedProratedFee: calculatedProrated,
@@ -1563,7 +1569,7 @@ export default function MembershipFees() {
                         <strong>Current Setting:</strong> {format(defaultTermEndDate, "MMMM dd, yyyy")}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        New members joining after January 1st will have their fees prorated from their registration date to this term end date.
+                        New members joining after {format(new Date(defaultTermEndDate.getFullYear() - 1, defaultTermEndDate.getMonth(), defaultTermEndDate.getDate()), "MMMM d, yyyy")} will have their fees prorated from their registration date to this term end date.
                       </p>
                     </div>
                   </CardContent>
