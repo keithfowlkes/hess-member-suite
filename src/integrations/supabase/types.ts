@@ -2252,6 +2252,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_user_organization_ids: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
       get_user_password_info: {
         Args: { user_email: string }
         Returns: {
