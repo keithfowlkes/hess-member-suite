@@ -1569,7 +1569,7 @@ export default function MembershipFees() {
                         <strong>Current Setting:</strong> {format(defaultTermEndDate, "MMMM dd, yyyy")}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        New members joining after January 1st will have their fees prorated from their registration date to this term end date.
+                        New members joining after {format(new Date(defaultTermEndDate.getFullYear() - 1, defaultTermEndDate.getMonth(), defaultTermEndDate.getDate()), "MMMM d, yyyy")} will have their fees prorated from their registration date to this term end date.
                       </p>
                     </div>
                   </CardContent>
