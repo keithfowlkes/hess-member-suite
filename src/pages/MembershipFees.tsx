@@ -28,6 +28,7 @@ import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { InvoiceDialog } from '@/components/InvoiceDialog';
 import { InvoiceTemplateEditor } from '@/components/InvoiceTemplateEditor';
 import { PendingOrganizationsModal } from '@/components/PendingOrganizationsModal';
+import { FeeStatsDrilldownModal } from '@/components/FeeStatsDrilldownModal';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   DollarSign, 
@@ -124,6 +125,9 @@ export default function MembershipFees() {
 
   // Pending modal states
   const [pendingModalOpen, setPendingModalOpen] = useState(false);
+
+  // Drill-down modals for stat cards
+  const [drilldownType, setDrilldownType] = useState<null | 'organizations' | 'revenue' | 'active' | 'average'>(null);
 
   // Prorated fee states
   const initialInvoicePeriod = getCurrentInvoicePeriod();
@@ -1366,7 +1370,10 @@ export default function MembershipFees() {
             {/* Redesigned Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
               {/* Organizations Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 border-blue-100/50 hover:shadow-md hover:shadow-blue-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card
+                className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 border-blue-100/50 hover:shadow-md hover:shadow-blue-100/20 transition-all duration-300 hover:scale-105 group cursor-pointer"
+                onClick={() => setDrilldownType('organizations')}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/10"></div>
                 <CardContent className="relative p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -1374,7 +1381,7 @@ export default function MembershipFees() {
                       <Users className="h-4 w-4 text-white" />
                     </div>
                     <div className="text-xs font-medium text-blue-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      Total Count
+                      Click to View
                     </div>
                   </div>
                   <div>
@@ -1385,7 +1392,10 @@ export default function MembershipFees() {
               </Card>
               
               {/* Revenue Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-green-50 border-emerald-100/50 hover:shadow-md hover:shadow-emerald-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card
+                className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-green-50 border-emerald-100/50 hover:shadow-md hover:shadow-emerald-100/20 transition-all duration-300 hover:scale-105 group cursor-pointer"
+                onClick={() => setDrilldownType('revenue')}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/10"></div>
                 <CardContent className="relative p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -1393,7 +1403,7 @@ export default function MembershipFees() {
                       <DollarSign className="h-4 w-4 text-white" />
                     </div>
                     <div className="text-xs font-medium text-emerald-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      Annual Total
+                      Click to View
                     </div>
                   </div>
                   <div>
@@ -1404,7 +1414,10 @@ export default function MembershipFees() {
               </Card>
               
               {/* Active Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 via-white to-emerald-50 border-green-100/50 hover:shadow-md hover:shadow-green-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card
+                className="relative overflow-hidden bg-gradient-to-br from-green-50 via-white to-emerald-50 border-green-100/50 hover:shadow-md hover:shadow-green-100/20 transition-all duration-300 hover:scale-105 group cursor-pointer"
+                onClick={() => setDrilldownType('active')}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/10"></div>
                 <CardContent className="relative p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -1412,7 +1425,7 @@ export default function MembershipFees() {
                       <CheckSquare className="h-4 w-4 text-white" />
                     </div>
                     <div className="text-xs font-medium text-green-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      Paid Members
+                      Click to View
                     </div>
                   </div>
                   <div>
@@ -1467,7 +1480,10 @@ export default function MembershipFees() {
               </Card>
               
               {/* Average Fee Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-violet-50 border-purple-100/50 hover:shadow-md hover:shadow-purple-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card
+                className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-violet-50 border-purple-100/50 hover:shadow-md hover:shadow-purple-100/20 transition-all duration-300 hover:scale-105 group cursor-pointer"
+                onClick={() => setDrilldownType('average')}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-violet-500/10"></div>
                 <CardContent className="relative p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -1475,7 +1491,7 @@ export default function MembershipFees() {
                       <DollarSign className="h-4 w-4 text-white" />
                     </div>
                     <div className="text-xs font-medium text-purple-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      Per Member
+                      Click to View
                     </div>
                   </div>
                   <div>
@@ -3302,6 +3318,113 @@ export default function MembershipFees() {
             onClose={() => setPendingModalOpen(false)}
             organizations={organizations}
           />
+
+          {/* Stat Card Drill-down Modal */}
+          {(() => {
+            if (!drilldownType) return null;
+            const activeOrgs = organizations.filter(o => o.membership_status === 'active');
+
+            // Compute paid revenue from invoices marked paid
+            const paidRevenue = invoices
+              .filter((inv: any) => inv.status === 'paid')
+              .reduce((sum: number, inv: any) => sum + Number(inv.prorated_amount ?? inv.amount ?? 0), 0);
+            const outstanding = Math.max(stats.totalRevenue - paidRevenue, 0);
+
+            // Determine which orgs have a paid invoice (any period)
+            const paidOrgIds = new Set(
+              invoices.filter((inv: any) => inv.status === 'paid').map((inv: any) => inv.organization_id)
+            );
+
+            if (drilldownType === 'organizations') {
+              return (
+                <FeeStatsDrilldownModal
+                  isOpen
+                  onClose={() => setDrilldownType(null)}
+                  title="All Organizations"
+                  description="Every organization tracked in the fee system."
+                  organizations={organizations as any}
+                  summary={[
+                    { label: 'Total', value: String(stats.totalOrganizations) },
+                    { label: 'Active', value: String(stats.paidFees), tone: 'success' },
+                    { label: 'Pending', value: String(stats.pendingFees), tone: 'warning' },
+                  ]}
+                />
+              );
+            }
+
+            if (drilldownType === 'revenue') {
+              // Only include organizations with a fee amount, sorted by amount desc via alpha in modal
+              const revenueOrgs = organizations.filter(o => (o.annual_fee_amount || 0) > 0);
+              return (
+                <FeeStatsDrilldownModal
+                  isOpen
+                  onClose={() => setDrilldownType(null)}
+                  title="Total Revenue Breakdown"
+                  description="Annual fees billed across all organizations, and revenue actually collected."
+                  organizations={revenueOrgs as any}
+                  amountLabel="Annual Fee"
+                  summary={[
+                    { label: 'Annual Total Billed', value: `$${stats.totalRevenue.toLocaleString()}` },
+                    { label: 'Current Paid Revenue', value: `$${paidRevenue.toLocaleString()}`, tone: 'success' },
+                    { label: 'Outstanding', value: `$${outstanding.toLocaleString()}`, tone: 'warning' },
+                  ]}
+                  getAmount={(org) => {
+                    const paid = paidOrgIds.has(org.id);
+                    return org.annual_fee_amount ? Number(org.annual_fee_amount) : null;
+                  }}
+                />
+              );
+            }
+
+            if (drilldownType === 'active') {
+              return (
+                <FeeStatsDrilldownModal
+                  isOpen
+                  onClose={() => setDrilldownType(null)}
+                  title="Active Organizations"
+                  description="Organizations with an active membership status."
+                  organizations={activeOrgs as any}
+                  summary={[
+                    { label: 'Active', value: String(activeOrgs.length), tone: 'success' },
+                    {
+                      label: 'Paid Invoices',
+                      value: String(activeOrgs.filter(o => paidOrgIds.has(o.id)).length),
+                      tone: 'success',
+                    },
+                    {
+                      label: 'Unpaid',
+                      value: String(activeOrgs.filter(o => !paidOrgIds.has(o.id)).length),
+                      tone: 'warning',
+                    },
+                  ]}
+                />
+              );
+            }
+
+            if (drilldownType === 'average') {
+              const orgsWithFees = organizations.filter(o => (o.annual_fee_amount || 0) > 0);
+              const amounts = orgsWithFees.map(o => Number(o.annual_fee_amount || 0));
+              const min = amounts.length ? Math.min(...amounts) : 0;
+              const max = amounts.length ? Math.max(...amounts) : 0;
+              return (
+                <FeeStatsDrilldownModal
+                  isOpen
+                  onClose={() => setDrilldownType(null)}
+                  title="Average Fee Breakdown"
+                  description="Fee amounts across organizations that have an annual fee configured."
+                  organizations={orgsWithFees as any}
+                  summary={[
+                    { label: 'Average', value: `$${Math.round(stats.averageFeeAmount).toLocaleString()}` },
+                    { label: 'Lowest', value: `$${min.toLocaleString()}` },
+                    { label: 'Highest', value: `$${max.toLocaleString()}` },
+                  ]}
+                />
+              );
+            }
+
+            return null;
+          })()}
+
 
           {/* Delete Fee Tier Confirmation Dialog */}
           <Dialog open={deleteTierConfirmOpen} onOpenChange={setDeleteTierConfirmOpen}>
