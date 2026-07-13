@@ -3319,6 +3319,113 @@ export default function MembershipFees() {
             organizations={organizations}
           />
 
+          {/* Stat Card Drill-down Modal */}
+          {(() => {
+            if (!drilldownType) return null;
+            const activeOrgs = organizations.filter(o => o.membership_status === 'active');
+
+            // Compute paid revenue from invoices marked paid
+            const paidRevenue = invoices
+              .filter((inv: any) => inv.status === 'paid')
+              .reduce((sum: number, inv: any) => sum + Number(inv.prorated_amount ?? inv.amount ?? 0), 0);
+            const outstanding = Math.max(stats.totalRevenue - paidRevenue, 0);
+
+            // Determine which orgs have a paid invoice (any period)
+            const paidOrgIds = new Set(
+              invoices.filter((inv: any) => inv.status === 'paid').map((inv: any) => inv.organization_id)
+            );
+
+            if (drilldownType === 'organizations') {
+              return (
+                <FeeStatsDrilldownModal
+                  isOpen
+                  onClose={() => setDrilldownType(null)}
+                  title="All Organizations"
+                  description="Every organization tracked in the fee system."
+                  organizations={organizations as any}
+                  summary={[
+                    { label: 'Total', value: String(stats.totalOrganizations) },
+                    { label: 'Active', value: String(stats.paidFees), tone: 'success' },
+                    { label: 'Pending', value: String(stats.pendingFees), tone: 'warning' },
+                  ]}
+                />
+              );
+            }
+
+            if (drilldownType === 'revenue') {
+              // Only include organizations with a fee amount, sorted by amount desc via alpha in modal
+              const revenueOrgs = organizations.filter(o => (o.annual_fee_amount || 0) > 0);
+              return (
+                <FeeStatsDrilldownModal
+                  isOpen
+                  onClose={() => setDrilldownType(null)}
+                  title="Total Revenue Breakdown"
+                  description="Annual fees billed across all organizations, and revenue actually collected."
+                  organizations={revenueOrgs as any}
+                  amountLabel="Annual Fee"
+                  summary={[
+                    { label: 'Annual Total Billed', value: `$${stats.totalRevenue.toLocaleString()}` },
+                    { label: 'Current Paid Revenue', value: `$${paidRevenue.toLocaleString()}`, tone: 'success' },
+                    { label: 'Outstanding', value: `$${outstanding.toLocaleString()}`, tone: 'warning' },
+                  ]}
+                  getAmount={(org) => {
+                    const paid = paidOrgIds.has(org.id);
+                    return org.annual_fee_amount ? Number(org.annual_fee_amount) : null;
+                  }}
+                />
+              );
+            }
+
+            if (drilldownType === 'active') {
+              return (
+                <FeeStatsDrilldownModal
+                  isOpen
+                  onClose={() => setDrilldownType(null)}
+                  title="Active Organizations"
+                  description="Organizations with an active membership status."
+                  organizations={activeOrgs as any}
+                  summary={[
+                    { label: 'Active', value: String(activeOrgs.length), tone: 'success' },
+                    {
+                      label: 'Paid Invoices',
+                      value: String(activeOrgs.filter(o => paidOrgIds.has(o.id)).length),
+                      tone: 'success',
+                    },
+                    {
+                      label: 'Unpaid',
+                      value: String(activeOrgs.filter(o => !paidOrgIds.has(o.id)).length),
+                      tone: 'warning',
+                    },
+                  ]}
+                />
+              );
+            }
+
+            if (drilldownType === 'average') {
+              const orgsWithFees = organizations.filter(o => (o.annual_fee_amount || 0) > 0);
+              const amounts = orgsWithFees.map(o => Number(o.annual_fee_amount || 0));
+              const min = amounts.length ? Math.min(...amounts) : 0;
+              const max = amounts.length ? Math.max(...amounts) : 0;
+              return (
+                <FeeStatsDrilldownModal
+                  isOpen
+                  onClose={() => setDrilldownType(null)}
+                  title="Average Fee Breakdown"
+                  description="Fee amounts across organizations that have an annual fee configured."
+                  organizations={orgsWithFees as any}
+                  summary={[
+                    { label: 'Average', value: `$${Math.round(stats.averageFeeAmount).toLocaleString()}` },
+                    { label: 'Lowest', value: `$${min.toLocaleString()}` },
+                    { label: 'Highest', value: `$${max.toLocaleString()}` },
+                  ]}
+                />
+              );
+            }
+
+            return null;
+          })()}
+
+
           {/* Delete Fee Tier Confirmation Dialog */}
           <Dialog open={deleteTierConfirmOpen} onOpenChange={setDeleteTierConfirmOpen}>
             <DialogContent>
