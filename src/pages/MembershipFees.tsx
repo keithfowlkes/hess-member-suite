@@ -1370,7 +1370,10 @@ export default function MembershipFees() {
             {/* Redesigned Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
               {/* Organizations Card */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 border-blue-100/50 hover:shadow-md hover:shadow-blue-100/20 transition-all duration-300 hover:scale-105 group">
+              <Card
+                className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 border-blue-100/50 hover:shadow-md hover:shadow-blue-100/20 transition-all duration-300 hover:scale-105 group cursor-pointer"
+                onClick={() => setDrilldownType('organizations')}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/10"></div>
                 <CardContent className="relative p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -1378,7 +1381,7 @@ export default function MembershipFees() {
                       <Users className="h-4 w-4 text-white" />
                     </div>
                     <div className="text-xs font-medium text-blue-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      Total Count
+                      Click to View
                     </div>
                   </div>
                   <div>
