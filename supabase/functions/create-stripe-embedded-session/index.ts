@@ -148,15 +148,14 @@ Deno.serve(async (req) => {
           .maybeSingle();
         if (!profile) return json({ error: "Profile not found" }, 403);
 
-        const { data: org } = await admin
+        const { data: orgs } = await admin
           .from("organizations")
           .select("id, name, email")
-          .eq("contact_person_id", profile.id)
-          .maybeSingle();
-        if (!org) {
+          .eq("contact_person_id", profile.id);
+        if (!orgs || orgs.length === 0) {
           return json({ error: "Organization not found for caller" }, 403);
         }
-        if (invoice.organization_id !== org.id) {
+        if (!orgs.some((o: any) => o.id === invoice.organization_id)) {
           return json({ error: "Forbidden" }, 403);
         }
       }
