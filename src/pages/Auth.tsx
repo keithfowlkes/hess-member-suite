@@ -1125,7 +1125,7 @@ export default function Auth() {
                         ? 'Please enter your new password'
                         : showPasswordReset 
                           ? 'Enter your email to receive password reset instructions'
-                          : 'Sign in to your HESS Consortium account'
+                          : <>Sign in to your HESS Consortium account&nbsp;<br />(HESS member-of-record only)</>
                       }
                     </p>
                   </div>
