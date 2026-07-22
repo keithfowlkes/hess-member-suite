@@ -17,7 +17,9 @@ const periodCoversToday = (inv: Invoice, today: Date) => {
   return today >= start && today <= end;
 };
 
-/** True when the org has a paid invoice covering today (or fallback: paid in current calendar year). */
+/** True when the org has a paid invoice covering today, a paid invoice for a
+ *  future/current period (pre-paid renewal), or a paid invoice in the current
+ *  calendar year when period dates are missing. */
 export function isDuesPaidForCurrentPeriod(
   invoices: Invoice[] | undefined | null,
   now: Date = new Date()
@@ -26,7 +28,10 @@ export function isDuesPaidForCurrentPeriod(
   return invoices.some((inv) => {
     if (inv.status !== 'paid') return false;
     if (inv.period_start_date && inv.period_end_date) {
-      return periodCoversToday(inv, now);
+      if (periodCoversToday(inv, now)) return true;
+      // Pre-paid for an upcoming term — still counts as paid.
+      const end = parseInvoiceDate(inv.period_end_date) || new Date(inv.period_end_date);
+      return end >= now;
     }
     const yearRef = inv.period_start_date || inv.created_at;
     return yearRef ? new Date(yearRef).getFullYear() === now.getFullYear() : false;
