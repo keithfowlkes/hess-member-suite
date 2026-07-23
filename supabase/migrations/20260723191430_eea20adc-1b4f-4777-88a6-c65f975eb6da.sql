@@ -1,0 +1,2 @@
+UPDATE auth.users SET email = 'weinstom@reed.edu', raw_user_meta_data = COALESCE(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('email','weinstom@reed.edu'), updated_at = now() WHERE id = '561eb642-ffaa-46e6-85f6-35081b29000d';
+UPDATE auth.identities SET identity_data = COALESCE(identity_data, '{}'::jsonb) || jsonb_build_object('email','weinstom@reed.edu') WHERE user_id = '561eb642-ffaa-46e6-85f6-35081b29000d';
