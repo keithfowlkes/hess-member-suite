@@ -98,7 +98,18 @@ export default function Invoices() {
   const generatePDF = async (invoice: any, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      const pdf = await generateInvoicePdf({ invoice });
+      const { supabase } = await import('@/integrations/supabase/client');
+      let registrationCode: string | null = null;
+      if (invoice?.organization_id) {
+        const { data } = await supabase
+          .from('conference_registration_codes')
+          .select('code')
+          .eq('organization_id', invoice.organization_id)
+          .eq('conference_slug', 'hess2026')
+          .maybeSingle();
+        registrationCode = (data as any)?.code || null;
+      }
+      const pdf = await generateInvoicePdf({ invoice, registrationCode });
       pdf.save(`${invoice.invoice_number}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);

@@ -45,6 +45,7 @@ import { cn } from '@/lib/utils';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
 import { getCurrentInvoicePeriod, parseInvoiceDate, toInvoiceDateString } from '@/utils/invoicePeriod';
+import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
 
 
 const invoiceSchema = z.object({
@@ -96,6 +97,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
   const { data: termStartSetting } = useSystemSetting('default_term_end_date');
   const stripeFee = Math.max(0, parseFloat(stripeFeeSetting?.setting_value || '9.27') || 0);
   const currentInvoicePeriod = getCurrentInvoicePeriod(termStartSetting?.setting_value);
+  const { data: registrationCodeData } = useConferenceRegistrationCode(invoice?.organization_id);
 
   // Persist the forwarding comment across invoices/organizations for the admin session.
   useEffect(() => {
@@ -122,6 +124,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
         logoSrc: logoImg?.currentSrc || logoImg?.src || null,
         paymentMode,
         stripeFee,
+        registrationCode: registrationCodeData?.code || null,
       });
       const organizationName = invoice.organizations?.name || 'Unknown';
       const suffix = paymentMode === 'ach' ? '_ACH' : '';
