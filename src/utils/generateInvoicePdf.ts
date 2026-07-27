@@ -39,11 +39,7 @@ async function drawInvoicePdf(
   const contentWidth = pageWidth - margin * 2;
   const right = pageWidth - margin;
 
-  pdf.setFillColor(255, 255, 255);
-  pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-  pdf.setDrawColor(229, 231, 235);
-  pdf.setLineWidth(0.75);
-  pdf.rect(24, 24, pageWidth - 48, pageHeight - 48);
+  drawInvoicePageFrame(pdf);
 
   const logo = await imageToPdfData(logoSrc || '/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png');
   if (logo) {
@@ -149,17 +145,52 @@ async function drawInvoicePdf(
   }
 
   if (registrationCode) {
+    const codeBoxHeight = 106;
     pdf.setDrawColor(12, 35, 64);
     pdf.setFillColor(243, 246, 251);
-    pdf.roundedRect(margin, y, contentWidth, 62, 5, 5, 'FD');
+    pdf.setLineDashPattern([4, 3], 0);
+    pdf.roundedRect(margin, y, contentWidth, codeBoxHeight, 5, 5, 'FD');
+    pdf.setLineDashPattern([], 0);
     setPdfText(pdf, 11, 'bold', margin + 12, y + 19, 'HESS 2026 Conference Registration Code', { color: [12, 35, 64] });
-    setPdfText(pdf, 9, 'normal', margin + 12, y + 35, 'Use this unique code to register one attendee from your institution for the HESS 2026 Conference.', { color: [68, 68, 68] });
-    setPdfText(pdf, 13, 'bold', margin + 12, y + 53, registrationCode, { color: [12, 35, 64] });
-    y += 78;
+    setPdfText(
+      pdf,
+      9,
+      'normal',
+      margin + 12,
+      y + 36,
+      'Use this unique code to register one attendee from your institution for the HESS 2026 Conference:',
+      { color: [68, 68, 68] },
+    );
+    pdf.setDrawColor(245, 158, 11);
+    pdf.setFillColor(255, 251, 234);
+    pdf.roundedRect(margin + 12, y + 48, contentWidth - 24, 31, 3, 3, 'FD');
+    setPdfText(
+      pdf,
+      7.6,
+      'bold',
+      margin + 20,
+      y + 61,
+      'IMPORTANT: This code is valid for one attendee only from this organization and may not be transferred',
+      { color: [146, 64, 14] },
+    );
+    setPdfText(pdf, 7.6, 'bold', margin + 20, y + 72, 'to another institution.', { color: [146, 64, 14] });
+    setPdfText(pdf, 13, 'bold', margin + 12, y + 99, registrationCode, { color: [12, 35, 64] });
+    y += codeBoxHeight + 16;
   }
 
-  const paymentBoxTop = Math.min(y, 520);
+  const minimumPaymentBoxTop = 520;
   const paymentBoxHeight = 150;
+  let paymentBoxTop = Math.max(y, minimumPaymentBoxTop);
+  const paymentPageRequiredHeight = paymentBoxHeight + 18 + 82;
+  let paymentStartsNewPage = false;
+  if (paymentBoxTop + paymentPageRequiredHeight > pageHeight - 28) {
+    pdf.addPage();
+    drawInvoicePageFrame(pdf);
+    setPdfText(pdf, 10, 'bold', margin, 54, `Invoice #${invoice.invoice_number}`, { color: [96, 96, 96] });
+    setPdfText(pdf, 10, 'normal', right, 54, 'Payment details', { align: 'right', color: [96, 96, 96] });
+    paymentBoxTop = 78;
+    paymentStartsNewPage = true;
+  }
   pdf.setFillColor(248, 249, 250);
   pdf.rect(margin, paymentBoxTop, contentWidth, paymentBoxHeight, 'F');
   pdf.setFillColor(107, 114, 128);
@@ -205,11 +236,21 @@ async function drawInvoicePdf(
   pdf.setLineWidth(0.6);
   pdf.line(margin + prefixWidth, w9Y + 1.5, margin + prefixWidth + linkWidth, w9Y + 1.5);
 
-  const footerTop = 692;
+  const footerTop = paymentStartsNewPage ? 692 : paymentBoxTop + paymentBoxHeight + 36;
   setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop, 'Questions about your invoice?', { align: 'center', color: [96, 96, 96] });
   setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 16, 'Contact us at: billing@hessconsortium.org', { align: 'center', color: [96, 96, 96] });
   setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 32, 'Visit us online: www.hessconsortium.org', { align: 'center', color: [96, 96, 96] });
   setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 62, 'Thank you for being a valued member of the HESS Consortium community!', { align: 'center', color: [96, 96, 96] });
+}
+
+function drawInvoicePageFrame(pdf: jsPDF) {
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  pdf.setFillColor(255, 255, 255);
+  pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+  pdf.setDrawColor(229, 231, 235);
+  pdf.setLineWidth(0.75);
+  pdf.rect(24, 24, pageWidth - 48, pageHeight - 48);
 }
 
 function setPdfText(
