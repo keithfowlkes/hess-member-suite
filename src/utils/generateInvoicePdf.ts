@@ -75,19 +75,19 @@ async function drawInvoicePdf(
 
   const leftCol = margin;
   const rightCol = margin + contentWidth * 0.54;
-  let y = 214;
+  let y = 194;
 
   setPdfText(pdf, 13, 'bold', leftCol, y, 'Bill To:');
   setPdfText(pdf, 13, 'bold', rightCol, y, 'Invoice Details:');
-  y += 22;
+  y += 20;
   setPdfText(pdf, 11, 'bold', leftCol, y, invoice.organizations?.name || '');
   setPdfText(pdf, 10, 'bold', rightCol, y, 'Invoice Date:');
   setPdfText(pdf, 10, 'normal', rightCol + 78, y, safeFormat(invoice.invoice_date, 'MMM dd, yyyy'));
-  y += 16;
+  y += 15;
   setPdfText(pdf, 10, 'normal', leftCol, y, 'Organization Address');
   setPdfText(pdf, 10, 'bold', rightCol, y, 'Due Date:');
   setPdfText(pdf, 10, 'normal', rightCol + 78, y, safeFormat(invoice.due_date, 'MMM dd, yyyy'));
-  y += 16;
+  y += 15;
   if (invoice.organizations?.email) {
     setPdfText(pdf, 10, 'normal', leftCol, y, invoice.organizations.email);
   }
@@ -101,87 +101,86 @@ async function drawInvoicePdf(
     `${safeFormat(invoice.period_start_date, 'MMM dd, yyyy')} - ${safeFormat(invoice.period_end_date, 'MMM dd, yyyy')}`,
   );
 
-  y = 304;
+  y += 26;
   const tableX = margin;
   const tableWidth = contentWidth;
   const descWidth = 220;
-  const periodWidth = 210;
   pdf.setFillColor(107, 114, 128);
-  pdf.rect(tableX, y, tableWidth, 34, 'F');
-  setPdfText(pdf, 11, 'bold', tableX + 10, y + 22, 'Description', { color: [255, 255, 255] });
-  setPdfText(pdf, 11, 'bold', tableX + descWidth + 10, y + 22, 'Period', { color: [255, 255, 255] });
-  setPdfText(pdf, 11, 'bold', right - 10, y + 22, 'Amount', { align: 'right', color: [255, 255, 255] });
+  pdf.rect(tableX, y, tableWidth, 30, 'F');
+  setPdfText(pdf, 11, 'bold', tableX + 10, y + 20, 'Description', { color: [255, 255, 255] });
+  setPdfText(pdf, 11, 'bold', tableX + descWidth + 10, y + 20, 'Period', { color: [255, 255, 255] });
+  setPdfText(pdf, 11, 'bold', right - 10, y + 20, 'Amount', { align: 'right', color: [255, 255, 255] });
 
-  y += 34;
+  y += 30;
   pdf.setDrawColor(229, 231, 235);
-  pdf.rect(tableX, y, tableWidth, 64);
-  setPdfText(pdf, 11, 'bold', tableX + 10, y + 22, 'Annual Membership Fee');
+  pdf.rect(tableX, y, tableWidth, 56);
+  setPdfText(pdf, 11, 'bold', tableX + 10, y + 20, 'Annual Membership Fee');
   setPdfText(
     pdf,
     9,
     isAch ? 'bold' : 'normal',
     tableX + 10,
-    y + 38,
+    y + 34,
     isAch ? 'ACH / Check payment — no processing fee' : 'includes Stripe Processing Fee',
     { color: isAch ? [22, 101, 52] : [96, 96, 96] },
   );
   if (invoice.prorated_amount) {
-    setPdfText(pdf, 9, 'normal', tableX + 10, y + 52, 'Prorated from membership start date', { color: [96, 96, 96] });
+    setPdfText(pdf, 9, 'normal', tableX + 10, y + 47, 'Prorated from membership start date', { color: [96, 96, 96] });
   }
-  setPdfText(pdf, 10, 'normal', tableX + descWidth + 10, y + 31, `${safeFormat(invoice.period_start_date, 'MMM dd, yyyy')} - ${safeFormat(invoice.period_end_date, 'MMM dd, yyyy')}`);
-  setPdfText(pdf, 10, 'normal', right - 10, y + 31, formatCurrency(adjustAmt(invoice.prorated_amount || invoice.amount)), { align: 'right' });
+  setPdfText(pdf, 10, 'normal', tableX + descWidth + 10, y + 28, `${safeFormat(invoice.period_start_date, 'MMM dd, yyyy')} - ${safeFormat(invoice.period_end_date, 'MMM dd, yyyy')}`);
+  setPdfText(pdf, 10, 'normal', right - 10, y + 28, formatCurrency(adjustAmt(invoice.prorated_amount || invoice.amount)), { align: 'right' });
 
-  y += 92;
+  y += 56 + 22;
   setPdfText(pdf, 13, 'bold', right, y, `Total Due: ${formatCurrency(adjustAmt(invoice.prorated_amount || invoice.amount))}`, { align: 'right' });
 
 
-  y += 34;
+  y += 22;
   if (invoice.notes) {
     setPdfText(pdf, 12, 'bold', margin, y, 'Notes:');
-    y += 16;
+    y += 14;
     const noteLines = pdf.splitTextToSize(invoice.notes, contentWidth) as string[];
     setPdfText(pdf, 10, 'normal', margin, y, noteLines.slice(0, 2));
-    y += Math.min(noteLines.length, 2) * 13 + 12;
+    y += Math.min(noteLines.length, 2) * 13 + 10;
   }
 
   if (registrationCode) {
-    const codeBoxHeight = 106;
+    const codeBoxHeight = 92;
     pdf.setDrawColor(12, 35, 64);
     pdf.setFillColor(243, 246, 251);
     pdf.setLineDashPattern([4, 3], 0);
     pdf.roundedRect(margin, y, contentWidth, codeBoxHeight, 5, 5, 'FD');
     pdf.setLineDashPattern([], 0);
-    setPdfText(pdf, 11, 'bold', margin + 12, y + 19, 'HESS 2026 Conference Registration Code', { color: [12, 35, 64] });
+    setPdfText(pdf, 11, 'bold', margin + 12, y + 17, 'HESS 2026 Conference Registration Code', { color: [12, 35, 64] });
     setPdfText(
       pdf,
       9,
       'normal',
       margin + 12,
-      y + 36,
+      y + 32,
       'Use this unique code to register one attendee from your institution for the HESS 2026 Conference:',
       { color: [68, 68, 68] },
     );
     pdf.setDrawColor(245, 158, 11);
     pdf.setFillColor(255, 251, 234);
-    pdf.roundedRect(margin + 12, y + 48, contentWidth - 24, 31, 3, 3, 'FD');
+    pdf.roundedRect(margin + 12, y + 40, contentWidth - 24, 26, 3, 3, 'FD');
     setPdfText(
       pdf,
       7.6,
       'bold',
       margin + 20,
-      y + 61,
+      y + 51,
       'IMPORTANT: This code is valid for one attendee only from this organization and may not be transferred',
       { color: [146, 64, 14] },
     );
-    setPdfText(pdf, 7.6, 'bold', margin + 20, y + 72, 'to another institution.', { color: [146, 64, 14] });
-    setPdfText(pdf, 13, 'bold', margin + 12, y + 99, registrationCode, { color: [12, 35, 64] });
-    y += codeBoxHeight + 16;
+    setPdfText(pdf, 7.6, 'bold', margin + 20, y + 61, 'to another institution.', { color: [146, 64, 14] });
+    setPdfText(pdf, 13, 'bold', margin + 12, y + 85, registrationCode, { color: [12, 35, 64] });
+    y += codeBoxHeight + 12;
   }
 
-  const minimumPaymentBoxTop = 520;
-  const paymentBoxHeight = 150;
-  let paymentBoxTop = Math.max(y, minimumPaymentBoxTop);
-  const paymentPageRequiredHeight = paymentBoxHeight + 18 + 82;
+  const paymentBoxHeight = 132;
+  let paymentBoxTop = y;
+  // Reserve space for payment box + W-9 line + footer (~90pt)
+  const paymentPageRequiredHeight = paymentBoxHeight + 16 + 90;
   let paymentStartsNewPage = false;
   if (paymentBoxTop + paymentPageRequiredHeight > pageHeight - 28) {
     pdf.addPage();
