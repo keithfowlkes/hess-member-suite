@@ -14,6 +14,7 @@ import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useResendInvoice } from '@/hooks/useResendInvoice';
+import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
 import liberationSansRegularUrl from '@/assets/fonts/LiberationSans-Regular.ttf?url';
 import liberationSansBoldUrl from '@/assets/fonts/LiberationSans-Bold.ttf?url';
 import { applyCurrentInvoicePeriod, formatInvoiceDate } from '@/utils/invoicePeriod';
@@ -118,9 +119,14 @@ export function MemberInvoiceViewModal({ open, onOpenChange, invoice }: MemberIn
     if (!node) return;
     setDownloading(true);
     try {
-      const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'letter' });
-      await registerInvoicePdfFonts(pdf);
-      await drawInvoicePdf(pdf, displayInvoice, node, registrationCodeData?.code || null, paymentMode, stripeFee);
+      const logoImg = node.querySelector('.logo-section img') as HTMLImageElement | null;
+      const pdf = await generateInvoicePdf({
+        invoice: displayInvoice,
+        registrationCode: registrationCodeData?.code || null,
+        logoSrc: logoImg?.currentSrc || logoImg?.src || null,
+        paymentMode,
+        stripeFee,
+      });
 
       const suffix = paymentMode === 'ach' ? '_ACH' : '';
       pdf.save(`Invoice_${displayInvoice.invoice_number}${suffix}.pdf`);
