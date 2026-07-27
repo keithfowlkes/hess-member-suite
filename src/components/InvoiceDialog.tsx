@@ -45,6 +45,7 @@ import { cn } from '@/lib/utils';
 import { ProfessionalInvoice } from '@/components/ProfessionalInvoice';
 import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
 import { getCurrentInvoicePeriod, parseInvoiceDate, toInvoiceDateString } from '@/utils/invoicePeriod';
+import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
 
 
 const invoiceSchema = z.object({
