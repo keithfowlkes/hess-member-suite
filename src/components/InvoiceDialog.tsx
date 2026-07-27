@@ -124,6 +124,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
         logoSrc: logoImg?.currentSrc || logoImg?.src || null,
         paymentMode,
         stripeFee,
+        registrationCode: registrationCodeData?.code || null,
       });
       const organizationName = invoice.organizations?.name || 'Unknown';
       const suffix = paymentMode === 'ach' ? '_ACH' : '';
