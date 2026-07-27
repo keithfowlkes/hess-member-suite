@@ -194,32 +194,32 @@ async function drawInvoicePdf(
   pdf.rect(margin, paymentBoxTop, contentWidth, paymentBoxHeight, 'F');
   pdf.setFillColor(107, 114, 128);
   pdf.rect(margin, paymentBoxTop, 4, paymentBoxHeight, 'F');
-  setPdfText(pdf, 13, 'bold', margin + 16, paymentBoxTop + 25, 'Payment Information');
-  setPdfText(pdf, 10, 'bold', margin + 16, paymentBoxTop + 45, 'Payment Terms:');
-  setPdfText(pdf, 10, 'normal', margin + 106, paymentBoxTop + 45, 'Net 30 days');
-  setPdfText(pdf, 10, 'bold', margin + 16, paymentBoxTop + 61, 'Due Date:');
-  setPdfText(pdf, 10, 'normal', margin + 106, paymentBoxTop + 61, safeFormat(invoice.due_date, 'MMM dd, yyyy'));
-  setPdfText(pdf, 10, 'normal', margin + 16, paymentBoxTop + 78, `Please include invoice number ${invoice.invoice_number} with your payment.`);
+  setPdfText(pdf, 13, 'bold', margin + 16, paymentBoxTop + 20, 'Payment Information');
+  setPdfText(pdf, 10, 'bold', margin + 16, paymentBoxTop + 38, 'Payment Terms:');
+  setPdfText(pdf, 10, 'normal', margin + 106, paymentBoxTop + 38, 'Net 30 days');
+  setPdfText(pdf, 10, 'bold', margin + 16, paymentBoxTop + 52, 'Due Date:');
+  setPdfText(pdf, 10, 'normal', margin + 106, paymentBoxTop + 52, safeFormat(invoice.due_date, 'MMM dd, yyyy'));
+  setPdfText(pdf, 10, 'normal', margin + 16, paymentBoxTop + 66, `Please include invoice number ${invoice.invoice_number} with your payment.`);
   pdf.setDrawColor(209, 213, 219);
-  pdf.line(margin + 16, paymentBoxTop + 88, right - 16, paymentBoxTop + 88);
+  pdf.line(margin + 16, paymentBoxTop + 74, right - 16, paymentBoxTop + 74);
   // Two-column remit info: left = check, right = ACH
   const colLeftX = margin + 16;
   const colRightX = margin + contentWidth / 2 + 8;
-  pdf.line(margin + contentWidth / 2, paymentBoxTop + 92, margin + contentWidth / 2, paymentBoxTop + paymentBoxHeight - 8);
-  setPdfText(pdf, 10, 'bold', colLeftX, paymentBoxTop + 106, 'Remit Check Payments To:');
-  setPdfText(pdf, 10, 'normal', colLeftX, paymentBoxTop + 121, 'The HESS Consortium');
-  setPdfText(pdf, 10, 'normal', colLeftX, paymentBoxTop + 134, '952 Winchester Rd #1051');
-  setPdfText(pdf, 10, 'normal', colLeftX, paymentBoxTop + 147, 'Lexington, KY 40505');
-  setPdfText(pdf, 10, 'bold', colRightX, paymentBoxTop + 106, 'HESS ACH Payment Information:');
-  setPdfText(pdf, 10, 'bold', colRightX, paymentBoxTop + 121, 'Account number:');
-  setPdfText(pdf, 10, 'normal', colRightX + 100, paymentBoxTop + 121, '837993307');
-  setPdfText(pdf, 10, 'bold', colRightX, paymentBoxTop + 134, 'Routing number:');
-  setPdfText(pdf, 10, 'normal', colRightX + 100, paymentBoxTop + 134, '083000137');
+  pdf.line(margin + contentWidth / 2, paymentBoxTop + 78, margin + contentWidth / 2, paymentBoxTop + paymentBoxHeight - 6);
+  setPdfText(pdf, 10, 'bold', colLeftX, paymentBoxTop + 90, 'Remit Check Payments To:');
+  setPdfText(pdf, 10, 'normal', colLeftX, paymentBoxTop + 104, 'The HESS Consortium');
+  setPdfText(pdf, 10, 'normal', colLeftX, paymentBoxTop + 116, '952 Winchester Rd #1051');
+  setPdfText(pdf, 10, 'normal', colLeftX, paymentBoxTop + 128, 'Lexington, KY 40505');
+  setPdfText(pdf, 10, 'bold', colRightX, paymentBoxTop + 90, 'HESS ACH Payment Information:');
+  setPdfText(pdf, 10, 'bold', colRightX, paymentBoxTop + 104, 'Account number:');
+  setPdfText(pdf, 10, 'normal', colRightX + 100, paymentBoxTop + 104, '837993307');
+  setPdfText(pdf, 10, 'bold', colRightX, paymentBoxTop + 116, 'Routing number:');
+  setPdfText(pdf, 10, 'normal', colRightX + 100, paymentBoxTop + 116, '083000137');
 
 
   // W-9 download link
   const w9Url = 'https://members.hessconsortium.app/__l5e/assets-v1/fd85b32a-a3bb-4874-84bf-84b01c9d0969/HESS_W9.pdf';
-  const w9Y = paymentBoxTop + paymentBoxHeight + 18;
+  const w9Y = paymentBoxTop + paymentBoxHeight + 16;
   const w9Prefix = 'Need our W-9? ';
   const w9Link = 'Download the HESS Consortium W-9 (PDF)';
   pdf.setFont(activeInvoicePdfFontFamily, 'normal');
@@ -235,11 +235,11 @@ async function drawInvoicePdf(
   pdf.setLineWidth(0.6);
   pdf.line(margin + prefixWidth, w9Y + 1.5, margin + prefixWidth + linkWidth, w9Y + 1.5);
 
-  const footerTop = paymentStartsNewPage ? 692 : paymentBoxTop + paymentBoxHeight + 36;
+  const footerTop = paymentStartsNewPage ? 692 : Math.min(w9Y + 26, pageHeight - 78);
   setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop, 'Questions about your invoice?', { align: 'center', color: [96, 96, 96] });
-  setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 16, 'Contact us at: billing@hessconsortium.org', { align: 'center', color: [96, 96, 96] });
-  setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 32, 'Visit us online: www.hessconsortium.org', { align: 'center', color: [96, 96, 96] });
-  setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 62, 'Thank you for being a valued member of the HESS Consortium community!', { align: 'center', color: [96, 96, 96] });
+  setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 14, 'Contact us at: billing@hessconsortium.org', { align: 'center', color: [96, 96, 96] });
+  setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 28, 'Visit us online: www.hessconsortium.org', { align: 'center', color: [96, 96, 96] });
+  setPdfText(pdf, 10, 'normal', pageWidth / 2, footerTop + 50, 'Thank you for being a valued member of the HESS Consortium community!', { align: 'center', color: [96, 96, 96] });
 }
 
 function drawInvoicePageFrame(pdf: jsPDF) {
