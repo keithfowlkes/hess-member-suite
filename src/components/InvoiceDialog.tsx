@@ -97,6 +97,7 @@ export function InvoiceDialog({ open, onOpenChange, invoice, bulkMode = false }:
   const { data: termStartSetting } = useSystemSetting('default_term_end_date');
   const stripeFee = Math.max(0, parseFloat(stripeFeeSetting?.setting_value || '9.27') || 0);
   const currentInvoicePeriod = getCurrentInvoicePeriod(termStartSetting?.setting_value);
+  const { data: registrationCodeData } = useConferenceRegistrationCode(invoice?.organization_id);
 
   // Persist the forwarding comment across invoices/organizations for the admin session.
   useEffect(() => {
