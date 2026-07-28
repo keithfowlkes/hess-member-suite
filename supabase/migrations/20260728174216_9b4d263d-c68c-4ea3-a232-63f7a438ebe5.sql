@@ -1,0 +1,1 @@
+UPDATE public.invoices SET amount = 309.27, updated_at = now() WHERE amount = 300.00;
