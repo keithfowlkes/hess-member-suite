@@ -139,8 +139,9 @@ export default function ResearchDashboard() {
                   <p className="text-muted-foreground mt-2">
                     Browse member organizations and their membership details
                   </p>
-                  <p className="text-sm text-muted-foreground/80 mt-1 italic">
-                    This is confidential member-only data and will not be shared to vendor partners.
+                  <p className="text-sm text-muted-foreground/80 mt-1 italic whitespace-pre-line">
+                    THIS INFORMATION IS PRIVATE AND CONFIDENTIAL FOR YOUR INSTITUTION ONLY.{"\n"}
+                    IF YOU WORK FOR AN OUTSOURCED IT SERVICE PROVIDER, YOU ARE PROHIBITED FROM SHARING THIS INFORMATION OUTSIDE OF THE INSTITUTION.
                   </p>
                 </div>
               </div>
@@ -198,8 +199,9 @@ export default function ResearchDashboard() {
                 <p className="text-muted-foreground mt-2">
                   Browse member organizations and their membership details
                 </p>
-                <p className="text-sm text-muted-foreground/80 mt-1 italic">
-                  This is confidential member-only data and will not be shared to vendor partners.
+                <p className="text-sm text-muted-foreground/80 mt-1 italic whitespace-pre-line">
+                  THIS INFORMATION IS PRIVATE AND CONFIDENTIAL FOR YOUR INSTITUTION ONLY.{"\n"}
+                  IF YOU WORK FOR AN OUTSOURCED IT SERVICE PROVIDER, YOU ARE PROHIBITED FROM SHARING THIS INFORMATION OUTSIDE OF THE INSTITUTION.
                 </p>
               </div>
               <Button variant="outline" onClick={refresh} disabled={loading}>
