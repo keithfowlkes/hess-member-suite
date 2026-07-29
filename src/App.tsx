@@ -60,6 +60,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter basename={baseName}>
+          <ConfidentialityAgreementModal />
           <Routes>
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/auth" element={<Auth />} />
