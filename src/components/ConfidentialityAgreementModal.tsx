@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Dialog,
@@ -11,34 +11,30 @@ import {
 import { Button } from '@/components/ui/button';
 import { ShieldAlert } from 'lucide-react';
 
-const STORAGE_KEY_PREFIX = 'confidentiality-agreed-';
-
 /**
- * Shows a one-time-per-session Confidentiality Agreement modal after login.
+ * Shows the Confidentiality Agreement modal on every login.
  * If the user declines, they are signed out and returned to the auth page.
  */
 export function ConfidentialityAgreementModal() {
   const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const prevUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!user) {
-      setOpen(false);
-      return;
-    }
-    try {
-      const key = `${STORAGE_KEY_PREFIX}${user.id}`;
-      const agreed = sessionStorage.getItem(key);
-      if (!agreed) setOpen(true);
-    } catch {
+    const prev = prevUserIdRef.current;
+    const current = user?.id ?? null;
+
+    // Show whenever a user session appears (fresh login or page load with an active session).
+    if (current && current !== prev) {
       setOpen(true);
     }
+    if (!current) {
+      setOpen(false);
+    }
+    prevUserIdRef.current = current;
   }, [user]);
 
   const handleAgree = () => {
-    try {
-      if (user) sessionStorage.setItem(`${STORAGE_KEY_PREFIX}${user.id}`, '1');
-    } catch {}
     setOpen(false);
   };
 
@@ -48,6 +44,7 @@ export function ConfidentialityAgreementModal() {
   };
 
   if (!user) return null;
+
 
   return (
     <Dialog
