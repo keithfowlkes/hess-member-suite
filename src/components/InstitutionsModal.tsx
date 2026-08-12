@@ -26,8 +26,33 @@ export function InstitutionsModal({
   systemDisplayName
 }: InstitutionsModalProps) {
   const { data: institutions, isLoading } = useInstitutionsBySystem(systemField, systemName);
-  const { isViewingAsAdmin } = useAuth();
+  const { isViewingAsAdmin, isAdmin, user } = useAuth();
   const { deleteOrganization } = useMembers();
+  const [canExport, setCanExport] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const checkRole = async () => {
+      if (!user) {
+        if (active) setCanExport(false);
+        return;
+      }
+      if (isAdmin) {
+        if (active) setCanExport(true);
+        return;
+      }
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'cohort_leader')
+        .limit(1);
+      if (active) setCanExport(!!data && data.length > 0);
+    };
+    checkRole();
+    return () => { active = false; };
+  }, [user, isAdmin]);
 
   const handleDelete = async (institutionId: string, institutionName: string) => {
     if (confirm(`Are you sure you want to delete "${institutionName}"? This action cannot be undone.`)) {
@@ -38,6 +63,69 @@ export function InstitutionsModal({
       }
     }
   };
+
+  const handleExportCsv = async () => {
+    if (!institutions || institutions.length === 0) return;
+    setExporting(true);
+    try {
+      const ids = institutions.map((i) => i.id);
+      const rows: any[] = [];
+      for (let i = 0; i < ids.length; i += 200) {
+        const { data, error } = await supabase
+          .from('organizations')
+          .select('id, name, address_line_1, address_line_2, city, state, zip_code, phone, email, website, primary_contact_title, secondary_first_name, secondary_last_name, secondary_contact_title, secondary_contact_email, secondary_contact_phone, contact_person_id, profiles:contact_person_id (first_name, last_name, email, phone)')
+          .in('id', ids.slice(i, i + 200));
+        if (error) throw error;
+        rows.push(...(data || []));
+      }
+
+      const byId = new Map(rows.map((r) => [r.id, r]));
+      const headers = [
+        'Institution', 'System', 'Address 1', 'Address 2', 'City', 'State', 'Zip',
+        'Institution Phone', 'Institution Email', 'Website',
+        'Primary Contact Name', 'Primary Contact Title', 'Primary Contact Email', 'Primary Contact Phone',
+        'Secondary Contact Name', 'Secondary Contact Title', 'Secondary Contact Email', 'Secondary Contact Phone',
+      ];
+
+      const escape = (value: any) => {
+        const str = value === null || value === undefined ? '' : String(value);
+        return `"${str.replace(/"/g, '""')}"`;
+      };
+
+      const lines = [headers.join(',')];
+      institutions.forEach((inst) => {
+        const org: any = byId.get(inst.id) || {};
+        const primary = org.profiles || null;
+        const primaryName = primary ? [primary.first_name, primary.last_name].filter(Boolean).join(' ') : '';
+        const secondaryName = [org.secondary_first_name, org.secondary_last_name].filter(Boolean).join(' ');
+        lines.push([
+          inst.name,
+          inst.systemName || systemName || '',
+          org.address_line_1, org.address_line_2, org.city, org.state, org.zip_code,
+          org.phone, org.email, org.website,
+          primaryName, org.primary_contact_title, primary?.email, primary?.phone,
+          secondaryName, org.secondary_contact_title, org.secondary_contact_email, org.secondary_contact_phone,
+        ].map(escape).join(','));
+      });
+
+      const blob = new Blob([`\uFEFF${lines.join('\n')}`], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `institutions-${(systemName || 'system').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success(`Exported ${institutions.length} institutions`);
+    } catch (error: any) {
+      console.error('CSV export failed:', error);
+      toast.error(error?.message || 'Failed to export institutions');
+    } finally {
+      setExporting(false);
+    }
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
