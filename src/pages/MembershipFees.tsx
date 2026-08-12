@@ -2968,6 +2968,10 @@ export default function MembershipFees() {
                                 'Organization Name': org.name,
                                 'Contact Name': contactName,
                                 'Email': org.email || '',
+                                'Financial System': org.financial_system || '',
+                                'Financial Aid': org.financial_aid || '',
+                                'HCM/HR': org.hcm_hr || '',
+                                'Payroll System': org.payroll_system || '',
                                 'Annual Fee': org.annual_fee_amount || 0,
                                 'Payment Status': paymentStatus
                               };
@@ -2983,6 +2987,10 @@ export default function MembershipFees() {
                               { wch: 35 }, // Organization Name
                               { wch: 25 }, // Contact Name
                               { wch: 30 }, // Email
+                              { wch: 30 }, // Financial System
+                              { wch: 30 }, // Financial Aid
+                              { wch: 30 }, // HCM/HR
+                              { wch: 30 }, // Payroll System
                               { wch: 15 }, // Annual Fee
                               { wch: 15 }  // Payment Status
                             ];
@@ -3025,6 +3033,10 @@ export default function MembershipFees() {
                                 <th className="px-4 py-3 text-left text-sm font-medium">Organization</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Contact Name</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Financial System</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Financial Aid</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">HCM/HR</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Payroll System</th>
                                 <th className="px-4 py-3 text-right text-sm font-medium">Annual Fee</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Payment Status</th>
                               </tr>
@@ -3057,7 +3069,7 @@ export default function MembershipFees() {
                                 if (filteredOrgs.length === 0) {
                                   return (
                                     <tr>
-                                      <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                                      <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
                                         No organizations found for the selected date range.
                                       </td>
                                     </tr>
@@ -3081,6 +3093,10 @@ export default function MembershipFees() {
                                       </td>
                                       <td className="px-4 py-3 text-sm">{contactName || '-'}</td>
                                       <td className="px-4 py-3 text-sm">{org.email || '-'}</td>
+                                      <td className="px-4 py-3 text-sm">{org.financial_system || '-'}</td>
+                                      <td className="px-4 py-3 text-sm">{org.financial_aid || '-'}</td>
+                                      <td className="px-4 py-3 text-sm">{org.hcm_hr || '-'}</td>
+                                      <td className="px-4 py-3 text-sm">{org.payroll_system || '-'}</td>
                                       <td className="px-4 py-3 text-right font-medium">
                                         ${org.annual_fee_amount?.toLocaleString() || '0'}
                                       </td>
