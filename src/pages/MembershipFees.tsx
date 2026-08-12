@@ -2968,6 +2968,10 @@ export default function MembershipFees() {
                                 'Organization Name': org.name,
                                 'Contact Name': contactName,
                                 'Email': org.email || '',
+                                'Financial System': org.financial_system || '',
+                                'Financial Aid': org.financial_aid || '',
+                                'HCM/HR': org.hcm_hr || '',
+                                'Payroll System': org.payroll_system || '',
                                 'Annual Fee': org.annual_fee_amount || 0,
                                 'Payment Status': paymentStatus
                               };
