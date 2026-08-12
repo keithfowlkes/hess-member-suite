@@ -3068,7 +3068,10 @@ export default function MembershipFees() {
                                   const orgInvoices = invoices.filter(inv => inv.organization_id === org.id);
                                   const hasPaidInvoice = orgInvoices.some(inv => inv.status === 'paid');
                                   const paymentStatus = hasPaidInvoice ? 'paid' : 'unpaid';
-                                  
+                                  const contactName = org.profiles
+                                    ? `${org.profiles.first_name || ''} ${org.profiles.last_name || ''}`.trim()
+                                    : '-';
+
                                   return (
                                     <tr key={org.id} className="border-t hover:bg-muted/50">
                                       <td className="px-4 py-3">
@@ -3076,6 +3079,7 @@ export default function MembershipFees() {
                                           <p className="font-medium">{org.name}</p>
                                         </div>
                                       </td>
+                                      <td className="px-4 py-3 text-sm">{contactName || '-'}</td>
                                       <td className="px-4 py-3 text-sm">{org.email || '-'}</td>
                                       <td className="px-4 py-3 text-right font-medium">
                                         ${org.annual_fee_amount?.toLocaleString() || '0'}
