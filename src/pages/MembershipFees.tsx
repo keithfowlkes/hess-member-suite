@@ -2960,9 +2960,13 @@ export default function MembershipFees() {
                               const orgInvoices = invoices.filter(inv => inv.organization_id === org.id);
                               const hasPaidInvoice = orgInvoices.some(inv => inv.status === 'paid');
                               const paymentStatus = hasPaidInvoice ? 'Paid' : 'Unpaid';
-                              
+                              const contactName = org.profiles
+                                ? `${org.profiles.first_name || ''} ${org.profiles.last_name || ''}`.trim()
+                                : '';
+
                               return {
                                 'Organization Name': org.name,
+                                'Contact Name': contactName,
                                 'Email': org.email || '',
                                 'Annual Fee': org.annual_fee_amount || 0,
                                 'Payment Status': paymentStatus
@@ -2977,6 +2981,7 @@ export default function MembershipFees() {
                             // Set column widths
                             const colWidths = [
                               { wch: 35 }, // Organization Name
+                              { wch: 25 }, // Contact Name
                               { wch: 30 }, // Email
                               { wch: 15 }, // Annual Fee
                               { wch: 15 }  // Payment Status
