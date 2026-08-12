@@ -3057,7 +3057,7 @@ export default function MembershipFees() {
                                 if (filteredOrgs.length === 0) {
                                   return (
                                     <tr>
-                                      <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                                      <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                                         No organizations found for the selected date range.
                                       </td>
                                     </tr>
