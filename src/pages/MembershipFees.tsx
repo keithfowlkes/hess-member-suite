@@ -3023,6 +3023,7 @@ export default function MembershipFees() {
                             <thead className="bg-muted">
                               <tr>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Organization</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Contact Name</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
                                 <th className="px-4 py-3 text-right text-sm font-medium">Annual Fee</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Payment Status</th>
