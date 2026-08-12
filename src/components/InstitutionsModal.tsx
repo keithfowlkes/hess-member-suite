@@ -140,6 +140,20 @@ export function InstitutionsModal({
               </Badge>
             )}
           </DialogTitle>
+          {canExport && (
+            <div className="flex justify-end pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={handleExportCsv}
+                disabled={exporting || isLoading || !institutions || institutions.length === 0}
+              >
+                <Download className="h-4 w-4" />
+                {exporting ? 'Exporting...' : 'Export CSV'}
+              </Button>
+            </div>
+          )}
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden">
