@@ -3033,6 +3033,10 @@ export default function MembershipFees() {
                                 <th className="px-4 py-3 text-left text-sm font-medium">Organization</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Contact Name</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Financial System</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Financial Aid</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">HCM/HR</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Payroll System</th>
                                 <th className="px-4 py-3 text-right text-sm font-medium">Annual Fee</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Payment Status</th>
                               </tr>
