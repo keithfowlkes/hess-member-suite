@@ -3093,6 +3093,10 @@ export default function MembershipFees() {
                                       </td>
                                       <td className="px-4 py-3 text-sm">{contactName || '-'}</td>
                                       <td className="px-4 py-3 text-sm">{org.email || '-'}</td>
+                                      <td className="px-4 py-3 text-sm">{org.financial_system || '-'}</td>
+                                      <td className="px-4 py-3 text-sm">{org.financial_aid || '-'}</td>
+                                      <td className="px-4 py-3 text-sm">{org.hcm_hr || '-'}</td>
+                                      <td className="px-4 py-3 text-sm">{org.payroll_system || '-'}</td>
                                       <td className="px-4 py-3 text-right font-medium">
                                         ${org.annual_fee_amount?.toLocaleString() || '0'}
                                       </td>
