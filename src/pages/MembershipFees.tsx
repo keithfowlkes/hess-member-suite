@@ -2987,6 +2987,10 @@ export default function MembershipFees() {
                               { wch: 35 }, // Organization Name
                               { wch: 25 }, // Contact Name
                               { wch: 30 }, // Email
+                              { wch: 30 }, // Financial System
+                              { wch: 30 }, // Financial Aid
+                              { wch: 30 }, // HCM/HR
+                              { wch: 30 }, // Payroll System
                               { wch: 15 }, // Annual Fee
                               { wch: 15 }  // Payment Status
                             ];
