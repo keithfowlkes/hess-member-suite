@@ -2960,9 +2960,13 @@ export default function MembershipFees() {
                               const orgInvoices = invoices.filter(inv => inv.organization_id === org.id);
                               const hasPaidInvoice = orgInvoices.some(inv => inv.status === 'paid');
                               const paymentStatus = hasPaidInvoice ? 'Paid' : 'Unpaid';
-                              
+                              const contactName = org.profiles
+                                ? `${org.profiles.first_name || ''} ${org.profiles.last_name || ''}`.trim()
+                                : '';
+
                               return {
                                 'Organization Name': org.name,
+                                'Contact Name': contactName,
                                 'Email': org.email || '',
                                 'Annual Fee': org.annual_fee_amount || 0,
                                 'Payment Status': paymentStatus
@@ -2977,6 +2981,7 @@ export default function MembershipFees() {
                             // Set column widths
                             const colWidths = [
                               { wch: 35 }, // Organization Name
+                              { wch: 25 }, // Contact Name
                               { wch: 30 }, // Email
                               { wch: 15 }, // Annual Fee
                               { wch: 15 }  // Payment Status
@@ -3018,6 +3023,7 @@ export default function MembershipFees() {
                             <thead className="bg-muted">
                               <tr>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Organization</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Contact Name</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
                                 <th className="px-4 py-3 text-right text-sm font-medium">Annual Fee</th>
                                 <th className="px-4 py-3 text-left text-sm font-medium">Payment Status</th>
@@ -3051,7 +3057,7 @@ export default function MembershipFees() {
                                 if (filteredOrgs.length === 0) {
                                   return (
                                     <tr>
-                                      <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                                      <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                                         No organizations found for the selected date range.
                                       </td>
                                     </tr>
@@ -3062,7 +3068,10 @@ export default function MembershipFees() {
                                   const orgInvoices = invoices.filter(inv => inv.organization_id === org.id);
                                   const hasPaidInvoice = orgInvoices.some(inv => inv.status === 'paid');
                                   const paymentStatus = hasPaidInvoice ? 'paid' : 'unpaid';
-                                  
+                                  const contactName = org.profiles
+                                    ? `${org.profiles.first_name || ''} ${org.profiles.last_name || ''}`.trim()
+                                    : '-';
+
                                   return (
                                     <tr key={org.id} className="border-t hover:bg-muted/50">
                                       <td className="px-4 py-3">
@@ -3070,6 +3079,7 @@ export default function MembershipFees() {
                                           <p className="font-medium">{org.name}</p>
                                         </div>
                                       </td>
+                                      <td className="px-4 py-3 text-sm">{contactName || '-'}</td>
                                       <td className="px-4 py-3 text-sm">{org.email || '-'}</td>
                                       <td className="px-4 py-3 text-right font-medium">
                                         ${org.annual_fee_amount?.toLocaleString() || '0'}
