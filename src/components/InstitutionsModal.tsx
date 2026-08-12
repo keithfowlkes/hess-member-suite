@@ -1,11 +1,14 @@
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, MapPin, Mail, Building2, MoreVertical, Trash2 } from 'lucide-react';
+import { ExternalLink, MapPin, Mail, Building2, MoreVertical, Trash2, Download } from 'lucide-react';
 import { useInstitutionsBySystem } from '@/hooks/useInstitutionsBySystem';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembers } from '@/hooks/useMembers';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface InstitutionsModalProps {
   open: boolean;
