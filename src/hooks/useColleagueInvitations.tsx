@@ -109,6 +109,27 @@ export function useColleagueInvitations(organizationId?: string, enabled = true)
     }
   };
 
+  const setInvitationPermission = async (invitationId: string, canEditOrganization: boolean) => {
+    if (!organizationId) return { success: false };
+    setSubmitting(true);
+    try {
+      await callFunction({ action: 'set_permission', organizationId, invitationId, canEditOrganization });
+      toast({
+        title: 'Profile access updated',
+        description: canEditOrganization
+          ? 'This colleague can now submit institution profile updates.'
+          : 'This colleague is now view only for the institution profile.',
+      });
+      await fetchInvitations();
+      return { success: true };
+    } catch (error: any) {
+      toast({ title: 'Could not update access', description: error.message, variant: 'destructive' });
+      return { success: false, error: error.message };
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const deleteInvitation = async (invitationId: string) => {
     if (!organizationId) return { success: false };
     setSubmitting(true);
