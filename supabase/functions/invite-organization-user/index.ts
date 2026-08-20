@@ -232,7 +232,6 @@ serve(async (req) => {
     const email = String(body.email || '').trim().toLowerCase();
     const firstName = String(body.firstName || '').trim();
     const lastName = String(body.lastName || '').trim();
-    const canEditOrganization = body.canEditOrganization === true;
 
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       return json({ error: 'A valid email address is required.' }, 400);
