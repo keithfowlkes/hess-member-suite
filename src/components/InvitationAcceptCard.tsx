@@ -43,6 +43,8 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
   const [info, setInfo] = useState<InvitationInfo | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
