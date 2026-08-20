@@ -151,5 +151,5 @@ export function useColleagueInvitations(organizationId?: string, enabled = true)
     }
   };
 
-  return { invitations, loading, submitting, sendInvitation, resendInvitation, revokeInvitation, deleteInvitation, refetch: fetchInvitations };
+  return { invitations, loading, submitting, sendInvitation, resendInvitation, revokeInvitation, deleteInvitation, setInvitationPermission, refetch: fetchInvitations };
 }
