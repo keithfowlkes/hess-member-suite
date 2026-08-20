@@ -198,6 +198,7 @@ export default function Dashboards() {
                 <ArcticSecurityDashboard />
               </TabsContent>
 
+              {isAdmin && (
               <TabsContent value="deepseas">
                 <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
                   <CardHeader>
@@ -221,6 +222,7 @@ export default function Dashboards() {
                   </CardContent>
                 </Card>
               </TabsContent>
+              )}
             </Tabs>
           </div>
           
