@@ -743,6 +743,19 @@ const Index = () => {
             </div>
           </div>
           
+          {/* Invite Colleague Modal (primary contacts only) */}
+          {isPrimaryContact && userOrganization && (
+            <InviteColleagueModal
+              open={inviteModalOpen}
+              onOpenChange={setInviteModalOpen}
+              organizationId={userOrganization.id}
+              organizationName={userOrganization.name}
+              organizationEmail={userOrganization.email}
+              organizationWebsite={userOrganization.website}
+              primaryContactEmail={unifiedProfileData?.profile?.email || user?.email}
+            />
+          )}
+
           {/* Profile Edit Modal */}
           <ProfileEditModal 
             open={profileModalOpen} 
