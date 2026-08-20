@@ -85,7 +85,13 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
 
     setSubmitting(true);
     try {
-      await callAccept({ action: 'accept', token, password });
+      await callAccept({
+        action: 'accept',
+        token,
+        password,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      });
       const { error: signInError } = await supabase.auth.signInWithPassword({ email: info.email, password });
       if (signInError) throw signInError;
       toast({ title: 'Welcome to the HESS Member Portal', description: `Your account for ${info.organizationName} is ready.` });
