@@ -16,61 +16,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import arcticLogo from '@/assets/arctic-logo.png';
+import { ARCTIC_RAW_DATA as RAW_DATA } from '@/data/arcticScanData';
 import sampleReport from '@/assets/ews-sample-report.pdf.asset.json';
 
-// ── Same raw sample data as admin dashboard ──
-const RAW_DATA = [
-  {"observation time":"2026-02","organization":"Aaronfurt University","category":"public exposure","# events":"1"},
-  {"observation time":"2026-02","organization":"Aaronfurt University","category":"suspected compromise","# events":"6"},
-  {"observation time":"2026-02","organization":"Allenshire University","category":"suspected compromise","# events":"4"},
-  {"observation time":"2026-02","organization":"Bakerchester University","category":"suspected compromise","# events":"2"},
-  {"observation time":"2026-02","organization":"Blakestad University","category":"suspected compromise","# events":"155"},
-  {"observation time":"2026-02","organization":"Bradleymouth University","category":"suspected compromise","# events":"133"},
-  {"observation time":"2026-02","organization":"Bridgesview University","category":"public exposure","# events":"6"},
-  {"observation time":"2026-02","organization":"Bridgesview University","category":"suspected compromise","# events":"495"},
-  {"observation time":"2026-02","organization":"Cohenmouth University","category":"suspected compromise","# events":"244"},
-  {"observation time":"2026-02","organization":"Cummingsview University","category":"public exposure","# events":"1"},
-  {"observation time":"2026-02","organization":"Cummingsview University","category":"suspected compromise","# events":"21"},
-  {"observation time":"2026-02","organization":"Davidberg University","category":"suspected compromise","# events":"2"},
-  {"observation time":"2026-02","organization":"Davidbury University","category":"public exposure","# events":"3"},
-  {"observation time":"2026-02","organization":"Davidbury University","category":"suspected compromise","# events":"33"},
-  {"observation time":"2026-02","organization":"Davisburgh University","category":"suspected compromise","# events":"1"},
-  {"observation time":"2026-02","organization":"Dianechester University","category":"public exposure","# events":"3"},
-  {"observation time":"2026-02","organization":"Dianechester University","category":"suspected compromise","# events":"2"},
-  {"observation time":"2026-02","organization":"Diaztown University","category":"public exposure","# events":"17"},
-  {"observation time":"2026-02","organization":"Diaztown University","category":"suspected compromise","# events":"570"},
-  {"observation time":"2026-02","organization":"East Adam University","category":"suspected compromise","# events":"9"},
-  {"observation time":"2026-02","organization":"East Angelaberg University","category":"suspected compromise","# events":"26"},
-  {"observation time":"2026-02","organization":"East Anitafurt University","category":"suspected compromise","# events":"9"},
-  {"observation time":"2026-02","organization":"East Brittanystad University","category":"suspected compromise","# events":"5"},
-  {"observation time":"2026-02","organization":"East Bryceport University","category":"suspected compromise","# events":"106"},
-  {"observation time":"2026-02","organization":"East Paul University","category":"public exposure","# events":"5"},
-  {"observation time":"2026-02","organization":"East Richard University","category":"suspected compromise","# events":"5"},
-  {"observation time":"2026-02","organization":"East Whitneyshire University","category":"suspected compromise","# events":"133"},
-  {"observation time":"2026-02","organization":"Edwardville University","category":"public exposure","# events":"4"},
-  {"observation time":"2026-02","organization":"Edwardville University","category":"suspected compromise","# events":"8"},
-  {"observation time":"2026-02","organization":"Friedmanmouth University","category":"suspected compromise","# events":"102"},
-  {"observation time":"2026-02","organization":"Glennton University","category":"public exposure","# events":"3"},
-  {"observation time":"2026-02","organization":"Glennton University","category":"suspected compromise","# events":"129"},
-  {"observation time":"2026-02","organization":"Hannamouth University","category":"public exposure","# events":"5"},
-  {"observation time":"2026-02","organization":"Hineschester University","category":"suspected compromise","# events":"1"},
-  {"observation time":"2026-02","organization":"Hunterborough University","category":"public exposure","# events":"2"},
-  {"observation time":"2026-02","organization":"Jimmyfurt University","category":"suspected compromise","# events":"19"},
-  {"observation time":"2026-02","organization":"Lake Ashleyburgh University","category":"suspected compromise","# events":"168"},
-  {"observation time":"2026-02","organization":"Lake Brianberg University","category":"suspected compromise","# events":"4"},
-  {"observation time":"2026-02","organization":"Lake Davidmouth University","category":"public exposure","# events":"6"},
-  {"observation time":"2026-02","organization":"Lake Ernestberg University","category":"suspected compromise","# events":"2"},
-  {"observation time":"2026-02","organization":"Lake James University","category":"suspected compromise","# events":"7"},
-  {"observation time":"2026-02","organization":"Lake Jennifermouth University","category":"suspected compromise","# events":"2"},
-  {"observation time":"2026-02","organization":"Lake Kelsey University","category":"suspected compromise","# events":"1"},
-  {"observation time":"2026-02","organization":"Lake Kurtmouth University","category":"suspected compromise","# events":"152"},
-  {"observation time":"2026-02","organization":"Lake Sarahfurt University","category":"suspected compromise","# events":"8"},
-  {"observation time":"2026-02","organization":"Lambfurt University","category":"public exposure","# events":"2"},
-  {"observation time":"2026-02","organization":"Laurenberg University","category":"suspected compromise","# events":"2"},
-  {"observation time":"2026-02","organization":"Matthewside University","category":"suspected compromise","# events":"2"},
-  {"observation time":"2026-02","organization":"HESS Consortium Administrator","category":"public exposure","# events":"3"},
-  {"observation time":"2026-02","organization":"HESS Consortium Administrator","category":"suspected compromise","# events":"12"},
-];
 
 type RiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 
@@ -96,6 +44,7 @@ const RISK_COLORS: Record<RiskLevel, string> = {
 
 const CATEGORY_COLORS = {
   'Suspected Compromise': 'hsl(0 84% 60%)',
+  'Known Vulnerabilities': 'hsl(25 95% 53%)',
   'Public Exposure': 'hsl(48 96% 53%)',
 };
 
@@ -178,16 +127,17 @@ export function MemberArcticSecurityView() {
 
   // ── Aggregate all orgs for risk distribution (no org names exposed) ──
   const orgData = useMemo(() => {
-    const map = new Map<string, { pe: number; sc: number }>();
+    const map = new Map<string, { pe: number; kv: number; sc: number }>();
     for (const row of RAW_DATA) {
-      const existing = map.get(row.organization) || { pe: 0, sc: 0 };
-      const events = parseInt(row['# events'], 10);
+      const existing = map.get(row.organization) || { pe: 0, kv: 0, sc: 0 };
+      const events = parseInt(row['# events'], 10) || 0;
       if (row.category === 'public exposure') existing.pe += events;
+      else if (row.category === 'known vulnerabilities') existing.kv += events;
       else existing.sc += events;
       map.set(row.organization, existing);
     }
-    return Array.from(map.entries()).map(([, { pe, sc }]) => {
-      const total = pe + sc;
+    return Array.from(map.entries()).map(([, { pe, kv, sc }]) => {
+      const total = pe + kv + sc;
       return { total, riskLevel: getRiskLevel(total) };
     });
   }, []);
@@ -213,20 +163,23 @@ export function MemberArcticSecurityView() {
     if (orgRows.length === 0) return null;
 
     let publicExposure = 0;
+    let knownVulnerabilities = 0;
     let suspectedCompromise = 0;
     const lastScan = orgRows[0]['observation time'];
 
     for (const row of orgRows) {
-      const events = parseInt(row['# events'], 10);
+      const events = parseInt(row['# events'], 10) || 0;
       if (row.category === 'public exposure') publicExposure += events;
+      else if (row.category === 'known vulnerabilities') knownVulnerabilities += events;
       else suspectedCompromise += events;
     }
 
-    const total = publicExposure + suspectedCompromise;
+    const total = publicExposure + knownVulnerabilities + suspectedCompromise;
     return {
       name: orgRows[0].organization,
       lastScan,
       publicExposure,
+      knownVulnerabilities,
       suspectedCompromise,
       total,
       riskLevel: getRiskLevel(total),
@@ -241,6 +194,7 @@ export function MemberArcticSecurityView() {
     if (!myOrgData) return [];
     return [
       { name: 'Suspected Compromise', value: myOrgData.suspectedCompromise, color: CATEGORY_COLORS['Suspected Compromise'] },
+      { name: 'Known Vulnerabilities', value: myOrgData.knownVulnerabilities, color: CATEGORY_COLORS['Known Vulnerabilities'] },
       { name: 'Public Exposure', value: myOrgData.publicExposure, color: CATEGORY_COLORS['Public Exposure'] },
     ].filter(d => d.value > 0);
   }, [myOrgData]);
