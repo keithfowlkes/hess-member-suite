@@ -23,6 +23,7 @@ import { PayInvoiceButton } from '@/components/PayInvoiceButton';
 import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistrationCode';
 import { Copy, Ticket } from 'lucide-react';
 import { MemberInvoiceViewModal } from '@/components/MemberInvoiceViewModal';
+import { InviteColleagueModal } from '@/components/InviteColleagueModal';
 import { HelpModal } from '@/components/HelpModal';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -34,6 +35,7 @@ const Index = () => {
   const { data: systemSettings } = useSystemSettings();
   const navigate = useNavigate();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const { data: unifiedProfileData, loading: profileLoading } = useUnifiedProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
@@ -90,6 +92,12 @@ const Index = () => {
 
   // Use organization data from unified profile
   const userOrganization = unifiedProfileData?.organization;
+  // Only the organization's primary contact may invite colleagues
+  const isPrimaryContact = !!(
+    userOrganization?.contact_person_id &&
+    unifiedProfileData?.profile?.id &&
+    userOrganization.contact_person_id === unifiedProfileData.profile.id
+  );
   const organizationInvoices = userOrganization?.id
     ? invoices.filter((invoice) => invoice.organization_id === userOrganization.id)
     : [];
@@ -447,6 +455,16 @@ const Index = () => {
                         >
                           Update Your Profile
                         </Button>
+                        {isPrimaryContact && (
+                          <Button
+                            onClick={() => setInviteModalOpen(true)}
+                            className="w-full"
+                            size="lg"
+                            variant="outline"
+                          >
+                            Invite a Colleague
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -725,6 +743,19 @@ const Index = () => {
             </div>
           </div>
           
+          {/* Invite Colleague Modal (primary contacts only) */}
+          {isPrimaryContact && userOrganization && (
+            <InviteColleagueModal
+              open={inviteModalOpen}
+              onOpenChange={setInviteModalOpen}
+              organizationId={userOrganization.id}
+              organizationName={userOrganization.name}
+              organizationEmail={userOrganization.email}
+              organizationWebsite={userOrganization.website}
+              primaryContactEmail={unifiedProfileData?.profile?.email || user?.email}
+            />
+          )}
+
           {/* Profile Edit Modal */}
           <ProfileEditModal 
             open={profileModalOpen} 

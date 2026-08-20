@@ -774,7 +774,11 @@ export type Database = {
           id: string
           invitation_token: string
           invited_by: string
+          invited_first_name: string | null
+          invited_last_name: string | null
           organization_id: string
+          revoked_at: string | null
+          status: string
           updated_at: string
           used_at: string | null
         }
@@ -785,7 +789,11 @@ export type Database = {
           id?: string
           invitation_token: string
           invited_by: string
+          invited_first_name?: string | null
+          invited_last_name?: string | null
           organization_id: string
+          revoked_at?: string | null
+          status?: string
           updated_at?: string
           used_at?: string | null
         }
@@ -796,7 +804,11 @@ export type Database = {
           id?: string
           invitation_token?: string
           invited_by?: string
+          invited_first_name?: string | null
+          invited_last_name?: string | null
           organization_id?: string
+          revoked_at?: string | null
+          status?: string
           updated_at?: string
           used_at?: string | null
         }
@@ -2269,6 +2281,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_org_primary_contact: {
+        Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
       refresh_analytics_datacube_sql: { Args: never; Returns: undefined }

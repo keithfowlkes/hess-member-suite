@@ -167,3 +167,9 @@ verify_jwt = false
 
 [functions.list-member-institutions]
 verify_jwt = false
+
+[functions.invite-organization-user]
+verify_jwt = true
+
+[functions.accept-organization-invitation]
+verify_jwt = false

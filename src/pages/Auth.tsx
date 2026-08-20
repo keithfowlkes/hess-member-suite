@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { InvitationAcceptCard } from '@/components/InvitationAcceptCard';
 import { Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -306,6 +307,12 @@ export default function Auth() {
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // Colleague invitation acceptance flow (?invitation=<token>)
+  const invitationToken = searchParams.get('invitation');
+  if (invitationToken) {
+    return <InvitationAcceptCard token={invitationToken} />;
   }
 
   // Only redirect if user exists and we're not in the middle of a sign out process
