@@ -36,6 +36,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [accessModalOpen, setAccessModalOpen] = useState(false);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const { data: unifiedProfileData, loading: profileLoading } = useUnifiedProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
