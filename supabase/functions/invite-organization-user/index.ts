@@ -100,6 +100,8 @@ serve(async (req) => {
       return json({ error: 'No institutional email domain is on file for your organization. Please contact HESS staff.' }, 400);
     }
 
+    const canEditOrganization = body.canEditOrganization === true;
+
     const sendEmail = async (email: string, inviteToken: string, expiresAt: Date, firstName?: string) => {
       const link = `${PORTAL_URL}/auth?invitation=${inviteToken}`;
       const html = `
@@ -109,7 +111,9 @@ serve(async (req) => {
           <p><strong>${callerProfile.first_name} ${callerProfile.last_name}</strong>, the primary contact for
           <strong>${org.name}</strong>, has invited you to create your own account on the HESS Consortium Member Portal.</p>
           <p>Your account will give you access to the member information your institution shares with the consortium.
-          Only the primary contact can update the institution record or view billing information.</p>
+          ${canEditOrganization
+            ? 'You have also been granted permission to submit updates to your institution record for review.'
+            : 'Only the primary contact can update the institution record or view billing information.'}</p>
           <div style="margin: 30px 0; text-align: center;">
             <a href="${link}" style="background-color: #4b2e83; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Create Your Account</a>
           </div>
