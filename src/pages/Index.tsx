@@ -768,6 +768,17 @@ const Index = () => {
             />
           )}
 
+          {/* Organization Access Modal (primary contacts only) */}
+          {isPrimaryContact && userOrganization && (
+            <OrganizationAccessModal
+              open={accessModalOpen}
+              onOpenChange={setAccessModalOpen}
+              organizationId={userOrganization.id}
+              organizationName={userOrganization.name}
+            />
+          )}
+
+
           {/* Profile Edit Modal */}
           <ProfileEditModal 
             open={profileModalOpen} 
