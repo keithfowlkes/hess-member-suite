@@ -41,7 +41,7 @@ export function OrganizationAccessModal({
   organizationId,
   organizationName,
 }: OrganizationAccessModalProps) {
-  const { invitations, loading, submitting, deleteInvitation, refetch } = useColleagueInvitations(organizationId, open);
+  const { invitations, loading, submitting, deleteInvitation, setInvitationPermission, refetch } = useColleagueInvitations(organizationId, open);
   const [pendingDelete, setPendingDelete] = useState<ColleagueInvitation | null>(null);
 
   const activeCount = invitations.filter((i) => !!i.used_at).length;
