@@ -108,5 +108,26 @@ export function useColleagueInvitations(organizationId?: string, enabled = true)
     }
   };
 
-  return { invitations, loading, submitting, sendInvitation, resendInvitation, revokeInvitation, refetch: fetchInvitations };
+  const deleteInvitation = async (invitationId: string) => {
+    if (!organizationId) return { success: false };
+    setSubmitting(true);
+    try {
+      const result: any = await callFunction({ action: 'delete', organizationId, invitationId });
+      toast({
+        title: 'Access removed',
+        description: result?.accountRemoved
+          ? 'The colleague’s portal account and access have been removed.'
+          : 'The invitation has been removed from your access list.',
+      });
+      await fetchInvitations();
+      return { success: true };
+    } catch (error: any) {
+      toast({ title: 'Could not remove access', description: error.message, variant: 'destructive' });
+      return { success: false, error: error.message };
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return { invitations, loading, submitting, sendInvitation, resendInvitation, revokeInvitation, deleteInvitation, refetch: fetchInvitations };
 }
