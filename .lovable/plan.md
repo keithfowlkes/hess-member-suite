@@ -1,71 +1,54 @@
-## Goal
+# Invite Colleagues to Your Institution's Portal Account
 
-Let members and admins view, download (PDF), print, and forward an ACH/Check version of an invoice that removes the Stripe processing fee (default $9.27, admin-configurable) — without altering the stored invoice record.
+Let primary contacts invite additional people from their own institution to create their own portal login, restricted to the institution's email domain. Nothing in the existing admin invitation flow, registration approval flow, or login flow changes behavior.
 
-## New setting
+## What the user sees
 
-- Add a `system_settings` row: `stripe_processing_fee` (default `9.27`, numeric string).
-- Expose it in **Settings → Membership Fees** as an editable field: "Stripe processing fee (subtracted for ACH/Check version)".
+**Member dashboard (Index page), Institution Information card**
+- A new card action appears **only for the signed-in primary contact** of an organization: "Invite a Colleague".
+- Clicking opens a modal titled **Invite Colleagues from {Institution Name}**:
+  - Short explainer: invited colleagues get a read-only member login for your institution. Only the primary contact can update the institution record and see billing.
+  - Fields: First name, Last name, Email address.
+  - A visible note listing the allowed email domain(s), e.g. "Invitations must use an @graceland.edu address."
+  - Inline error if the typed email is outside the allowed domain — the Send button stays disabled.
+  - A list of that organization's invitations with status (Pending / Accepted / Expired) plus **Resend** and **Revoke** for pending ones.
+- Non-primary contacts never see the button or the modal.
 
-## UI: the "ACH / no card fee" toggle
+**Invited colleague**
+- Receives an email (sent through the existing centralized email delivery system) with a "Create your account" link.
+- The link opens the existing login page in a new invitation mode: it shows their name/email (locked) and the institution, and asks them to set a password.
+- After setting the password they are signed in and land on the member dashboard scoped to their institution. No admin approval step is needed, since the primary contact already vouched for them and the domain was verified.
 
-Added in two places, using the same control:
+## Domain rule
 
-**Admin panel → Membership Fees → Invoices → Invoice detail modal** (`InvoiceDialog.tsx`)
-**Member portal → My Invoices → Invoice detail modal** (`MemberInvoiceViewModal.tsx`)
+Allowed domains are derived from, in order of availability:
+1. the primary contact's own login email domain,
+2. the organization's contact email domain,
+3. the organization's website domain.
 
-At the top of the invoice preview area, a segmented control:
+Free/consumer domains (gmail.com, outlook.com, yahoo.com, hotmail.com, icloud.com, aol.com) are never used as an allowed domain; if the primary contact's own address is one of those and the organization has no institutional domain on file, the modal explains that invitations aren't available and to contact HESS staff.
 
-```text
-Payment method:  [ Credit Card (default) ]  [ ACH / Check — no processing fee ]
-```
+The domain check runs in the browser for immediate feedback **and again on the server**, which is the enforcement point.
 
-Selecting **ACH / Check** immediately re-renders the on-screen invoice with:
-- Amount reduced by the configured Stripe fee (e.g. $309.27 → $300.00), including the line-item amount, the "Total Due" line, and the "Payment Information → Due" summary.
-- The gray sub-line "includes Stripe Processing Fee" replaced with "**ACH / Check payment — no processing fee**".
-- The "Pay this invoice online" button and its blurb hidden (card-only path).
-- A small badge under the invoice number: "ACH / Check version".
+## Technical plan
 
-The three action buttons in the modal footer act on whichever version is currently displayed:
-- **Download PDF** → `Invoice_<num>_<org>_ACH.pdf` when ACH mode is on.
-- **Print** (new button, uses `window.print()` of the invoice container) — same ACH/CC state.
-- **Forward…** → sends the ACH-styled HTML through the existing forward flow; the persisted `forward_comment` is unchanged. Subject/body indicate "(ACH / Check version)" when applicable.
+**Database (additive only)**
+- Extend `public.organization_invitations` with nullable columns: `invited_first_name text`, `invited_last_name text`, `status text default 'pending'`, `revoked_at timestamptz`. Existing rows and the admin UI are unaffected.
+- Add RLS policies alongside the existing admin-only policy (no policy is dropped or altered):
+  - SELECT / INSERT / UPDATE for the primary contact of the invitation's organization, via a new `SECURITY DEFINER` helper `public.is_org_primary_contact(_user_id uuid, _org_id uuid)` that checks `organizations.contact_person_id -> profiles.user_id` (avoids recursive RLS).
+- Grants: `SELECT, INSERT, UPDATE` to `authenticated`, `ALL` to `service_role`.
 
-The toggle state is remembered per session in `localStorage` (`invoice-view-mode`) so an admin forwarding many ACH invoices doesn't have to re-toggle each time. It is **not** saved to the invoice.
+**Edge functions (new, nothing existing modified)**
+- `invite-organization-user`: validates the caller's JWT, confirms they are `contact_person_id` of the target org, recomputes the allowed domains server-side and rejects mismatches, rejects addresses that already have an account, creates the token + 7-day expiry row, and sends the email via `centralized-email-delivery`.
+- `accept-organization-invitation`: public; validates token, expiry, unused, not revoked; creates the auth user with `raw_user_meta_data.organization` set to the exact existing organization name and `email_confirm: true`; marks the invitation used. Association happens through the existing `get_user_organization_ids` path (`profiles.organization = organizations.name`), and `handle_new_user` only creates an organization when the name doesn't already exist, so no duplicate org is created and no trigger changes are needed.
 
-## Code changes
+**Frontend**
+- New `src/components/InviteColleagueModal.tsx` and `src/hooks/useColleagueInvitations.tsx` (separate from the admin `useOrganizationInvitations` hook so the admin screen is untouched).
+- New `src/utils/orgEmailDomains.ts` for the shared domain derivation/validation used by the modal.
+- `src/pages/Index.tsx`: render the invite button only when the signed-in user's profile id equals `userOrganization.contact_person_id`.
+- `src/pages/Auth.tsx`: add one additive branch for `?invitation=<token>` that renders the set-password form; all existing login, reset, and registration branches are left as-is.
 
-1. **`system_settings`** — one-row insert for `stripe_processing_fee` = `9.27` (via insert tool, not migration; key already fits existing schema).
+## Safety notes
 
-2. **`src/hooks/useSystemSettings.tsx`** — no change; consumers use `useSystemSetting('stripe_processing_fee')`.
-
-3. **`src/components/ProfessionalInvoice.tsx`**
-   - New prop `paymentMode?: 'card' | 'ach'` (default `'card'`).
-   - When `ach`: subtract fee from `invoice.amount` / `invoice.prorated_amount` for display, swap the description sub-line, hide the "Pay online" link if present, add "ACH / Check version" badge.
-
-4. **`src/utils/generateInvoicePdf.ts`** — accept `paymentMode` and pass it through to the rendered invoice; adjust filename suffix.
-
-5. **`src/utils/invoiceEmailRenderer.ts`** and **`supabase/functions/_shared/invoice-html.ts`** — accept `payment_mode` / `paymentMode`; apply the same subtraction, description swap, and hide the "Pay this invoice online" button when `ach`.
-
-6. **`src/hooks/useResendInvoice.tsx`** — thread a new `paymentMode` param into `invoiceEmailData` and the edge-function payload; subject gets " (ACH / Check version)" suffix when set.
-
-7. **`src/components/InvoiceDialog.tsx`** and **`src/components/MemberInvoiceViewModal.tsx`**
-   - Add the segmented toggle, "Print" button (`window.print()` on the invoice ref), and pass `paymentMode` into `ProfessionalInvoice`, `generateInvoicePdf`, and `resendInvoice.mutate`.
-   - Member portal restricts the toggle to primary contacts of their own org (matching the existing forward permission).
-
-8. **`src/pages/MembershipFees.tsx`** (Settings section) — new numeric input bound to `stripe_processing_fee`.
-
-## Out of scope
-
-- No changes to the stored `invoices.amount`, no new column, no new invoice status.
-- Stripe checkout / `PayInvoiceButton` unchanged — the ACH view simply hides that button.
-- Bulk invoice creation / scheduling / meter untouched.
-- The `_shared/invoice-html.ts` "PAID" stamp, conference registration code block, and W-9 link behavior are unchanged.
-
-## How the user will use it
-
-1. Open an invoice (admin or member).
-2. Click the **ACH / Check — no processing fee** toggle above the invoice preview.
-3. The preview updates to $300.00 with the fee line removed.
-4. Use **Download PDF**, **Print**, or **Forward…** — all reflect the ACH version.
-5. Admins can adjust the subtracted fee amount in Settings → Membership Fees if Stripe pricing ever changes.
+- Invited users receive the standard `member` role, are not set as `contact_person_id`, and therefore keep read-only access to institution data, matching current member permissions.
+- No changes to `handle_new_user`, `pending_registrations`, the admin invitation dialog, or any existing RLS policy.
