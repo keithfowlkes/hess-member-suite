@@ -387,12 +387,6 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                 <Shield className="h-3 w-3" />
                 Last Assessment: {myOrgData.lastScan === '2026-07' ? 'July 2026' : myOrgData.lastScan}
               </Badge>
-              <a
-                href="mailto:sales@arcticsecurity.com?subject=HESS%20Consortium%20Member%20Interest"
-                className="text-lg font-bold text-primary hover:underline text-center block mt-3"
-              >
-                Click here to email Arctic Security to get HESS pricing for their detailed service.
-              </a>
             </>
           )}
         </CardContent>
