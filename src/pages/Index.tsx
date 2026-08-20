@@ -467,6 +467,16 @@ const Index = () => {
                             Invite a Colleague
                           </Button>
                         )}
+                        {isPrimaryContact && (
+                          <Button
+                            onClick={() => setAccessModalOpen(true)}
+                            className="w-full"
+                            size="lg"
+                            variant="outline"
+                          >
+                            View Organization Access
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
