@@ -200,6 +200,7 @@ const MemberAnalytics = () => {
                 </TabsContent>
               )}
 
+              {isAdmin && (
               <TabsContent value="deepseas">
                 <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
                   <CardHeader>
@@ -223,6 +224,7 @@ const MemberAnalytics = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
+              )}
             </Tabs>
           </div>
           
