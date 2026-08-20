@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { InvitationAcceptCard } from '@/components/InvitationAcceptCard';
 import { Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
