@@ -13,6 +13,7 @@ export interface ColleagueInvitation {
   used_at: string | null;
   revoked_at: string | null;
   created_at: string;
+  can_edit_organization: boolean | null;
 }
 
 export function useColleagueInvitations(organizationId?: string, enabled = true) {
@@ -27,7 +28,7 @@ export function useColleagueInvitations(organizationId?: string, enabled = true)
     try {
       const { data, error } = await supabase
         .from('organization_invitations')
-        .select('id, organization_id, email, invited_first_name, invited_last_name, status, expires_at, used_at, revoked_at, created_at')
+        .select('id, organization_id, email, invited_first_name, invited_last_name, status, expires_at, used_at, revoked_at, created_at, can_edit_organization')
         .eq('organization_id', organizationId)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -65,7 +66,7 @@ export function useColleagueInvitations(organizationId?: string, enabled = true)
     return data;
   };
 
-  const sendInvitation = async (input: { firstName: string; lastName: string; email: string }) => {
+  const sendInvitation = async (input: { firstName: string; lastName: string; email: string; canEditOrganization?: boolean }) => {
     if (!organizationId) return { success: false };
     setSubmitting(true);
     try {
