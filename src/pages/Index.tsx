@@ -92,6 +92,12 @@ const Index = () => {
 
   // Use organization data from unified profile
   const userOrganization = unifiedProfileData?.organization;
+  // Only the organization's primary contact may invite colleagues
+  const isPrimaryContact = !!(
+    userOrganization?.contact_person_id &&
+    unifiedProfileData?.profile?.id &&
+    userOrganization.contact_person_id === unifiedProfileData.profile.id
+  );
   const organizationInvoices = userOrganization?.id
     ? invoices.filter((invoice) => invoice.organization_id === userOrganization.id)
     : [];
