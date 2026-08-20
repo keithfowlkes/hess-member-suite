@@ -71,6 +71,8 @@ export function ArcticSecurityDashboard() {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('total');
   const [sortAsc, setSortAsc] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewOrg, setPreviewOrg] = useState<string>('');
 
   // ── Aggregate data ──
   const orgData = useMemo<OrgData[]>(() => {
