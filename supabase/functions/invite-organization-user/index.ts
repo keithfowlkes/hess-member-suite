@@ -169,6 +169,61 @@ serve(async (req) => {
       return json({ success: true });
     }
 
+    if (action === 'delete') {
+      const invitationId = String(body.invitationId || '');
+      if (!invitationId) return json({ error: 'invitationId is required' }, 400);
+
+      const { data: invitation, error: invErr } = await supabaseAdmin
+        .from('organization_invitations')
+        .select('id, email, used_at')
+        .eq('id', invitationId)
+        .eq('organization_id', organizationId)
+        .maybeSingle();
+      if (invErr) throw invErr;
+      if (!invitation) return json({ error: 'Invitation not found' }, 404);
+
+      let accountRemoved = false;
+
+      // If the colleague already created an account, remove their portal access too.
+      if (invitation.used_at) {
+        const { data: colleagueProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('id, user_id, email')
+          .ilike('email', invitation.email)
+          .maybeSingle();
+
+        if (colleagueProfile) {
+          if (colleagueProfile.id === org.contact_person_id || colleagueProfile.id === callerProfile.id) {
+            return json({ error: 'This person is the primary contact and cannot be removed here.' }, 400);
+          }
+          const { data: otherOrg } = await supabaseAdmin
+            .from('organizations')
+            .select('id')
+            .eq('contact_person_id', colleagueProfile.id)
+            .maybeSingle();
+          if (otherOrg) {
+            return json({ error: 'This person is the primary contact for an institution and cannot be removed here.' }, 400);
+          }
+
+          if (colleagueProfile.user_id) {
+            const { error: delAuthErr } = await supabaseAdmin.auth.admin.deleteUser(colleagueProfile.user_id);
+            if (delAuthErr) console.error('[invite-organization-user] auth delete failed', delAuthErr);
+          }
+          await supabaseAdmin.from('profiles').delete().eq('id', colleagueProfile.id);
+          accountRemoved = true;
+        }
+      }
+
+      const { error: delErr } = await supabaseAdmin
+        .from('organization_invitations')
+        .delete()
+        .eq('id', invitationId)
+        .eq('organization_id', organizationId);
+      if (delErr) throw delErr;
+
+      return json({ success: true, accountRemoved });
+    }
+
     // Default action: create invitation
     const email = String(body.email || '').trim().toLowerCase();
     const firstName = String(body.firstName || '').trim();
