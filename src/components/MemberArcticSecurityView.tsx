@@ -110,8 +110,8 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
     { type: 'weak encryption', description: 'These types of observations relate to network services which expose a specific weakness in encryption.', impact: 'According to OWASP, incorrect uses of encryption may result in sensitive data exposure, key leakage, broken authentication, insecure session, and spoofing attacks.' },
   ];
 
-  // Fetch the logged-in user's organization name
-  const { data: userOrg } = useQuery({
+  // Fetch the logged-in user's organization name (skipped in preview mode)
+  const { data: fetchedOrg } = useQuery({
     queryKey: ['user-org-name', user?.id],
     queryFn: async () => {
       if (!user) return null;
@@ -122,8 +122,11 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
         .single();
       return profile?.organization ?? null;
     },
-    enabled: !!user,
+    enabled: !!user && !previewOrgName,
   });
+
+  const userOrg = previewOrgName ?? fetchedOrg;
+
 
   // ── Aggregate all orgs for risk distribution (no org names exposed) ──
   const orgData = useMemo(() => {
