@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { UserPlus, Mail, Loader2, RotateCcw, Ban, Info } from 'lucide-react';
 import { useColleagueInvitations, ColleagueInvitation } from '@/hooks/useColleagueInvitations';
@@ -39,6 +40,7 @@ export function InviteColleagueModal({
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [canEditOrganization, setCanEditOrganization] = useState(false);
 
   const { invitations, loading, submitting, sendInvitation, resendInvitation, revokeInvitation } =
     useColleagueInvitations(organizationId, open);
@@ -64,11 +66,13 @@ export function InviteColleagueModal({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: email.trim().toLowerCase(),
+      canEditOrganization,
     });
     if (result.success) {
       setFirstName('');
       setLastName('');
       setEmail('');
+      setCanEditOrganization(false);
     }
   };
 
@@ -130,6 +134,23 @@ export function InviteColleagueModal({
               )}
             </div>
 
+            <div className="flex items-start gap-3 rounded-lg border p-3">
+              <Checkbox
+                id="invite-can-edit"
+                checked={canEditOrganization}
+                onCheckedChange={(checked) => setCanEditOrganization(checked === true)}
+              />
+              <div className="space-y-1">
+                <Label htmlFor="invite-can-edit" className="cursor-pointer">
+                  Allow this colleague to update the institution profile
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  When unchecked, this colleague can view your institution's information but cannot submit any changes
+                  to the institution record.
+                </p>
+              </div>
+            </div>
+
             <Button type="submit" disabled={!canSubmit} className="w-full">
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Send Invitation
@@ -165,6 +186,9 @@ export function InviteColleagueModal({
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={status.variant}>{status.label}</Badge>
+                        <Badge variant="outline">
+                          {invitation.can_edit_organization ? 'Can edit institution' : 'View only'}
+                        </Badge>
                         {actionable && (
                           <>
                             <Button size="sm" variant="outline" onClick={() => resendInvitation(invitation.id)}>

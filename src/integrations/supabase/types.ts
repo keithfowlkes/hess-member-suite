@@ -768,6 +768,7 @@ export type Database = {
       }
       organization_invitations: {
         Row: {
+          can_edit_organization: boolean
           created_at: string
           email: string
           expires_at: string
@@ -783,6 +784,7 @@ export type Database = {
           used_at: string | null
         }
         Insert: {
+          can_edit_organization?: boolean
           created_at?: string
           email: string
           expires_at: string
@@ -798,6 +800,7 @@ export type Database = {
           used_at?: string | null
         }
         Update: {
+          can_edit_organization?: boolean
           created_at?: string
           email?: string
           expires_at?: string
@@ -2254,6 +2257,10 @@ export type Database = {
       }
       cohort_leader_can_update_profile: {
         Args: { _profile_id: string }
+        Returns: boolean
+      }
+      colleague_can_edit_org: {
+        Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
       email_exists: { Args: { p_email: string }; Returns: boolean }

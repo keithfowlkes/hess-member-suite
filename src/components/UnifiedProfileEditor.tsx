@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 interface UnifiedProfileEditorProps {
   data: UnifiedProfile;
   canEditDirectly: boolean;
+  canEditOrganizationFields?: boolean;
   onSave: (updates: {
     profile?: Partial<UnifiedProfile['profile']>;
     organization?: Partial<UnifiedProfile['organization']>;
@@ -30,6 +31,7 @@ interface UnifiedProfileEditorProps {
 export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
   data,
   canEditDirectly,
+  canEditOrganizationFields = true,
   onSave,
   saving = false
 }) => {
@@ -48,6 +50,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
   };
   
   const [editedData, setEditedData] = useState<UnifiedProfile>(initializeEditedData(data));
+  const orgFieldsLocked = !canEditOrganizationFields;
   
   // Update editedData when data prop changes
   useEffect(() => {
@@ -276,6 +279,13 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
         </div>
       </div>
 
+      {orgFieldsLocked && editedData.organization && (
+        <p className="text-sm text-amber-600">
+          Your access is view-only for institution information. Ask your institution's primary contact if you need to
+          update the institution record.
+        </p>
+      )}
+
       {/* Organization Information - Only show if user has an organization */}
       {editedData.organization && (
         <>
@@ -291,7 +301,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                      id="org_name"
                      value={editedData.organization.name || ''}
                      onChange={(e) => updateOrganizationField('name', e.target.value)}
-                     disabled={!isEditing}
+                     disabled={!isEditing || orgFieldsLocked}
                    />
                  </div>
                  <div>
@@ -301,7 +311,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                      type="number"
                      value={editedData.organization.student_fte || ''}
                      onChange={(e) => updateOrganizationField('student_fte', parseInt(e.target.value) || null)}
-                     disabled={!isEditing}
+                     disabled={!isEditing || orgFieldsLocked}
                    />
                  </div>
                  <div>
@@ -310,7 +320,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                      id="org_website"
                      value={editedData.organization.website || ''}
                      onChange={(e) => updateOrganizationField('website', e.target.value)}
-                     disabled={!isEditing}
+                     disabled={!isEditing || orgFieldsLocked}
                    />
                  </div>
                  <div>
@@ -320,7 +330,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                      type="date"
                      value={editedData.organization.approximate_date_joined_hess || ''}
                      onChange={(e) => updateOrganizationField('approximate_date_joined_hess', e.target.value)}
-                     disabled={!isEditing}
+                     disabled={!isEditing || orgFieldsLocked}
                    />
                  </div>
                </div>
@@ -342,7 +352,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                 id="address"
                 value={editedData.organization?.address_line_1 || ''}
                 onChange={(e) => updateAddressField('address', e.target.value)}
-                disabled={!isEditing}
+                disabled={!isEditing || orgFieldsLocked}
               />
             </div>
             <div>
@@ -351,7 +361,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                 id="city"
                 value={editedData.organization?.city || ''}
                 onChange={(e) => updateAddressField('city', e.target.value)}
-                disabled={!isEditing}
+                disabled={!isEditing || orgFieldsLocked}
               />
             </div>
             <div>
@@ -360,7 +370,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                 id="state"
                 value={editedData.organization?.state || ''}
                 onChange={(e) => updateAddressField('state', e.target.value)}
-                disabled={!isEditing}
+                disabled={!isEditing || orgFieldsLocked}
               />
             </div>
             <div>
@@ -369,7 +379,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                 id="zip"
                 value={editedData.organization?.zip_code || ''}
                 onChange={(e) => updateAddressField('zip', e.target.value)}
-                disabled={!isEditing}
+                disabled={!isEditing || orgFieldsLocked}
               />
             </div>
             <div>
@@ -378,7 +388,7 @@ export const UnifiedProfileEditor: React.FC<UnifiedProfileEditorProps> = ({
                 id="state_association"
                 value={editedData.organization?.state_association || ''}
                 onChange={(e) => updateOrganizationField('state_association', e.target.value)}
-                disabled={!isEditing}
+                disabled={!isEditing || orgFieldsLocked}
               />
             </div>
           </div>
