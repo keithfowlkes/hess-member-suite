@@ -71,7 +71,7 @@ const RiskTooltip = ({ active, payload }: any) => {
   );
 };
 
-export function MemberArcticSecurityView() {
+export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: string } = {}) {
   const { user } = useAuth();
   const [aboutOpen, setAboutOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
