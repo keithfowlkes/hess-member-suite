@@ -419,7 +419,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                 href="mailto:sales@arcticsecurity.com?subject=HESS%20Consortium%20Member%20Interest"
                 className="text-lg font-bold text-primary hover:underline text-center block mt-3"
               >
-                Click here to email Arctic Security to get HESS pricing for their service.
+                Click here to email Arctic Security to get HESS pricing for their detailed service.
               </a>
             </>
           )}
