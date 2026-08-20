@@ -269,7 +269,7 @@ export function MemberArcticSecurityView() {
                 <div>
                   <span className="text-muted-foreground">Last Scan: </span>
                   <span className="font-semibold text-foreground">
-                    {myOrgData.lastScan === '2026-02' ? 'February 2026' : myOrgData.lastScan}
+                    {myOrgData.lastScan === '2026-07' ? 'July 2026' : myOrgData.lastScan}
                   </span>
                 </div>
                 <div>
