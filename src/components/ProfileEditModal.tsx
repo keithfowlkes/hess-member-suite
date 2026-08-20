@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
+import { useCanEditOrganizationProfile } from '@/hooks/useCanEditOrganizationProfile';
 
 interface ProfileEditModalProps {
   open: boolean;
@@ -33,6 +34,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
+  const { canEditOrganizationProfile } = useCanEditOrganizationProfile(data?.organization?.id);
 
   const handleSave = async (updates: {
     profile?: Partial<any>;
@@ -40,6 +42,11 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   }) => {
     console.log('🚀 Profile modal: handleSave called with:', updates);
     setSaving(true);
+
+    // Colleagues without institution-edit permission may only change their own contact details
+    if (!canEditOrganizationProfile) {
+      updates = { profile: updates.profile };
+    }
     
     try {
       // Check if user is primary contact of their organization
@@ -156,6 +163,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               <UnifiedProfileEditor
                 data={data}
                 canEditDirectly={canEditDirectly()}
+                canEditOrganizationFields={canEditOrganizationProfile}
                 onSave={handleSave}
                 saving={saving}
               />
