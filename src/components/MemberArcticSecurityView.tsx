@@ -128,35 +128,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
   const userOrg = previewOrgName ?? fetchedOrg;
 
 
-  // ── Aggregate all orgs for risk distribution (no org names exposed) ──
-  const orgData = useMemo(() => {
-    const map = new Map<string, { pe: number; kv: number; sc: number }>();
-    for (const row of RAW_DATA) {
-      const existing = map.get(row.organization) || { pe: 0, kv: 0, sc: 0 };
-      const events = parseInt(row['# events'], 10) || 0;
-      if (row.category === 'public exposure') existing.pe += events;
-      else if (row.category === 'known vulnerabilities') existing.kv += events;
-      else existing.sc += events;
-      map.set(row.organization, existing);
-    }
-    return Array.from(map.entries()).map(([, { pe, kv, sc }]) => {
-      const total = pe + kv + sc;
-      return { total, riskLevel: getRiskLevel(total) };
-    });
-  }, []);
 
-  const riskDistribution = useMemo(() => {
-    const counts: Record<RiskLevel, number> = { Low: 0, Medium: 0, High: 0, Critical: 0 };
-    orgData.forEach(o => counts[o.riskLevel]++);
-    return (['Critical', 'High', 'Medium', 'Low'] as RiskLevel[])
-      .map(level => ({ name: level, value: counts[level], color: RISK_COLORS[level] }))
-      .filter(d => d.value > 0);
-  }, [orgData]);
-
-  const riskChartConfig = riskDistribution.reduce((acc, d) => {
-    acc[d.name] = { label: d.name, color: d.color };
-    return acc;
-  }, {} as Record<string, { label: string; color: string }>);
   // ── Organization-specific data ──
   const myOrgData = useMemo(() => {
     if (!userOrg) return null;
