@@ -308,6 +308,12 @@ export default function Auth() {
     );
   }
 
+  // Colleague invitation acceptance flow (?invitation=<token>)
+  const invitationToken = searchParams.get('invitation');
+  if (invitationToken) {
+    return <InvitationAcceptCard token={invitationToken} />;
+  }
+
   // Only redirect if user exists and we're not in the middle of a sign out process
   if (user && !loading) {
     let redirectTo = '/';
