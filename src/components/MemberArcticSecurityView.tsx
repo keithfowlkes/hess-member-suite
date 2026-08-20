@@ -407,6 +407,12 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
             Arctic EWS matches global cybersecurity observations to your organization and turns them into ready-to-use notifications. It handles threat types such as compromised machines and remotely exploitable services that act as publicly accessible weak points in your network. Arctic EWS notifications reveal the immediate security issues in your organization's network. Enhance your security by increasing the visibility of cybersecurity issues such as data breaches that could damage your operations. Instead of reacting to issues, anticipate them using high-quality information: fix problems before they cause harm.{"\u00a0"}{"\n\n"}
             Arctic Security is an early warning service. <span className="underline">They do not remediate security issues for your campus.</span> If you need these services, DeepSeas Security is our HESS recommended partner.
           </p>
+          <a
+            href="mailto:sales@arcticsecurity.com?subject=HESS%20Consortium%20Member%20Interest"
+            className="text-sm font-bold text-primary hover:underline text-center block"
+          >
+            Click here to email Arctic Security to get HESS pricing for their detailed service.
+          </a>
 
           <button
             onClick={() => setAboutOpen(!aboutOpen)}
