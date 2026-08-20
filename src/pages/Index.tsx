@@ -24,6 +24,7 @@ import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistration
 import { Copy, Ticket } from 'lucide-react';
 import { MemberInvoiceViewModal } from '@/components/MemberInvoiceViewModal';
 import { InviteColleagueModal } from '@/components/InviteColleagueModal';
+import { OrganizationAccessModal } from '@/components/OrganizationAccessModal';
 import { HelpModal } from '@/components/HelpModal';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -36,6 +37,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [accessModalOpen, setAccessModalOpen] = useState(false);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const { data: unifiedProfileData, loading: profileLoading } = useUnifiedProfile();
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
@@ -465,6 +467,16 @@ const Index = () => {
                             Invite a Colleague
                           </Button>
                         )}
+                        {isPrimaryContact && (
+                          <Button
+                            onClick={() => setAccessModalOpen(true)}
+                            className="w-full"
+                            size="lg"
+                            variant="outline"
+                          >
+                            View Organization Access
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -755,6 +767,17 @@ const Index = () => {
               primaryContactEmail={unifiedProfileData?.profile?.email || user?.email}
             />
           )}
+
+          {/* Organization Access Modal (primary contacts only) */}
+          {isPrimaryContact && userOrganization && (
+            <OrganizationAccessModal
+              open={accessModalOpen}
+              onOpenChange={setAccessModalOpen}
+              organizationId={userOrganization.id}
+              organizationName={userOrganization.name}
+            />
+          )}
+
 
           {/* Profile Edit Modal */}
           <ProfileEditModal 
