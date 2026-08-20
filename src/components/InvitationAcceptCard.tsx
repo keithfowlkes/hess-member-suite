@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, UserPlus } from 'lucide-react';
+import { CheckCircle2, ExternalLink, Loader2, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface InvitationAcceptCardProps {
@@ -48,6 +48,7 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [created, setCreated] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -92,10 +93,8 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
       });
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email: info.email, password });
-      if (signInError) throw signInError;
-      toast({ title: 'Welcome to the HESS Member Portal', description: `Your account for ${info.organizationName} is ready.` });
-      window.location.href = '/';
+      toast({ title: 'Account created', description: `Your account for ${info.organizationName} is ready.` });
+      setCreated(true);
     } catch (error: any) {
       toast({ title: 'Could not create your account', description: error.message, variant: 'destructive' });
     } finally {
@@ -118,7 +117,27 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
             <img src="/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" alt="HESS Consortium" className="h-14 w-auto" />
           </div>
 
-          {loading ? (
+          {created ? (
+            <div className="space-y-5 text-center">
+              <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto" />
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-gray-800">Your account has been created</h3>
+                <p className="text-gray-600">
+                  {info?.organizationName ? `You now have portal access for ${info.organizationName}. ` : ''}
+                  Sign in with <span className="font-medium">{info?.email}</span> and the password you just created.
+                </p>
+              </div>
+              <Button
+                className="w-full"
+                onClick={() =>
+                  window.open('https://www.hessconsortium.org/new/hess-member-portal/', '_blank', 'noopener,noreferrer')
+                }
+              >
+                Go to the HESS Member Portal
+                <ExternalLink className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          ) : loading ? (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Checking your invitation...
             </div>
@@ -185,7 +204,7 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
               </div>
               <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Account &amp; Sign In
+                Create Account
               </Button>
             </form>
           )}
