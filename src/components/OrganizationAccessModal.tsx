@@ -68,6 +68,7 @@ export function OrganizationAccessModal({
             </DialogTitle>
             <DialogDescription>
               Invited colleagues for {organizationName || 'your organization'} and the status of their portal access.
+              Click the <strong>Profile access</strong> badge to toggle whether a colleague can update the institution profile.
             </DialogDescription>
           </DialogHeader>
 
