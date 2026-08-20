@@ -173,6 +173,23 @@ serve(async (req) => {
       return json({ success: true });
     }
 
+    if (action === 'set_permission') {
+      const invitationId = String(body.invitationId || '');
+      if (!invitationId) return json({ error: 'invitationId is required' }, 400);
+
+      const { data: updated, error: permErr } = await supabaseAdmin
+        .from('organization_invitations')
+        .update({ can_edit_organization: canEditOrganization })
+        .eq('id', invitationId)
+        .eq('organization_id', organizationId)
+        .select('id, can_edit_organization')
+        .maybeSingle();
+      if (permErr) throw permErr;
+      if (!updated) return json({ error: 'Invitation not found' }, 404);
+
+      return json({ success: true, canEditOrganization: updated.can_edit_organization });
+    }
+
     if (action === 'delete') {
       const invitationId = String(body.invitationId || '');
       if (!invitationId) return json({ error: 'invitationId is required' }, 400);

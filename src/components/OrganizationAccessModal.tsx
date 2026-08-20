@@ -41,7 +41,7 @@ export function OrganizationAccessModal({
   organizationId,
   organizationName,
 }: OrganizationAccessModalProps) {
-  const { invitations, loading, submitting, deleteInvitation, refetch } = useColleagueInvitations(organizationId, open);
+  const { invitations, loading, submitting, deleteInvitation, setInvitationPermission, refetch } = useColleagueInvitations(organizationId, open);
   const [pendingDelete, setPendingDelete] = useState<ColleagueInvitation | null>(null);
 
   const activeCount = invitations.filter((i) => !!i.used_at).length;
@@ -115,9 +115,20 @@ export function OrganizationAccessModal({
                           <Badge variant={status.variant}>{status.label}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">
-                            {inv.can_edit_organization ? 'Can update institution' : 'View only'}
-                          </Badge>
+                          <button
+                            type="button"
+                            onClick={() => setInvitationPermission(inv.id, !inv.can_edit_organization)}
+                            disabled={submitting}
+                            title="Click to toggle institution profile access"
+                            className="disabled:opacity-60"
+                          >
+                            <Badge
+                              variant={inv.can_edit_organization ? 'default' : 'outline'}
+                              className="cursor-pointer hover:opacity-80 transition-opacity"
+                            >
+                              {inv.can_edit_organization ? 'Can update institution' : 'View only'}
+                            </Badge>
+                          </button>
                         </TableCell>
                         <TableCell>{formatDate(inv.created_at)}</TableCell>
                         <TableCell>{formatDate(inv.used_at)}</TableCell>
