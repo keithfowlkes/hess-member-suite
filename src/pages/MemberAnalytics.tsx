@@ -83,7 +83,7 @@ const MemberAnalytics = () => {
             </div>
             
             <Tabs defaultValue="usage" className="w-full">
-              <TabsList className={`grid w-full mb-6 ${showArcticTab ? 'grid-cols-4' : 'grid-cols-3'}`}>
+              <TabsList className={`grid w-full mb-6 ${isAdmin ? (showArcticTab ? 'grid-cols-4' : 'grid-cols-3') : 'grid-cols-2'}`}>
                 <TabsTrigger value="usage" className="gap-2">
                   <PieChart className="h-4 w-4" />
                   System Usage Analytics
@@ -98,10 +98,12 @@ const MemberAnalytics = () => {
                     Arctic Security Assessment
                   </TabsTrigger>
                 )}
-                <TabsTrigger value="deepseas" className="gap-2">
-                  <img src={deepseasLogo.url} alt="DeepSeas" className="h-4 w-auto" />
-                  Dark Web Service
-                </TabsTrigger>
+                {isAdmin && (
+                  <TabsTrigger value="deepseas" className="gap-2">
+                    <img src={deepseasLogo.url} alt="DeepSeas" className="h-4 w-auto" />
+                    Dark Web Service
+                  </TabsTrigger>
+                )}
               </TabsList>
               
               <TabsContent value="usage">
@@ -198,6 +200,7 @@ const MemberAnalytics = () => {
                 </TabsContent>
               )}
 
+              {isAdmin && (
               <TabsContent value="deepseas">
                 <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
                   <CardHeader>
@@ -221,6 +224,7 @@ const MemberAnalytics = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
+              )}
             </Tabs>
           </div>
           
