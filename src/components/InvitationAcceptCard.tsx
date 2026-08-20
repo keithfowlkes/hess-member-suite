@@ -156,7 +156,7 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Email</Label>
+                <Label>Email (email address is auto entered)</Label>
                 <Input value={info?.email ?? ''} readOnly className="bg-muted" />
                 <p className="text-xs text-muted-foreground">
                   Your account must use the email address this invitation was sent to.
