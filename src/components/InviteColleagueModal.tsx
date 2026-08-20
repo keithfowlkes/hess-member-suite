@@ -160,7 +160,7 @@ export function InviteColleagueModal({
 
         <Card>
           <CardContent className="pt-6">
-            <h4 className="font-medium mb-3">Invitations sent from domain "members.hessconsortium.app"</h4>
+            <h4 className="font-medium mb-3">NOTE: Invitations sent from domain "members.hessconsortium.app"</h4>
             {loading ? (
               <div className="text-sm text-muted-foreground">Loading invitations...</div>
             ) : invitations.length === 0 ? (
