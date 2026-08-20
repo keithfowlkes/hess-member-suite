@@ -18,6 +18,10 @@ import { Label } from '@/components/ui/label';
 import { useSystemSetting, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
 import arcticLogo from '@/assets/arctic-logo.png';
 import { ARCTIC_RAW_DATA as RAW_DATA } from '@/data/arcticScanData';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
+
 
 
 // ── Types ──
@@ -67,6 +71,8 @@ export function ArcticSecurityDashboard() {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('total');
   const [sortAsc, setSortAsc] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewOrg, setPreviewOrg] = useState<string>('');
 
   // ── Aggregate data ──
   const orgData = useMemo<OrgData[]>(() => {
@@ -155,14 +161,58 @@ export function ArcticSecurityDashboard() {
             <p className="text-sm text-muted-foreground">Security scanning results for member institutions</p>
           </div>
         </div>
-        <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1">
-          <Shield className="h-3 w-3" />
-          Last Scan: July 2026
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => setPreviewOpen(true)}>
+            <Eye className="h-4 w-4" />
+            Preview member view
+          </Button>
+          <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1">
+            <Shield className="h-3 w-3" />
+            Last Scan: July 2026
+          </Badge>
+        </div>
       </div>
+
+      {/* Member view preview */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary" />
+              Member View Preview
+            </DialogTitle>
+            <DialogDescription>
+              This is exactly what the selected institution sees in their member portal.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="max-w-md">
+              <Label className="text-sm">Preview as institution</Label>
+              <Select value={previewOrg} onValueChange={setPreviewOrg}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select an institution" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {orgData.map((o) => (
+                    <SelectItem key={o.name} value={o.name}>{o.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {previewOrg ? (
+              <div className="rounded-lg border bg-muted/20 p-4">
+                <MemberArcticSecurityView previewOrgName={previewOrg} />
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Select an institution to see their member view.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Member Portal Visibility Toggle */}
       <MemberVisibilityToggle />
+
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
