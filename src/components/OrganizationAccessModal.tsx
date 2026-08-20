@@ -97,6 +97,7 @@ export function OrganizationAccessModal({
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Profile access</TableHead>
                     <TableHead>Invited</TableHead>
                     <TableHead>Account created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -112,6 +113,11 @@ export function OrganizationAccessModal({
                         <TableCell className="break-all">{inv.email}</TableCell>
                         <TableCell>
                           <Badge variant={status.variant}>{status.label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {inv.can_edit_organization ? 'Can update institution' : 'View only'}
+                          </Badge>
                         </TableCell>
                         <TableCell>{formatDate(inv.created_at)}</TableCell>
                         <TableCell>{formatDate(inv.used_at)}</TableCell>
