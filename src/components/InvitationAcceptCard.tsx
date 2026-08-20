@@ -135,7 +135,7 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="invite-first">First name</Label>
+                  <Label htmlFor="invite-first">First name (auto entered)</Label>
                   <Input
                     id="invite-first"
                     value={firstName}
@@ -145,7 +145,7 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="invite-last">Last name</Label>
+                  <Label htmlFor="invite-last">Last name (auto entered)</Label>
                   <Input
                     id="invite-last"
                     value={lastName}
