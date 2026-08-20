@@ -24,6 +24,7 @@ import { useConferenceRegistrationCode } from '@/hooks/useConferenceRegistration
 import { Copy, Ticket } from 'lucide-react';
 import { MemberInvoiceViewModal } from '@/components/MemberInvoiceViewModal';
 import { InviteColleagueModal } from '@/components/InviteColleagueModal';
+import { OrganizationAccessModal } from '@/components/OrganizationAccessModal';
 import { HelpModal } from '@/components/HelpModal';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
