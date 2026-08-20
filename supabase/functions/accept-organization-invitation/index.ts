@@ -70,8 +70,8 @@ serve(async (req) => {
       password,
       email_confirm: true,
       user_metadata: {
-        first_name: invitation.invited_first_name || '',
-        last_name: invitation.invited_last_name || '',
+        first_name: String(body.firstName || '').trim() || invitation.invited_first_name || '',
+        last_name: String(body.lastName || '').trim() || invitation.invited_last_name || '',
         organization: organizationName,
       },
     });

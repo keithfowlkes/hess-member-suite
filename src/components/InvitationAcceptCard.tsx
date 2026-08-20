@@ -43,6 +43,8 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
   const [info, setInfo] = useState<InvitationInfo | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -53,7 +55,11 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
     (async () => {
       try {
         const result = await callAccept({ action: 'lookup', token });
-        if (!cancelled) setInfo(result.invitation);
+        if (!cancelled) {
+          setInfo(result.invitation);
+          setFirstName(result.invitation?.firstName || '');
+          setLastName(result.invitation?.lastName || '');
+        }
       } catch (error: any) {
         if (!cancelled) setLoadError(error.message);
       } finally {
@@ -79,7 +85,13 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
 
     setSubmitting(true);
     try {
-      await callAccept({ action: 'accept', token, password });
+      await callAccept({
+        action: 'accept',
+        token,
+        password,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      });
       const { error: signInError } = await supabase.auth.signInWithPassword({ email: info.email, password });
       if (signInError) throw signInError;
       toast({ title: 'Welcome to the HESS Member Portal', description: `Your account for ${info.organizationName} is ready.` });
@@ -121,13 +133,34 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-2">
-                <Label>Name</Label>
-                <Input value={`${info?.firstName ?? ''} ${info?.lastName ?? ''}`.trim()} disabled />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="invite-first">First name</Label>
+                  <Input
+                    id="invite-first"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="First name"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite-last">Last name</Label>
+                  <Input
+                    id="invite-last"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Last name"
+                    required
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input value={info?.email ?? ''} disabled />
+                <Input value={info?.email ?? ''} readOnly className="bg-muted" />
+                <p className="text-xs text-muted-foreground">
+                  Your account must use the email address this invitation was sent to.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="invite-password">Create a password</Label>
