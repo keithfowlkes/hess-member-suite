@@ -55,7 +55,11 @@ export function InvitationAcceptCard({ token }: InvitationAcceptCardProps) {
     (async () => {
       try {
         const result = await callAccept({ action: 'lookup', token });
-        if (!cancelled) setInfo(result.invitation);
+        if (!cancelled) {
+          setInfo(result.invitation);
+          setFirstName(result.invitation?.firstName || '');
+          setLastName(result.invitation?.lastName || '');
+        }
       } catch (error: any) {
         if (!cancelled) setLoadError(error.message);
       } finally {
