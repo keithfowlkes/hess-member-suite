@@ -360,129 +360,127 @@ const Index = () => {
             )}
 
             {/* Institution Information - Moved to top */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Institution Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              <Card className="flex-1">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    Institution Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   {/* Organization Information */}
-                  <div className="flex-1">
-                    {userOrganization ? (
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{userOrganization.name}</h3>
-                        </div>
-                        
-                        {(userOrganization.address_line_1 || userOrganization.city || userOrganization.state) && (
-                          <div className="flex items-start gap-2 text-sm">
-                            <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                            <div className="text-muted-foreground">
-                              {userOrganization.address_line_1 && (
-                                <div>{userOrganization.address_line_1}</div>
-                              )}
-                              {userOrganization.address_line_2 && (
-                                <div>{userOrganization.address_line_2}</div>
-                              )}
-                              {(userOrganization.city || userOrganization.state) && (
-                                <div>
-                                  {userOrganization.city}
-                                  {userOrganization.city && userOrganization.state && ', '}
-                                  {userOrganization.state} {userOrganization.zip_code}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {userOrganization.email && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
-                            <a 
-                              href={`mailto:${userOrganization.email}`}
-                              className="text-primary hover:underline"
-                            >
-                              {userOrganization.email}
-                            </a>
-                          </div>
-                        )}
-
-                        {user?.email && (
-                          <div className="pt-2 border-t">
-                            <div className="flex items-center gap-2 text-sm">
-                              <User className="h-4 w-4 text-muted-foreground" />
-                              <div>
-                                <div className="font-medium text-foreground">Primary Contact</div>
-                                <div className="text-muted-foreground">{user.email}</div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {userOrganization.updated_at && (
-                          <div className="pt-2 border-t">
-                            <div className="text-sm text-muted-foreground">
-                              <span className="font-medium">Profile Last Updated:</span> {new Date(userOrganization.updated_at).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                              })}
-                            </div>
-                          </div>
-                        )}
+                  {userOrganization ? (
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold text-foreground">{userOrganization.name}</h3>
                       </div>
-                    ) : (
-                      <div className="text-sm text-muted-foreground">Loading institution information...</div>
+                      
+                      {(userOrganization.address_line_1 || userOrganization.city || userOrganization.state) && (
+                        <div className="flex items-start gap-2 text-sm">
+                          <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                          <div className="text-muted-foreground">
+                            {userOrganization.address_line_1 && (
+                              <div>{userOrganization.address_line_1}</div>
+                            )}
+                            {userOrganization.address_line_2 && (
+                              <div>{userOrganization.address_line_2}</div>
+                            )}
+                            {(userOrganization.city || userOrganization.state) && (
+                              <div>
+                                {userOrganization.city}
+                                {userOrganization.city && userOrganization.state && ', '}
+                                {userOrganization.state} {userOrganization.zip_code}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {userOrganization.email && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <a 
+                            href={`mailto:${userOrganization.email}`}
+                            className="text-primary hover:underline"
+                          >
+                            {userOrganization.email}
+                          </a>
+                        </div>
+                      )}
+
+                      {user?.email && (
+                        <div className="pt-2 border-t">
+                          <div className="flex items-center gap-2 text-sm">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium text-foreground">Primary Contact</div>
+                              <div className="text-muted-foreground">{user.email}</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {userOrganization.updated_at && (
+                        <div className="pt-2 border-t">
+                          <div className="text-sm text-muted-foreground">
+                            <span className="font-medium">Profile Last Updated:</span> {new Date(userOrganization.updated_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">Loading institution information...</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Profile Update Button */}
+              <div className="flex-shrink-0 lg:w-64">
+                <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 h-full flex flex-col justify-center">
+                  <div className="text-center space-y-3">
+                    <Edit3 className="h-8 w-8 text-primary mx-auto" />
+                    <div>
+                      <h4 className="font-medium text-foreground mb-1">Keep Your Profile Current</h4>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Update your organization, contact information or password
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={() => setProfileModalOpen(true)}
+                      className="w-full"
+                      size="lg"
+                    >
+                      Update Your Profile
+                    </Button>
+                    {isPrimaryContact && (
+                      <Button
+                        onClick={() => setInviteModalOpen(true)}
+                        className="w-full"
+                        size="lg"
+                        variant="outline"
+                      >
+                        Invite a Colleague
+                      </Button>
+                    )}
+                    {isPrimaryContact && (
+                      <Button
+                        onClick={() => setAccessModalOpen(true)}
+                        className="w-full"
+                        size="lg"
+                        variant="outline"
+                      >
+                        View Organization Access
+                      </Button>
                     )}
                   </div>
-
-                  {/* Profile Update Button */}
-                  <div className="flex-shrink-0 lg:w-64 space-y-3">
-                    <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 h-full flex flex-col justify-center">
-                      <div className="text-center space-y-3">
-                        <Edit3 className="h-8 w-8 text-primary mx-auto" />
-                        <div>
-                          <h4 className="font-medium text-foreground mb-1">Keep Your Profile Current</h4>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            Update your organization, contact information or password
-                          </p>
-                        </div>
-                        <Button 
-                          onClick={() => setProfileModalOpen(true)}
-                          className="w-full"
-                          size="lg"
-                        >
-                          Update Your Profile
-                        </Button>
-                        {isPrimaryContact && (
-                          <Button
-                            onClick={() => setInviteModalOpen(true)}
-                            className="w-full"
-                            size="lg"
-                            variant="outline"
-                          >
-                            Invite a Colleague
-                          </Button>
-                        )}
-                        {isPrimaryContact && (
-                          <Button
-                            onClick={() => setAccessModalOpen(true)}
-                            className="w-full"
-                            size="lg"
-                            variant="outline"
-                          >
-                            View Organization Access
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Membership Fee Status */}
             {(() => {
