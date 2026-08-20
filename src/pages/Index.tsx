@@ -455,6 +455,16 @@ const Index = () => {
                         >
                           Update Your Profile
                         </Button>
+                        {isPrimaryContact && (
+                          <Button
+                            onClick={() => setInviteModalOpen(true)}
+                            className="w-full"
+                            size="lg"
+                            variant="outline"
+                          >
+                            Invite a Colleague
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
