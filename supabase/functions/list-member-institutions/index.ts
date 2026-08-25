@@ -48,7 +48,7 @@ serve(async (req) => {
 
   const { data, error } = await admin
     .from("organizations")
-    .select("id, name, email, website")
+    .select("id, name, email, website, city, state, zip_code")
     .eq("membership_status", "active")
     .eq("organization_type", "member")
     .order("name", { ascending: true });
@@ -62,6 +62,9 @@ serve(async (req) => {
     id: o.id,
     name: o.name,
     email_domain: extractDomain(o),
+    city: o.city ?? "",
+    state: o.state ?? "",
+    zip_code: o.zip_code ?? "",
   }));
 
   return json({ institutions });
