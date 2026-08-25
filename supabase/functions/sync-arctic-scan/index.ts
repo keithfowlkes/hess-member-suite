@@ -61,15 +61,20 @@ function monthWindow(offset: number) {
 }
 
 async function fetchPeriod(baseUrl: string, aggregateId: string, apiKey: string, start: string, end: string) {
-  const url = new URL(`${baseUrl.replace(/\/$/, '')}/${aggregateId}`);
-  url.searchParams.set('apikey', apiKey);
-  url.searchParams.set('accept', 'application/csv');
-  url.searchParams.set('start', start);
-  url.searchParams.set('end', end);
-  url.searchParams.set('granularity', 'month');
-  url.searchParams.set('keys', 'organization,category,urgency,#');
+  // The Arctic API expects literal commas in `keys`, so the query string is
+  // assembled manually instead of via URLSearchParams (which escapes them).
+  const query = [
+    `apikey=${encodeURIComponent(apiKey)}`,
+    'accept=application/csv',
+    `start=${encodeURIComponent(start)}`,
+    `end=${encodeURIComponent(end)}`,
+    'granularity=month',
+    'keys=organization,category,urgency,%23',
+  ].join('&');
+  const url = `${baseUrl.replace(/\/$/, '')}/${aggregateId}?${query}`;
 
-  const res = await fetch(url.toString());
+  const res = await fetch(url);
+
   const text = await res.text();
   if (!res.ok) {
     throw new Error(`Arctic API responded ${res.status}: ${text.slice(0, 500)}`);
