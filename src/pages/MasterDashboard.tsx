@@ -1681,7 +1681,12 @@ const MasterDashboard = () => {
                           <TableRow key={user.id}>
                             <TableCell>
                               <div>
-                                <p className="font-medium">{user.first_name} {user.last_name}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium">{user.first_name} {user.last_name}</p>
+                                  {user.is_guest && (
+                                    <Badge variant="outline" className="text-xs">Guest</Badge>
+                                  )}
+                                </div>
                                 <p className="text-sm text-muted-foreground">
                                   {user.email}
                                 </p>
