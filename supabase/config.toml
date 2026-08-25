@@ -173,3 +173,6 @@ verify_jwt = true
 
 [functions.accept-organization-invitation]
 verify_jwt = false
+
+[functions.submit-arctic-pricing-request]
+verify_jwt = true
