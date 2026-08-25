@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useSystemSetting, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
 import arcticLogo from '@/assets/arctic-logo.png';
+import { ArcticPricingRequestsPanel } from '@/components/ArcticPricingRequestsPanel';
 import { useArcticScanData, useRefreshArcticScanData } from '@/hooks/useArcticScanData';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -265,6 +266,8 @@ export function ArcticSecurityDashboard() {
 
       {/* Member Portal Visibility Toggle */}
       <MemberVisibilityToggle />
+
+      <ArcticPricingRequestsPanel />
 
       {!scanLoading && orgData.length === 0 && (
         <Card>

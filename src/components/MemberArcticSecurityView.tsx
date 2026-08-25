@@ -101,6 +101,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
   const { user, isAdmin } = useAuth();
   const [adminOrgOverride, setAdminOrgOverride] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
 
