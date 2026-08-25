@@ -1,12 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { z } from "https://esm.sh/zod@3.23.8";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-internal-secret",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
 const json = (body: unknown, status = 200) =>
@@ -14,16 +13,6 @@ const json = (body: unknown, status = 200) =>
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-
-// Optional body — accepted for forward-compat, ignored today.
-const BodySchema = z.object({}).passthrough().optional();
-
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let out = 0;
-  for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return out === 0;
-}
 
 function extractDomain(org: { email?: string | null; website?: string | null; name: string }): string {
   const email = (org.email ?? "").trim();
@@ -48,27 +37,8 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  if (req.method !== "POST") {
+  if (req.method !== "GET" && req.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
-  }
-
-  const expected = Deno.env.get("HESS_MEMBER_PORTAL_WEBHOOK_SECRET") ?? "";
-  const provided = req.headers.get("x-internal-secret") ?? "";
-  if (!expected || !provided || !timingSafeEqual(expected, provided)) {
-    return json({ error: "Unauthorized" }, 401);
-  }
-
-  // Best-effort body parse (not required)
-  try {
-    if (req.headers.get("content-length") && req.headers.get("content-length") !== "0") {
-      const raw = await req.json().catch(() => ({}));
-      const parsed = BodySchema.safeParse(raw);
-      if (!parsed.success) {
-        return json({ error: parsed.error.flatten().fieldErrors }, 400);
-      }
-    }
-  } catch {
-    // ignore
   }
 
   const admin = createClient(
