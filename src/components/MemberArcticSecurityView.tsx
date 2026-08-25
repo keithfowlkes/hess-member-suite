@@ -189,6 +189,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
     return {
       name: orgRows[0].organization,
       lastScan,
+      lastSyncAt: scanData?.lastSyncAt,
       publicExposure,
       knownVulnerabilities,
       suspectedCompromise,
@@ -199,7 +200,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
         events: parseInt(r['# events'], 10),
       })),
     };
-  }, [userOrg, RAW_DATA]);
+  }, [userOrg, RAW_DATA, scanData?.lastSyncAt]);
 
   const orgPieData = useMemo(() => {
     if (!myOrgData) return [];
