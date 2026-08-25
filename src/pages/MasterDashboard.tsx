@@ -500,7 +500,8 @@ const MasterDashboard = () => {
       user.first_name.toLowerCase().includes(searchLower) ||
       user.last_name.toLowerCase().includes(searchLower) ||
       (user.organization && user.organization.toLowerCase().includes(searchLower)) ||
-      user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower)
+      user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower) ||
+      (user.is_guest && 'guest'.includes(searchLower))
     );
   }).sort((a, b) => {
     // If a column is being sorted, use that
@@ -1681,7 +1682,12 @@ const MasterDashboard = () => {
                           <TableRow key={user.id}>
                             <TableCell>
                               <div>
-                                <p className="font-medium">{user.first_name} {user.last_name}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium">{user.first_name} {user.last_name}</p>
+                                  {user.is_guest && (
+                                    <Badge variant="outline" className="text-xs">Guest</Badge>
+                                  )}
+                                </div>
                                 <p className="text-sm text-muted-foreground">
                                   {user.email}
                                 </p>
