@@ -33,6 +33,19 @@ function formatPeriod(period?: string | null): string {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
+function formatFullDate(value?: string | null): string {
+  if (!value) return 'Not available';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Not available';
+  return date.toLocaleString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 function getRiskLevel(total: number): RiskLevel {
   if (total <= 10) return 'Low';
   if (total <= 100) return 'Medium';
