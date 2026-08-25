@@ -33,6 +33,19 @@ function formatPeriod(period?: string | null): string {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
+function formatFullDate(value?: string | null): string {
+  if (!value) return 'Not available';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Not available';
+  return date.toLocaleString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 function getRiskLevel(total: number): RiskLevel {
   if (total <= 10) return 'Low';
   if (total <= 100) return 'Medium';
@@ -176,6 +189,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
     return {
       name: orgRows[0].organization,
       lastScan,
+      lastSyncAt: scanData?.lastSyncAt,
       publicExposure,
       knownVulnerabilities,
       suspectedCompromise,
@@ -186,7 +200,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
         events: parseInt(r['# events'], 10),
       })),
     };
-  }, [userOrg, RAW_DATA]);
+  }, [userOrg, RAW_DATA, scanData?.lastSyncAt]);
 
   const orgPieData = useMemo(() => {
     if (!myOrgData) return [];
@@ -434,7 +448,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
               </div>
               <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1 mt-4">
                 <Shield className="h-3 w-3" />
-                Last Scan Loaded: {formatPeriod(myOrgData.lastScan)}
+                Last Scan Loaded: {formatPeriod(myOrgData.lastScan)} — Ingested: {formatFullDate(myOrgData.lastSyncAt)}
               </Badge>
               <a
                 href="mailto:sales@arcticsecurity.com?subject=HESS%20Consortium%20Member%20Interest"
