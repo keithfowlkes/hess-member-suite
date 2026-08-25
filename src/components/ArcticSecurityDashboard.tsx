@@ -266,6 +266,18 @@ export function ArcticSecurityDashboard() {
       {/* Member Portal Visibility Toggle */}
       <MemberVisibilityToggle />
 
+      {!scanLoading && orgData.length === 0 && (
+        <Card>
+          <CardContent className="py-10 text-center">
+            <ShieldAlert className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-muted-foreground">No Arctic Security scan data is available yet.</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">
+              The feed syncs automatically every 2 hours. Use "Refresh data" above to pull the latest results now.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
