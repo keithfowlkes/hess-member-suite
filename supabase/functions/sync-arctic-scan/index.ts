@@ -90,7 +90,9 @@ function toRows(csv: string, observationTime: string) {
   const iIps = idx('# unique ip');
 
   if (iOrg < 0 || iCat < 0 || iUrg < 0) {
-    throw new Error(`Unexpected CSV header: ${parsed[0].join(',')}`);
+    // The API omits the key columns when a period has no observations.
+    console.log(`No keyed Arctic rows for ${observationTime}: ${parsed[0].join(',')}`);
+    return [];
   }
 
   const num = (v?: string) => {
