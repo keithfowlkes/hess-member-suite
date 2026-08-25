@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      arctic_scan_rows: {
+        Row: {
+          category: string
+          created_at: string
+          events: number
+          fetched_at: string
+          id: string
+          observation_time: string
+          organization: string
+          unique_event_group_ids: number
+          unique_ips: number
+          updated_at: string
+          urgency: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          events?: number
+          fetched_at?: string
+          id?: string
+          observation_time: string
+          organization: string
+          unique_event_group_ids?: number
+          unique_ips?: number
+          updated_at?: string
+          urgency: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          events?: number
+          fetched_at?: string
+          id?: string
+          observation_time?: string
+          organization?: string
+          unique_event_group_ids?: number
+          unique_ips?: number
+          updated_at?: string
+          urgency?: string
+        }
+        Relationships: []
+      }
+      arctic_scan_syncs: {
+        Row: {
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          observation_time: string | null
+          row_count: number
+          started_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          observation_time?: string | null
+          row_count?: number
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          observation_time?: string | null
+          row_count?: number
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string

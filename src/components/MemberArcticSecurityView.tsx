@@ -16,11 +16,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import arcticLogo from '@/assets/arctic-logo.png';
-import { ARCTIC_RAW_DATA as RAW_DATA } from '@/data/arcticScanData';
+import { useArcticScanData } from '@/hooks/useArcticScanData';
 import sampleReport from '@/assets/ews-sample-report.pdf.asset.json';
 
 
 type RiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
+
+function formatPeriod(period?: string | null): string {
+  if (!period) return 'Not available';
+  const [year, month] = period.split('-');
+  const date = new Date(Number(year), Number(month) - 1, 1);
+  if (Number.isNaN(date.getTime())) return period;
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
 
 function getRiskLevel(total: number): RiskLevel {
   if (total <= 10) return 'Low';
@@ -126,6 +134,8 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
   });
 
   const userOrg = previewOrgName ?? fetchedOrg;
+  const { data: scanData } = useArcticScanData();
+  const RAW_DATA = scanData?.rows ?? [];
 
 
 
@@ -163,7 +173,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
         events: parseInt(r['# events'], 10),
       })),
     };
-  }, [userOrg]);
+  }, [userOrg, RAW_DATA]);
 
   const orgPieData = useMemo(() => {
     if (!myOrgData) return [];
@@ -244,7 +254,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                 <div>
                   <span className="text-muted-foreground">Last Scan: </span>
                   <span className="font-semibold text-foreground">
-                    {myOrgData.lastScan === '2026-07' ? 'July 2026' : myOrgData.lastScan}
+                    {formatPeriod(myOrgData.lastScan)}
                   </span>
                 </div>
                 <div>
@@ -385,7 +395,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
               </div>
               <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1 mt-4">
                 <Shield className="h-3 w-3" />
-                Last Assessment: {myOrgData.lastScan === '2026-07' ? 'July 2026' : myOrgData.lastScan}
+                Last Assessment: {formatPeriod(myOrgData.lastScan)}
               </Badge>
               <a
                 href="mailto:sales@arcticsecurity.com?subject=HESS%20Consortium%20Member%20Interest"

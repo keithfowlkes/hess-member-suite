@@ -11,13 +11,14 @@ import {
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell,
 } from 'recharts';
-import { Search, Shield, AlertTriangle, Eye, Building2, ArrowUpDown, ShieldAlert } from 'lucide-react';
+import { Search, Shield, AlertTriangle, Eye, Building2, ArrowUpDown, ShieldAlert, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useSystemSetting, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
 import arcticLogo from '@/assets/arctic-logo.png';
-import { ARCTIC_RAW_DATA as RAW_DATA } from '@/data/arcticScanData';
+import { useArcticScanData, useRefreshArcticScanData } from '@/hooks/useArcticScanData';
+import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
@@ -65,6 +66,13 @@ function getEventBadgeClass(count: number): string {
   return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
 }
 
+function formatPeriod(period?: string | null): string {
+  if (!period) return 'Not available';
+  const [year, month] = period.split('-');
+  const date = new Date(Number(year), Number(month) - 1, 1);
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
 type SortKey = 'name' | 'publicExposure' | 'knownVulnerabilities' | 'suspectedCompromise' | 'total';
 
 export function ArcticSecurityDashboard() {
@@ -73,6 +81,22 @@ export function ArcticSecurityDashboard() {
   const [sortAsc, setSortAsc] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewOrg, setPreviewOrg] = useState<string>('');
+  const { data: scanData, isLoading: scanLoading } = useArcticScanData();
+  const refreshArcticData = useRefreshArcticScanData();
+  const [refreshing, setRefreshing] = useState(false);
+  const RAW_DATA = scanData?.rows ?? [];
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshArcticData();
+      toast.success('Arctic scan data refreshed');
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to refresh Arctic scan data');
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // ── Aggregate data ──
   const orgData = useMemo<OrgData[]>(() => {
@@ -89,7 +113,7 @@ export function ArcticSecurityDashboard() {
       const total = pe + kv + sc;
       return { name, publicExposure: pe, knownVulnerabilities: kv, suspectedCompromise: sc, total, riskLevel: getRiskLevel(total) };
     });
-  }, []);
+  }, [RAW_DATA]);
 
   // ── Summary stats ──
   const totalOrgs = orgData.length;
@@ -166,11 +190,24 @@ export function ArcticSecurityDashboard() {
             <Eye className="h-4 w-4" />
             Preview member view
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            disabled={refreshing || scanLoading}
+            onClick={handleRefresh}
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh data
+          </Button>
           <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1">
             <Shield className="h-3 w-3" />
-            Last Scan: July 2026
+            {scanLoading
+              ? 'Loading scan data…'
+              : `Last Scan: ${formatPeriod(scanData?.observationTime)}`}
           </Badge>
         </div>
+
       </div>
 
       {/* Member view preview */}
