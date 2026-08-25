@@ -434,7 +434,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
               </div>
               <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1 mt-4">
                 <Shield className="h-3 w-3" />
-                Last Assessment: {formatPeriod(myOrgData.lastScan)}
+                Last Scan Loaded: {formatPeriod(myOrgData.lastScan)}
               </Badge>
               <a
                 href="mailto:sales@arcticsecurity.com?subject=HESS%20Consortium%20Member%20Interest"
