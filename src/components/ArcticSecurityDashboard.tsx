@@ -168,11 +168,24 @@ export function ArcticSecurityDashboard() {
             <Eye className="h-4 w-4" />
             Preview member view
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            disabled={refreshing || scanLoading}
+            onClick={handleRefresh}
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh data
+          </Button>
           <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1">
             <Shield className="h-3 w-3" />
-            Last Scan: July 2026
+            {scanLoading
+              ? 'Loading scan data…'
+              : `Last Scan: ${formatPeriod(scanData?.observationTime)}`}
           </Badge>
         </div>
+
       </div>
 
       {/* Member view preview */}
