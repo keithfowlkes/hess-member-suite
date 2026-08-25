@@ -173,6 +173,7 @@ export function AppSidebar() {
     { title: 'User Messages', url: '/user-messages', icon: MessageSquare, badge: unreadMessageCount },
     { title: 'Cohort Information', url: '/cohort-information', icon: GraduationCap },
     { title: 'Member Analytics', url: '/dashboards', icon: BarChart3 },
+    { title: 'Member Security', url: '/admin-security', icon: ShieldCheck },
     { title: 'Surveys', url: '/admin/surveys', icon: FileQuestion },
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
     { title: 'Organization Profile', url: '/profile', icon: User },
