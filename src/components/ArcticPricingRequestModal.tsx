@@ -108,7 +108,7 @@ export function ArcticPricingRequestModal({ open, onOpenChange }: Props) {
             <Input id="apr-phone" value={form.contact_phone} onChange={set('contact_phone')} />
           </div>
           <div>
-            <Label htmlFor="apr-org">Institution</Label>
+             <Label htmlFor="apr-org">HESS Consortium Institution</Label>
             <Input id="apr-org" value={form.organization_name} onChange={set('organization_name')} />
           </div>
           <div className="md:col-span-2">
