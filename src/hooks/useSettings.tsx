@@ -70,6 +70,16 @@ export function useSettings() {
 
       if (cohortError) throw cohortError;
 
+      // Get accepted colleague invitations (these users are "guests" of an organization)
+      const { data: acceptedInvites } = await supabase
+        .from('organization_invitations')
+        .select('email, used_at')
+        .not('used_at', 'is', null);
+
+      const guestEmails = new Set(
+        (acceptedInvites || []).map((i: any) => (i.email || '').toLowerCase())
+      );
+
       // Filter out any profiles that might be stale or problematic
       // In a perfect world we'd validate against auth.users, but we'll rely on cleanup functions for that
       const validProfiles = profiles?.filter(profile => {
@@ -83,7 +93,8 @@ export function useSettings() {
       const usersWithRoles = validProfiles.map(profile => ({
         ...profile,
         user_roles: roles?.filter(role => role.user_id === profile.user_id) || [],
-        user_cohorts: cohorts?.filter(cohort => cohort.user_id === profile.user_id) || []
+        user_cohorts: cohorts?.filter(cohort => cohort.user_id === profile.user_id) || [],
+        is_guest: guestEmails.has((profile.email || '').toLowerCase())
       }));
       
       setUsers(usersWithRoles);
