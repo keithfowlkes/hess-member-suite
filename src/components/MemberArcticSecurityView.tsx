@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import arcticLogo from '@/assets/arctic-logo.png';
-import { ARCTIC_RAW_DATA as RAW_DATA } from '@/data/arcticScanData';
+import { useArcticScanData } from '@/hooks/useArcticScanData';
 import sampleReport from '@/assets/ews-sample-report.pdf.asset.json';
 
 
@@ -126,6 +126,8 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
   });
 
   const userOrg = previewOrgName ?? fetchedOrg;
+  const { data: scanData } = useArcticScanData();
+  const RAW_DATA = scanData?.rows ?? [];
 
 
 
@@ -163,7 +165,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
         events: parseInt(r['# events'], 10),
       })),
     };
-  }, [userOrg]);
+  }, [userOrg, RAW_DATA]);
 
   const orgPieData = useMemo(() => {
     if (!myOrgData) return [];

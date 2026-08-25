@@ -17,7 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useSystemSetting, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
 import arcticLogo from '@/assets/arctic-logo.png';
-import { ARCTIC_RAW_DATA as RAW_DATA } from '@/data/arcticScanData';
+import { useArcticScanData } from '@/hooks/useArcticScanData';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
@@ -73,6 +73,8 @@ export function ArcticSecurityDashboard() {
   const [sortAsc, setSortAsc] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewOrg, setPreviewOrg] = useState<string>('');
+  const { data: scanData, isLoading: scanLoading } = useArcticScanData();
+  const RAW_DATA = scanData?.rows ?? [];
 
   // ── Aggregate data ──
   const orgData = useMemo<OrgData[]>(() => {
@@ -89,7 +91,7 @@ export function ArcticSecurityDashboard() {
       const total = pe + kv + sc;
       return { name, publicExposure: pe, knownVulnerabilities: kv, suspectedCompromise: sc, total, riskLevel: getRiskLevel(total) };
     });
-  }, []);
+  }, [RAW_DATA]);
 
   // ── Summary stats ──
   const totalOrgs = orgData.length;
