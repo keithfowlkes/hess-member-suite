@@ -8,14 +8,10 @@ import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationS
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { BarChart3, ChartScatter, MessageSquare, PieChart, TrendingUp } from 'lucide-react';
 import { HessEnrollmentTrends } from '@/components/HessEnrollmentTrends';
-import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
-import arcticLogo from '@/assets/arctic-logo.png';
-import deepseasLogo from '@/assets/deepseas-logo.png.asset.json';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useAuth } from '@/hooks/useAuth';
 import { TrendAnalyticsManager, useTrendEntries, TrendEntry } from '@/components/TrendAnalyticsManager';
 import { Settings, Pencil, Trash2 } from 'lucide-react';
@@ -50,9 +46,6 @@ const MemberAnalytics = () => {
     setTrendManagerOpen(true);
   };
 
-  const { data: arcticSetting } = useSystemSetting('arctic_scan_member_visible');
-  const showArcticTab = isAdmin && arcticSetting?.setting_value !== 'false'; // admin-only
-
   return <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
@@ -83,7 +76,7 @@ const MemberAnalytics = () => {
             </div>
             
             <Tabs defaultValue="usage" className="w-full">
-              <TabsList className={`grid w-full mb-6 ${isAdmin ? (showArcticTab ? 'grid-cols-4' : 'grid-cols-3') : 'grid-cols-2'}`}>
+              <TabsList className="grid w-full mb-6 grid-cols-2">
                 <TabsTrigger value="usage" className="gap-2">
                   <PieChart className="h-4 w-4" />
                   System Usage Analytics
@@ -92,19 +85,8 @@ const MemberAnalytics = () => {
                   <ChartScatter className="h-4 w-4" />
                   Trend Analytics
                 </TabsTrigger>
-                {showArcticTab && (
-                  <TabsTrigger value="security" className="gap-2">
-                    <img src={arcticLogo} alt="Arctic" className="h-4 w-4" />
-                    Arctic Security Assessment
-                  </TabsTrigger>
-                )}
-                {isAdmin && (
-                  <TabsTrigger value="deepseas" className="gap-2">
-                    <img src={deepseasLogo.url} alt="DeepSeas" className="h-4 w-auto" />
-                    Dark Web Service
-                  </TabsTrigger>
-                )}
               </TabsList>
+
               
               <TabsContent value="usage">
                 <SystemAnalyticsDashboard />
@@ -193,38 +175,6 @@ const MemberAnalytics = () => {
               </TabsContent>
 
 
-              
-              {showArcticTab && (
-                <TabsContent value="security">
-                  <MemberArcticSecurityView />
-                </TabsContent>
-              )}
-
-              {isAdmin && (
-              <TabsContent value="deepseas">
-                <Card className="bg-gradient-to-r from-background via-background/95 to-background border-2 shadow-lg">
-                  <CardHeader>
-                    <div className="flex items-center gap-4">
-                      <img src={deepseasLogo.url} alt="DeepSeas" className="h-12 w-auto" />
-                      <div>
-                        <CardTitle className="text-xl">DeepSeas Dark Web Service</CardTitle>
-                        <p className="text-muted-foreground mt-1">
-                          Dark web monitoring and threat intelligence for subscribing HESS Consortium member institutions.
-                        </p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      DeepSeas Dark Web Service integration coming soon.
-                    </p>
-                    <p className="text-muted-foreground mt-2">
-                      If you have not subscribed to this service, you will not see any data for your institution. For more information, <a href="mailto:sales@deepseas.com?subject=HESS%20Consortium%20Member%20Interest" className="text-primary hover:underline">click here</a> to email DeepSeas for HESS discount pricing for this service.
-                    </p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              )}
             </Tabs>
           </div>
           
