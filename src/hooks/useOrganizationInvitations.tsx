@@ -13,7 +13,7 @@ export interface OrganizationInvitation {
   created_at: string;
   organization?: {
     name: string;
-  };
+  } | null;
 }
 
 export const useOrganizationInvitations = () => {
@@ -27,7 +27,7 @@ export const useOrganizationInvitations = () => {
         .from('organization_invitations')
         .select(`
           *,
-          organizations!inner(name)
+          organization:organizations(name)
         `)
         .order('created_at', { ascending: false });
 
