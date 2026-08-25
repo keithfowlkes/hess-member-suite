@@ -451,7 +451,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
               </div>
               <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1 mt-4">
                 <Shield className="h-3 w-3" />
-                Last Scan Loaded: {formatPeriod(myOrgData.lastScan)} — Ingested: {formatFullDate(myOrgData.lastSyncAt)} (refreshes every 2 hours)
+                Last Scan Loaded: {formatFullDate(myOrgData.lastSyncAt)} (refreshes every 2 hours)
               </Badge>
               <Button className="mt-3 font-bold" onClick={() => setPricingOpen(true)}>
                 Get Full Arctic Security Pricing
