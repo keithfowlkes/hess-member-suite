@@ -128,23 +128,36 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const admin = createClient(supabaseUrl, serviceKey);
 
-  // Authorization: service role key (scheduler) or an admin user's JWT.
+  // Admins (valid JWT) may force a refresh at any time. Any other caller
+  // (the scheduler) only triggers a refresh when the cached data is stale.
   const authHeader = req.headers.get('Authorization') ?? '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-  let authorized = token === serviceKey;
+  let isAdminCaller = token === serviceKey;
 
-  if (!authorized && token) {
+  if (!isAdminCaller && token) {
     const { data: userData } = await admin.auth.getUser(token);
     const userId = userData?.user?.id;
     if (userId) {
       const { data: isAdmin } = await admin.rpc('has_role', { _user_id: userId, _role: 'admin' });
-      authorized = Boolean(isAdmin);
+      isAdminCaller = Boolean(isAdmin);
     }
   }
 
-  if (!authorized) {
-    return json({ error: 'Not authorized to refresh Arctic scan data' }, 403);
+  if (!isAdminCaller) {
+    const { data: lastSuccess } = await admin
+      .from('arctic_scan_syncs')
+      .select('finished_at')
+      .eq('status', 'success')
+      .order('finished_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const lastAt = lastSuccess?.finished_at ? new Date(lastSuccess.finished_at).getTime() : 0;
+    if (Date.now() - lastAt < 90 * 60 * 1000) {
+      return json({ success: true, skipped: true, reason: 'Arctic scan data is still fresh' });
+    }
   }
+
 
   const baseUrl = Deno.env.get('ARCTIC_API_BASE_URL');
   const aggregateId = Deno.env.get('ARCTIC_AGGREGATE_ID');
