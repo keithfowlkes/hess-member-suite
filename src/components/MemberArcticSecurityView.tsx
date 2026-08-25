@@ -13,6 +13,9 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import arcticLogo from '@/assets/arctic-logo.png';
@@ -80,7 +83,8 @@ const RiskTooltip = ({ active, payload }: any) => {
 };
 
 export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: string } = {}) {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const [adminOrgOverride, setAdminOrgOverride] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
@@ -133,9 +137,18 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
     enabled: !!user && !previewOrgName,
   });
 
-  const userOrg = previewOrgName ?? fetchedOrg;
   const { data: scanData, isLoading: scanLoading } = useArcticScanData();
   const RAW_DATA = scanData?.rows ?? [];
+
+  // Superadmins may preview any institution's assessment exactly as that
+  // institution's authenticated users would see it.
+  const scanOrgNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const r of RAW_DATA) names.add(r.organization);
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  }, [RAW_DATA]);
+
+  const userOrg = previewOrgName ?? (isAdmin ? adminOrgOverride ?? fetchedOrg : fetchedOrg);
 
 
 
@@ -232,6 +245,27 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
           </p>
         </CardHeader>
         <CardContent>
+          {isAdmin && !previewOrgName && (
+            <div className="mb-4 rounded-md border border-dashed bg-muted/30 p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2">
+                Administrator preview — view an individual institution's assessment as their authenticated users see it.
+              </p>
+              <Select
+                value={adminOrgOverride ?? '__mine__'}
+                onValueChange={(v) => setAdminOrgOverride(v === '__mine__' ? null : v)}
+              >
+                <SelectTrigger className="w-full sm:w-80 bg-background">
+                  <SelectValue placeholder="Select an institution" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  <SelectItem value="__mine__">My organization{fetchedOrg ? ` (${fetchedOrg})` : ''}</SelectItem>
+                  {scanOrgNames.map((name) => (
+                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {scanLoading ? (
             <div className="text-center py-8">
               <Shield className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3 animate-pulse" />
