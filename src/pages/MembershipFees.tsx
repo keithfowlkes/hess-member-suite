@@ -105,6 +105,14 @@ export default function MembershipFees() {
   
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Refresh when the invoice tab is opened so records restored or changed
+  // outside this browser session appear without requiring a full page reload.
+  useEffect(() => {
+    if (activeTab === 'invoices') {
+      void fetchInvoices();
+    }
+  }, [activeTab]);
+
   // Test email states
   const [testEmailData, setTestEmailData] = useState({
     to: '',
@@ -1833,6 +1841,9 @@ export default function MembershipFees() {
                         className="pl-10"
                       />
                     </div>
+                    <Button variant="outline" onClick={() => void fetchInvoices()}>
+                      Refresh invoices
+                    </Button>
                   </div>
 
                   {/* Invoices List */}
