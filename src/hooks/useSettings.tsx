@@ -17,6 +17,7 @@ export interface UserProfile {
   user_cohorts?: {
     cohort: string;
   }[];
+  is_guest?: boolean;
 }
 
 export interface SystemStats {
