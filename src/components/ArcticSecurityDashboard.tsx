@@ -73,6 +73,15 @@ function formatPeriod(period?: string | null): string {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
+function formatSyncTime(value?: string | null): string {
+  if (!value) return 'never';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'never';
+  return date.toLocaleString('en-US', {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+  });
+}
+
 type SortKey = 'name' | 'publicExposure' | 'knownVulnerabilities' | 'suspectedCompromise' | 'total';
 
 export function ArcticSecurityDashboard() {
@@ -200,12 +209,19 @@ export function ArcticSecurityDashboard() {
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh data
           </Button>
-          <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1">
-            <Shield className="h-3 w-3" />
-            {scanLoading
-              ? 'Loading scan data…'
-              : `Last Scan: ${formatPeriod(scanData?.observationTime)}`}
-          </Badge>
+          <div className="flex flex-col items-end gap-1">
+            <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1">
+              <Shield className="h-3 w-3" />
+              {scanLoading
+                ? 'Loading scan data…'
+                : `Last Scan: ${formatPeriod(scanData?.observationTime)}`}
+            </Badge>
+            {!scanLoading && (
+              <span className="text-[11px] text-muted-foreground">
+                Feed synced: {formatSyncTime(scanData?.lastSyncAt)}
+              </span>
+            )}
+          </div>
         </div>
 
       </div>

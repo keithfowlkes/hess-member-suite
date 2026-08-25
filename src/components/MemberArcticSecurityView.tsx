@@ -134,7 +134,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
   });
 
   const userOrg = previewOrgName ?? fetchedOrg;
-  const { data: scanData } = useArcticScanData();
+  const { data: scanData, isLoading: scanLoading } = useArcticScanData();
   const RAW_DATA = scanData?.rows ?? [];
 
 
@@ -232,7 +232,12 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
           </p>
         </CardHeader>
         <CardContent>
-          {!myOrgData ? (
+          {scanLoading ? (
+            <div className="text-center py-8">
+              <Shield className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3 animate-pulse" />
+              <p className="text-muted-foreground">Loading your Arctic Security scan results…</p>
+            </div>
+          ) : !myOrgData ? (
             <div className="text-center py-8">
               <Shield className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
               <p className="text-muted-foreground">
