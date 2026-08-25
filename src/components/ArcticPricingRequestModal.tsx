@@ -17,7 +17,7 @@ interface Props {
 }
 
 export function ArcticPricingRequestModal({ open, onOpenChange }: Props) {
-  const { profile } = useUnifiedProfile();
+  const { data: profile } = useUnifiedProfile();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     contact_name: '',
