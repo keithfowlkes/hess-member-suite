@@ -500,7 +500,8 @@ const MasterDashboard = () => {
       user.first_name.toLowerCase().includes(searchLower) ||
       user.last_name.toLowerCase().includes(searchLower) ||
       (user.organization && user.organization.toLowerCase().includes(searchLower)) ||
-      user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower)
+      user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower) ||
+      (user.is_guest && 'guest'.includes(searchLower))
     );
   }).sort((a, b) => {
     // If a column is being sorted, use that
