@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      arctic_pricing_requests: {
+        Row: {
+          address_line_1: string | null
+          address_line_2: string | null
+          city: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          notified_emails: string[]
+          organization_id: string | null
+          organization_name: string
+          state: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          wants_pricing_info: boolean
+          zip_code: string | null
+        }
+        Insert: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          notified_emails?: string[]
+          organization_id?: string | null
+          organization_name: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          wants_pricing_info?: boolean
+          zip_code?: string | null
+        }
+        Update: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          notified_emails?: string[]
+          organization_id?: string | null
+          organization_name?: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          wants_pricing_info?: boolean
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       arctic_scan_rows: {
         Row: {
           category: string
