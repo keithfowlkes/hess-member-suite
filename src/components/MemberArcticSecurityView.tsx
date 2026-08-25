@@ -653,6 +653,8 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
           </CardContent>
         )}
       </Card>
+
+      <ArcticPricingRequestModal open={pricingOpen} onOpenChange={setPricingOpen} />
     </div>
   );
 }
