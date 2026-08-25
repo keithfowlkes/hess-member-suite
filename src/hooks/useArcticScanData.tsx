@@ -1,11 +1,21 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { ArcticScanRow } from '@/data/arcticScanData';
+
+export interface ArcticScanRow {
+  'observation time': string;
+  organization: string;
+  category: string;
+  urgency: string;
+  '# events': string;
+  '# unique event group id': string;
+  '# unique ip': string;
+}
 
 export interface ArcticScanData {
   rows: ArcticScanRow[];
   observationTime: string | null;
   lastUpdated: string | null;
+  lastSyncAt: string | null;
 }
 
 const PAGE_SIZE = 1000;
@@ -20,7 +30,17 @@ async function fetchArcticRows(): Promise<ArcticScanData> {
     .maybeSingle();
 
   if (latestError) throw latestError;
-  if (!latest) return { rows: [], observationTime: null, lastUpdated: null };
+
+  const { data: lastSync } = await supabase
+    .from('arctic_scan_syncs')
+    .select('finished_at')
+    .eq('status', 'success')
+    .order('finished_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const lastSyncAt = (lastSync?.finished_at as string | undefined) ?? null;
+
+  if (!latest) return { rows: [], observationTime: null, lastUpdated: null, lastSyncAt };
 
   const observationTime = latest.observation_time as string;
   const collected: ArcticScanRow[] = [];
@@ -55,7 +75,7 @@ async function fetchArcticRows(): Promise<ArcticScanData> {
     if (data.length < PAGE_SIZE) break;
   }
 
-  return { rows: collected, observationTime, lastUpdated };
+  return { rows: collected, observationTime, lastUpdated, lastSyncAt };
 }
 
 export const useArcticScanData = () => {
