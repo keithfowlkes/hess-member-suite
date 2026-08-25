@@ -8,14 +8,10 @@ import { OrganizationSizeFinancialCorrelation } from '@/components/OrganizationS
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
 import { BarChart3, ChartScatter, MessageSquare, PieChart, TrendingUp } from 'lucide-react';
 import { HessEnrollmentTrends } from '@/components/HessEnrollmentTrends';
-import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
-import arcticLogo from '@/assets/arctic-logo.png';
-import deepseasLogo from '@/assets/deepseas-logo.png.asset.json';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSystemSetting } from '@/hooks/useSystemSettings';
 import { useAuth } from '@/hooks/useAuth';
 import { TrendAnalyticsManager, useTrendEntries, TrendEntry } from '@/components/TrendAnalyticsManager';
 import { Settings, Pencil, Trash2 } from 'lucide-react';
@@ -49,9 +45,6 @@ const MemberAnalytics = () => {
     setEditingTrendEntry(entry);
     setTrendManagerOpen(true);
   };
-
-  const { data: arcticSetting } = useSystemSetting('arctic_scan_member_visible');
-  const showArcticTab = isAdmin && arcticSetting?.setting_value !== 'false'; // admin-only
 
   return <SidebarProvider>
       <div className="min-h-screen flex w-full">

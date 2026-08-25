@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, BarChart3, Search, Map, MessageSquare, GraduationCap, FileQuestion } from 'lucide-react';
+import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, ShieldCheck, BarChart3, Search, Map, MessageSquare, GraduationCap, FileQuestion } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { supabase } from '@/integrations/supabase/client';
@@ -183,6 +183,7 @@ export function AppSidebar() {
     { title: 'Dashboard', url: '/', icon: Home },
     { title: 'HESS Member Information', url: '/research-dashboard', icon: Search },
     { title: 'Member Analytics', url: '/member-analytics', icon: BarChart3 },
+    { title: 'Member Security', url: '/member-security', icon: ShieldCheck },
     { title: 'Member Map', url: '/public-map', icon: Map },
     { title: 'Surveys', url: '/surveys', icon: FileQuestion },
   ];
@@ -191,8 +192,6 @@ export function AppSidebar() {
   if (showMemberFeeInfo) {
     memberItems.push({ title: 'My Invoices', url: '/invoices', icon: FileText });
   }
-  
-  memberItems.push({ title: 'Organization Profile', url: '/profile', icon: User });
   
   // Add cohort information for cohort leaders and admins viewing as members
   if (!isViewingAsAdmin && canAccessCohortInfo) {

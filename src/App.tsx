@@ -25,6 +25,7 @@ import ProfileEdit from "./pages/ProfileEdit";
 import Dashboards from "./pages/Dashboards";
 import ResearchDashboard from "./pages/ResearchDashboard";
 import MemberAnalytics from "./pages/MemberAnalytics";
+import MemberSecurity from "./pages/MemberSecurity";
 import UserMessages from "./pages/UserMessages";
 import CohortInformation from "./pages/CohortInformation";
 import Surveys from "./pages/Surveys";
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/dashboards" element={<ProtectedRoute><Dashboards /></ProtectedRoute>} />
             <Route path="/research-dashboard" element={<ProtectedRoute><ResearchDashboard /></ProtectedRoute>} />
             <Route path="/member-analytics" element={<ProtectedRoute><MemberAnalytics /></ProtectedRoute>} />
+            <Route path="/member-security" element={<ProtectedRoute><MemberSecurity /></ProtectedRoute>} />
             <Route path="/membership-fees" element={<ProtectedRoute><MembershipFees /></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
             <Route path="/public/directory" element={<PublicDirectory />} />
