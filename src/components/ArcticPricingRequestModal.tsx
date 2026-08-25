@@ -146,7 +146,7 @@ export function ArcticPricingRequestModal({ open, onOpenChange }: Props) {
             onCheckedChange={(c) => setWantsInfo(c === true)}
             className="mt-0.5"
           />
-          <Label htmlFor="apr-consent" className="text-sm font-normal cursor-pointer leading-snug">
+          <Label htmlFor="apr-consent" className="text-sm font-bold cursor-pointer leading-snug">
             I would like more information on the HESS pricing for Arctic Security Services.
           </Label>
         </div>
