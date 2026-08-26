@@ -3420,7 +3420,11 @@ export default function Auth() {
                 <>
                   The email address <strong>{signInForm.email}</strong> is not found in our membership database.
                   <br /><br />
-                  If this is in error, please contact <strong>info@hessconsortium.org</strong>.
+                  You may not be the primary contact for your organization. Only the primary contact listed for each member institution has login access by default.
+                  <br /><br />
+                  If you are a colleague who needs access, or if your institution's primary contact has changed, please use the <strong>"Current Member Updates"</strong> tab above to submit your information and request access. Your institution's primary contact or an administrator will review the request.
+                  <br /><br />
+                  If you believe this is an error, please contact <strong>info@hessconsortium.org</strong>.
                 </>
               )}
               <br /><br />
