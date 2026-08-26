@@ -3431,10 +3431,22 @@ export default function Auth() {
               You have <strong>{Math.max(0, 3 - loginAttempts)}</strong> attempts remaining.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+            {loginErrorType === 'not_found' && (
+              <AlertDialogAction
+                onClick={() => {
+                  setShowUserNotFoundModal(false);
+                  setActiveTab('member-update');
+                }}
+                className="w-full"
+              >
+                Go to Current Member Updates
+              </AlertDialogAction>
+            )}
             <AlertDialogAction 
               onClick={() => setShowUserNotFoundModal(false)}
-              className="w-full"
+              className={`w-full ${loginErrorType === 'not_found' ? 'bg-muted text-muted-foreground hover:bg-muted/80' : ''}`}
+              variant={loginErrorType === 'not_found' ? 'outline' : 'default'}
             >
               OK
             </AlertDialogAction>
