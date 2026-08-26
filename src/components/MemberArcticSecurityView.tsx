@@ -81,18 +81,57 @@ const RISK_DESCRIPTIONS: Record<RiskLevel, string> = {
   Critical: 'Critical risk (>200 events): severe activity; immediate action and incident response recommended.',
 };
 
+// ── Urgency (reported directly by the Arctic feed) ──
+export type UrgencyLevel = 'critical' | 'high' | 'medium' | 'low';
+
+export const URGENCY_ORDER: UrgencyLevel[] = ['critical', 'high', 'medium', 'low'];
+
+export const URGENCY_LABELS: Record<UrgencyLevel, string> = {
+  critical: 'Critical',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+};
+
+export const URGENCY_COLORS: Record<UrgencyLevel, string> = {
+  critical: 'hsl(0 84% 60%)',
+  high: 'hsl(25 95% 53%)',
+  medium: 'hsl(48 96% 53%)',
+  low: 'hsl(142 71% 45%)',
+};
+
+export const URGENCY_BADGE_CLASSES: Record<UrgencyLevel, string> = {
+  critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  high: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+  medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  low: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+};
+
+export const URGENCY_DESCRIPTIONS: Record<UrgencyLevel, string> = {
+  critical: 'Critical urgency: Arctic flags these observations for immediate incident response.',
+  high: 'High urgency: address promptly — these observations indicate elevated exposure or likely compromise.',
+  medium: 'Medium urgency: schedule remediation as part of your normal security cycle.',
+  low: 'Low urgency: informational observations worth reviewing but not time-critical.',
+};
+
+export function normalizeUrgency(value?: string | null): UrgencyLevel {
+  const v = (value ?? '').trim().toLowerCase();
+  if (v === 'critical' || v === 'high' || v === 'medium' || v === 'low') return v;
+  return 'low';
+}
+
 const RiskTooltip = ({ active, payload }: any) => {
   if (!active || !payload || !payload.length) return null;
   const item = payload[0];
-  const level = item.name as RiskLevel;
+  const level = String(item.name).toLowerCase() as UrgencyLevel;
   return (
     <div className="rounded-md border bg-background p-3 shadow-md max-w-xs">
       <div className="flex items-center gap-2 mb-1">
         <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.payload.color }} />
-        <span className="font-semibold text-foreground">{level}</span>
+        <span className="font-semibold text-foreground">{item.name}</span>
         <span className="text-muted-foreground text-sm">({item.value} {item.value === 1 ? 'event' : 'events'})</span>
       </div>
-      <p className="text-xs text-muted-foreground">{RISK_DESCRIPTIONS[level]}</p>
+      <p className="text-xs text-muted-foreground">{URGENCY_DESCRIPTIONS[level]}</p>
     </div>
   );
 };
@@ -180,15 +219,28 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
     let knownVulnerabilities = 0;
     let suspectedCompromise = 0;
     const lastScan = orgRows[0]['observation time'];
+    const urgencyTotals: Record<UrgencyLevel, number> = { critical: 0, high: 0, medium: 0, low: 0 };
 
     for (const row of orgRows) {
       const events = parseInt(row['# events'], 10) || 0;
       if (row.category === 'public exposure') publicExposure += events;
       else if (row.category === 'known vulnerabilities') knownVulnerabilities += events;
       else suspectedCompromise += events;
+      const urgency = normalizeUrgency(row.urgency);
+      urgencyTotals[urgency] += events;
     }
 
     const total = publicExposure + knownVulnerabilities + suspectedCompromise;
+    const categories = orgRows
+      .map(r => ({
+        category: r.category,
+        urgency: normalizeUrgency(r.urgency),
+        events: parseInt(r['# events'], 10) || 0,
+      }))
+      .sort((a, b) =>
+        URGENCY_ORDER.indexOf(a.urgency) - URGENCY_ORDER.indexOf(b.urgency) || b.events - a.events
+      );
+
     return {
       name: orgRows[0].organization,
       lastScan,
@@ -198,10 +250,8 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
       suspectedCompromise,
       total,
       riskLevel: getRiskLevel(total),
-      categories: orgRows.map(r => ({
-        category: r.category,
-        events: parseInt(r['# events'], 10),
-      })),
+      urgencyTotals,
+      categories,
     };
   }, [userOrg, RAW_DATA, scanData?.lastSyncAt]);
 
@@ -219,16 +269,15 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
     return acc;
   }, {} as Record<string, { label: string; color: string }>);
 
-  // Organization-specific risk-level distribution (events grouped by risk level per category)
+  // Organization-specific urgency distribution, straight from the Arctic feed.
   const orgRiskDistribution = useMemo(() => {
     if (!myOrgData) return [];
-    const counts: Record<RiskLevel, number> = { Low: 0, Medium: 0, High: 0, Critical: 0 };
-    for (const cat of myOrgData.categories) {
-      const level = getRiskLevel(cat.events);
-      counts[level] += cat.events;
-    }
-    return (['Critical', 'High', 'Medium', 'Low'] as RiskLevel[])
-      .map(level => ({ name: level, value: counts[level], color: RISK_COLORS[level] }))
+    return URGENCY_ORDER
+      .map(level => ({
+        name: URGENCY_LABELS[level],
+        value: myOrgData.urgencyTotals[level],
+        color: URGENCY_COLORS[level],
+      }))
       .filter(d => d.value > 0);
   }, [myOrgData]);
 
@@ -236,6 +285,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
     acc[d.name] = { label: d.name, color: d.color };
     return acc;
   }, {} as Record<string, { label: string; color: string }>);
+
 
   return (
     <div className="space-y-6">
