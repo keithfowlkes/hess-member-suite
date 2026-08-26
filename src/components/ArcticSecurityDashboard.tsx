@@ -22,7 +22,15 @@ import { useArcticScanData, useRefreshArcticScanData } from '@/hooks/useArcticSc
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
+import {
+  MemberArcticSecurityView,
+  URGENCY_ORDER,
+  URGENCY_LABELS,
+  URGENCY_COLORS,
+  URGENCY_BADGE_CLASSES,
+  normalizeUrgency,
+  type UrgencyLevel,
+} from '@/components/MemberArcticSecurityView';
 
 
 
@@ -36,6 +44,8 @@ interface OrgData {
   suspectedCompromise: number;
   total: number;
   riskLevel: RiskLevel;
+  urgency: Record<UrgencyLevel, number>;
+  topUrgency: UrgencyLevel;
 }
 
 function getRiskLevel(total: number): RiskLevel {
@@ -83,7 +93,16 @@ function formatSyncTime(value?: string | null): string {
   });
 }
 
-type SortKey = 'name' | 'publicExposure' | 'knownVulnerabilities' | 'suspectedCompromise' | 'total';
+type SortKey =
+  | 'name'
+  | 'publicExposure'
+  | 'knownVulnerabilities'
+  | 'suspectedCompromise'
+  | 'total'
+  | 'critical'
+  | 'high'
+  | 'medium'
+  | 'low';
 
 export function ArcticSecurityDashboard() {
   const [search, setSearch] = useState('');
@@ -110,20 +129,56 @@ export function ArcticSecurityDashboard() {
 
   // ── Aggregate data ──
   const orgData = useMemo<OrgData[]>(() => {
-    const map = new Map<string, { pe: number; kv: number; sc: number }>();
+    type Acc = { pe: number; kv: number; sc: number; urgency: Record<UrgencyLevel, number> };
+    const map = new Map<string, Acc>();
     for (const row of RAW_DATA) {
-      const existing = map.get(row.organization) || { pe: 0, kv: 0, sc: 0 };
+      const existing: Acc = map.get(row.organization) || {
+        pe: 0, kv: 0, sc: 0,
+        urgency: { critical: 0, high: 0, medium: 0, low: 0 },
+      };
       const events = parseInt(row['# events'], 10) || 0;
       if (row.category === 'public exposure') existing.pe += events;
       else if (row.category === 'known vulnerabilities') existing.kv += events;
       else existing.sc += events;
+      existing.urgency[normalizeUrgency(row.urgency)] += events;
       map.set(row.organization, existing);
     }
-    return Array.from(map.entries()).map(([name, { pe, kv, sc }]) => {
+    return Array.from(map.entries()).map(([name, { pe, kv, sc, urgency }]) => {
       const total = pe + kv + sc;
-      return { name, publicExposure: pe, knownVulnerabilities: kv, suspectedCompromise: sc, total, riskLevel: getRiskLevel(total) };
+      const topUrgency = URGENCY_ORDER.find(l => urgency[l] > 0) ?? 'low';
+      return {
+        name,
+        publicExposure: pe,
+        knownVulnerabilities: kv,
+        suspectedCompromise: sc,
+        total,
+        riskLevel: getRiskLevel(total),
+        urgency,
+        topUrgency,
+      };
     });
   }, [RAW_DATA]);
+
+  // ── Urgency totals across the consortium ──
+  const urgencyTotals = useMemo(() => {
+    const totals: Record<UrgencyLevel, number> = { critical: 0, high: 0, medium: 0, low: 0 };
+    for (const o of orgData) {
+      for (const level of URGENCY_ORDER) totals[level] += o.urgency[level];
+    }
+    return totals;
+  }, [orgData]);
+
+  const urgencyDistribution = useMemo(
+    () => URGENCY_ORDER
+      .map(level => ({ name: URGENCY_LABELS[level], value: urgencyTotals[level], color: URGENCY_COLORS[level] }))
+      .filter(d => d.value > 0),
+    [urgencyTotals]
+  );
+
+  const urgencyChartConfig = urgencyDistribution.reduce((acc, d) => {
+    acc[d.name] = { label: d.name, color: d.color };
+    return acc;
+  }, {} as Record<string, { label: string; color: string }>);
 
   // ── Summary stats ──
   const totalOrgs = orgData.length;
@@ -138,8 +193,12 @@ export function ArcticSecurityDashboard() {
       const q = search.toLowerCase();
       data = data.filter(o => o.name.toLowerCase().includes(q));
     }
+    const valueOf = (o: OrgData) =>
+      (['critical', 'high', 'medium', 'low'] as string[]).includes(sortKey)
+        ? o.urgency[sortKey as UrgencyLevel]
+        : (o[sortKey as keyof OrgData] as string | number);
     data = [...data].sort((a, b) => {
-      const av = a[sortKey], bv = b[sortKey];
+      const av = valueOf(a), bv = valueOf(b);
       if (typeof av === 'string' && typeof bv === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
       return sortAsc ? (av as number) - (bv as number) : (bv as number) - (av as number);
     });
