@@ -29,6 +29,7 @@ import {
   URGENCY_COLORS,
   URGENCY_BADGE_CLASSES,
   normalizeUrgency,
+  formatFullDate,
   type UrgencyLevel,
 } from '@/components/MemberArcticSecurityView';
 
