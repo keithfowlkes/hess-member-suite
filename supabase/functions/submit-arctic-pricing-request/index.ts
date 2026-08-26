@@ -112,7 +112,7 @@ serve(async (req) => {
         <div style="background:#f4f6f9;padding:28px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
           <div style="max-width:620px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(15,23,42,0.08);">
             <div style="background:#0c2340;padding:24px 28px;text-align:center;">
-              <img src="https://members.hessconsortium.app/__l5e/assets-v1/41a0e04b-e09c-405c-9085-bc79bfa36608/hess-logo.png" alt="HESS Consortium" width="180" style="max-width:180px;height:auto;display:inline-block;" />
+              <img src="https://members.hessconsortium.app/__l5e/assets-v1/deb5bca1-f67d-48c4-b698-3d443b4e009a/HESSlogoMasterFLAT_white.png" alt="HESS Consortium" width="180" style="max-width:180px;height:auto;display:inline-block;" />
             </div>
             <div style="padding:28px;">
               <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#2563eb;font-weight:700;">Arctic Security</p>
