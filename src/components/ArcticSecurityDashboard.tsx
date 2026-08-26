@@ -90,7 +90,7 @@ function formatSyncTime(value?: string | null): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'never';
   return date.toLocaleString('en-US', {
-    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
   });
 }
 
