@@ -3420,17 +3420,32 @@ export default function Auth() {
                 <>
                   The email address <strong>{signInForm.email}</strong> is not found in our membership database.
                   <br /><br />
-                  If this is in error, please contact <strong>info@hessconsortium.org</strong>.
+                  You may not be the primary contact for your organization. Only the primary contact listed for each member institution has login access by default.
+                  <br /><br />
+                  If you are a colleague who needs access, or if your institution's primary contact has changed, please use the <strong>"Current Member Updates"</strong> tab above to submit your information and request access. Your institution's primary contact or an administrator will review the request.
+                  <br /><br />
+                  If you believe this is an error, please contact <strong>info@hessconsortium.org</strong>.
                 </>
               )}
               <br /><br />
               You have <strong>{Math.max(0, 3 - loginAttempts)}</strong> attempts remaining.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+            {loginErrorType === 'not_found' && (
+              <AlertDialogAction
+                onClick={() => {
+                  setShowUserNotFoundModal(false);
+                  setActiveTab('member-update');
+                }}
+                className="w-full"
+              >
+                Go to Current Member Updates
+              </AlertDialogAction>
+            )}
             <AlertDialogAction 
               onClick={() => setShowUserNotFoundModal(false)}
-              className="w-full"
+              className={`w-full ${loginErrorType === 'not_found' ? 'bg-muted text-muted-foreground hover:bg-muted/80' : ''}`}
             >
               OK
             </AlertDialogAction>
