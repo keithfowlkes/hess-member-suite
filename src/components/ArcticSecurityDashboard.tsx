@@ -275,11 +275,11 @@ export function ArcticSecurityDashboard() {
               <Shield className="h-3 w-3" />
               {scanLoading
                 ? 'Loading scan data…'
-                : `Last Scan: ${formatPeriod(scanData?.observationTime)}`}
+                : `Last Scan Loaded: ${formatFullDate(scanData?.lastSyncAt)}`}
             </Badge>
             {!scanLoading && (
               <span className="text-[11px] text-muted-foreground">
-                Feed synced: {formatSyncTime(scanData?.lastSyncAt)}
+                Refreshes every 2 hours
               </span>
             )}
           </div>
