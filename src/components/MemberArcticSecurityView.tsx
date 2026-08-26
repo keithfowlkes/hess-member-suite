@@ -377,6 +377,11 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                     {myOrgData.riskLevel}
                   </Badge>
                 </div>
+                <div className="ml-auto">
+                  <Button size="sm" className="h-7 text-xs px-2.5 font-semibold" onClick={() => setPricingOpen(true)}>
+                    Get Full Arctic Security Pricing
+                  </Button>
+                </div>
               </div>
 
               {/* Urgency tiles — straight from the Arctic feed */}
