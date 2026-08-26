@@ -22,7 +22,15 @@ import { useArcticScanData, useRefreshArcticScanData } from '@/hooks/useArcticSc
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MemberArcticSecurityView } from '@/components/MemberArcticSecurityView';
+import {
+  MemberArcticSecurityView,
+  URGENCY_ORDER,
+  URGENCY_LABELS,
+  URGENCY_COLORS,
+  URGENCY_BADGE_CLASSES,
+  normalizeUrgency,
+  type UrgencyLevel,
+} from '@/components/MemberArcticSecurityView';
 
 
 
@@ -36,6 +44,8 @@ interface OrgData {
   suspectedCompromise: number;
   total: number;
   riskLevel: RiskLevel;
+  urgency: Record<UrgencyLevel, number>;
+  topUrgency: UrgencyLevel;
 }
 
 function getRiskLevel(total: number): RiskLevel {
@@ -83,7 +93,16 @@ function formatSyncTime(value?: string | null): string {
   });
 }
 
-type SortKey = 'name' | 'publicExposure' | 'knownVulnerabilities' | 'suspectedCompromise' | 'total';
+type SortKey =
+  | 'name'
+  | 'publicExposure'
+  | 'knownVulnerabilities'
+  | 'suspectedCompromise'
+  | 'total'
+  | 'critical'
+  | 'high'
+  | 'medium'
+  | 'low';
 
 export function ArcticSecurityDashboard() {
   const [search, setSearch] = useState('');
@@ -110,20 +129,56 @@ export function ArcticSecurityDashboard() {
 
   // ── Aggregate data ──
   const orgData = useMemo<OrgData[]>(() => {
-    const map = new Map<string, { pe: number; kv: number; sc: number }>();
+    type Acc = { pe: number; kv: number; sc: number; urgency: Record<UrgencyLevel, number> };
+    const map = new Map<string, Acc>();
     for (const row of RAW_DATA) {
-      const existing = map.get(row.organization) || { pe: 0, kv: 0, sc: 0 };
+      const existing: Acc = map.get(row.organization) || {
+        pe: 0, kv: 0, sc: 0,
+        urgency: { critical: 0, high: 0, medium: 0, low: 0 },
+      };
       const events = parseInt(row['# events'], 10) || 0;
       if (row.category === 'public exposure') existing.pe += events;
       else if (row.category === 'known vulnerabilities') existing.kv += events;
       else existing.sc += events;
+      existing.urgency[normalizeUrgency(row.urgency)] += events;
       map.set(row.organization, existing);
     }
-    return Array.from(map.entries()).map(([name, { pe, kv, sc }]) => {
+    return Array.from(map.entries()).map(([name, { pe, kv, sc, urgency }]) => {
       const total = pe + kv + sc;
-      return { name, publicExposure: pe, knownVulnerabilities: kv, suspectedCompromise: sc, total, riskLevel: getRiskLevel(total) };
+      const topUrgency = URGENCY_ORDER.find(l => urgency[l] > 0) ?? 'low';
+      return {
+        name,
+        publicExposure: pe,
+        knownVulnerabilities: kv,
+        suspectedCompromise: sc,
+        total,
+        riskLevel: getRiskLevel(total),
+        urgency,
+        topUrgency,
+      };
     });
   }, [RAW_DATA]);
+
+  // ── Urgency totals across the consortium ──
+  const urgencyTotals = useMemo(() => {
+    const totals: Record<UrgencyLevel, number> = { critical: 0, high: 0, medium: 0, low: 0 };
+    for (const o of orgData) {
+      for (const level of URGENCY_ORDER) totals[level] += o.urgency[level];
+    }
+    return totals;
+  }, [orgData]);
+
+  const urgencyDistribution = useMemo(
+    () => URGENCY_ORDER
+      .map(level => ({ name: URGENCY_LABELS[level], value: urgencyTotals[level], color: URGENCY_COLORS[level] }))
+      .filter(d => d.value > 0),
+    [urgencyTotals]
+  );
+
+  const urgencyChartConfig = urgencyDistribution.reduce((acc, d) => {
+    acc[d.name] = { label: d.name, color: d.color };
+    return acc;
+  }, {} as Record<string, { label: string; color: string }>);
 
   // ── Summary stats ──
   const totalOrgs = orgData.length;
@@ -138,8 +193,12 @@ export function ArcticSecurityDashboard() {
       const q = search.toLowerCase();
       data = data.filter(o => o.name.toLowerCase().includes(q));
     }
+    const valueOf = (o: OrgData) =>
+      (['critical', 'high', 'medium', 'low'] as string[]).includes(sortKey)
+        ? o.urgency[sortKey as UrgencyLevel]
+        : (o[sortKey as keyof OrgData] as string | number);
     data = [...data].sort((a, b) => {
-      const av = a[sortKey], bv = b[sortKey];
+      const av = valueOf(a), bv = valueOf(b);
       if (typeof av === 'string' && typeof bv === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
       return sortAsc ? (av as number) - (bv as number) : (bv as number) - (av as number);
     });
@@ -338,8 +397,34 @@ export function ArcticSecurityDashboard() {
         </Card>
       </div>
 
+      {/* Urgency summary strip (reported by the Arctic feed) */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Events by Urgency (Arctic feed)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {URGENCY_ORDER.map(level => (
+              <div
+                key={level}
+                className="rounded-lg border p-3"
+                style={{ borderLeftWidth: 4, borderLeftColor: URGENCY_COLORS[level] }}
+              >
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {URGENCY_LABELS[level]} urgency
+                </p>
+                <p className="text-2xl font-bold text-foreground">{urgencyTotals[level].toLocaleString()}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {orgData.filter(o => o.urgency[level] > 0).length} institutions affected
+                </p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Bar Chart */}
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -396,6 +481,43 @@ export function ArcticSecurityDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Urgency Donut */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Urgency Distribution</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center">
+            <ChartContainer config={urgencyChartConfig} className="h-[200px] w-[200px]">
+              <PieChart>
+                <Pie
+                  data={urgencyDistribution}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={3}
+                >
+                  {urgencyDistribution.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ChartContainer>
+            <div className="flex flex-wrap gap-3 mt-4 justify-center">
+              {urgencyDistribution.map(d => (
+                <div key={d.name} className="flex items-center gap-1.5 text-sm">
+                  <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                  <span className="text-muted-foreground">{d.name}</span>
+                  <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Data Table */}
@@ -444,6 +566,27 @@ export function ArcticSecurityDashboard() {
                       Total <ArrowUpDown className="h-3 w-3" />
                     </Button>
                   </TableHead>
+                  <TableHead className="text-center">
+                    <Button variant="ghost" size="sm" className="gap-1 font-medium" onClick={() => handleSort('critical')}>
+                      Critical <ArrowUpDown className="h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-center">
+                    <Button variant="ghost" size="sm" className="gap-1 font-medium" onClick={() => handleSort('high')}>
+                      High <ArrowUpDown className="h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-center">
+                    <Button variant="ghost" size="sm" className="gap-1 font-medium" onClick={() => handleSort('medium')}>
+                      Medium <ArrowUpDown className="h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-center">
+                    <Button variant="ghost" size="sm" className="gap-1 font-medium" onClick={() => handleSort('low')}>
+                      Low <ArrowUpDown className="h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-center">Top Urgency</TableHead>
                   <TableHead className="text-center">Risk Level</TableHead>
                 </TableRow>
               </TableHeader>
@@ -467,6 +610,20 @@ export function ArcticSecurityDashboard() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center font-semibold">{org.total}</TableCell>
+                    {URGENCY_ORDER.map(level => (
+                      <TableCell key={level} className="text-center">
+                        {org.urgency[level] > 0 ? (
+                          <span className="font-medium">{org.urgency[level].toLocaleString()}</span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                    ))}
+                    <TableCell className="text-center">
+                      <Badge variant="secondary" className={URGENCY_BADGE_CLASSES[org.topUrgency]}>
+                        {URGENCY_LABELS[org.topUrgency]}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-center">
                       <Badge className={RISK_BADGE_CLASSES[org.riskLevel]}>
                         {org.riskLevel}
@@ -476,7 +633,7 @@ export function ArcticSecurityDashboard() {
                 ))}
                 {filteredData.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                       No organizations found matching "{search}"
                     </TableCell>
                   </TableRow>
