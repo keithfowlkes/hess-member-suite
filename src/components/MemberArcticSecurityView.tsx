@@ -289,27 +289,39 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Organization-Specific Section — LEFT */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Lock className="h-4 w-4 text-primary" />
-              Your Organization's Security Assessment
-             <Popover>
-               <PopoverTrigger asChild>
-                 <button className="ml-1 rounded-full hover:bg-muted p-0.5 transition-colors">
-                   <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                 </button>
-               </PopoverTrigger>
-               <PopoverContent className="max-w-sm text-sm">
-                 This information is provided to HESS members as a basic "heads-up" for possible cybersecurity threats. For additional information, read the "About Arctic Security" information below on how to get detail information through their services at the HESS member discount.
-               </PopoverContent>
-             </Popover>
-           </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            This data is private to your institution only
-          </p>
+      {/* Organization-Specific Assessment — full width */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Lock className="h-4 w-4 text-primary" />
+                Your Organization's Security Assessment
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="ml-1 rounded-full hover:bg-muted p-0.5 transition-colors">
+                      <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="max-w-sm text-sm">
+                    This information is provided to HESS members as a basic "heads-up" for possible cybersecurity threats. For additional information, read the "About Arctic Security" information below on how to get detail information through their services at the HESS member discount.
+                  </PopoverContent>
+                </Popover>
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                This data is private to your institution only
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1">
+                <Shield className="h-3 w-3" />
+                Last Scan Loaded: {formatFullDate(scanData?.lastSyncAt)} (refreshes every 2 hours)
+              </Badge>
+              <Button size="sm" className="font-bold" onClick={() => setPricingOpen(true)}>
+                Get Full Arctic Security Pricing
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isAdmin && !previewOrgName && (
@@ -352,16 +364,18 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
           ) : (
             <div className="space-y-5">
               {/* Org summary row */}
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm rounded-md border bg-muted/30 px-4 py-2.5">
                 <div>
                   <span className="text-muted-foreground">Organization: </span>
                   <span className="font-semibold text-foreground">{myOrgData.name}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Last Scan: </span>
-                  <span className="font-semibold text-foreground">
-                    {formatPeriod(myOrgData.lastScan)}
-                  </span>
+                  <span className="font-semibold text-foreground">{formatPeriod(myOrgData.lastScan)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Total Events: </span>
+                  <span className="font-semibold text-foreground">{myOrgData.total.toLocaleString()}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Risk Level: </span>
@@ -371,14 +385,35 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                 </div>
               </div>
 
-              {/* Table + pie side by side */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-                {/* Category breakdown table */}
-                <div className="rounded-md border">
+              {/* Urgency tiles — straight from the Arctic feed */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {URGENCY_ORDER.map(level => (
+                  <div
+                    key={level}
+                    className="rounded-lg border p-3 flex items-start gap-3"
+                    style={{ borderLeftWidth: 4, borderLeftColor: URGENCY_COLORS[level] }}
+                  >
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        {URGENCY_LABELS[level]} urgency
+                      </p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {myOrgData.urgencyTotals[level].toLocaleString()}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">events reported</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Detail table + charts */}
+              <div className="grid grid-cols-1 xl:grid-cols-5 gap-5 items-start">
+                <div className="xl:col-span-3 rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Category</TableHead>
+                        <TableHead>Urgency</TableHead>
                         <TableHead className="text-right">Events</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -386,63 +421,96 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                       {myOrgData.categories.map((cat, i) => (
                         <TableRow key={i}>
                           <TableCell className="font-medium capitalize">{cat.category}</TableCell>
-                          <TableCell className="text-right">
-                            <Badge
-                              variant="secondary"
-                              className={
-                                cat.events > 100
-                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                  : cat.events > 10
-                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                              }
-                            >
-                              {cat.events.toLocaleString()}
+                          <TableCell>
+                            <Badge variant="secondary" className={URGENCY_BADGE_CLASSES[cat.urgency]}>
+                              {URGENCY_LABELS[cat.urgency]}
                             </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {cat.events.toLocaleString()}
                           </TableCell>
                         </TableRow>
                       ))}
                       <TableRow>
                         <TableCell className="font-bold">Total</TableCell>
+                        <TableCell />
                         <TableCell className="text-right font-bold">{myOrgData.total.toLocaleString()}</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
                 </div>
 
-                {/* Org pie chart */}
-                {orgPieData.length > 0 && (
-                  <div className="flex flex-col items-center justify-center">
-                    <ChartContainer config={orgChartConfig} className="h-[150px] w-[150px]">
-                      <PieChart>
-                        <Pie
-                          data={orgPieData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={35}
-                          outerRadius={60}
-                          paddingAngle={3}
-                        >
-                          {orgPieData.map((entry, i) => (
-                            <Cell key={i} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </PieChart>
-                    </ChartContainer>
-                    <div className="flex flex-wrap gap-3 mt-2 justify-center">
-                      {orgPieData.map(d => (
-                        <div key={d.name} className="flex items-center gap-1.5 text-xs">
-                          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: d.color }} />
-                          <span className="text-muted-foreground">{d.name}</span>
-                          <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
-                        </div>
-                      ))}
+                <div className="xl:col-span-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
+                  {orgPieData.length > 0 && (
+                    <div className="rounded-md border p-3 flex flex-col items-center">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Events by category</p>
+                      <ChartContainer config={orgChartConfig} className="h-[150px] w-[150px]">
+                        <PieChart>
+                          <Pie
+                            data={orgPieData}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={35}
+                            outerRadius={60}
+                            paddingAngle={3}
+                          >
+                            {orgPieData.map((entry, i) => (
+                              <Cell key={i} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                        </PieChart>
+                      </ChartContainer>
+                      <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                        {orgPieData.map(d => (
+                          <div key={d.name} className="flex items-center gap-1.5 text-xs">
+                            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: d.color }} />
+                            <span className="text-muted-foreground">{d.name}</span>
+                            <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+
+                  {orgRiskDistribution.length > 0 && (
+                    <div className="rounded-md border p-3 flex flex-col items-center">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                        Events by urgency (hover for detail)
+                      </p>
+                      <ChartContainer config={orgRiskChartConfig} className="h-[150px] w-[150px]">
+                        <PieChart>
+                          <Pie
+                            data={orgRiskDistribution}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={35}
+                            outerRadius={60}
+                            paddingAngle={3}
+                          >
+                            {orgRiskDistribution.map((entry, i) => (
+                              <Cell key={i} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<RiskTooltip />} />
+                        </PieChart>
+                      </ChartContainer>
+                      <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                        {orgRiskDistribution.map(d => (
+                          <div key={d.name} className="flex items-center gap-1.5 text-xs">
+                            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: d.color }} />
+                            <span className="text-muted-foreground">{d.name}</span>
+                            <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -450,67 +518,6 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
         </CardContent>
       </Card>
 
-      {/* Organization-Specific Risk Level Distribution — RIGHT */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Shield className="h-4 w-4 text-primary" />
-            Your Risk Level Distribution
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Risk level distribution of observed events for your organization (hover slices for threat level details)
-          </p>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center">
-          {orgRiskDistribution.length === 0 ? (
-            <div className="text-center py-8">
-              <Shield className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-              <p className="text-muted-foreground text-sm">
-                No risk distribution data available for your organization.
-              </p>
-            </div>
-          ) : (
-            <>
-              <ChartContainer config={orgRiskChartConfig} className="h-[220px] w-[220px]">
-                <PieChart>
-                  <Pie
-                    data={orgRiskDistribution}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={95}
-                    paddingAngle={3}
-                  >
-                    {orgRiskDistribution.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<RiskTooltip />} />
-                </PieChart>
-              </ChartContainer>
-              <div className="flex flex-wrap gap-3 mt-4 justify-center">
-                {orgRiskDistribution.map(d => (
-                  <div key={d.name} className="flex items-center gap-1.5 text-sm">
-                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                    <span className="text-muted-foreground">{d.name}</span>
-                    <span className="font-semibold text-foreground">{d.value.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-              <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1 mt-4">
-                <Shield className="h-3 w-3" />
-                Last Scan Loaded: {formatFullDate(myOrgData.lastSyncAt)} (refreshes every 2 hours)
-              </Badge>
-              <Button className="mt-3 font-bold" onClick={() => setPricingOpen(true)}>
-                Get Full Arctic Security Pricing
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
-      </div>
 
       {/* About Arctic Security + Sample Report */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
