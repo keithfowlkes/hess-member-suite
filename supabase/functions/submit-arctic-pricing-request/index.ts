@@ -100,19 +100,41 @@ serve(async (req) => {
     if (recipients.length > 0) {
       const esc = (s: string | null) =>
         String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const row = (label: string, value: string) => value.trim() ? `
+              <tr>
+                <td style="padding:10px 16px;border-bottom:1px solid #eef1f5;font-size:13px;color:#64748b;width:38%;vertical-align:top;">${label}</td>
+                <td style="padding:10px 16px;border-bottom:1px solid #eef1f5;font-size:14px;color:#0f172a;font-weight:600;">${value}</td>
+              </tr>` : "";
+      const addr = [esc(record.address_line_1), esc(record.address_line_2)].filter(Boolean).join(" ").trim();
+      const cityLine = [esc(record.city), [esc(record.state), esc(record.zip_code)].filter(Boolean).join(" ")].filter(Boolean).join(", ").trim();
+      const fullAddress = [addr, cityLine].filter(Boolean).join("<br>");
       const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2>Arctic Security Pricing Request</h2>
-          <p>A HESS member has requested pricing information for Arctic Security services.</p>
-          <table cellpadding="6" style="border-collapse: collapse; font-size: 14px;">
-            <tr><td><strong>Institution</strong></td><td>${esc(record.organization_name)}</td></tr>
-            <tr><td><strong>Contact</strong></td><td>${esc(record.contact_name)}</td></tr>
-            <tr><td><strong>Email</strong></td><td>${esc(record.contact_email)}</td></tr>
-            <tr><td><strong>Phone</strong></td><td>${esc(record.contact_phone)}</td></tr>
-            <tr><td><strong>Address</strong></td><td>${esc(record.address_line_1)} ${esc(record.address_line_2)}<br>${esc(record.city)}, ${esc(record.state)} ${esc(record.zip_code)}</td></tr>
-            <tr><td><strong>Notes</strong></td><td>${esc(record.notes)}</td></tr>
-          </table>
-          <p style="font-size:13px;color:#666;">Submitted ${new Date().toLocaleString("en-US")}. Tracked in the Arctic Security admin panel.</p>
+        <div style="background:#f4f6f9;padding:28px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+          <div style="max-width:620px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(15,23,42,0.08);">
+            <div style="background:#0c2340;padding:24px 28px;text-align:center;">
+              <img src="https://members.hessconsortium.app/__l5e/assets-v1/41a0e04b-e09c-405c-9085-bc79bfa36608/hess-logo.png" alt="HESS Consortium" width="180" style="max-width:180px;height:auto;display:inline-block;" />
+            </div>
+            <div style="padding:28px;">
+              <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#2563eb;font-weight:700;">Arctic Security</p>
+              <h1 style="margin:0 0 10px;font-size:22px;line-height:1.3;color:#0f172a;">New Pricing Request</h1>
+              <p style="margin:0 0 22px;font-size:14px;line-height:1.6;color:#475569;">A HESS member has requested pricing information for Arctic Security services.</p>
+              <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #eef1f5;border-radius:8px;overflow:hidden;">
+                ${row("Institution", esc(record.organization_name))}
+                ${row("Contact", esc(record.contact_name))}
+                ${row("Email", `<a href="mailto:${esc(record.contact_email)}" style="color:#2563eb;text-decoration:none;">${esc(record.contact_email)}</a>`)}
+                ${row("Phone", esc(record.contact_phone))}
+                ${row("Address", fullAddress)}
+                ${row("Notes", esc(record.notes))}
+              </table>
+              <p style="margin:24px 0 0;font-size:13px;color:#64748b;line-height:1.6;">
+                Submitted ${new Date().toLocaleString("en-US", { dateStyle: "long", timeStyle: "short", timeZone: "America/New_York" })} ET.<br>
+                This request is tracked in the Arctic Security admin panel.
+              </p>
+            </div>
+            <div style="background:#f8fafc;padding:16px 28px;text-align:center;border-top:1px solid #eef1f5;">
+              <p style="margin:0;font-size:12px;color:#94a3b8;">HESS Consortium Member Portal</p>
+            </div>
+          </div>
         </div>`;
 
       const { error: emailError } = await service.functions.invoke("centralized-email-delivery", {
