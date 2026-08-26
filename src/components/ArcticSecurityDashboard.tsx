@@ -29,6 +29,7 @@ import {
   URGENCY_COLORS,
   URGENCY_BADGE_CLASSES,
   normalizeUrgency,
+  formatFullDate,
   type UrgencyLevel,
 } from '@/components/MemberArcticSecurityView';
 
@@ -89,7 +90,7 @@ function formatSyncTime(value?: string | null): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'never';
   return date.toLocaleString('en-US', {
-    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
   });
 }
 
@@ -274,11 +275,11 @@ export function ArcticSecurityDashboard() {
               <Shield className="h-3 w-3" />
               {scanLoading
                 ? 'Loading scan data…'
-                : `Last Scan: ${formatPeriod(scanData?.observationTime)}`}
+                : `Last Scan Loaded: ${formatFullDate(scanData?.lastSyncAt)}`}
             </Badge>
             {!scanLoading && (
               <span className="text-[11px] text-muted-foreground">
-                Feed synced: {formatSyncTime(scanData?.lastSyncAt)}
+                Refreshes every 2 hours
               </span>
             )}
           </div>

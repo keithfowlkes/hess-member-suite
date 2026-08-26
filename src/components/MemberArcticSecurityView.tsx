@@ -35,7 +35,7 @@ function formatPeriod(period?: string | null): string {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
-function formatFullDate(value?: string | null): string {
+export function formatFullDate(value?: string | null): string {
   if (!value) return 'Not available';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Not available';
@@ -45,6 +45,7 @@ function formatFullDate(value?: string | null): string {
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZoneName: 'short',
   });
 }
 
