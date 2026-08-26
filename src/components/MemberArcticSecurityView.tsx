@@ -313,15 +313,6 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                 This data is private to your institution only
               </p>
             </div>
-            <div className="flex flex-col items-end gap-2">
-              <Badge variant="outline" className="text-xs gap-1.5 px-3 py-1">
-                <Shield className="h-3 w-3" />
-                Last Scan Loaded: {formatFullDate(scanData?.lastSyncAt)} (refreshes every 2 hours)
-              </Badge>
-              <Button size="sm" className="font-bold" onClick={() => setPricingOpen(true)}>
-                Get Full Arctic Security Pricing
-              </Button>
-            </div>
           </div>
         </CardHeader>
         <CardContent>
