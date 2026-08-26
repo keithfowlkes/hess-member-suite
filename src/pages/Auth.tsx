@@ -3446,7 +3446,6 @@ export default function Auth() {
             <AlertDialogAction 
               onClick={() => setShowUserNotFoundModal(false)}
               className={`w-full ${loginErrorType === 'not_found' ? 'bg-muted text-muted-foreground hover:bg-muted/80' : ''}`}
-              variant={loginErrorType === 'not_found' ? 'outline' : 'default'}
             >
               OK
             </AlertDialogAction>
