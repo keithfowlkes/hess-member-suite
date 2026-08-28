@@ -236,21 +236,10 @@ export function DataApiKeysManager() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        title="Copy ready-to-use URL"
-                        onClick={() =>
-                          copy(
-                            k.key_plain
-                              ? `${endpointFor(k.api_type)}?key=${k.key_plain}`
-                              : endpointFor(k.api_type),
-                            `url-${k.id}`,
-                          )
-                        }
+                        title="View ready-to-use URL"
+                        onClick={() => setUrlKey(k)}
                       >
-                        {copied === `url-${k.id}` ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
+                        <LinkIcon className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
