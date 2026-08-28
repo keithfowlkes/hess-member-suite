@@ -223,6 +223,23 @@ export function DataApiKeysManager() {
                         <span>{k.key_prefix}… (legacy, not recoverable)</span>
                       )}
                     </TableCell>
+                    <TableCell className="font-mono text-xs break-all">
+                      {k.key_plain ? (
+                        <div className="flex items-center gap-1">
+                          <span className="break-all">{endpointFor(k.api_type)}?key={k.key_plain}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0"
+                            onClick={() => copy(`${endpointFor(k.api_type)}?key=${k.key_plain}`, `url-row-${k.id}`)}
+                          >
+                            {copied === `url-row-${k.id}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">{endpointFor(k.api_type)}</span>
+                      )}
+                    </TableCell>
                     <TableCell>{k.request_count}</TableCell>
                     <TableCell className="text-xs">
                       {k.last_used_at ? format(new Date(k.last_used_at), 'MMM d, yyyy h:mm a') : '—'}
