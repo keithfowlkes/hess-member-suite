@@ -188,7 +188,13 @@ export function DataApiKeysManager() {
                 {keys.map((k) => (
                   <TableRow key={k.id}>
                     <TableCell>
-                      <div className="font-medium">{k.name}</div>
+                      <Button
+                        variant="link"
+                        className="h-auto p-0 font-medium text-left"
+                        onClick={() => setUrlKey(k)}
+                      >
+                        {k.name}
+                      </Button>
                       {k.description && (
                         <div className="text-xs text-muted-foreground">{k.description}</div>
                       )}
