@@ -8,6 +8,12 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
+const csv = (body: string, status = 200) =>
+  new Response(body, {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "text/csv; charset=utf-8" },
+  });
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -22,6 +28,15 @@ async function sha256Hex(value: string): Promise<string> {
   return Array.from(new Uint8Array(buf))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+/** Escape a value for CSV output (RFC 4180). */
+function csvCell(value: string): string {
+  const v = value ?? "";
+  if (/[",\n\r]/.test(v)) {
+    return `"${v.replace(/"/g, '""')}"`;
+  }
+  return v;
 }
 
 serve(async (req) => {
@@ -70,7 +85,7 @@ serve(async (req) => {
 
   const { data, error } = await admin
     .from("organizations")
-    .select("id, name, city, state, zip_code")
+    .select("name, city, state, zip_code")
     .eq("membership_status", "active")
     .eq("organization_type", "member")
     .order("name", { ascending: true });
@@ -88,13 +103,14 @@ serve(async (req) => {
     })
     .eq("id", keyRow.id);
 
-  const organizations = (data ?? []).map((o) => ({
-    id: o.id,
-    name: o.name,
-    city: o.city ?? "",
-    state: o.state ?? "",
-    zip_code: o.zip_code ?? "",
-  }));
+  const rows = (data ?? []).map((o) => [
+    csvCell(o.name ?? ""),
+    csvCell(o.city ?? ""),
+    csvCell(o.state ?? ""),
+    csvCell(o.zip_code ?? ""),
+  ].join(","));
 
-  return json({ count: organizations.length, organizations });
+  const csvBody = ["organization,city,state,zip", ...rows].join("\n");
+
+  return csv(csvBody);
 });
