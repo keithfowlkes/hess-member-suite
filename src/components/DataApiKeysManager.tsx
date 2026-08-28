@@ -177,7 +177,6 @@ export function DataApiKeysManager() {
                     <TableHead>Name</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Key</TableHead>
-                    <TableHead>URL</TableHead>
                     <TableHead>Requests</TableHead>
                     <TableHead>Last used</TableHead>
                     <TableHead>Active</TableHead>
