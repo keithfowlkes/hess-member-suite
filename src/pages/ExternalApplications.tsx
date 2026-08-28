@@ -16,8 +16,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, ExternalLink, Shield, Activity, Copy, Check, Mail, RefreshCw, Wifi, WifiOff, Users, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, ExternalLink, Shield, Activity, Copy, Check, Mail, RefreshCw, Wifi, WifiOff, Users, Loader2, KeyRound } from 'lucide-react';
 import { SimplelistsCohortMappings } from '@/components/SimplelistsCohortMappings';
+import { DataApiKeysManager } from '@/components/DataApiKeysManager';
+
 import { format } from 'date-fns';
 
 interface ExternalApplication {
