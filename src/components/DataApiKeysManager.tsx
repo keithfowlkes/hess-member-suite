@@ -354,6 +354,45 @@ export function DataApiKeysManager() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!urlKey} onOpenChange={(open) => { if (!open) setUrlKey(null); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Ready-to-use URL — {urlKey?.name}</DialogTitle>
+            <DialogDescription>
+              Pass this URL to the external application. The key is embedded as a query parameter;
+              the key can also be sent as an <code>x-api-key</code> header instead.
+            </DialogDescription>
+          </DialogHeader>
+          {urlKey?.key_plain ? (
+            <div className="space-y-2">
+              <Label>URL</Label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={`${endpointFor(urlKey.api_type)}?key=${urlKey.key_plain}`}
+                  className="font-mono text-xs"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copy(`${endpointFor(urlKey.api_type)}?key=${urlKey.key_plain}`, `url-modal-${urlKey.id}`)}
+                >
+                  {copied === `url-modal-${urlKey.id}` ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              This is a legacy key (full value not recoverable). The endpoint is:
+              <code className="block mt-2 break-all">{urlKey ? endpointFor(urlKey.api_type) : ''}</code>
+            </p>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setUrlKey(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
