@@ -37,6 +37,7 @@ interface ApiKeyRow {
   description: string | null;
   api_type: string;
   key_prefix: string;
+  key_plain: string | null;
   is_active: boolean;
   last_used_at: string | null;
   request_count: number;
