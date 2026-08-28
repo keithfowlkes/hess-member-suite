@@ -518,6 +518,51 @@ export type Database = {
         }
         Relationships: []
       }
+      external_api_keys: {
+        Row: {
+          api_type: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          request_count: number
+          updated_at: string
+        }
+        Insert: {
+          api_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          request_count?: number
+          updated_at?: string
+        }
+        Update: {
+          api_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          request_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       external_app_access_log: {
         Row: {
           action: string
