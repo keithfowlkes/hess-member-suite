@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Copy, Check, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { Plus, Copy, Check, Trash2, KeyRound, Eye, EyeOff, Link as LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
 const FUNCTIONS_BASE = 'https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1';
