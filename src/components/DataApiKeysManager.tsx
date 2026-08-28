@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Copy, Check, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { Plus, Copy, Check, Trash2, KeyRound, Eye, EyeOff, Link as LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
 const FUNCTIONS_BASE = 'https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1';
@@ -65,6 +65,7 @@ export function DataApiKeysManager() {
   const [createdKey, setCreatedKey] = useState<{ key: string; url: string } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const [urlKey, setUrlKey] = useState<ApiKeyRow | null>(null);
 
   const { data: keys, isLoading } = useQuery({
     queryKey: ['external-api-keys'],
@@ -177,7 +178,6 @@ export function DataApiKeysManager() {
                     <TableHead>Name</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Key</TableHead>
-                    <TableHead>URL</TableHead>
                     <TableHead>Requests</TableHead>
                     <TableHead>Last used</TableHead>
                     <TableHead>Active</TableHead>
@@ -223,23 +223,6 @@ export function DataApiKeysManager() {
                         <span>{k.key_prefix}… (legacy, not recoverable)</span>
                       )}
                     </TableCell>
-                    <TableCell className="font-mono text-xs break-all">
-                      {k.key_plain ? (
-                        <div className="flex items-center gap-1">
-                          <span className="break-all">{endpointFor(k.api_type)}?key={k.key_plain}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 shrink-0"
-                            onClick={() => copy(`${endpointFor(k.api_type)}?key=${k.key_plain}`, `url-row-${k.id}`)}
-                          >
-                            {copied === `url-row-${k.id}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">{endpointFor(k.api_type)}</span>
-                      )}
-                    </TableCell>
                     <TableCell>{k.request_count}</TableCell>
                     <TableCell className="text-xs">
                       {k.last_used_at ? format(new Date(k.last_used_at), 'MMM d, yyyy h:mm a') : '—'}
@@ -254,21 +237,10 @@ export function DataApiKeysManager() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        title="Copy ready-to-use URL"
-                        onClick={() =>
-                          copy(
-                            k.key_plain
-                              ? `${endpointFor(k.api_type)}?key=${k.key_plain}`
-                              : endpointFor(k.api_type),
-                            `url-${k.id}`,
-                          )
-                        }
+                        title="View ready-to-use URL"
+                        onClick={() => setUrlKey(k)}
                       >
-                        {copied === `url-${k.id}` ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
+                        <LinkIcon className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -380,6 +352,45 @@ export function DataApiKeysManager() {
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!urlKey} onOpenChange={(open) => { if (!open) setUrlKey(null); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Ready-to-use URL — {urlKey?.name}</DialogTitle>
+            <DialogDescription>
+              Pass this URL to the external application. The key is embedded as a query parameter;
+              the key can also be sent as an <code>x-api-key</code> header instead.
+            </DialogDescription>
+          </DialogHeader>
+          {urlKey?.key_plain ? (
+            <div className="space-y-2">
+              <Label>URL</Label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={`${endpointFor(urlKey.api_type)}?key=${urlKey.key_plain}`}
+                  className="font-mono text-xs"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copy(`${endpointFor(urlKey.api_type)}?key=${urlKey.key_plain}`, `url-modal-${urlKey.id}`)}
+                >
+                  {copied === `url-modal-${urlKey.id}` ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              This is a legacy key (full value not recoverable). The endpoint is:
+              <code className="block mt-2 break-all">{urlKey ? endpointFor(urlKey.api_type) : ''}</code>
+            </p>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setUrlKey(null)}>Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
