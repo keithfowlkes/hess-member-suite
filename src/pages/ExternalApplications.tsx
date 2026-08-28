@@ -451,6 +451,10 @@ export function ExternalApplicationsContent() {
           <Tabs defaultValue="applications" className="space-y-4">
             <TabsList>
               <TabsTrigger value="applications">Applications</TabsTrigger>
+              <TabsTrigger value="api-keys">
+                <KeyRound className="h-4 w-4 mr-1" />
+                Data API Keys
+              </TabsTrigger>
               <TabsTrigger value="simplelists">
                 <Mail className="h-4 w-4 mr-1" />
                 Simplelists
@@ -459,7 +463,12 @@ export function ExternalApplicationsContent() {
               <TabsTrigger value="integration">Integration Guide</TabsTrigger>
             </TabsList>
 
+            <TabsContent value="api-keys" className="space-y-4">
+              <DataApiKeysManager />
+            </TabsContent>
+
             <TabsContent value="applications" className="space-y-4">
+
               {isLoading ? (
                 <div className="flex items-center justify-center p-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
