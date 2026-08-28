@@ -1,0 +1,1 @@
+ALTER TABLE public.external_api_keys ADD COLUMN IF NOT EXISTS key_plain text;
