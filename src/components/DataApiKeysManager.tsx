@@ -65,6 +65,7 @@ export function DataApiKeysManager() {
   const [createdKey, setCreatedKey] = useState<{ key: string; url: string } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const [urlKey, setUrlKey] = useState<ApiKeyRow | null>(null);
 
   const { data: keys, isLoading } = useQuery({
     queryKey: ['external-api-keys'],
