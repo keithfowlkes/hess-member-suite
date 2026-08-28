@@ -173,15 +173,16 @@ export function DataApiKeysManager() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Key</TableHead>
-                  <TableHead>Requests</TableHead>
-                  <TableHead>Last used</TableHead>
-                  <TableHead>Active</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Key</TableHead>
+                    <TableHead>URL</TableHead>
+                    <TableHead>Requests</TableHead>
+                    <TableHead>Last used</TableHead>
+                    <TableHead>Active</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
               </TableHeader>
               <TableBody>
                 {keys.map((k) => (
