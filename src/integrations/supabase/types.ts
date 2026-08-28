@@ -527,6 +527,7 @@ export type Database = {
           id: string
           is_active: boolean
           key_hash: string
+          key_plain: string | null
           key_prefix: string
           last_used_at: string | null
           name: string
@@ -541,6 +542,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           key_hash: string
+          key_plain?: string | null
           key_prefix: string
           last_used_at?: string | null
           name: string
@@ -555,6 +557,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           key_hash?: string
+          key_plain?: string | null
           key_prefix?: string
           last_used_at?: string | null
           name?: string
