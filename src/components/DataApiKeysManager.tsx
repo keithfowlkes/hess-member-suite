@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Copy, Check, Trash2, KeyRound } from 'lucide-react';
+import { Plus, Copy, Check, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
 
 const FUNCTIONS_BASE = 'https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1';
@@ -64,6 +64,7 @@ export function DataApiKeysManager() {
   const [apiType, setApiType] = useState<string>('organization_basic');
   const [createdKey, setCreatedKey] = useState<{ key: string; url: string } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
 
   const { data: keys, isLoading } = useQuery({
     queryKey: ['external-api-keys'],
@@ -91,6 +92,7 @@ export function DataApiKeysManager() {
         api_type: apiType,
         key_prefix: key.slice(0, 12),
         key_hash,
+        key_plain: key,
         created_by: user?.id ?? null,
       });
       if (error) throw error;
@@ -193,7 +195,33 @@ export function DataApiKeysManager() {
                     <TableCell>
                       <Badge variant="secondary">{k.api_type}</Badge>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{k.key_prefix}…</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {k.key_plain ? (
+                        <div className="flex items-center gap-1">
+                          <span className="break-all">
+                            {revealed[k.id] ? k.key_plain : `${k.key_prefix}${'•'.repeat(8)}`}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => setRevealed((r) => ({ ...r, [k.id]: !r[k.id] }))}
+                          >
+                            {revealed[k.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => copy(k.key_plain!, `key-${k.id}`)}
+                          >
+                            {copied === `key-${k.id}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                      ) : (
+                        <span>{k.key_prefix}… (legacy, not recoverable)</span>
+                      )}
+                    </TableCell>
                     <TableCell>{k.request_count}</TableCell>
                     <TableCell className="text-xs">
                       {k.last_used_at ? format(new Date(k.last_used_at), 'MMM d, yyyy h:mm a') : '—'}
@@ -208,7 +236,15 @@ export function DataApiKeysManager() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => copy(endpointFor(k.api_type), `url-${k.id}`)}
+                        title="Copy ready-to-use URL"
+                        onClick={() =>
+                          copy(
+                            k.key_plain
+                              ? `${endpointFor(k.api_type)}?key=${k.key_plain}`
+                              : endpointFor(k.api_type),
+                            `url-${k.id}`,
+                          )
+                        }
                       >
                         {copied === `url-${k.id}` ? (
                           <Check className="h-4 w-4" />
@@ -243,7 +279,7 @@ export function DataApiKeysManager() {
               <DialogHeader>
                 <DialogTitle>API key created</DialogTitle>
                 <DialogDescription>
-                  Copy this now — the full key is stored hashed and cannot be shown again.
+                  Copy this now. Admins can also view this key later in the keys table.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
