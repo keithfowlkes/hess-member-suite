@@ -173,15 +173,16 @@ export function DataApiKeysManager() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Key</TableHead>
-                  <TableHead>Requests</TableHead>
-                  <TableHead>Last used</TableHead>
-                  <TableHead>Active</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Key</TableHead>
+                    <TableHead>URL</TableHead>
+                    <TableHead>Requests</TableHead>
+                    <TableHead>Last used</TableHead>
+                    <TableHead>Active</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
               </TableHeader>
               <TableBody>
                 {keys.map((k) => (
@@ -220,6 +221,23 @@ export function DataApiKeysManager() {
                         </div>
                       ) : (
                         <span>{k.key_prefix}… (legacy, not recoverable)</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs break-all">
+                      {k.key_plain ? (
+                        <div className="flex items-center gap-1">
+                          <span className="break-all">{endpointFor(k.api_type)}?key={k.key_plain}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0"
+                            onClick={() => copy(`${endpointFor(k.api_type)}?key=${k.key_plain}`, `url-row-${k.id}`)}
+                          >
+                            {copied === `url-row-${k.id}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">{endpointFor(k.api_type)}</span>
                       )}
                     </TableCell>
                     <TableCell>{k.request_count}</TableCell>
