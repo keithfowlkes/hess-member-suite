@@ -188,7 +188,13 @@ export function DataApiKeysManager() {
                 {keys.map((k) => (
                   <TableRow key={k.id}>
                     <TableCell>
-                      <div className="font-medium">{k.name}</div>
+                      <Button
+                        variant="link"
+                        className="h-auto p-0 font-medium text-left"
+                        onClick={() => setUrlKey(k)}
+                      >
+                        {k.name}
+                      </Button>
                       {k.description && (
                         <div className="text-xs text-muted-foreground">{k.description}</div>
                       )}
@@ -358,35 +364,96 @@ export function DataApiKeysManager() {
       <Dialog open={!!urlKey} onOpenChange={(open) => { if (!open) setUrlKey(null); }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Ready-to-use URL — {urlKey?.name}</DialogTitle>
+            <DialogTitle>{urlKey?.name}</DialogTitle>
             <DialogDescription>
-              Pass this URL to the external application. The key is embedded as a query parameter;
-              the key can also be sent as an <code>x-api-key</code> header instead.
+              Full API key details. Copy the key or the ready-to-use URL below.
             </DialogDescription>
           </DialogHeader>
-          {urlKey?.key_plain ? (
-            <div className="space-y-2">
-              <Label>URL</Label>
-              <div className="flex gap-2">
-                <Input
-                  readOnly
-                  value={`${endpointFor(urlKey.api_type)}?key=${urlKey.key_plain}`}
-                  className="font-mono text-xs"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => copy(`${endpointFor(urlKey.api_type)}?key=${urlKey.key_plain}`, `url-modal-${urlKey.id}`)}
-                >
-                  {copied === `url-modal-${urlKey.id}` ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
+          {urlKey && (
+            <div className="space-y-4">
+              {urlKey.description && (
+                <div className="space-y-1">
+                  <Label>Description</Label>
+                  <p className="text-sm text-muted-foreground">{urlKey.description}</p>
+                </div>
+              )}
+              <div className="space-y-1">
+                <Label>API type</Label>
+                <p className="text-sm">
+                  <Badge variant="secondary">{urlKey.api_type}</Badge>
+                </p>
+              </div>
+              <div className="space-y-1">
+                <Label>Secret key</Label>
+                {urlKey.key_plain ? (
+                  <div className="flex gap-2">
+                    <Input readOnly value={urlKey.key_plain} className="font-mono text-xs" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copy(urlKey.key_plain!, `detail-key-${urlKey.id}`)}
+                    >
+                      {copied === `detail-key-${urlKey.id}` ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {urlKey.key_prefix}… (legacy, not recoverable)
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <Label>Ready-to-use URL</Label>
+                {urlKey.key_plain ? (
+                  <div className="flex gap-2">
+                    <Input
+                      readOnly
+                      value={`${endpointFor(urlKey.api_type)}?key=${urlKey.key_plain}`}
+                      className="font-mono text-xs"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copy(`${endpointFor(urlKey.api_type)}?key=${urlKey.key_plain}`, `detail-url-${urlKey.id}`)}
+                    >
+                      {copied === `detail-url-${urlKey.id}` ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Endpoint only (legacy key):
+                    <code className="block mt-2 break-all">{endpointFor(urlKey.api_type)}</code>
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  The key can also be sent as an <code>x-api-key</code> header instead of the query string.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                <div className="space-y-1">
+                  <Label>Status</Label>
+                  <p className="text-sm">
+                    <Badge variant={urlKey.is_active ? 'default' : 'secondary'}>
+                      {urlKey.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <Label>Request count</Label>
+                  <p className="text-sm">{urlKey.request_count}</p>
+                </div>
+                <div className="space-y-1">
+                  <Label>Last used</Label>
+                  <p className="text-sm">
+                    {urlKey.last_used_at ? format(new Date(urlKey.last_used_at), 'MMM d, yyyy h:mm a') : '—'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <Label>Created</Label>
+                  <p className="text-sm">{format(new Date(urlKey.created_at), 'MMM d, yyyy h:mm a')}</p>
+                </div>
               </div>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              This is a legacy key (full value not recoverable). The endpoint is:
-              <code className="block mt-2 break-all">{urlKey ? endpointFor(urlKey.api_type) : ''}</code>
-            </p>
           )}
           <DialogFooter>
             <Button onClick={() => setUrlKey(null)}>Close</Button>
