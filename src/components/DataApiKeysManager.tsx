@@ -25,9 +25,9 @@ const FUNCTIONS_BASE = 'https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1';
 const API_TYPES = [
   {
     id: 'organization_basic',
-    label: 'Organization Basic (name, city, state, zip)',
+    label: 'Organization Basic (CSV: name, city, state, zip)',
     endpoint: `${FUNCTIONS_BASE}/org-directory-api`,
-    description: 'Returns active member institutions with name, city, state and zip code only.',
+    description: 'Returns active member institutions as straight CSV data in the order organization, city, state, zip.',
   },
 ] as const;
 
