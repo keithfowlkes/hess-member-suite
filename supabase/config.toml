@@ -176,3 +176,6 @@ verify_jwt = false
 
 [functions.submit-arctic-pricing-request]
 verify_jwt = true
+
+[functions.org-directory-api]
+verify_jwt = false
