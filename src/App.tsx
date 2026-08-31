@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ConfidentialityAgreementModal } from "@/components/ConfidentialityAgreementModal";
+import { AdminHelpAssistant } from "@/components/AdminHelpAssistant";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import PasswordReset from "./pages/PasswordReset";
@@ -63,6 +64,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter basename={baseName}>
           <ConfidentialityAgreementModal />
+          <AdminHelpAssistant />
           <Routes>
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/auth" element={<Auth />} />
