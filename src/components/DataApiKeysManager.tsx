@@ -156,7 +156,7 @@ export function DataApiKeysManager() {
             </CardTitle>
             <CardDescription>
               Issue a secret key and URL that lets an external application read basic organization
-              data (name, city, state, zip code) for active member institutions.
+              data (organization_id, name, city, state, zip code) for active member institutions.
             </CardDescription>
           </div>
           <Button onClick={() => { setCreatedKey(null); setIsOpen(true); }}>
