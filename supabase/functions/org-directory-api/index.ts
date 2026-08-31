@@ -85,7 +85,7 @@ serve(async (req) => {
 
   const { data, error } = await admin
     .from("organizations")
-    .select("name, city, state, zip_code")
+    .select("id, name, city, state, zip_code")
     .eq("membership_status", "active")
     .eq("organization_type", "member")
     .order("name", { ascending: true });
@@ -104,13 +104,14 @@ serve(async (req) => {
     .eq("id", keyRow.id);
 
   const rows = (data ?? []).map((o) => [
+    csvCell(o.id ?? ""),
     csvCell(o.name ?? ""),
     csvCell(o.city ?? ""),
     csvCell(o.state ?? ""),
     csvCell(o.zip_code ?? ""),
   ].join(","));
 
-  const csvBody = ["organization,city,state,zip", ...rows].join("\n");
+  const csvBody = ["organization_id,organization,city,state,zip", ...rows].join("\n");
 
   return csv(csvBody);
 });
