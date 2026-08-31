@@ -25,9 +25,9 @@ const FUNCTIONS_BASE = 'https://tyovnvuluyosjnabrzjc.supabase.co/functions/v1';
 const API_TYPES = [
   {
     id: 'organization_basic',
-    label: 'Organization Basic (CSV: name, city, state, zip)',
+    label: 'Organization Basic (CSV: organization_id, organization, city, state, zip)',
     endpoint: `${FUNCTIONS_BASE}/org-directory-api`,
-    description: 'Returns active member institutions as straight CSV data in the order organization, city, state, zip.',
+    description: 'Returns active member institutions as straight CSV data in the order organization_id, organization, city, state, zip.',
   },
 ] as const;
 
@@ -156,7 +156,7 @@ export function DataApiKeysManager() {
             </CardTitle>
             <CardDescription>
               Issue a secret key and URL that lets an external application read basic organization
-              data (name, city, state, zip code) for active member institutions.
+              data (organization_id, name, city, state, zip code) for active member institutions.
             </CardDescription>
           </div>
           <Button onClick={() => { setCreatedKey(null); setIsOpen(true); }}>
