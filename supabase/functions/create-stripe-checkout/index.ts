@@ -33,6 +33,63 @@ async function loadSettings(
   return out;
 }
 
+/**
+ * Every organization the caller belongs to — as primary contact OR as an
+ * invited colleague (profiles.organization matches the org name, or an
+ * accepted organization_invitations row for their email).
+ */
+async function resolveUserOrganizationIds(
+  admin: ReturnType<typeof createClient>,
+  user: { id: string; email?: string | null },
+): Promise<string[]> {
+  const ids = new Set<string>();
+
+  const { data: rpcIds } = await admin.rpc("get_user_organization_ids", {
+    _user_id: user.id,
+  });
+  if (Array.isArray(rpcIds)) {
+    for (const row of rpcIds) {
+      const id = typeof row === "string" ? row : row?.get_user_organization_ids;
+      if (id) ids.add(id);
+    }
+  }
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id, organization")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (profile?.id) {
+    const { data: ownedOrgs } = await admin
+      .from("organizations")
+      .select("id")
+      .eq("contact_person_id", profile.id);
+    for (const o of ownedOrgs ?? []) ids.add(o.id);
+  }
+
+  if (profile?.organization) {
+    const { data: namedOrgs } = await admin
+      .from("organizations")
+      .select("id")
+      .eq("name", profile.organization);
+    for (const o of namedOrgs ?? []) ids.add(o.id);
+  }
+
+  const email = (user.email ?? "").toLowerCase();
+  if (email) {
+    const { data: invites } = await admin
+      .from("organization_invitations")
+      .select("organization_id, used_at, revoked_at")
+      .ilike("email", email);
+    for (const inv of invites ?? []) {
+      if (inv.used_at && !inv.revoked_at) ids.add(inv.organization_id);
+    }
+  }
+
+  return Array.from(ids);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -61,19 +118,10 @@ Deno.serve(async (req) => {
     const invoiceId = String(body?.invoiceId ?? "");
     if (!invoiceId) return json({ error: "invoiceId required" }, 400);
 
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!profile) return json({ error: "Profile not found" }, 403);
-
-    const { data: org } = await admin
-      .from("organizations")
-      .select("id, name, email")
-      .eq("contact_person_id", profile.id)
-      .maybeSingle();
-    if (!org) return json({ error: "Organization not found for caller" }, 403);
+    const orgIds = await resolveUserOrganizationIds(admin, user);
+    if (orgIds.length === 0) {
+      return json({ error: "Organization not found for caller" }, 403);
+    }
 
     const { data: invoice, error: invErr } = await admin
       .from("invoices")
@@ -81,9 +129,15 @@ Deno.serve(async (req) => {
       .eq("id", invoiceId)
       .maybeSingle();
     if (invErr || !invoice) return json({ error: "Invoice not found" }, 404);
-    if (invoice.organization_id !== org.id) {
+    if (!orgIds.includes(invoice.organization_id)) {
       return json({ error: "Forbidden" }, 403);
     }
+
+    const { data: org } = await admin
+      .from("organizations")
+      .select("id, name, email")
+      .eq("id", invoice.organization_id)
+      .maybeSingle();
     if (invoice.status === "paid") {
       return json({ error: "Invoice already paid" }, 400);
     }
