@@ -196,10 +196,10 @@ Deno.serve(async (req) => {
       cancel_url: cancelUrl,
       client_reference_id: invoice.id,
       "metadata[invoice_id]": invoice.id,
-      "metadata[organization_id]": org.id,
+      "metadata[organization_id]": invoice.organization_id,
       "metadata[invoice_number]": invoice.invoice_number,
     };
-    if (org.email) params.customer_email = org.email;
+    if (org?.email) params.customer_email = org.email;
     if (settings.stripe_statement_descriptor) {
       params["payment_intent_data[statement_descriptor]"] =
         settings.stripe_statement_descriptor.slice(0, 22);
