@@ -118,16 +118,16 @@ export default function AdminBusinessPartners() {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1 p-6 lg:p-8">
-          <div className="container mx-auto max-w-6xl space-y-6">
-            <div className="flex items-start justify-between border-b border-border pb-4 gap-4">
-              <div>
+        <main className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6 lg:p-8">
+          <div className="container mx-auto w-full max-w-6xl space-y-6">
+            <div className="flex flex-wrap items-start justify-between border-b border-border pb-4 gap-4">
+              <div className="min-w-0">
                 <h1 className="text-3xl font-bold text-foreground">Business Partners</h1>
                 <p className="text-muted-foreground mt-2">
                   Create and manage vendor partner microsites, contacts, documents and member offers.
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" asChild>
                   <Link to="/partners" target="_blank">
                     <ExternalLink className="h-4 w-4 mr-2" />
@@ -171,8 +171,8 @@ export default function AdminBusinessPartners() {
                   <div className="space-y-3">
                     {ordered.map((partner) => (
                   <SortablePartnerItem key={partner.id} id={partner.id}>
-                    <CardContent className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 pl-0">
-                      <div className="h-14 w-24 shrink-0 rounded border border-border bg-card flex items-center justify-center overflow-hidden">
+                    <CardContent className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-4 pl-0">
+                      <div className="h-12 w-20 sm:h-14 sm:w-24 shrink-0 rounded border border-border bg-card flex items-center justify-center overflow-hidden">
                         {partner.logo_url ? (
                           <img src={partner.logo_url} alt="" className="max-h-12 max-w-[85%] object-contain" />
                         ) : (
@@ -205,7 +205,7 @@ export default function AdminBusinessPartners() {
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex flex-wrap items-center gap-1 shrink-0">
                         <Button variant="ghost" size="sm" onClick={() => togglePublished(partner)}>
                           {partner.is_published ? (
                             <>
