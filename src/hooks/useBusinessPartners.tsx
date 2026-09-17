@@ -385,6 +385,54 @@ export const slugify = (value: string) =>
     .replace(/^-+|-+$/g, '')
     .slice(0, 80);
 
+export interface PartnerReferenceSummary {
+  id: string;
+  partner_id: string;
+  summary: string;
+}
+
+/** Single-paragraph HESS member institution references for a partner — members only. */
+export const usePartnerReferenceSummary = (partnerId?: string) => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['business-partner-reference-summary', partnerId],
+    enabled: !!partnerId && !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('business_partner_reference_summaries' as any)
+        .select('*')
+        .eq('partner_id', partnerId!)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as unknown as PartnerReferenceSummary | null) ?? null;
+    },
+  });
+};
+
+export const useSavePartnerReferenceSummary = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ partnerId, summary }: { partnerId: string; summary: string }) => {
+      const trimmed = summary.trim();
+      const { error } = await supabase
+        .from('business_partner_reference_summaries' as any)
+        .upsert({ partner_id: partnerId, summary: trimmed } as any, { onConflict: 'partner_id' });
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['business-partner-reference-summary', vars.partnerId] });
+    },
+    onError: (error: any) =>
+      toast({
+        title: 'Error',
+        description: error.message || 'Could not save references.',
+        variant: 'destructive',
+      }),
+  });
+};
+
 export interface PartnerReference {
   id: string;
   partner_id: string;
