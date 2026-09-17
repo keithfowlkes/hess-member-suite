@@ -15,6 +15,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { usePartnershipLevels } from '@/hooks/usePartnershipLevels';
 import { useToast } from '@/hooks/use-toast';
 import PartnerMicrositeEditor from './PartnerMicrositeEditor';
 import {
@@ -49,6 +57,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
 
   const { data: existingContacts = [] } = usePartnerContacts(partner?.id);
   const { data: files = [] } = usePartnerFiles(partner?.id);
+  const { data: levels = [] } = usePartnershipLevels();
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -61,6 +70,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
   const [categories, setCategories] = useState<string[]>([]);
   const [categoryInput, setCategoryInput] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
+  const [partnershipLevelId, setPartnershipLevelId] = useState<string | null>(null);
   const [displayOrder, setDisplayOrder] = useState(0);
   const [isPublished, setIsPublished] = useState(false);
   const [contacts, setContacts] = useState<ContactDraft[]>([]);
@@ -82,6 +92,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
     setWebsiteUrl(partner?.website_url ?? '');
     setCategories(partner?.categories ?? []);
     setIsFeatured(partner?.is_featured ?? false);
+    setPartnershipLevelId(partner?.partnership_level_id ?? null);
     setDisplayOrder(partner?.display_order ?? 0);
     setIsPublished(partner?.is_published ?? false);
     setCategoryInput('');
@@ -148,6 +159,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
       banner_url: bannerUrl,
       website_url: websiteUrl.trim() || null,
       categories,
+      partnership_level_id: partnershipLevelId,
       is_featured: isFeatured,
       display_order: Number.isFinite(displayOrder) ? displayOrder : 0,
       is_published: isPublished,
@@ -242,6 +254,31 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
                 onChange={(e) => setWebsiteUrl(e.target.value)}
                 placeholder="https://example.com"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Partnership level</Label>
+              <Select
+                value={partnershipLevelId ?? 'none'}
+                onValueChange={(value) => setPartnershipLevelId(value === 'none' ? null : value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="No level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No level</SelectItem>
+                  {levels
+                    .filter((level) => level.is_active || level.id === partnershipLevelId)
+                    .map((level) => (
+                      <SelectItem key={level.id} value={level.id}>
+                        {level.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Shown as a badge on the directory card and the partner page.
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

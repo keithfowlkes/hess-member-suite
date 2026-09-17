@@ -3,6 +3,7 @@ import { Building2, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { BusinessPartner } from '@/hooks/useBusinessPartners';
+import { PartnerLevelBadge } from './PartnerLevelBadge';
 
 export function PartnerCard({
   partner,
@@ -35,6 +36,11 @@ export function PartnerCard({
               <Star className="h-4 w-4 text-primary shrink-0 fill-current" aria-label="Featured partner" />
             )}
           </div>
+          {partner.partnership_level_id && (
+            <div className="flex">
+              <PartnerLevelBadge levelId={partner.partnership_level_id} size="sm" />
+            </div>
+          )}
           {partner.short_description && (
             <p className="text-sm text-muted-foreground line-clamp-3">{partner.short_description}</p>
           )}

@@ -14,6 +14,7 @@ export interface BusinessPartner {
   banner_url: string | null;
   website_url: string | null;
   categories: string[];
+  partnership_level_id?: string | null;
   is_featured: boolean;
   display_order: number;
   is_published?: boolean;
