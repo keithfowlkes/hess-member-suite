@@ -339,6 +339,7 @@ export type Database = {
           logo_url: string | null
           member_offer_html: string | null
           name: string
+          partnership_level_id: string | null
           short_description: string | null
           slug: string
           updated_at: string
@@ -357,6 +358,7 @@ export type Database = {
           logo_url?: string | null
           member_offer_html?: string | null
           name: string
+          partnership_level_id?: string | null
           short_description?: string | null
           slug: string
           updated_at?: string
@@ -375,12 +377,21 @@ export type Database = {
           logo_url?: string | null
           member_offer_html?: string | null
           name?: string
+          partnership_level_id?: string | null
           short_description?: string | null
           slug?: string
           updated_at?: string
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "business_partners_partnership_level_id_fkey"
+            columns: ["partnership_level_id"]
+            isOneToOne: false
+            referencedRelation: "partnership_levels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       communications: {
         Row: {
@@ -1628,6 +1639,39 @@ export type Database = {
           },
         ]
       }
+      partnership_levels: {
+        Row: {
+          badge_style: string
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          badge_style?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          badge_style?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pending_registrations: {
         Row: {
           address: string | null
@@ -2476,6 +2520,7 @@ export type Database = {
           is_featured: boolean | null
           logo_url: string | null
           name: string | null
+          partnership_level_id: string | null
           short_description: string | null
           slug: string | null
           website_url: string | null
@@ -2489,6 +2534,7 @@ export type Database = {
           is_featured?: boolean | null
           logo_url?: string | null
           name?: string | null
+          partnership_level_id?: string | null
           short_description?: string | null
           slug?: string | null
           website_url?: string | null
@@ -2502,11 +2548,20 @@ export type Database = {
           is_featured?: boolean | null
           logo_url?: string | null
           name?: string | null
+          partnership_level_id?: string | null
           short_description?: string | null
           slug?: string | null
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "business_partners_partnership_level_id_fkey"
+            columns: ["partnership_level_id"]
+            isOneToOne: false
+            referencedRelation: "partnership_levels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       public_organization_directory: {
         Row: {
