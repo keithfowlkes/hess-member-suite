@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useBusinessPartners } from '@/hooks/useBusinessPartners';
 import { PartnerCard } from './PartnerCard';
 
-export function PartnerDirectory() {
+export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string }) {
   const { data: partners = [], isLoading } = useBusinessPartners();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -82,7 +82,7 @@ export function PartnerDirectory() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((partner) => (
-            <PartnerCard key={partner.id} partner={partner} />
+            <PartnerCard key={partner.id} partner={partner} basePath={basePath} />
           ))}
         </div>
       )}

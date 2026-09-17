@@ -4,9 +4,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { BusinessPartner } from '@/hooks/useBusinessPartners';
 
-export function PartnerCard({ partner }: { partner: BusinessPartner }) {
+export function PartnerCard({
+  partner,
+  basePath = '/partners',
+}: {
+  partner: BusinessPartner;
+  basePath?: string;
+}) {
   return (
-    <Link to={`/partners/${partner.slug}`} className="group">
+    <Link to={`${basePath}/${partner.slug}`} className="group">
       <Card className="h-full overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5">
         <div className="h-28 bg-muted flex items-center justify-center overflow-hidden border-b border-border">
           {partner.logo_url ? (
