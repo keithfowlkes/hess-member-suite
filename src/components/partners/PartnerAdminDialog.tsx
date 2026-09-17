@@ -124,7 +124,9 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
   }, [open, partner]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !openKey) return;
+    if (hydratedContactsRef.current === openKey) return;
+    hydratedContactsRef.current = openKey;
     setContacts(
       existingContacts.map((c) => ({
         name: c.name,
@@ -133,12 +135,14 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
         phone: c.phone ?? '',
       }))
     );
-  }, [open, existingContacts]);
+  }, [open, openKey, existingContacts]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !openKey) return;
+    if (hydratedSummaryRef.current === openKey) return;
+    hydratedSummaryRef.current = openKey;
     setReferencesText(referenceSummary?.summary ?? '');
-  }, [open, referenceSummary]);
+  }, [open, openKey, referenceSummary]);
 
   const handleImageUpload = async (kind: 'logo' | 'banner', file?: File) => {
     if (!file) return;
