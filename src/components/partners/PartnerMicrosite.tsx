@@ -72,6 +72,10 @@ export function PartnerMicrosite({
   const { data: files = [] } = usePartnerFiles(partner?.id);
   const { data: referenceSummary } = usePartnerReferenceSummary(partner?.id);
   const referencesText = referenceSummary?.summary?.trim() ?? '';
+  const referenceLines = referencesText
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
   const [downloading, setDownloading] = useState<string | null>(null);
 
   const handleDownload = async (id: string, filePath: string) => {
@@ -296,17 +300,30 @@ export function PartnerMicrosite({
             HESS Member Institution References
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {!user ? (
-            <SignInPrompt what="member institution references for this partner" />
-          ) : !referencesText ? (
-            <p className="text-sm text-muted-foreground">
-              No HESS member institution references have been listed for this partner yet.
-            </p>
-          ) : (
-            <p className="text-sm text-foreground whitespace-pre-line">{referencesText}</p>
-          )}
-        </CardContent>
+          <CardContent>
+            {!user ? (
+              <SignInPrompt what="member institution references for this partner" />
+            ) : !referencesText ? (
+              <p className="text-sm text-muted-foreground">
+                No HESS member institution references have been listed for this partner yet.
+              </p>
+            ) : (
+              <ul
+                className={`columns-2 lg:columns-3 gap-6 text-sm text-foreground ${
+                  referenceLines.length < 2 ? 'columns-1' : ''
+                }`}
+              >
+                {referenceLines.map((line, index) => (
+                  <li
+                    key={index}
+                    className="break-inside-avoid mb-2 pl-4 relative before:content-[''] before:absolute before:left-0 before:top-2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-primary/60"
+                  >
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
       </Card>
     </div>
   );
