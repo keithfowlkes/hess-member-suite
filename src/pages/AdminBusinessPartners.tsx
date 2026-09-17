@@ -41,6 +41,7 @@ import {
   BusinessPartner,
   useAllBusinessPartners,
   useDeleteBusinessPartner,
+  useReorderBusinessPartners,
   useSaveBusinessPartner,
 } from '@/hooks/useBusinessPartners';
 import { useAuth } from '@/hooks/useAuth';
@@ -50,10 +51,32 @@ export default function AdminBusinessPartners() {
   const { data: partners = [], isLoading } = useAllBusinessPartners();
   const savePartner = useSaveBusinessPartner();
   const deletePartner = useDeleteBusinessPartner();
+  const reorderPartners = useReorderBusinessPartners();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [editing, setEditing] = useState<BusinessPartner | null>(null);
+  const [ordered, setOrdered] = useState<BusinessPartner[]>([]);
+
+  useEffect(() => {
+    setOrdered(partners);
+  }, [partners]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = ordered.findIndex((p) => p.id === active.id);
+    const newIndex = ordered.findIndex((p) => p.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const next = arrayMove(ordered, oldIndex, newIndex);
+    setOrdered(next);
+    reorderPartners.mutate(next.map((p) => p.id));
+  };
 
   const openNew = () => {
     setEditing(null);
