@@ -72,6 +72,10 @@ export function PartnerMicrosite({
   const { data: files = [] } = usePartnerFiles(partner?.id);
   const { data: referenceSummary } = usePartnerReferenceSummary(partner?.id);
   const referencesText = referenceSummary?.summary?.trim() ?? '';
+  const referenceLines = referencesText
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
   const [downloading, setDownloading] = useState<string | null>(null);
 
   const handleDownload = async (id: string, filePath: string) => {
