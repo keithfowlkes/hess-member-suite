@@ -15,6 +15,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { usePartnershipLevels } from '@/hooks/usePartnershipLevels';
 import { useToast } from '@/hooks/use-toast';
 import PartnerMicrositeEditor from './PartnerMicrositeEditor';
 import {
@@ -242,6 +250,31 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
                 onChange={(e) => setWebsiteUrl(e.target.value)}
                 placeholder="https://example.com"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Partnership level</Label>
+              <Select
+                value={partnershipLevelId ?? 'none'}
+                onValueChange={(value) => setPartnershipLevelId(value === 'none' ? null : value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="No level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No level</SelectItem>
+                  {levels
+                    .filter((level) => level.is_active || level.id === partnershipLevelId)
+                    .map((level) => (
+                      <SelectItem key={level.id} value={level.id}>
+                        {level.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Shown as a badge on the directory card and the partner page.
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
