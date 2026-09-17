@@ -195,15 +195,11 @@ export function PartnerMicrosite({
           <CardContent>
             {!user ? (
               <SignInPrompt what="member-only offers from this partner" />
-            ) : partner.member_offer_html ? (
+            ) : (
               <div
                 className="partner-content"
-                dangerouslySetInnerHTML={{ __html: sanitize(partner.member_offer_html) }}
+                dangerouslySetInnerHTML={{ __html: sanitize(partner.member_offer_html || "") }}
               />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No member offers have been posted for this partner yet.
-              </p>
             )}
           </CardContent>
         </Card>
