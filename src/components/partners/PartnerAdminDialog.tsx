@@ -159,7 +159,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
       id: partner?.id,
       name: name.trim().slice(0, 200),
       slug: finalSlug,
-      short_description: shortDescription.trim().slice(0, 500) || null,
+      short_description: shortDescription.trim() || null,
       description_html: descriptionHtml || null,
       member_offer_html: memberOfferHtml || null,
       logo_url: logoUrl,
@@ -247,7 +247,6 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
               <Textarea
                 id="partner-blurb"
                 value={shortDescription}
-                maxLength={500}
                 rows={2}
                 onChange={(e) => setShortDescription(e.target.value)}
                 placeholder="One or two lines shown on the directory card."
