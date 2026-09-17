@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Award, Plus, Trash2 } from 'lucide-react';
+import { Award, Plus, Star, Trash2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
