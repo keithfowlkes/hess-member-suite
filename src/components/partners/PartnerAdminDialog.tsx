@@ -64,20 +64,20 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
   const { data: levels = [] } = usePartnershipLevels();
   const [referencesText, setReferencesText] = useState('');
 
-  const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [shortDescription, setShortDescription] = useState('');
-  const [descriptionHtml, setDescriptionHtml] = useState('');
-  const [memberOfferHtml, setMemberOfferHtml] = useState('');
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
-  const [websiteUrl, setWebsiteUrl] = useState('');
-  const [categories, setCategories] = useState<string[]>([]);
+  const [name, setName] = useState(() => partner?.name ?? '');
+  const [slug, setSlug] = useState(() => partner?.slug ?? '');
+  const [shortDescription, setShortDescription] = useState(() => partner?.short_description ?? '');
+  const [descriptionHtml, setDescriptionHtml] = useState(() => partner?.description_html ?? '');
+  const [memberOfferHtml, setMemberOfferHtml] = useState(() => partner?.member_offer_html ?? '');
+  const [logoUrl, setLogoUrl] = useState<string | null>(() => partner?.logo_url ?? null);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(() => partner?.banner_url ?? null);
+  const [websiteUrl, setWebsiteUrl] = useState(() => partner?.website_url ?? '');
+  const [categories, setCategories] = useState<string[]>(() => partner?.categories ?? []);
   const [categoryInput, setCategoryInput] = useState('');
-  const [isFeatured, setIsFeatured] = useState(false);
-  const [partnershipLevelId, setPartnershipLevelId] = useState<string | null>(null);
-  const [displayOrder, setDisplayOrder] = useState(0);
-  const [isPublished, setIsPublished] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(() => partner?.is_featured ?? false);
+  const [partnershipLevelId, setPartnershipLevelId] = useState<string | null>(() => partner?.partnership_level_id ?? null);
+  const [displayOrder, setDisplayOrder] = useState(() => partner?.display_order ?? 0);
+  const [isPublished, setIsPublished] = useState(() => partner?.is_published ?? false);
   const [contacts, setContacts] = useState<ContactDraft[]>([]);
   const [uploading, setUploading] = useState<'logo' | 'banner' | null>(null);
 
@@ -85,43 +85,16 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
   const [fileDescription, setFileDescription] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Hydrate the form only once per dialog open (and when switching partners),
-  // so background data refreshes never overwrite what the admin is typing.
-  const hydratedKeyRef = useRef<string | null>(null);
   const hydratedContactsRef = useRef<string | null>(null);
   const hydratedSummaryRef = useRef<string | null>(null);
   const openKey = open ? partner?.id ?? 'new' : null;
 
   useEffect(() => {
     if (!open) {
-      hydratedKeyRef.current = null;
       hydratedContactsRef.current = null;
       hydratedSummaryRef.current = null;
     }
   }, [open]);
-
-  useEffect(() => {
-    if (!open || !openKey) return;
-    if (hydratedKeyRef.current === openKey) return;
-    hydratedKeyRef.current = openKey;
-    setName(partner?.name ?? '');
-
-    setSlug(partner?.slug ?? '');
-    setShortDescription(partner?.short_description ?? '');
-    setDescriptionHtml(partner?.description_html ?? '');
-    setMemberOfferHtml(partner?.member_offer_html ?? '');
-    setLogoUrl(partner?.logo_url ?? null);
-    setBannerUrl(partner?.banner_url ?? null);
-    setWebsiteUrl(partner?.website_url ?? '');
-    setCategories(partner?.categories ?? []);
-    setIsFeatured(partner?.is_featured ?? false);
-    setPartnershipLevelId(partner?.partnership_level_id ?? null);
-    setDisplayOrder(partner?.display_order ?? 0);
-    setIsPublished(partner?.is_published ?? false);
-    setCategoryInput('');
-    setFileTitle('');
-    setFileDescription('');
-  }, [open, partner]);
 
   useEffect(() => {
     if (!open || !openKey) return;
