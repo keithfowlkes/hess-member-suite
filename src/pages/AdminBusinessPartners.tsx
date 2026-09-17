@@ -1,4 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { SortablePartnerItem } from '@/components/partners/SortablePartnerItem';
 import { Link } from 'react-router-dom';
 import { Award, Building2, ExternalLink, Eye, EyeOff, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import { SidebarProvider } from '@/components/ui/sidebar';
