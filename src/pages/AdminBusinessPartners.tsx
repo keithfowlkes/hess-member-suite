@@ -208,7 +208,14 @@ export default function AdminBusinessPartners() {
         </main>
       </div>
 
-      <PartnerAdminDialog open={dialogOpen} onOpenChange={setDialogOpen} partner={editing} />
+      {dialogOpen && (
+        <PartnerAdminDialog
+          key={editing?.id ?? 'new-partner'}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          partner={editing}
+        />
+      )}
       <PartnershipLevelsDialog open={levelsOpen} onOpenChange={setLevelsOpen} />
     </SidebarProvider>
   );
