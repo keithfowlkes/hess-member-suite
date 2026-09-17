@@ -325,6 +325,80 @@ export type Database = {
           },
         ]
       }
+      business_partner_references: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          contact_title: string | null
+          created_at: string
+          display_order: number
+          id: string
+          institution_name: string
+          notes: string | null
+          organization_id: string | null
+          partner_id: string
+          updated_at: string
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_title?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          institution_name: string
+          notes?: string | null
+          organization_id?: string | null
+          partner_id: string
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_title?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          institution_name?: string
+          notes?: string | null
+          organization_id?: string | null
+          partner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_partner_references_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_partner_references_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organization_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_partner_references_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "business_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_partner_references_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "public_business_partner_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_partners: {
         Row: {
           banner_url: string | null

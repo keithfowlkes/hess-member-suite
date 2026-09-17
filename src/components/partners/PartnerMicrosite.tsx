@@ -8,6 +8,7 @@ import {
   ExternalLink,
   FileText,
   Gift,
+  GraduationCap,
   Lock,
   Mail,
   Phone,
@@ -24,6 +25,7 @@ import {
   useBusinessPartner,
   usePartnerContacts,
   usePartnerFiles,
+  usePartnerReferences,
 } from '@/hooks/useBusinessPartners';
 import { PartnerLevelBadge } from './PartnerLevelBadge';
 import { usePartnershipLevels } from '@/hooks/usePartnershipLevels';
@@ -68,6 +70,7 @@ export function PartnerMicrosite({
   const highlighted = !!level?.is_highlighted;
   const { data: contacts = [] } = usePartnerContacts(partner?.id);
   const { data: files = [] } = usePartnerFiles(partner?.id);
+  const { data: references = [] } = usePartnerReferences(partner?.id);
   const [downloading, setDownloading] = useState<string | null>(null);
 
   const handleDownload = async (id: string, filePath: string) => {
@@ -282,6 +285,60 @@ export function PartnerMicrosite({
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <GraduationCap className="h-5 w-5 text-primary" />
+            HESS Member Institution References
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {!user ? (
+            <SignInPrompt what="member institution references for this partner" />
+          ) : references.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No HESS member institution references have been listed for this partner yet.
+            </p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {references.map((reference) => (
+                <div key={reference.id} className="rounded-md border border-border p-4">
+                  <p className="font-medium text-foreground">{reference.institution_name}</p>
+                  {reference.contact_name && (
+                    <p className="text-sm text-foreground mt-1">
+                      {reference.contact_name}
+                      {reference.contact_title && (
+                        <span className="text-muted-foreground"> · {reference.contact_title}</span>
+                      )}
+                    </p>
+                  )}
+                  <div className="mt-2 space-y-1 text-sm">
+                    {reference.contact_email && (
+                      <a
+                        href={`mailto:${reference.contact_email}`}
+                        className="flex items-center gap-2 text-primary hover:underline"
+                      >
+                        <Mail className="h-3.5 w-3.5" />
+                        {reference.contact_email}
+                      </a>
+                    )}
+                    {reference.contact_phone && (
+                      <span className="flex items-center gap-2 text-muted-foreground">
+                        <Phone className="h-3.5 w-3.5" />
+                        {reference.contact_phone}
+                      </span>
+                    )}
+                  </div>
+                  {reference.notes && (
+                    <p className="text-sm text-muted-foreground mt-2">{reference.notes}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

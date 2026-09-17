@@ -384,3 +384,80 @@ export const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 80);
+
+export interface PartnerReference {
+  id: string;
+  partner_id: string;
+  organization_id: string | null;
+  institution_name: string;
+  contact_name: string | null;
+  contact_title: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  notes: string | null;
+  display_order: number;
+}
+
+/** HESS member institution references for a partner — members only. */
+export const usePartnerReferences = (partnerId?: string) => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['business-partner-references', partnerId],
+    enabled: !!partnerId && !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('business_partner_references')
+        .select('*')
+        .eq('partner_id', partnerId!)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as unknown as PartnerReference[];
+    },
+  });
+};
+
+export const useSavePartnerReferences = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      partnerId,
+      references,
+    }: {
+      partnerId: string;
+      references: Array<Partial<PartnerReference> & { institution_name: string }>;
+    }) => {
+      const { error: delError } = await supabase
+        .from('business_partner_references')
+        .delete()
+        .eq('partner_id', partnerId);
+      if (delError) throw delError;
+
+      if (references.length === 0) return;
+
+      const rows = references.map((r, index) => ({
+        partner_id: partnerId,
+        organization_id: r.organization_id || null,
+        institution_name: r.institution_name,
+        contact_name: r.contact_name || null,
+        contact_title: r.contact_title || null,
+        contact_email: r.contact_email || null,
+        contact_phone: r.contact_phone || null,
+        notes: r.notes || null,
+        display_order: index,
+      }));
+      const { error } = await supabase.from('business_partner_references').insert(rows);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['business-partner-references', vars.partnerId] });
+    },
+    onError: (error: any) =>
+      toast({
+        title: 'Error',
+        description: error.message || 'Could not save references.',
+        variant: 'destructive',
+      }),
+  });
+};

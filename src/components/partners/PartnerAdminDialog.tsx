@@ -28,14 +28,17 @@ import PartnerMicrositeEditor from './PartnerMicrositeEditor';
 import {
   BusinessPartner,
   PartnerContact,
+  PartnerReference,
   slugify,
   uploadPartnerAsset,
   useAddPartnerFile,
   useDeletePartnerFile,
   usePartnerContacts,
   usePartnerFiles,
+  usePartnerReferences,
   useSaveBusinessPartner,
   useSavePartnerContacts,
+  useSavePartnerReferences,
 } from '@/hooks/useBusinessPartners';
 
 interface PartnerAdminDialogProps {
@@ -46,18 +49,35 @@ interface PartnerAdminDialogProps {
 
 type ContactDraft = Pick<PartnerContact, 'name' | 'title' | 'email' | 'phone'>;
 
+type ReferenceDraft = Pick<
+  PartnerReference,
+  'institution_name' | 'contact_name' | 'contact_title' | 'contact_email' | 'contact_phone' | 'notes'
+>;
+
 const emptyContact: ContactDraft = { name: '', title: '', email: '', phone: '' };
+
+const emptyReference: ReferenceDraft = {
+  institution_name: '',
+  contact_name: '',
+  contact_title: '',
+  contact_email: '',
+  contact_phone: '',
+  notes: '',
+};
 
 export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdminDialogProps) {
   const { toast } = useToast();
   const savePartner = useSaveBusinessPartner();
   const saveContacts = useSavePartnerContacts();
+  const saveReferences = useSavePartnerReferences();
   const addFile = useAddPartnerFile();
   const deleteFile = useDeletePartnerFile();
 
   const { data: existingContacts = [] } = usePartnerContacts(partner?.id);
+  const { data: existingReferences = [] } = usePartnerReferences(partner?.id);
   const { data: files = [] } = usePartnerFiles(partner?.id);
   const { data: levels = [] } = usePartnershipLevels();
+  const [references, setReferences] = useState<ReferenceDraft[]>([]);
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -111,6 +131,20 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
       }))
     );
   }, [open, existingContacts]);
+
+  useEffect(() => {
+    if (!open) return;
+    setReferences(
+      existingReferences.map((r) => ({
+        institution_name: r.institution_name,
+        contact_name: r.contact_name ?? '',
+        contact_title: r.contact_title ?? '',
+        contact_email: r.contact_email ?? '',
+        contact_phone: r.contact_phone ?? '',
+        notes: r.notes ?? '',
+      }))
+    );
+  }, [open, existingReferences]);
 
   const handleImageUpload = async (kind: 'logo' | 'banner', file?: File) => {
     if (!file) return;
@@ -167,6 +201,10 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
 
     const cleanedContacts = contacts.filter((c) => c.name.trim());
     await saveContacts.mutateAsync({ partnerId: saved.id, contacts: cleanedContacts });
+    const cleanedReferences = references
+      .filter((r) => r.institution_name.trim())
+      .map((r) => ({ ...r, institution_name: r.institution_name.trim() }));
+    await saveReferences.mutateAsync({ partnerId: saved.id, references: cleanedReferences });
     onOpenChange(false);
   };
 
@@ -184,7 +222,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const busy = savePartner.isPending || saveContacts.isPending;
+  const busy = savePartner.isPending || saveContacts.isPending || saveReferences.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -201,6 +239,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="microsite">Microsite</TabsTrigger>
             <TabsTrigger value="contacts">Contacts</TabsTrigger>
+            <TabsTrigger value="references">References</TabsTrigger>
             <TabsTrigger value="files" disabled={!partner}>Files</TabsTrigger>
             <TabsTrigger value="offers">Member Offers</TabsTrigger>
           </TabsList>
@@ -448,6 +487,111 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
             <p className="text-xs text-muted-foreground">
               Contacts are visible only to signed-in HESS members.
             </p>
+          </TabsContent>
+
+          {/* References */}
+          <TabsContent value="references" className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              HESS member institutions that use this vendor and are willing to serve as a reference.
+              Visible only to signed-in HESS members.
+            </p>
+            {references.map((reference, index) => (
+              <div key={index} className="space-y-3 border border-border rounded-md p-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">HESS member institution</Label>
+                    <Input
+                      value={reference.institution_name}
+                      maxLength={200}
+                      placeholder="e.g. Wheaton College"
+                      onChange={(e) => {
+                        const next = [...references];
+                        next[index] = { ...reference, institution_name: e.target.value };
+                        setReferences(next);
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Reference contact name</Label>
+                    <Input
+                      value={reference.contact_name ?? ''}
+                      maxLength={120}
+                      onChange={(e) => {
+                        const next = [...references];
+                        next[index] = { ...reference, contact_name: e.target.value };
+                        setReferences(next);
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Title</Label>
+                    <Input
+                      value={reference.contact_title ?? ''}
+                      maxLength={120}
+                      onChange={(e) => {
+                        const next = [...references];
+                        next[index] = { ...reference, contact_title: e.target.value };
+                        setReferences(next);
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Email</Label>
+                    <Input
+                      type="email"
+                      value={reference.contact_email ?? ''}
+                      maxLength={255}
+                      onChange={(e) => {
+                        const next = [...references];
+                        next[index] = { ...reference, contact_email: e.target.value };
+                        setReferences(next);
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Phone</Label>
+                    <Input
+                      value={reference.contact_phone ?? ''}
+                      maxLength={40}
+                      onChange={(e) => {
+                        const next = [...references];
+                        next[index] = { ...reference, contact_phone: e.target.value };
+                        setReferences(next);
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Notes</Label>
+                  <Textarea
+                    rows={2}
+                    maxLength={1000}
+                    value={reference.notes ?? ''}
+                    placeholder="Products in use, implementation year, what they can speak to."
+                    onChange={(e) => {
+                      const next = [...references];
+                      next[index] = { ...reference, notes: e.target.value };
+                      setReferences(next);
+                    }}
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive"
+                  onClick={() => setReferences(references.filter((_, i) => i !== index))}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <Button variant="outline" onClick={() => setReferences([...references, { ...emptyReference }])}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add reference
+            </Button>
           </TabsContent>
 
           {/* Files */}
