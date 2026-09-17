@@ -11,6 +11,8 @@ export interface PartnershipLevel {
   badge_style: PartnershipBadgeStyle;
   display_order: number;
   is_active: boolean;
+  /** When true, partners at this level are visually emphasized in directories. */
+  is_highlighted?: boolean;
 }
 
 export const usePartnershipLevels = () =>
