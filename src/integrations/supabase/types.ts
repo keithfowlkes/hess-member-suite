@@ -217,6 +217,171 @@ export type Database = {
           },
         ]
       }
+      business_partner_contacts: {
+        Row: {
+          created_at: string
+          display_order: number
+          email: string | null
+          id: string
+          name: string
+          partner_id: string
+          phone: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          email?: string | null
+          id?: string
+          name: string
+          partner_id: string
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          email?: string | null
+          id?: string
+          name?: string
+          partner_id?: string
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_partner_contacts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "business_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_partner_contacts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "public_business_partner_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_partner_files: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          partner_id: string
+          size_bytes: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          partner_id: string
+          size_bytes?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          partner_id?: string
+          size_bytes?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_partner_files_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "business_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_partner_files_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "public_business_partner_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_partners: {
+        Row: {
+          banner_url: string | null
+          categories: string[]
+          created_at: string
+          created_by: string | null
+          description_html: string | null
+          display_order: number
+          id: string
+          is_featured: boolean
+          is_published: boolean
+          logo_url: string | null
+          member_offer_html: string | null
+          name: string
+          short_description: string | null
+          slug: string
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          banner_url?: string | null
+          categories?: string[]
+          created_at?: string
+          created_by?: string | null
+          description_html?: string | null
+          display_order?: number
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          logo_url?: string | null
+          member_offer_html?: string | null
+          name: string
+          short_description?: string | null
+          slug: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          banner_url?: string | null
+          categories?: string[]
+          created_at?: string
+          created_by?: string | null
+          description_html?: string | null
+          display_order?: number
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          logo_url?: string | null
+          member_offer_html?: string | null
+          name?: string
+          short_description?: string | null
+          slug?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       communications: {
         Row: {
           communication_date: string
@@ -2301,6 +2466,48 @@ export type Database = {
       }
     }
     Views: {
+      public_business_partner_directory: {
+        Row: {
+          banner_url: string | null
+          categories: string[] | null
+          description_html: string | null
+          display_order: number | null
+          id: string | null
+          is_featured: boolean | null
+          logo_url: string | null
+          name: string | null
+          short_description: string | null
+          slug: string | null
+          website_url: string | null
+        }
+        Insert: {
+          banner_url?: string | null
+          categories?: string[] | null
+          description_html?: string | null
+          display_order?: number | null
+          id?: string | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          name?: string | null
+          short_description?: string | null
+          slug?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          banner_url?: string | null
+          categories?: string[] | null
+          description_html?: string | null
+          display_order?: number | null
+          id?: string | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          name?: string | null
+          short_description?: string | null
+          slug?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       public_organization_directory: {
         Row: {
           admissions_crm: string | null
