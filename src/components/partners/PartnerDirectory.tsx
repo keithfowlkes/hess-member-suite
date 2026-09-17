@@ -1,12 +1,17 @@
-import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { LayoutGrid, List, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useBusinessPartners } from '@/hooks/useBusinessPartners';
 import { usePartnershipLevels } from '@/hooks/usePartnershipLevels';
 import { PartnerCard } from './PartnerCard';
+import { PartnerListRow } from './PartnerListRow';
 
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+
+type ViewMode = 'grid' | 'list';
+const VIEW_MODE_KEY = 'partner-directory-view-mode';
 
 export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string }) {
   const { data: partners = [], isLoading } = useBusinessPartners();
@@ -16,6 +21,21 @@ export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string
     [levels],
   );
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      return (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, viewMode);
+    } catch {
+      /* ignore */
+    }
+  }, [viewMode]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
