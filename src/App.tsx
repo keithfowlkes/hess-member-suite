@@ -38,6 +38,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import BusinessPartners from "./pages/BusinessPartners";
 import BusinessPartnerDetail from "./pages/BusinessPartnerDetail";
 import AdminBusinessPartners from "./pages/AdminBusinessPartners";
+import { PartnersEmbedDirectory, PartnersEmbedDetail } from "./pages/PartnersEmbed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -97,6 +98,10 @@ const App = () => (
             <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
             <Route path="/partners" element={<BusinessPartners />} />
             <Route path="/partners/:slug" element={<BusinessPartnerDetail />} />
+            <Route path="/public/partners" element={<PartnersEmbedDirectory />} />
+            <Route path="/public/partners/:slug" element={<PartnersEmbedDetail />} />
+            <Route path="/embed/partners" element={<PartnersEmbedDirectory />} />
+            <Route path="/embed/partners/:slug" element={<PartnersEmbedDetail />} />
             <Route path="/admin/partners" element={<ProtectedRoute><AdminBusinessPartners /></ProtectedRoute>} />
 
             
