@@ -28,17 +28,16 @@ import PartnerMicrositeEditor from './PartnerMicrositeEditor';
 import {
   BusinessPartner,
   PartnerContact,
-  PartnerReference,
   slugify,
   uploadPartnerAsset,
   useAddPartnerFile,
   useDeletePartnerFile,
   usePartnerContacts,
   usePartnerFiles,
-  usePartnerReferences,
+  usePartnerReferenceSummary,
   useSaveBusinessPartner,
   useSavePartnerContacts,
-  useSavePartnerReferences,
+  useSavePartnerReferenceSummary,
 } from '@/hooks/useBusinessPartners';
 
 interface PartnerAdminDialogProps {
@@ -49,35 +48,21 @@ interface PartnerAdminDialogProps {
 
 type ContactDraft = Pick<PartnerContact, 'name' | 'title' | 'email' | 'phone'>;
 
-type ReferenceDraft = Pick<
-  PartnerReference,
-  'institution_name' | 'contact_name' | 'contact_title' | 'contact_email' | 'contact_phone' | 'notes'
->;
-
 const emptyContact: ContactDraft = { name: '', title: '', email: '', phone: '' };
-
-const emptyReference: ReferenceDraft = {
-  institution_name: '',
-  contact_name: '',
-  contact_title: '',
-  contact_email: '',
-  contact_phone: '',
-  notes: '',
-};
 
 export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdminDialogProps) {
   const { toast } = useToast();
   const savePartner = useSaveBusinessPartner();
   const saveContacts = useSavePartnerContacts();
-  const saveReferences = useSavePartnerReferences();
+  const saveReferenceSummary = useSavePartnerReferenceSummary();
   const addFile = useAddPartnerFile();
   const deleteFile = useDeletePartnerFile();
 
   const { data: existingContacts = [] } = usePartnerContacts(partner?.id);
-  const { data: existingReferences = [] } = usePartnerReferences(partner?.id);
+  const { data: referenceSummary } = usePartnerReferenceSummary(partner?.id);
   const { data: files = [] } = usePartnerFiles(partner?.id);
   const { data: levels = [] } = usePartnershipLevels();
-  const [references, setReferences] = useState<ReferenceDraft[]>([]);
+  const [referencesText, setReferencesText] = useState('');
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -134,17 +119,8 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
 
   useEffect(() => {
     if (!open) return;
-    setReferences(
-      existingReferences.map((r) => ({
-        institution_name: r.institution_name,
-        contact_name: r.contact_name ?? '',
-        contact_title: r.contact_title ?? '',
-        contact_email: r.contact_email ?? '',
-        contact_phone: r.contact_phone ?? '',
-        notes: r.notes ?? '',
-      }))
-    );
-  }, [open, existingReferences]);
+    setReferencesText(referenceSummary?.summary ?? '');
+  }, [open, referenceSummary]);
 
   const handleImageUpload = async (kind: 'logo' | 'banner', file?: File) => {
     if (!file) return;
@@ -201,10 +177,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
 
     const cleanedContacts = contacts.filter((c) => c.name.trim());
     await saveContacts.mutateAsync({ partnerId: saved.id, contacts: cleanedContacts });
-    const cleanedReferences = references
-      .filter((r) => r.institution_name.trim())
-      .map((r) => ({ ...r, institution_name: r.institution_name.trim() }));
-    await saveReferences.mutateAsync({ partnerId: saved.id, references: cleanedReferences });
+    await saveReferenceSummary.mutateAsync({ partnerId: saved.id, summary: referencesText });
     onOpenChange(false);
   };
 
@@ -222,7 +195,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const busy = savePartner.isPending || saveContacts.isPending || saveReferences.isPending;
+  const busy = savePartner.isPending || saveContacts.isPending || saveReferenceSummary.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
