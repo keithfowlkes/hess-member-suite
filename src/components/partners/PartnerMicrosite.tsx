@@ -24,6 +24,7 @@ import {
   usePartnerContacts,
   usePartnerFiles,
 } from '@/hooks/useBusinessPartners';
+import { PartnerLevelBadge } from './PartnerLevelBadge';
 
 const sanitize = (html: string) =>
   DOMPurify.sanitize(html, { ADD_ATTR: ['target', 'rel', 'class', 'style'] });
@@ -122,7 +123,10 @@ export function PartnerMicrosite({
               )}
             </div>
             <div className="flex-1 space-y-2">
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{partner.name}</h1>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{partner.name}</h1>
+                <PartnerLevelBadge levelId={partner.partnership_level_id} />
+              </div>
               {partner.short_description && (
                 <p className="text-muted-foreground">{partner.short_description}</p>
               )}
