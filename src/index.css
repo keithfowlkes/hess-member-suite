@@ -119,3 +119,47 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+/* Business Partner microsite content (matches the admin WYSIWYG editor) */
+@layer components {
+  .partner-content {
+    @apply text-foreground leading-relaxed;
+  }
+  .partner-content::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+  .partner-content p { @apply mb-4; }
+  .partner-content h1 { @apply text-2xl font-bold mb-3 mt-6; }
+  .partner-content h2 { @apply text-xl font-semibold mb-3 mt-6; }
+  .partner-content h3 { @apply text-lg font-semibold mb-2 mt-4; }
+  .partner-content ul { @apply list-disc pl-6 mb-4 space-y-1; }
+  .partner-content ol { @apply list-decimal pl-6 mb-4 space-y-1; }
+  .partner-content a { @apply text-primary underline underline-offset-2; }
+  .partner-content blockquote { @apply border-l-4 border-border pl-4 italic text-muted-foreground mb-4; }
+  .partner-content table { @apply w-full border-collapse mb-4; }
+  .partner-content th,
+  .partner-content td { @apply border border-border px-3 py-2 text-sm; }
+  .partner-content img { @apply max-w-full h-auto rounded-md; }
+  .partner-content figure { @apply mb-4; }
+  .partner-content figcaption { @apply text-sm text-muted-foreground mt-1; }
+  .partner-content .partner-img-left {
+    float: left;
+    margin: 0 1.25rem 1rem 0;
+    max-width: 45%;
+  }
+  .partner-content .partner-img-right {
+    float: right;
+    margin: 0 0 1rem 1.25rem;
+    max-width: 45%;
+  }
+}
+
+@media (max-width: 640px) {
+  .partner-content .partner-img-left,
+  .partner-content .partner-img-right {
+    float: none;
+    margin: 0 0 1rem 0;
+    max-width: 100%;
+  }
+}
