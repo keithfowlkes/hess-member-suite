@@ -1,9 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Building2, ChevronRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { PartnerLevelBadge } from './PartnerLevelBadge';
 import { usePartnershipLevels } from '@/hooks/usePartnershipLevels';
-import type { BusinessPartnerWithLevel } from '@/hooks/useBusinessPartners';
+import type { BusinessPartner } from '@/hooks/useBusinessPartners';
 
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -11,7 +10,7 @@ export function PartnerListRow({
   partner,
   basePath,
 }: {
-  partner: BusinessPartnerWithLevel;
+  partner: BusinessPartner;
   basePath: string;
 }) {
   const { data: levels = [] } = usePartnershipLevels();
@@ -43,7 +42,7 @@ export function PartnerListRow({
           <span className="truncate font-semibold text-foreground group-hover:text-primary">
             {partner.name}
           </span>
-          {level && <PartnerLevelBadge level={level} />}
+          <PartnerLevelBadge levelId={partner.partnership_level_id} size="sm" />
         </div>
         {summary && (
           <p className="mt-0.5 truncate text-sm text-muted-foreground">{summary}</p>
