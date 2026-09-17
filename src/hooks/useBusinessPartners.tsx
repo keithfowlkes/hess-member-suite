@@ -115,7 +115,6 @@ export const useBusinessPartners = () => {
         .from('business_partners')
         .select('*')
         .eq('is_published', true)
-        .order('is_featured', { ascending: false })
         .order('display_order', { ascending: true })
         .order('name', { ascending: true });
       if (error) throw error;
