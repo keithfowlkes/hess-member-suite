@@ -52,27 +52,6 @@ export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string
           />
         </div>
 
-        {categories.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <Badge
-              variant={activeCategory === null ? 'default' : 'outline'}
-              className="cursor-pointer"
-              onClick={() => setActiveCategory(null)}
-            >
-              All
-            </Badge>
-            {categories.map((category) => (
-              <Badge
-                key={category}
-                variant={activeCategory === category ? 'default' : 'outline'}
-                className="cursor-pointer"
-                onClick={() => setActiveCategory(activeCategory === category ? null : category)}
-              >
-                {category}
-              </Badge>
-            ))}
-          </div>
-        )}
       </div>
 
       {isLoading ? (
