@@ -94,6 +94,10 @@ export default function AdminBusinessPartners() {
                     View directory
                   </Link>
                 </Button>
+                <Button variant="outline" onClick={() => setLevelsOpen(true)}>
+                  <Award className="h-4 w-4 mr-2" />
+                  Partnership levels
+                </Button>
                 <Button onClick={openNew}>
                   <Plus className="h-4 w-4 mr-2" />
                   New partner
@@ -143,6 +147,7 @@ export default function AdminBusinessPartners() {
                               Featured
                             </Badge>
                           )}
+                          <PartnerLevelBadge levelId={partner.partnership_level_id} size="sm" />
                         </div>
                         <p className="text-sm text-muted-foreground truncate">
                           /partners/{partner.slug}
@@ -204,6 +209,7 @@ export default function AdminBusinessPartners() {
       </div>
 
       <PartnerAdminDialog open={dialogOpen} onOpenChange={setDialogOpen} partner={editing} />
+      <PartnershipLevelsDialog open={levelsOpen} onOpenChange={setLevelsOpen} />
     </SidebarProvider>
   );
 }
