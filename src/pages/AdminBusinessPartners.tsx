@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, ExternalLink, Eye, EyeOff, Pencil, Plus, Star, Trash2 } from 'lucide-react';
+import { Award, Building2, ExternalLink, Eye, EyeOff, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { PartnerAdminDialog } from '@/components/partners/PartnerAdminDialog';
+import { PartnershipLevelsDialog } from '@/components/partners/PartnershipLevelsDialog';
+import { PartnerLevelBadge } from '@/components/partners/PartnerLevelBadge';
 import {
   BusinessPartner,
   useAllBusinessPartners,
@@ -33,6 +35,7 @@ export default function AdminBusinessPartners() {
   const deletePartner = useDeleteBusinessPartner();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [levelsOpen, setLevelsOpen] = useState(false);
   const [editing, setEditing] = useState<BusinessPartner | null>(null);
 
   const openNew = () => {

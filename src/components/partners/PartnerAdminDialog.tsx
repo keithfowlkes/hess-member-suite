@@ -159,6 +159,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
       banner_url: bannerUrl,
       website_url: websiteUrl.trim() || null,
       categories,
+      partnership_level_id: partnershipLevelId,
       is_featured: isFeatured,
       display_order: Number.isFinite(displayOrder) ? displayOrder : 0,
       is_published: isPublished,
