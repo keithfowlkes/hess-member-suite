@@ -325,6 +325,45 @@ export type Database = {
           },
         ]
       }
+      business_partner_reference_summaries: {
+        Row: {
+          created_at: string
+          id: string
+          partner_id: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          partner_id: string
+          summary?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          partner_id?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_partner_reference_summaries_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: true
+            referencedRelation: "business_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_partner_reference_summaries_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: true
+            referencedRelation: "public_business_partner_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_partner_references: {
         Row: {
           contact_email: string | null
