@@ -25,6 +25,7 @@ import {
   usePartnerFiles,
 } from '@/hooks/useBusinessPartners';
 import { PartnerLevelBadge } from './PartnerLevelBadge';
+import { usePartnershipLevels } from '@/hooks/usePartnershipLevels';
 
 const sanitize = (html: string) =>
   DOMPurify.sanitize(html, { ADD_ATTR: ['target', 'rel', 'class', 'style'] });
@@ -61,6 +62,9 @@ export function PartnerMicrosite({
   const { user } = useAuth();
   const { toast } = useToast();
   const { data: partner, isLoading } = useBusinessPartner(slug);
+  const { data: levels = [] } = usePartnershipLevels();
+  const level = levels.find((l) => l.id === partner?.partnership_level_id);
+  const highlighted = !!level?.is_highlighted;
   const { data: contacts = [] } = usePartnerContacts(partner?.id);
   const { data: files = [] } = usePartnerFiles(partner?.id);
   const [downloading, setDownloading] = useState<string | null>(null);
@@ -107,7 +111,15 @@ export function PartnerMicrosite({
         </Link>
       </Button>
 
-      <Card className="overflow-hidden">
+      <Card
+        className={`overflow-hidden ${highlighted ? 'ring-2 ring-primary/60 border-primary/40 shadow-md' : ''}`}
+      >
+        {highlighted && (
+          <div className="flex items-center justify-center gap-1.5 bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-wide text-primary-foreground">
+            <Star className="h-3.5 w-3.5 fill-current" />
+            HESS {level?.name}
+          </div>
+        )}
         {partner.banner_url && (
           <div className="h-40 sm:h-56 w-full overflow-hidden bg-muted">
             <img src={partner.banner_url} alt={`${partner.name} banner`} className="w-full h-full object-cover" />

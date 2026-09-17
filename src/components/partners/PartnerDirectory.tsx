@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useBusinessPartners } from '@/hooks/useBusinessPartners';
+import { usePartnershipLevels } from '@/hooks/usePartnershipLevels';
 import { PartnerCard } from './PartnerCard';
 
 export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string }) {
