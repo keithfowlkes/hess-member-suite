@@ -184,7 +184,7 @@ export function PartnerMicrosite({
         </Card>
       )}
 
-      {(user || partner.member_offer_html) && (
+      {hasMemberOffer && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
