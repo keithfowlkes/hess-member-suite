@@ -50,7 +50,13 @@ const formatSize = (bytes: number | null) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-export function PartnerMicrosite({ slug }: { slug: string }) {
+export function PartnerMicrosite({
+  slug,
+  basePath = '/partners',
+}: {
+  slug: string;
+  basePath?: string;
+}) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { data: partner, isLoading } = useBusinessPartner(slug);
@@ -84,7 +90,7 @@ export function PartnerMicrosite({ slug }: { slug: string }) {
         <CardContent className="py-12 text-center space-y-4">
           <p className="text-muted-foreground">This business partner page is not available.</p>
           <Button asChild variant="outline">
-            <Link to="/partners">Back to Business Partners</Link>
+            <Link to={basePath}>Back to Business Partners</Link>
           </Button>
         </CardContent>
       </Card>
@@ -94,7 +100,7 @@ export function PartnerMicrosite({ slug }: { slug: string }) {
   return (
     <div className="space-y-6">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
-        <Link to="/partners">
+        <Link to={basePath}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           All Business Partners
         </Link>
