@@ -57,6 +57,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
 
   const { data: existingContacts = [] } = usePartnerContacts(partner?.id);
   const { data: files = [] } = usePartnerFiles(partner?.id);
+  const { data: levels = [] } = usePartnershipLevels();
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -69,6 +70,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
   const [categories, setCategories] = useState<string[]>([]);
   const [categoryInput, setCategoryInput] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
+  const [partnershipLevelId, setPartnershipLevelId] = useState<string | null>(null);
   const [displayOrder, setDisplayOrder] = useState(0);
   const [isPublished, setIsPublished] = useState(false);
   const [contacts, setContacts] = useState<ContactDraft[]>([]);
@@ -90,6 +92,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
     setWebsiteUrl(partner?.website_url ?? '');
     setCategories(partner?.categories ?? []);
     setIsFeatured(partner?.is_featured ?? false);
+    setPartnershipLevelId(partner?.partnership_level_id ?? null);
     setDisplayOrder(partner?.display_order ?? 0);
     setIsPublished(partner?.is_published ?? false);
     setCategoryInput('');
