@@ -1,12 +1,17 @@
-import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { LayoutGrid, List, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useBusinessPartners } from '@/hooks/useBusinessPartners';
 import { usePartnershipLevels } from '@/hooks/usePartnershipLevels';
 import { PartnerCard } from './PartnerCard';
+import { PartnerListRow } from './PartnerListRow';
 
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+
+type ViewMode = 'grid' | 'list';
+const VIEW_MODE_KEY = 'partner-directory-view-mode';
 
 export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string }) {
   const { data: partners = [], isLoading } = useBusinessPartners();
@@ -16,6 +21,21 @@ export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string
     [levels],
   );
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      return (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, viewMode);
+    } catch {
+      /* ignore */
+    }
+  }, [viewMode]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -40,8 +60,8 @@ export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="relative max-w-md">
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={search}
@@ -51,7 +71,30 @@ export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string
             maxLength={100}
           />
         </div>
-
+        <div className="flex shrink-0 items-center gap-1 rounded-md border border-border p-1">
+          <Button
+            type="button"
+            variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => setViewMode('grid')}
+            aria-label="Grid view"
+            title="Grid view"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => setViewMode('list')}
+            aria-label="List view"
+            title="List view"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -66,6 +109,12 @@ export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string
             No business partners match your search yet.
           </CardContent>
         </Card>
+      ) : viewMode === 'list' ? (
+        <div className="flex flex-col gap-2">
+          {filtered.map((partner) => (
+            <PartnerListRow key={partner.id} partner={partner} basePath={basePath} />
+          ))}
+        </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((partner) => (
