@@ -76,6 +76,11 @@ export function PartnerMicrosite({
     .split(/\n+/)
     .map((line) => line.trim())
     .filter(Boolean);
+  const memberOfferText = (partner?.member_offer_html ?? '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .trim();
+  const hasMemberOffer = memberOfferText.length > 0;
   const [downloading, setDownloading] = useState<string | null>(null);
 
   const handleDownload = async (id: string, filePath: string) => {
