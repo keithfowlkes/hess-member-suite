@@ -35,6 +35,9 @@ import AdminSurveys from "./pages/AdminSurveys";
 import ExternalApplications from "./pages/ExternalApplications";
 import InboundPayments from "./pages/InboundPayments";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import BusinessPartners from "./pages/BusinessPartners";
+import BusinessPartnerDetail from "./pages/BusinessPartnerDetail";
+import AdminBusinessPartners from "./pages/AdminBusinessPartners";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -92,6 +95,9 @@ const App = () => (
             <Route path="/admin/external-apps" element={<ProtectedRoute><ExternalApplications /></ProtectedRoute>} />
             <Route path="/admin/inbound-payments" element={<ProtectedRoute><InboundPayments /></ProtectedRoute>} />
             <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+            <Route path="/partners" element={<BusinessPartners />} />
+            <Route path="/partners/:slug" element={<BusinessPartnerDetail />} />
+            <Route path="/admin/partners" element={<ProtectedRoute><AdminBusinessPartners /></ProtectedRoute>} />
 
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, ShieldCheck, BarChart3, Search, Map, MessageSquare, GraduationCap, FileQuestion } from 'lucide-react';
+import { Building2, Users, FileText, User, Settings, Home, LogOut, ToggleLeft, ToggleRight, Shield, ShieldCheck, BarChart3, Search, Map, MessageSquare, GraduationCap, FileQuestion, Handshake } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { supabase } from '@/integrations/supabase/client';
@@ -175,6 +175,7 @@ export function AppSidebar() {
     { title: 'Member Analytics', url: '/dashboards', icon: BarChart3 },
     { title: 'Member Security', url: '/admin-security', icon: ShieldCheck },
     { title: 'Surveys', url: '/admin/surveys', icon: FileQuestion },
+    { title: 'Business Partners', url: '/admin/partners', icon: Handshake },
     { title: 'Membership Fees', url: '/membership-fees', icon: Building2 },
     { title: 'Organization Profile', url: '/profile', icon: User },
     { title: 'Settings', url: '/settings', icon: Settings },
@@ -185,6 +186,7 @@ export function AppSidebar() {
     { title: 'HESS Member Information', url: '/research-dashboard', icon: Search },
     { title: 'Member Analytics', url: '/member-analytics', icon: BarChart3 },
     { title: 'Member Security', url: '/member-security', icon: ShieldCheck },
+    { title: 'Business Partners', url: '/partners', icon: Handshake },
     { title: 'Member Map', url: '/public-map', icon: Map },
     { title: 'Surveys', url: '/surveys', icon: FileQuestion },
   ];
