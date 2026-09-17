@@ -60,8 +60,8 @@ export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative w-full max-w-md">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+        <div className="relative w-full min-w-[180px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={search}
