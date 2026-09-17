@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useBusinessPartners } from '@/hooks/useBusinessPartners';
 import { usePartnershipLevels } from '@/hooks/usePartnershipLevels';
 import { PartnerCard } from './PartnerCard';
+
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
 
 export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string }) {
   const { data: partners = [], isLoading } = useBusinessPartners();
@@ -15,31 +16,27 @@ export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string
     [levels],
   );
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    partners.forEach((p) => p.categories?.forEach((c) => set.add(c)));
-    return Array.from(set).sort();
-  }, [partners]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     const matches = partners.filter((p) => {
-      const matchesCategory = !activeCategory || p.categories?.includes(activeCategory);
-      const matchesTerm =
-        !term ||
-        p.name.toLowerCase().includes(term) ||
-        (p.short_description ?? '').toLowerCase().includes(term) ||
-        (p.categories ?? []).some((c) => c.toLowerCase().includes(term));
-      return matchesCategory && matchesTerm;
+      if (!term) return true;
+      const searchableText = [
+        p.name,
+        p.short_description ?? '',
+        stripHtml(p.description_html ?? ''),
+        ...(p.categories ?? []),
+      ]
+        .join(' ')
+        .toLowerCase();
+      return searchableText.includes(term);
     });
     // Highlighted-level partners lead the grid; relative order is otherwise preserved.
     return [
       ...matches.filter((p) => highlightedLevelIds.has(p.partnership_level_id ?? '')),
       ...matches.filter((p) => !highlightedLevelIds.has(p.partnership_level_id ?? '')),
     ];
-  }, [partners, search, activeCategory, highlightedLevelIds]);
+  }, [partners, search, highlightedLevelIds]);
 
   return (
     <div className="space-y-6">
