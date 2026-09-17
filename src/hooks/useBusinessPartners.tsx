@@ -105,7 +105,6 @@ export const useBusinessPartners = () => {
         const { data, error } = await supabase
           .from('public_business_partner_directory')
           .select('*')
-          .order('is_featured', { ascending: false })
           .order('display_order', { ascending: true })
           .order('name', { ascending: true });
         if (error) throw error;
