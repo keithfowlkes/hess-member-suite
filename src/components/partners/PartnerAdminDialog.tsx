@@ -58,8 +58,8 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
   const addFile = useAddPartnerFile();
   const deleteFile = useDeletePartnerFile();
 
-  const { data: existingContacts = [] } = usePartnerContacts(partner?.id);
-  const { data: referenceSummary } = usePartnerReferenceSummary(partner?.id);
+  const { data: existingContacts = [], isFetched: contactsFetched } = usePartnerContacts(partner?.id);
+  const { data: referenceSummary, isFetched: summaryFetched } = usePartnerReferenceSummary(partner?.id);
   const { data: files = [] } = usePartnerFiles(partner?.id);
   const { data: levels = [] } = usePartnershipLevels();
   const [referencesText, setReferencesText] = useState('');
@@ -85,9 +85,27 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
   const [fileDescription, setFileDescription] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Hydrate the form only once per dialog open (and when switching partners),
+  // so background data refreshes never overwrite what the admin is typing.
+  const hydratedKeyRef = useRef<string | null>(null);
+  const hydratedContactsRef = useRef<string | null>(null);
+  const hydratedSummaryRef = useRef<string | null>(null);
+  const openKey = open ? partner?.id ?? 'new' : null;
+
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      hydratedKeyRef.current = null;
+      hydratedContactsRef.current = null;
+      hydratedSummaryRef.current = null;
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !openKey) return;
+    if (hydratedKeyRef.current === openKey) return;
+    hydratedKeyRef.current = openKey;
     setName(partner?.name ?? '');
+
     setSlug(partner?.slug ?? '');
     setShortDescription(partner?.short_description ?? '');
     setDescriptionHtml(partner?.description_html ?? '');
@@ -106,7 +124,10 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
   }, [open, partner]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !openKey) return;
+    if (partner && !contactsFetched) return;
+    if (hydratedContactsRef.current === openKey) return;
+    hydratedContactsRef.current = openKey;
     setContacts(
       existingContacts.map((c) => ({
         name: c.name,
@@ -115,12 +136,15 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
         phone: c.phone ?? '',
       }))
     );
-  }, [open, existingContacts]);
+  }, [open, openKey, partner, contactsFetched, existingContacts]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !openKey) return;
+    if (partner && !summaryFetched) return;
+    if (hydratedSummaryRef.current === openKey) return;
+    hydratedSummaryRef.current = openKey;
     setReferencesText(referenceSummary?.summary ?? '');
-  }, [open, referenceSummary]);
+  }, [open, openKey, partner, summaryFetched, referenceSummary]);
 
   const handleImageUpload = async (kind: 'logo' | 'banner', file?: File) => {
     if (!file) return;
