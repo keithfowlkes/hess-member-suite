@@ -180,28 +180,30 @@ export function PartnerMicrosite({
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Gift className="h-5 w-5 text-primary" />
-            HESS Member Offers
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!user ? (
-            <SignInPrompt what="member-only offers from this partner" />
-          ) : partner.member_offer_html ? (
-            <div
-              className="partner-content"
-              dangerouslySetInnerHTML={{ __html: sanitize(partner.member_offer_html) }}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No member offers have been posted for this partner yet.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      {(user || partner.member_offer_html) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Gift className="h-5 w-5 text-primary" />
+              HESS Member Offers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!user ? (
+              <SignInPrompt what="member-only offers from this partner" />
+            ) : partner.member_offer_html ? (
+              <div
+                className="partner-content"
+                dangerouslySetInnerHTML={{ __html: sanitize(partner.member_offer_html) }}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No member offers have been posted for this partner yet.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
