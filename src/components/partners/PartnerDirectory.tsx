@@ -9,6 +9,11 @@ import { PartnerCard } from './PartnerCard';
 
 export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string }) {
   const { data: partners = [], isLoading } = useBusinessPartners();
+  const { data: levels = [] } = usePartnershipLevels();
+  const highlightedLevelIds = useMemo(
+    () => new Set(levels.filter((l) => l.is_highlighted).map((l) => l.id)),
+    [levels],
+  );
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
@@ -20,7 +25,7 @@ export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return partners.filter((p) => {
+    const matches = partners.filter((p) => {
       const matchesCategory = !activeCategory || p.categories?.includes(activeCategory);
       const matchesTerm =
         !term ||
@@ -29,7 +34,12 @@ export function PartnerDirectory({ basePath = '/partners' }: { basePath?: string
         (p.categories ?? []).some((c) => c.toLowerCase().includes(term));
       return matchesCategory && matchesTerm;
     });
-  }, [partners, search, activeCategory]);
+    // Highlighted-level partners lead the grid; relative order is otherwise preserved.
+    return [
+      ...matches.filter((p) => highlightedLevelIds.has(p.partnership_level_id ?? '')),
+      ...matches.filter((p) => !highlightedLevelIds.has(p.partnership_level_id ?? '')),
+    ];
+  }, [partners, search, activeCategory, highlightedLevelIds]);
 
   return (
     <div className="space-y-6">
