@@ -141,11 +141,11 @@ export function PartnerMicrosite({
         )}
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-            <div className="h-24 w-36 shrink-0 rounded-md border border-border bg-card flex items-center justify-center overflow-hidden">
+            <div className="h-[120px] w-[180px] shrink-0 rounded-md border border-border bg-card flex items-center justify-center overflow-hidden">
               {partner.logo_url ? (
-                <img src={partner.logo_url} alt={`${partner.name} logo`} className="max-h-20 max-w-[85%] object-contain" />
+                <img src={partner.logo_url} alt={`${partner.name} logo`} className="max-h-[100px] max-w-[85%] object-contain" />
               ) : (
-                <Building2 className="h-8 w-8 text-muted-foreground" />
+                <Building2 className="h-10 w-10 text-muted-foreground" />
               )}
             </div>
             <div className="flex-1 space-y-2">
