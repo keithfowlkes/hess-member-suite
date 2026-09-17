@@ -222,7 +222,7 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const busy = savePartner.isPending || saveContacts.isPending;
+  const busy = savePartner.isPending || saveContacts.isPending || saveReferences.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
