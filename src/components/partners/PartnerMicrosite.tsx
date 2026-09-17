@@ -11,6 +11,7 @@ import {
   Lock,
   Mail,
   Phone,
+  Star,
   Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
