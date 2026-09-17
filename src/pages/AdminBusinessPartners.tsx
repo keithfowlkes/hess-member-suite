@@ -1,4 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { SortablePartnerItem } from '@/components/partners/SortablePartnerItem';
 import { Link } from 'react-router-dom';
 import { Award, Building2, ExternalLink, Eye, EyeOff, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -24,6 +41,7 @@ import {
   BusinessPartner,
   useAllBusinessPartners,
   useDeleteBusinessPartner,
+  useReorderBusinessPartners,
   useSaveBusinessPartner,
 } from '@/hooks/useBusinessPartners';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,10 +51,32 @@ export default function AdminBusinessPartners() {
   const { data: partners = [], isLoading } = useAllBusinessPartners();
   const savePartner = useSaveBusinessPartner();
   const deletePartner = useDeleteBusinessPartner();
+  const reorderPartners = useReorderBusinessPartners();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [editing, setEditing] = useState<BusinessPartner | null>(null);
+  const [ordered, setOrdered] = useState<BusinessPartner[]>([]);
+
+  useEffect(() => {
+    setOrdered(partners);
+  }, [partners]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = ordered.findIndex((p) => p.id === active.id);
+    const newIndex = ordered.findIndex((p) => p.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const next = arrayMove(ordered, oldIndex, newIndex);
+    setOrdered(next);
+    reorderPartners.mutate(next.map((p) => p.id));
+  };
 
   const openNew = () => {
     setEditing(null);
@@ -118,10 +158,20 @@ export default function AdminBusinessPartners() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-3">
-                {partners.map((partner) => (
-                  <Card key={partner.id}>
-                    <CardContent className="flex flex-col sm:flex-row sm:items-center gap-4 p-4">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                modifiers={[restrictToVerticalAxis]}
+                onDragEnd={handleDragEnd}
+              >
+                <p className="text-sm text-muted-foreground">
+                  Drag the handle on the left of each partner to set the order shown to members.
+                </p>
+                <SortableContext items={ordered.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-3">
+                    {ordered.map((partner) => (
+                  <SortablePartnerItem key={partner.id} id={partner.id}>
+                    <CardContent className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 pl-0">
                       <div className="h-14 w-24 shrink-0 rounded border border-border bg-card flex items-center justify-center overflow-hidden">
                         {partner.logo_url ? (
                           <img src={partner.logo_url} alt="" className="max-h-12 max-w-[85%] object-contain" />
@@ -200,9 +250,11 @@ export default function AdminBusinessPartners() {
                         </AlertDialog>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
-              </div>
+                  </SortablePartnerItem>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </main>

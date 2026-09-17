@@ -105,7 +105,6 @@ export const useBusinessPartners = () => {
         const { data, error } = await supabase
           .from('public_business_partner_directory')
           .select('*')
-          .order('is_featured', { ascending: false })
           .order('display_order', { ascending: true })
           .order('name', { ascending: true });
         if (error) throw error;
@@ -116,7 +115,6 @@ export const useBusinessPartners = () => {
         .from('business_partners')
         .select('*')
         .eq('is_published', true)
-        .order('is_featured', { ascending: false })
         .order('display_order', { ascending: true })
         .order('name', { ascending: true });
       if (error) throw error;
@@ -139,6 +137,36 @@ export const useAllBusinessPartners = () =>
       return (data ?? []) as unknown as BusinessPartner[];
     },
   });
+
+/** Persist a new admin-defined ordering; drives both admin and member listings. */
+export const useReorderBusinessPartners = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      for (let index = 0; index < orderedIds.length; index++) {
+        const { error } = await supabase
+          .from('business_partners')
+          .update({ display_order: index })
+          .eq('id', orderedIds[index]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['business-partners'] });
+      toast({ title: 'Order saved', description: 'Partner display order updated.' });
+    },
+    onError: (error: any) => {
+      queryClient.invalidateQueries({ queryKey: ['business-partners'] });
+      toast({
+        title: 'Error',
+        description: error.message || 'Could not save the new order.',
+        variant: 'destructive',
+      });
+    },
+  });
+};
 
 export const useBusinessPartner = (slug?: string) => {
   const { user } = useAuth();
