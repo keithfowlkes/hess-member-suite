@@ -250,9 +250,11 @@ export default function AdminBusinessPartners() {
                         </AlertDialog>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
-              </div>
+                  </SortablePartnerItem>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </main>
