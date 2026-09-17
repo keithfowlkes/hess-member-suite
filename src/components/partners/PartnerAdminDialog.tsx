@@ -58,8 +58,8 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
   const addFile = useAddPartnerFile();
   const deleteFile = useDeletePartnerFile();
 
-  const { data: existingContacts = [] } = usePartnerContacts(partner?.id);
-  const { data: referenceSummary } = usePartnerReferenceSummary(partner?.id);
+  const { data: existingContacts = [], isFetched: contactsFetched } = usePartnerContacts(partner?.id);
+  const { data: referenceSummary, isFetched: summaryFetched } = usePartnerReferenceSummary(partner?.id);
   const { data: files = [] } = usePartnerFiles(partner?.id);
   const { data: levels = [] } = usePartnershipLevels();
   const [referencesText, setReferencesText] = useState('');
