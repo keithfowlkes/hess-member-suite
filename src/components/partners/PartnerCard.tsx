@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Building2, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import type { BusinessPartner } from '@/hooks/useBusinessPartners';
 import { usePartnershipLevels } from '@/hooks/usePartnershipLevels';
 import { PartnerLevelBadge } from './PartnerLevelBadge';
@@ -60,15 +59,6 @@ export function PartnerCard({
           )}
           {partner.short_description && (
             <p className="text-sm text-muted-foreground line-clamp-3">{partner.short_description}</p>
-          )}
-          {partner.categories?.length > 0 && (
-            <div className="flex flex-wrap gap-1 pt-1">
-              {partner.categories.slice(0, 3).map((category) => (
-                <Badge key={category} variant="secondary" className="text-xs font-normal">
-                  {category}
-                </Badge>
-              ))}
-            </div>
           )}
         </CardContent>
       </Card>
