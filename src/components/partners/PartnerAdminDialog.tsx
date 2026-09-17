@@ -28,14 +28,17 @@ import PartnerMicrositeEditor from './PartnerMicrositeEditor';
 import {
   BusinessPartner,
   PartnerContact,
+  PartnerReference,
   slugify,
   uploadPartnerAsset,
   useAddPartnerFile,
   useDeletePartnerFile,
   usePartnerContacts,
   usePartnerFiles,
+  usePartnerReferences,
   useSaveBusinessPartner,
   useSavePartnerContacts,
+  useSavePartnerReferences,
 } from '@/hooks/useBusinessPartners';
 
 interface PartnerAdminDialogProps {
@@ -46,18 +49,35 @@ interface PartnerAdminDialogProps {
 
 type ContactDraft = Pick<PartnerContact, 'name' | 'title' | 'email' | 'phone'>;
 
+type ReferenceDraft = Pick<
+  PartnerReference,
+  'institution_name' | 'contact_name' | 'contact_title' | 'contact_email' | 'contact_phone' | 'notes'
+>;
+
 const emptyContact: ContactDraft = { name: '', title: '', email: '', phone: '' };
+
+const emptyReference: ReferenceDraft = {
+  institution_name: '',
+  contact_name: '',
+  contact_title: '',
+  contact_email: '',
+  contact_phone: '',
+  notes: '',
+};
 
 export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdminDialogProps) {
   const { toast } = useToast();
   const savePartner = useSaveBusinessPartner();
   const saveContacts = useSavePartnerContacts();
+  const saveReferences = useSavePartnerReferences();
   const addFile = useAddPartnerFile();
   const deleteFile = useDeletePartnerFile();
 
   const { data: existingContacts = [] } = usePartnerContacts(partner?.id);
+  const { data: existingReferences = [] } = usePartnerReferences(partner?.id);
   const { data: files = [] } = usePartnerFiles(partner?.id);
   const { data: levels = [] } = usePartnershipLevels();
+  const [references, setReferences] = useState<ReferenceDraft[]>([]);
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
