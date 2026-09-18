@@ -204,7 +204,7 @@ export const usePartnerContacts = (partnerId?: string) => {
     queryFn: async () => {
       // Signed-out visitors read the public view (contacts of published partners only).
       const table = user ? 'business_partner_contacts' : 'public_business_partner_contacts';
-      const fromTable = (supabase.from as unknown as (t: string) => ReturnType<typeof supabase.from>);
+      const fromTable = supabase.from as unknown as (t: string) => any;
       const { data, error } = await fromTable(table)
         .select('*')
         .eq('partner_id', partnerId!)
