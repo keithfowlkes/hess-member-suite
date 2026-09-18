@@ -199,11 +199,13 @@ export const useBusinessPartner = (slug?: string) => {
 export const usePartnerContacts = (partnerId?: string) => {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ['business-partner-contacts', partnerId],
-    enabled: !!partnerId && !!user,
+    queryKey: ['business-partner-contacts', partnerId, user ? 'auth' : 'public'],
+    enabled: !!partnerId,
     queryFn: async () => {
+      // Signed-out visitors read the public view (contacts of published partners only).
+      const table = user ? 'business_partner_contacts' : 'public_business_partner_contacts';
       const { data, error } = await supabase
-        .from('business_partner_contacts')
+        .from(table)
         .select('*')
         .eq('partner_id', partnerId!)
         .order('display_order', { ascending: true });
