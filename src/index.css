@@ -164,8 +164,8 @@ All colors MUST be HSL.
   }
 }
 
-/* TinyMCE renders menus and dialogs at the document root. Keep them above the
-   partner editor dialog; that dialog is non-modal so these controls remain interactive. */
+/* Keep any document-level TinyMCE dialogs above application dialogs. Partner
+   editor menus use split UI mode and stay inside the dialog's focus boundary. */
 .tox-tinymce-aux,
 .tox-silver-sink {
   z-index: 100000 !important;
