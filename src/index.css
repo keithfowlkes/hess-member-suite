@@ -164,16 +164,8 @@ All colors MUST be HSL.
   }
 }
 
-/* TinyMCE popups (menus, dropdowns, dialogs) render outside the Radix dialog,
-   which disables pointer events on the rest of the page. Re-enable them. */
-.tox-tinymce-aux,
-.tox-tinymce-aux *,
-.tox-silver-sink,
-.tox-silver-sink *,
-body > .tox:not(.tox-tinymce) {
-  pointer-events: auto !important;
-}
-
+/* TinyMCE renders menus and dialogs at the document root. Keep them above the
+   partner editor dialog; that dialog is non-modal so these controls remain interactive. */
 .tox-tinymce-aux,
 .tox-silver-sink {
   z-index: 100000 !important;
