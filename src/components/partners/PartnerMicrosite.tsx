@@ -219,9 +219,7 @@ export function PartnerMicrosite({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!user ? (
-              <SignInPrompt what="this partner's contact details" />
-            ) : contacts.length === 0 ? (
+            {contacts.length === 0 ? (
               <p className="text-sm text-muted-foreground">No contacts listed yet.</p>
             ) : (
               contacts.map((contact) => (
