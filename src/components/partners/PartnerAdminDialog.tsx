@@ -196,7 +196,27 @@ export function PartnerAdminDialog({ open, onOpenChange, partner }: PartnerAdmin
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-5xl max-h-[92vh] overflow-y-auto"
+        onInteractOutside={(e) => {
+          const target = e.target as HTMLElement | null;
+          if (target?.closest('.tox, .tox-tinymce-aux, .tox-dialog, .tox-silver-sink')) {
+            e.preventDefault();
+          }
+        }}
+        onPointerDownOutside={(e) => {
+          const target = e.target as HTMLElement | null;
+          if (target?.closest('.tox, .tox-tinymce-aux, .tox-dialog, .tox-silver-sink')) {
+            e.preventDefault();
+          }
+        }}
+        onFocusOutside={(e) => {
+          const target = e.target as HTMLElement | null;
+          if (target?.closest('.tox, .tox-tinymce-aux, .tox-dialog, .tox-silver-sink')) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{partner ? `Edit ${partner.name}` : 'New Business Partner'}</DialogTitle>
           <DialogDescription>

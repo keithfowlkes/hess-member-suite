@@ -73,7 +73,7 @@ export const PartnerMicrositeEditor: React.FC<PartnerMicrositeEditorProps> = ({
         toolbar:
           'undo redo | blocks | bold italic underline forecolor | ' +
           'alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | ' +
-          'image media link table | wrapLeft wrapRight wrapNone | removeformat code fullscreen',
+          'uploadImage image media link table | wrapLeft wrapRight wrapNone | removeformat code fullscreen',
         quickbars_selection_toolbar: 'bold italic quicklink',
         quickbars_image_toolbar: 'wrapLeft wrapNone wrapRight | alignleft aligncenter alignright | image',
         image_class_list: [
@@ -89,6 +89,38 @@ export const PartnerMicrositeEditor: React.FC<PartnerMicrositeEditorProps> = ({
           p { overflow-wrap: break-word; }
         `,
         setup: (editor: any) => {
+          const pickAndInsertImage = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.style.display = 'none';
+            document.body.appendChild(input);
+            input.onchange = async () => {
+              const file = input.files?.[0];
+              input.remove();
+              if (!file) return;
+              editor.notificationManager.open({ text: 'Uploading image...', type: 'info', timeout: 2000 });
+              try {
+                const url = await uploadPartnerAsset(file);
+                editor.insertContent(`<img src="${url}" alt="${file.name}" />`);
+                editor.fire('change');
+              } catch (error: any) {
+                console.error('Partner image upload failed', error);
+                editor.notificationManager.open({
+                  text: `Image upload failed: ${error?.message || 'unknown error'}`,
+                  type: 'error',
+                });
+              }
+            };
+            input.click();
+          };
+
+          editor.ui.registry.addButton('uploadImage', {
+            icon: 'image',
+            tooltip: 'Upload an image from your computer',
+            onAction: pickAndInsertImage,
+          });
+
           const applyWrap = (mode: 'left' | 'right' | 'none') => {
             const node = editor.selection.getNode();
             if (!node || node.nodeName !== 'IMG') {
