@@ -491,6 +491,7 @@ export function useInvoices() {
     createBulkInvoices,
     updateInvoice,
     markAsPaid,
+    markAsUnpaid,
     sendInvoice,
     deleteInvoice,
     markAllInvoicesAsPaid
