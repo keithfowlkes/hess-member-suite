@@ -251,6 +251,43 @@ export function useInvoices() {
     }
   };
 
+  const markAsUnpaid = async (id: string) => {
+    try {
+      const { data: current } = await supabase
+        .from('invoices')
+        .select('sent_date')
+        .eq('id', id)
+        .maybeSingle();
+
+      const { data, error } = await supabase
+        .from('invoices')
+        .update({
+          status: current?.sent_date ? 'sent' : 'draft',
+          paid_date: null
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Invoice marked as unpaid'
+      });
+
+      await fetchInvoices();
+      return data;
+    } catch (error: any) {
+      toast({
+        title: 'Error updating invoice',
+        description: error.message,
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  };
+
   const sendInvoice = async (id: string) => {
     try {
       // First get the invoice and organization details
@@ -454,6 +491,7 @@ export function useInvoices() {
     createBulkInvoices,
     updateInvoice,
     markAsPaid,
+    markAsUnpaid,
     sendInvoice,
     deleteInvoice,
     markAllInvoicesAsPaid

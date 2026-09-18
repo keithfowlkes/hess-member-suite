@@ -75,7 +75,7 @@ interface FeesStats {
 
 export default function MembershipFees() {
   const { organizations, loading, updateOrganization, markAllOrganizationsActive } = useMembers();
-  const { invoices, createInvoice, markAsPaid, sendInvoice, markAllInvoicesAsPaid, deleteInvoice, fetchInvoices } = useInvoices();
+  const { invoices, createInvoice, markAsPaid, markAsUnpaid, sendInvoice, markAllInvoicesAsPaid, deleteInvoice, fetchInvoices } = useInvoices();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const resendInvoice = useResendInvoice();
@@ -914,6 +914,11 @@ export default function MembershipFees() {
   const handleMarkAsPaid = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     await markAsPaid(invoiceId);
+  };
+
+  const handleMarkAsUnpaid = async (invoiceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await markAsUnpaid(invoiceId);
   };
 
   const handleSendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
@@ -1942,8 +1947,19 @@ export default function MembershipFees() {
                                       <DollarSign className="h-4 w-4 mr-1" />
                                       Mark Paid
                                     </Button>
-                                  </>
-                                )}
+                                   </>
+                                 )}
+                                 {invoice.status === 'paid' && (
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={(e) => handleMarkAsUnpaid(invoice.id, e)}
+                                     title="Reverse the paid status for this invoice"
+                                   >
+                                     <X className="h-4 w-4 mr-1" />
+                                     Mark Unpaid
+                                   </Button>
+                                 )}
                                 {invoice.status === 'draft' && (
                                   <Button
                                     size="sm"
