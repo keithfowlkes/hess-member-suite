@@ -1947,8 +1947,19 @@ export default function MembershipFees() {
                                       <DollarSign className="h-4 w-4 mr-1" />
                                       Mark Paid
                                     </Button>
-                                  </>
-                                )}
+                                   </>
+                                 )}
+                                 {invoice.status === 'paid' && (
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={(e) => handleMarkAsUnpaid(invoice.id, e)}
+                                     title="Reverse the paid status for this invoice"
+                                   >
+                                     <X className="h-4 w-4 mr-1" />
+                                     Mark Unpaid
+                                   </Button>
+                                 )}
                                 {invoice.status === 'draft' && (
                                   <Button
                                     size="sm"
