@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Dialog,
@@ -17,22 +18,26 @@ import { ShieldAlert } from 'lucide-react';
  */
 export function ConfidentialityAgreementModal() {
   const { user, signOut } = useAuth();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const prevUserIdRef = useRef<string | null>(null);
+
+  // Public/embed pages are not confidential — never show the agreement there.
+  const isPublicRoute = location.pathname.startsWith('/public/') || location.pathname.startsWith('/embed/');
 
   useEffect(() => {
     const prev = prevUserIdRef.current;
     const current = user?.id ?? null;
 
     // Show whenever a user session appears (fresh login or page load with an active session).
-    if (current && current !== prev) {
+    if (current && current !== prev && !isPublicRoute) {
       setOpen(true);
     }
-    if (!current) {
+    if (!current || isPublicRoute) {
       setOpen(false);
     }
     prevUserIdRef.current = current;
-  }, [user]);
+  }, [user, isPublicRoute]);
 
   const handleAgree = () => {
     setOpen(false);
