@@ -73,7 +73,7 @@ export const PartnerMicrositeEditor: React.FC<PartnerMicrositeEditorProps> = ({
         toolbar:
           'undo redo | blocks | bold italic underline forecolor | ' +
           'alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | ' +
-          'image media link table | wrapLeft wrapRight wrapNone | removeformat code fullscreen',
+          'uploadImage image media link table | wrapLeft wrapRight wrapNone | removeformat code fullscreen',
         quickbars_selection_toolbar: 'bold italic quicklink',
         quickbars_image_toolbar: 'wrapLeft wrapNone wrapRight | alignleft aligncenter alignright | image',
         image_class_list: [
