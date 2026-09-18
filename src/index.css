@@ -164,16 +164,8 @@ All colors MUST be HSL.
   }
 }
 
-/* TinyMCE popups (menus, dropdowns, dialogs) render outside the Radix dialog,
-   which disables pointer events on the rest of the page. Re-enable them. */
-.tox-tinymce-aux,
-.tox-tinymce-aux *,
-.tox-silver-sink,
-.tox-silver-sink *,
-body > .tox:not(.tox-tinymce) {
-  pointer-events: auto !important;
-}
-
+/* Keep any document-level TinyMCE dialogs above application dialogs. Partner
+   editor menus use split UI mode and stay inside the dialog's focus boundary. */
 .tox-tinymce-aux,
 .tox-silver-sink {
   z-index: 100000 !important;

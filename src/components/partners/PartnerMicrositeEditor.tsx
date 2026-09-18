@@ -53,6 +53,9 @@ export const PartnerMicrositeEditor: React.FC<PartnerMicrositeEditorProps> = ({
       onEditorChange={(content) => onChange(content)}
       init={{
         height,
+        // Keep menus, popups, and inline dialogs beside the editor so they remain
+        // inside the Radix dialog's focus boundary and move with its scroll area.
+        ui_mode: 'split',
         menubar: 'edit insert format table',
         placeholder,
         branding: false,
