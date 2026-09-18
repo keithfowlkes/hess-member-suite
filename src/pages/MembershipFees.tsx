@@ -916,6 +916,11 @@ export default function MembershipFees() {
     await markAsPaid(invoiceId);
   };
 
+  const handleMarkAsUnpaid = async (invoiceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await markAsUnpaid(invoiceId);
+  };
+
   const handleSendInvoice = async (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
