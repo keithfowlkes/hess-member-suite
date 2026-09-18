@@ -129,10 +129,10 @@ export default function AdminBusinessPartners() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" asChild>
-                  <Link to="/partners" target="_blank">
+                  <a href="https://members.hessconsortium.app/partners" target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     View directory
-                  </Link>
+                  </a>
                 </Button>
                 <Button variant="outline" onClick={() => setLevelsOpen(true)}>
                   <Award className="h-4 w-4 mr-2" />

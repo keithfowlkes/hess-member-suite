@@ -49,7 +49,7 @@ export function PartnersShell({ children }: PartnersShellProps) {
             />
           </Link>
           <Button asChild variant="outline" size="sm">
-            <Link to="/auth">Member sign in</Link>
+            <a href="https://www.hessconsortium.org/new/hess-member-portal">Member sign in</a>
           </Button>
         </div>
       </header>
