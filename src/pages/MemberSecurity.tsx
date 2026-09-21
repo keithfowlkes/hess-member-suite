@@ -29,8 +29,8 @@ const MemberSecurity = () => {
                 <p className="text-muted-foreground mt-2">
                   Security assessment and threat intelligence services for your institution
                 </p>
-                <p className="text-sm text-muted-foreground/80 mt-1 italic whitespace-pre-line">
-                  THIS INFORMATION IS PRIVATE AND CONFIDENTIAL FOR YOUR INSTITUTION ONLY.{"\n"}
+                <p className="text-sm text-muted-foreground/80 mt-1 italic">
+                  THIS INFORMATION IS PRIVATE AND CONFIDENTIAL FOR YOUR INSTITUTION ONLY.
                 </p>
               </div>
             </div>
