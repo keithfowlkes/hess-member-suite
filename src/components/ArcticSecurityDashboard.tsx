@@ -572,6 +572,11 @@ export function ArcticSecurityDashboard() {
                     </Button>
                   </TableHead>
                   <TableHead className="text-center">
+                    <Button variant="ghost" size="sm" className="gap-1 font-medium" onClick={() => handleSort('uniqueEvents')}>
+                      Unique Events <ArrowUpDown className="h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-center">
                     <Button variant="ghost" size="sm" className="gap-1 font-medium" onClick={() => handleSort('critical')}>
                       Critical <ArrowUpDown className="h-3 w-3" />
                     </Button>
