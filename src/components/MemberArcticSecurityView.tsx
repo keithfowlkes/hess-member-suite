@@ -422,6 +422,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                         <TableHead>Category</TableHead>
                         <TableHead>Urgency</TableHead>
                         <TableHead className="text-right">Events</TableHead>
+                        <TableHead className="text-right">Unique Events</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -436,12 +437,16 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                           <TableCell className="text-right font-semibold">
                             {cat.events.toLocaleString()}
                           </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {cat.uniqueEvents.toLocaleString()}
+                          </TableCell>
                         </TableRow>
                       ))}
                       <TableRow>
                         <TableCell className="font-bold">Total</TableCell>
                         <TableCell />
                         <TableCell className="text-right font-bold">{myOrgData.total.toLocaleString()}</TableCell>
+                        <TableCell className="text-right font-bold">{myOrgData.uniqueEvents.toLocaleString()}</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
