@@ -131,11 +131,11 @@ export function ArcticSecurityDashboard() {
 
   // ── Aggregate data ──
   const orgData = useMemo<OrgData[]>(() => {
-    type Acc = { pe: number; kv: number; sc: number; urgency: Record<UrgencyLevel, number> };
+    type Acc = { pe: number; kv: number; sc: number; ue: number; urgency: Record<UrgencyLevel, number> };
     const map = new Map<string, Acc>();
     for (const row of RAW_DATA) {
       const existing: Acc = map.get(row.organization) || {
-        pe: 0, kv: 0, sc: 0,
+        pe: 0, kv: 0, sc: 0, ue: 0,
         urgency: { critical: 0, high: 0, medium: 0, low: 0 },
       };
       const events = parseInt(row['# events'], 10) || 0;
@@ -143,9 +143,10 @@ export function ArcticSecurityDashboard() {
       else if (row.category === 'known vulnerabilities') existing.kv += events;
       else existing.sc += events;
       existing.urgency[normalizeUrgency(row.urgency)] += events;
+      existing.ue += parseInt(row['# unique event group id'], 10) || 0;
       map.set(row.organization, existing);
     }
-    return Array.from(map.entries()).map(([name, { pe, kv, sc, urgency }]) => {
+    return Array.from(map.entries()).map(([name, { pe, kv, sc, ue, urgency }]) => {
       const total = pe + kv + sc;
       const topUrgency = URGENCY_ORDER.find(l => urgency[l] > 0) ?? 'low';
       return {
@@ -154,6 +155,7 @@ export function ArcticSecurityDashboard() {
         knownVulnerabilities: kv,
         suspectedCompromise: sc,
         total,
+        uniqueEvents: ue,
         riskLevel: getRiskLevel(total),
         urgency,
         topUrgency,
