@@ -644,7 +644,7 @@ export function ArcticSecurityDashboard() {
                 ))}
                 {filteredData.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
                       No organizations found matching "{search}"
                     </TableCell>
                   </TableRow>
