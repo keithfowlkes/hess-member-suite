@@ -376,6 +376,10 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                   <span className="font-semibold text-foreground">{myOrgData.total.toLocaleString()}</span>
                 </div>
                 <div>
+                  <span className="text-muted-foreground">Unique Events: </span>
+                  <span className="font-semibold text-foreground">{myOrgData.uniqueEvents.toLocaleString()}</span>
+                </div>
+                <div>
                   <span className="text-muted-foreground">Risk Level: </span>
                   <Badge className={RISK_BADGE_CLASSES[myOrgData.riskLevel]}>
                     {myOrgData.riskLevel}
