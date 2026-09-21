@@ -44,6 +44,7 @@ interface OrgData {
   knownVulnerabilities: number;
   suspectedCompromise: number;
   total: number;
+  uniqueEvents: number;
   riskLevel: RiskLevel;
   urgency: Record<UrgencyLevel, number>;
   topUrgency: UrgencyLevel;
