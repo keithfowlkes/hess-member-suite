@@ -103,7 +103,7 @@ export function InviteColleagueModal({
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Invitations must use {allowedDomains.map((d) => `@${d}`).join(' or ')} email addresses.
+                Invitations must use your institution's email addresses.  Invitations will be coming from mail.deuslogic.app so check your spam folders.
               </AlertDescription>
             </Alert>
 
