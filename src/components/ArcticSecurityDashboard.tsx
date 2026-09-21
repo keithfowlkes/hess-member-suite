@@ -44,6 +44,7 @@ interface OrgData {
   knownVulnerabilities: number;
   suspectedCompromise: number;
   total: number;
+  uniqueEvents: number;
   riskLevel: RiskLevel;
   urgency: Record<UrgencyLevel, number>;
   topUrgency: UrgencyLevel;
@@ -100,6 +101,7 @@ type SortKey =
   | 'knownVulnerabilities'
   | 'suspectedCompromise'
   | 'total'
+  | 'uniqueEvents'
   | 'critical'
   | 'high'
   | 'medium'
@@ -130,11 +132,11 @@ export function ArcticSecurityDashboard() {
 
   // ── Aggregate data ──
   const orgData = useMemo<OrgData[]>(() => {
-    type Acc = { pe: number; kv: number; sc: number; urgency: Record<UrgencyLevel, number> };
+    type Acc = { pe: number; kv: number; sc: number; ue: number; urgency: Record<UrgencyLevel, number> };
     const map = new Map<string, Acc>();
     for (const row of RAW_DATA) {
       const existing: Acc = map.get(row.organization) || {
-        pe: 0, kv: 0, sc: 0,
+        pe: 0, kv: 0, sc: 0, ue: 0,
         urgency: { critical: 0, high: 0, medium: 0, low: 0 },
       };
       const events = parseInt(row['# events'], 10) || 0;
@@ -142,9 +144,10 @@ export function ArcticSecurityDashboard() {
       else if (row.category === 'known vulnerabilities') existing.kv += events;
       else existing.sc += events;
       existing.urgency[normalizeUrgency(row.urgency)] += events;
+      existing.ue += parseInt(row['# unique event group id'], 10) || 0;
       map.set(row.organization, existing);
     }
-    return Array.from(map.entries()).map(([name, { pe, kv, sc, urgency }]) => {
+    return Array.from(map.entries()).map(([name, { pe, kv, sc, ue, urgency }]) => {
       const total = pe + kv + sc;
       const topUrgency = URGENCY_ORDER.find(l => urgency[l] > 0) ?? 'low';
       return {
@@ -153,6 +156,7 @@ export function ArcticSecurityDashboard() {
         knownVulnerabilities: kv,
         suspectedCompromise: sc,
         total,
+        uniqueEvents: ue,
         riskLevel: getRiskLevel(total),
         urgency,
         topUrgency,
@@ -568,6 +572,11 @@ export function ArcticSecurityDashboard() {
                     </Button>
                   </TableHead>
                   <TableHead className="text-center">
+                    <Button variant="ghost" size="sm" className="gap-1 font-medium" onClick={() => handleSort('uniqueEvents')}>
+                      Unique Events <ArrowUpDown className="h-3 w-3" />
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-center">
                     <Button variant="ghost" size="sm" className="gap-1 font-medium" onClick={() => handleSort('critical')}>
                       Critical <ArrowUpDown className="h-3 w-3" />
                     </Button>
@@ -611,6 +620,7 @@ export function ArcticSecurityDashboard() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center font-semibold">{org.total}</TableCell>
+                    <TableCell className="text-center font-semibold">{org.uniqueEvents.toLocaleString()}</TableCell>
                     {URGENCY_ORDER.map(level => (
                       <TableCell key={level} className="text-center">
                         {org.urgency[level] > 0 ? (
@@ -634,7 +644,7 @@ export function ArcticSecurityDashboard() {
                 ))}
                 {filteredData.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
                       No organizations found matching "{search}"
                     </TableCell>
                   </TableRow>
