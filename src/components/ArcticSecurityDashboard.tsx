@@ -101,6 +101,7 @@ type SortKey =
   | 'knownVulnerabilities'
   | 'suspectedCompromise'
   | 'total'
+  | 'uniqueEvents'
   | 'critical'
   | 'high'
   | 'medium'
