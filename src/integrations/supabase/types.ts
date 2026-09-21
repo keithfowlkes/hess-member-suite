@@ -2626,6 +2626,33 @@ export type Database = {
       }
     }
     Views: {
+      public_business_partner_contacts: {
+        Row: {
+          display_order: number | null
+          email: string | null
+          id: string | null
+          name: string | null
+          partner_id: string | null
+          phone: string | null
+          title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_partner_contacts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "business_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_partner_contacts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "public_business_partner_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_business_partner_directory: {
         Row: {
           banner_url: string | null
