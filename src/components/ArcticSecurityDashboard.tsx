@@ -620,6 +620,7 @@ export function ArcticSecurityDashboard() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center font-semibold">{org.total}</TableCell>
+                    <TableCell className="text-center font-semibold">{org.uniqueEvents.toLocaleString()}</TableCell>
                     {URGENCY_ORDER.map(level => (
                       <TableCell key={level} className="text-center">
                         {org.urgency[level] > 0 ? (
