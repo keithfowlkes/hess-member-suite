@@ -253,6 +253,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
       knownVulnerabilities,
       suspectedCompromise,
       total,
+      uniqueEvents,
       riskLevel: getRiskLevel(total),
       urgencyTotals,
       categories,
