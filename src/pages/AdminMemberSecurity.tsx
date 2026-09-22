@@ -12,7 +12,7 @@ const AdminMemberSecurity = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1 p-8">
+        <main className="flex-1 min-w-0 p-4 sm:p-8">
           {/* Mobile menu button */}
           <div className="sticky top-0 z-50 flex items-center gap-2 -mx-8 -mt-8 mb-6 border-b bg-background p-4 lg:hidden">
             <SidebarTrigger className="h-10 w-10 rounded-md border-2 border-primary bg-primary/10 hover:bg-primary/20" />
