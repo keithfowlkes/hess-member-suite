@@ -255,7 +255,7 @@ export function ArcticSecurityDashboard() {
             <img src={arcticLogo} alt="Arctic" className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-foreground">Arctic Security Scan</h2>
+            <h2 className="text-xl font-bold text-foreground">Arctic Security Monitoring</h2>
             <p className="text-sm text-muted-foreground">Security scanning results for member institutions</p>
           </div>
         </div>
@@ -672,12 +672,12 @@ function MemberVisibilityToggle() {
           updateSetting.mutate({
             settingKey: 'arctic_scan_member_visible',
             settingValue: String(checked),
-            description: 'Controls visibility of Arctic Security Scan tab in Member Portal'
+            description: 'Controls visibility of Arctic Security Monitoring tab in Member Portal'
           });
         }}
       />
       <Label htmlFor="arctic-member-visibility" className="text-sm cursor-pointer">
-        Show Arctic Security Scan tab in Member Portal
+        Show Arctic Security Monitoring tab in Member Portal
       </Label>
     </div>
   );
