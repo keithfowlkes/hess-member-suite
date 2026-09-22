@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { PartnerDirectory } from '@/components/partners/PartnerDirectory';
 import { PartnerMicrosite } from '@/components/partners/PartnerMicrosite';
