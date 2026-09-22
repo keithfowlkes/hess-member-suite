@@ -9,7 +9,7 @@ export default function BusinessPartners() {
           <h1 className="text-3xl font-bold text-foreground">HESS / Coalition Business Partners</h1>
           <p className="text-muted-foreground mt-2 font-semibold">
             Vendor partners serving HESS Consortium and Coalition institutions and associations. Sign in with your member portal account to see
-            partner contacts, documents and member-only offers.
+            HESS / Coalition partner pricing, contacts, documents and member-only offers.
           </p>
         </div>
         <PartnerDirectory />
