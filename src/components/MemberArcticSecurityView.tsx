@@ -366,7 +366,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                   <span className="font-semibold text-foreground">{myOrgData.name}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Last Scan: </span>
+                  <span className="text-muted-foreground">Last Refresh: </span>
                   <span className="font-semibold text-foreground">
                     {formatPeriod(myOrgData.lastScan)} · {formatFullDate(scanData?.lastSyncAt)}
                   </span>
