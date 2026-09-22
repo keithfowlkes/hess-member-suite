@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { PartnerDirectory } from '@/components/partners/PartnerDirectory';
 import { PartnerMicrosite } from '@/components/partners/PartnerMicrosite';
@@ -27,6 +28,12 @@ export function PartnersEmbedDirectory() {
 
 export function PartnersEmbedDetail() {
   const { slug } = useParams<{ slug: string }>();
+
+  // Partner pages can be long; always start at the top when one is opened.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+  }, [slug]);
+
   return (
     <div className="min-h-screen bg-background px-4 py-6">
       <div className="mx-auto max-w-6xl">
