@@ -40,7 +40,7 @@ const AdminMemberSecurity = () => {
               <TabsList className="grid w-full mb-6 grid-cols-2">
                 <TabsTrigger value="security" className="gap-2">
                   <img src={arcticLogo} alt="Arctic" className="h-4 w-4" />
-                  Arctic Security Scan
+                  Arctic Security Monitoring
                 </TabsTrigger>
                 <TabsTrigger value="deepseas" className="gap-2">
                   <img src={deepseasLogo.url} alt="DeepSeas" className="h-4 w-auto" />
