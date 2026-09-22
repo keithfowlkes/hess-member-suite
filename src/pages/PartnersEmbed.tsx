@@ -12,10 +12,11 @@ export function PartnersEmbedDirectory() {
   return (
     <div className="min-h-screen bg-background px-4 py-6">
       <div className="mx-auto max-w-6xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">HESS Business Partners</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Vendor partners serving HESS Consortium institutions.
+        <div className="border-b border-border pb-4">
+          <h1 className="text-2xl font-bold text-foreground">HESS / Coalition Business Partners</h1>
+          <p className="text-muted-foreground mt-2 text-sm font-semibold">
+            Vendor partners serving HESS Consortium and Coalition institutions and associations. Sign in with your member portal account to see
+            HESS / Coalition partner pricing, contacts, documents and member-only offers.
           </p>
         </div>
         <PartnerDirectory basePath={BASE} />
