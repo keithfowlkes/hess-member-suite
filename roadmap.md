@@ -12,5 +12,5 @@
 
 ## Member dashboard
 - [x] Board-member-only total billed revenue card and secured revenue breakdown
-- [ ] Revenue breakdown paid status, search, and payment filter
-- [ ] Fix Board Member role assignment for Keith's account
+- [x] Revenue breakdown paid status, search, and payment filter
+- [x] Fix Board Member role assignment for Keith's account
