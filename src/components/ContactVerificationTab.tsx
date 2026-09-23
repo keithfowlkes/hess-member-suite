@@ -368,7 +368,7 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
                 </TableCell>
                 <TableCell>
                   {state !== 'no_contact' && (
-                    <Button size="sm" variant="ghost" disabled={running} onClick={() => runBatch([org])}>Verify</Button>
+                    <Button size="sm" variant="ghost" disabled={running} onClick={() => verifySingle(org)}>Verify</Button>
                   )}
                 </TableCell>
               </TableRow>
