@@ -83,17 +83,29 @@ Deno.serve(async (req) => {
     }
 
     const s = data.structured || {};
+    let status = (s.verificationStatus || "UNKNOWN").toUpperCase();
+    let contactTitle = p.primary_contact_title || null;
+    let notes = s.notes || null;
+    const ft = (s.foundTitle || "").trim();
+    const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if ((status === "VERIFIED" || status === "LIKELY") && ft && !/^not found$/i.test(ft) && norm(ft) !== norm(contactTitle || "")) {
+      await db.from("organizations").update({ primary_contact_title: ft }).eq("id", org.id);
+      if (org.contact_person_id) await db.from("profiles").update({ primary_contact_title: ft }).eq("id", org.contact_person_id);
+      notes = `Title updated from "${contactTitle || "(none)"}" to "${ft}". ${notes || ""}`.trim();
+      contactTitle = ft;
+      status = "VERIFIED";
+    }
     await db.from("contact_verifications").upsert({
       organization_id: org.id,
       contact_name: `${p.first_name} ${p.last_name}`.trim(),
-      contact_title: p.primary_contact_title || null,
-      status: (s.verificationStatus || "UNKNOWN").toUpperCase(),
+      contact_title: contactTitle,
+      status,
       confidence: s.confidence || null,
       found_title: s.foundTitle || null,
       summary: s.summary || null,
       linkedin_url: s.linkedinUrl || null,
       institutional_url: s.institutionalUrl || null,
-      notes: s.notes || null,
+      notes,
       verified_by: item.queued_by,
       verified_at: new Date().toISOString(),
     }, { onConflict: "organization_id" });

@@ -172,6 +172,7 @@ VERIFICATION CRITERIA:
 - NOT_FOUND = No information found about this person at this organization
 
 IMPORTANT:
+- TITLE CHANGES: If the person is still employed at this organization but now holds a DIFFERENT title than the one provided, mark them VERIFIED (or LIKELY if evidence is weaker) — a title change does NOT make the contact invalid. Put their CURRENT title in FOUND_TITLE exactly as shown on the most reliable source, and mention the title change in NOTES.
 - Higher education IT staff often aren't listed on public directories - don't penalize for this
 - Prioritize absence of evidence that they LEFT over presence of "former" tags from aggregators
 - If the person is submitting a member update for HESS, they likely still work there
