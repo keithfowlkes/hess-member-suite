@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Mail, RefreshCw, Save } from 'lucide-react';
+import { ChevronDown, Mail, RefreshCw, Save } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useSystemSetting, useUpdateSystemSetting } from '@/hooks/useSystemSettings';
@@ -27,6 +28,7 @@ interface PricingRequest {
 
 export function ArcticPricingRequestsPanel() {
   const [requests, setRequests] = useState<PricingRequest[]>([]);
+  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const { data: setting } = useSystemSetting('arctic_pricing_notification_emails');
   const updateSetting = useUpdateSystemSetting();
@@ -159,6 +161,8 @@ export function ArcticPricingRequestsPanel() {
           </div>
         )}
       </CardContent>
+      </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }
