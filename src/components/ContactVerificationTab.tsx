@@ -211,7 +211,8 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
     return () => { supabase.removeChannel(ch); };
   }, [qc]);
 
-  /** Spread checks evenly across the next 24 hours so the AI service is never flooded. */
+  /** Spread checks evenly across the next 8 hours so the AI service is never flooded. */
+
   const scheduleBatch = async (targets: Organization[]) => {
     const list = targets.filter((o) => !queuedIds.has(o.id));
     if (list.length === 0) {
@@ -221,7 +222,7 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
     setScheduling(true);
     try {
       const { data: auth } = await supabase.auth.getUser();
-      const spacing = (24 * 60 * 60 * 1000) / list.length;
+      const spacing = (8 * 60 * 60 * 1000) / list.length;
       const start = Date.now() + 60 * 1000;
       const rows = list.map((o, i) => ({
         organization_id: o.id,
@@ -240,7 +241,7 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
       const { error: jobError } = await (supabase as any).rpc('ensure_contact_verification_job');
       if (jobError) throw jobError;
       localStorage.setItem(BATCH_KEY, String(pendingQueue.length + list.length));
-      toast.success(`${list.length} verifications scheduled over the next 24 hours`);
+      toast.success(`${list.length} verifications scheduled over the next 8 hours`);
     } catch (err: any) {
       toast.error(`Could not schedule verifications: ${err?.message || err}`);
     } finally {
@@ -353,7 +354,7 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            Batches are spread evenly over 24 hours and run in the background, so you can close this page. Each check uses AI and web search and uses AI credits; if the AI limit is reached, remaining checks wait an hour and continue.
+            Batches are spread evenly over 8 hours and run in the background, so you can close this page. Each check uses AI and web search and uses AI credits; if the AI limit is reached, remaining checks wait an hour and continue.
           </p>
           {pendingQueue.length > 0 && (
             <div className="text-sm rounded-md border bg-muted/40 p-3">
