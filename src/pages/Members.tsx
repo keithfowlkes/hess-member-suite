@@ -312,7 +312,7 @@ export default function Members() {
             <Tabs defaultValue="organizations" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="organizations">Member Organizations</TabsTrigger>
-                {isAdmin && <TabsTrigger value="verification">Verification</TabsTrigger>}
+                {isAdmin && <TabsTrigger value="verification">Member Verifications</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="organizations" className="space-y-4">
