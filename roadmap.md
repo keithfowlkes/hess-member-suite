@@ -9,3 +9,6 @@
 - [ ] Admin management page + tabbed editor
 - [ ] WYSIWYG microsite editor with image upload and left/right text wrapping
 - [ ] Routes in App.tsx + sidebar nav entries
+
+## Member dashboard
+- [x] Board-member-only total billed revenue card and secured revenue breakdown
