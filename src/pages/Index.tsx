@@ -10,7 +10,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Building2, FileText, DollarSign, LogOut, MapPin, Mail, User, AlertTriangle, Edit3, Info, MessageSquare, ClipboardList, ExternalLink } from 'lucide-react';
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
-import { useInvoices } from '@/hooks/useInvoices';
+import { useInvoices, type Invoice } from '@/hooks/useInvoices';
 import MemberSystemMessages from '@/components/MemberSystemMessages';
 import { ProfileEditModal } from '@/components/ProfileEditModal';
 import { AnalyticsFeedbackDialog } from '@/components/AnalyticsFeedbackDialog';
@@ -50,7 +50,7 @@ const Index = () => {
   const [unansweredSurveys, setUnansweredSurveys] = useState<number>(0);
   const [surveyAlertDismissed, setSurveyAlertDismissed] = useState(false);
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
-  const [deepLinkedInvoice, setDeepLinkedInvoice] = useState<any>(null);
+  const [deepLinkedInvoice, setDeepLinkedInvoice] = useState<Invoice | null>(null);
   const [revenueBreakdownOpen, setRevenueBreakdownOpen] = useState(false);
   const {
     isBoardMember,
@@ -201,7 +201,15 @@ const Index = () => {
   const showMemberViewItems = !isViewingAsAdmin && systemSettings?.find(s => s.setting_key === 'stripe_enabled')?.setting_value === 'true';
 
   // Check for missing organization information
-  const checkMissingInfo = (org: any) => {
+  const checkMissingInfo = (org: {
+    address_line_1?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    student_fte?: number;
+    student_information_system?: string;
+    financial_system?: string;
+  } | null | undefined) => {
     if (!org) return [];
     
     const missingFields = [];
