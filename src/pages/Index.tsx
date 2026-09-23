@@ -835,6 +835,7 @@ const Index = () => {
               description="Annual fees billed across all organizations, and revenue actually collected."
               organizations={boardRevenue.organizations}
               amountLabel="Annual Fee"
+              showPaymentStatus
               summary={[
                 {
                   label: 'Annual Total Billed',

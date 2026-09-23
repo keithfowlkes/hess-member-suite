@@ -276,16 +276,26 @@ export function useSettings() {
     }
   };
 
-  const updateUserRoles = async (userId: string, newRoles: ('admin' | 'member' | 'cohort_leader')[]) => {
+  const updateUserRoles = async (userId: string, newRoles: ('admin' | 'member' | 'cohort_leader' | 'board_member')[]) => {
     try {
       console.log('🔄 Updating roles for user:', userId, 'to:', newRoles);
       
-      // First delete existing role
-      console.log('🗑️ Deleting existing roles for user...');
-      const { error: deleteError } = await supabase
+      const { data: existingRoleRows, error: existingRolesError } = await supabase
         .from('user_roles')
-        .delete()
+        .select('role')
         .eq('user_id', userId);
+
+      if (existingRolesError) throw existingRolesError;
+
+      const existingRoles = (existingRoleRows || []).map((row) => row.role);
+      const rolesToRemove = existingRoles.filter((role) => !newRoles.includes(role));
+      const rolesToAdd = newRoles.filter((role) => !existingRoles.includes(role));
+
+      console.log('🗑️ Removing roles no longer selected...');
+      const deleteQuery = supabase.from('user_roles').delete().eq('user_id', userId);
+      const { error: deleteError } = rolesToRemove.length
+        ? await deleteQuery.in('role', rolesToRemove)
+        : { error: null };
 
       if (deleteError) {
         console.error('❌ Error deleting existing role:', deleteError);
@@ -350,14 +360,14 @@ export function useSettings() {
         throw deleteError;
       }
 
-      console.log('✅ Existing roles deleted successfully');
+      console.log('✅ Removed roles no longer selected');
 
-      // Then insert new roles
+      // Add only newly selected roles so protected roles are not temporarily removed.
       console.log('➕ Inserting new roles...');
-      const roleInserts = newRoles.map(role => ({ user_id: userId, role }));
-      const { error: insertError } = await supabase
-        .from('user_roles')
-        .insert(roleInserts);
+      const roleInserts = rolesToAdd.map(role => ({ user_id: userId, role }));
+      const { error: insertError } = roleInserts.length
+        ? await supabase.from('user_roles').insert(roleInserts)
+        : { error: null };
 
       if (insertError) {
         console.error('❌ Error inserting new role:', insertError);

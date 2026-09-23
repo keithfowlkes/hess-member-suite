@@ -3413,7 +3413,9 @@ export default function MembershipFees() {
 
             if (drilldownType === 'revenue') {
               // Only include organizations with a fee amount, sorted by amount desc via alpha in modal
-              const revenueOrgs = organizations.filter(o => (o.annual_fee_amount || 0) > 0);
+              const revenueOrgs = organizations
+                .filter(o => (o.annual_fee_amount || 0) > 0)
+                .map(o => ({ ...o, has_paid_invoice: paidOrgIds.has(o.id) }));
               return (
                 <FeeStatsDrilldownModal
                   isOpen
@@ -3422,13 +3424,13 @@ export default function MembershipFees() {
                   description="Annual fees billed across all organizations, and revenue actually collected."
                   organizations={revenueOrgs as any}
                   amountLabel="Annual Fee"
+                  showPaymentStatus
                   summary={[
                     { label: 'Annual Total Billed', value: `$${stats.totalRevenue.toLocaleString()}` },
                     { label: 'Current Paid Revenue', value: `$${paidRevenue.toLocaleString()}`, tone: 'success' },
                     { label: 'Outstanding', value: `$${outstanding.toLocaleString()}`, tone: 'warning' },
                   ]}
                   getAmount={(org) => {
-                    const paid = paidOrgIds.has(org.id);
                     return org.annual_fee_amount ? Number(org.annual_fee_amount) : null;
                   }}
                 />
