@@ -190,12 +190,15 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
       );
       let completedSinceStart = 0;
       if (batchStartedAt) {
-        const { count, error: countError } = await (supabase as any)
+        const { data: completedRows, error: countError } = await (supabase as any)
           .from('contact_verifications')
-          .select('id', { count: 'exact', head: true })
+          .select('organization_id')
           .gte('verified_at', batchStartedAt);
         if (countError) throw countError;
-        completedSinceStart = count || 0;
+        const stillPending = new Set(pendingRows.map((row) => row.organization_id));
+        completedSinceStart = (completedRows || []).filter(
+          (row: { organization_id: string }) => !stillPending.has(row.organization_id),
+        ).length;
       }
       return { rows, completedSinceStart };
     },
