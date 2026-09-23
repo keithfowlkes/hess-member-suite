@@ -109,17 +109,32 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
     if (!data?.success) throw new Error(data?.error || 'Verification failed');
     const s = data.structured || {};
     const { data: auth } = await supabase.auth.getUser();
+    let status = (s.verificationStatus || 'UNKNOWN').toUpperCase();
+    let contactTitle: string | null = p.primary_contact_title || null;
+    let notes: string | null = s.notes || null;
+    const ft = String(s.foundTitle || '').trim();
+    const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if ((status === 'VERIFIED' || status === 'LIKELY') && ft && !/^not found$/i.test(ft) && norm(ft) !== norm(contactTitle || '')) {
+      await supabase.from('organizations').update({ primary_contact_title: ft }).eq('id', org.id);
+      if ((org as any).contact_person_id) {
+        await supabase.from('profiles').update({ primary_contact_title: ft }).eq('id', (org as any).contact_person_id);
+      }
+      notes = `Title updated from "${contactTitle || '(none)'}" to "${ft}". ${notes || ''}`.trim();
+      contactTitle = ft;
+      status = 'VERIFIED';
+      toast.success(`${org.name}: title updated to "${ft}"`);
+    }
     const { error: saveError } = await (supabase as any).from('contact_verifications').upsert({
       organization_id: org.id,
       contact_name: contactName,
-      contact_title: p.primary_contact_title || null,
-      status: (s.verificationStatus || 'UNKNOWN').toUpperCase(),
+      contact_title: contactTitle,
+      status,
       confidence: s.confidence || null,
       found_title: s.foundTitle || null,
       summary: s.summary || null,
       linkedin_url: s.linkedinUrl || null,
       institutional_url: s.institutionalUrl || null,
-      notes: s.notes || null,
+      notes,
       verified_by: auth.user?.id || null,
       verified_at: new Date().toISOString(),
     }, { onConflict: 'organization_id' });
