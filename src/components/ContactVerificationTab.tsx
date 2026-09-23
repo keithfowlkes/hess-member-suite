@@ -222,11 +222,13 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
     setScheduling(true);
     try {
       const { data: auth } = await supabase.auth.getUser();
-      const spacing = (8 * 60 * 60 * 1000) / list.length;
-      const start = Date.now() + 60 * 1000;
+      const FIRST_BATCH = 3;
+      const rest = Math.max(list.length - FIRST_BATCH, 1);
+      const spacing = (8 * 60 * 60 * 1000) / rest;
+      const now = Date.now();
       const rows = list.map((o, i) => ({
         organization_id: o.id,
-        scheduled_for: new Date(start + i * spacing).toISOString(),
+        scheduled_for: new Date(i < FIRST_BATCH ? now - 1000 : now + (i - FIRST_BATCH + 1) * spacing).toISOString(),
         status: 'pending',
         attempts: 0,
         last_error: null,
@@ -241,7 +243,15 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
       const { error: jobError } = await (supabase as any).rpc('ensure_contact_verification_job');
       if (jobError) throw jobError;
       localStorage.setItem(BATCH_KEY, String(pendingQueue.length + list.length));
-      toast.success(`${list.length} verifications scheduled over the next 8 hours`);
+      qc.invalidateQueries({ queryKey: ['contact-verification-queue'] });
+      // Start the first batch right away instead of waiting for the next background wake-up.
+      supabase.functions.invoke('process-contact-verification-queue', { body: {} })
+        .then(() => {
+          qc.invalidateQueries({ queryKey: ['contact-verification-queue'] });
+          qc.invalidateQueries({ queryKey: ['contact-verifications'] });
+        })
+        .catch(() => {});
+      toast.success(`${list.length} verifications scheduled — first batch starting now, rest over 8 hours`);
     } catch (err: any) {
       toast.error(`Could not schedule verifications: ${err?.message || err}`);
     } finally {
