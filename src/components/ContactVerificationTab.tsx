@@ -174,29 +174,46 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
   };
 
   const qc = useQueryClient();
-  const { data: queue } = useQuery({
+  const { data: queueState } = useQuery({
     queryKey: ['contact-verification-queue'],
     refetchInterval: 10000,
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('contact_verification_queue')
-        .select('organization_id, scheduled_for, status');
+        .select('organization_id, scheduled_for, status, created_at');
       if (error) throw error;
-      return (data || []) as { organization_id: string; scheduled_for: string; status: string }[];
+      const rows = (data || []) as { organization_id: string; scheduled_for: string; status: string; created_at: string }[];
+      const pendingRows = rows.filter((row) => row.status === 'pending');
+      const batchStartedAt = pendingRows.reduce<string | null>(
+        (earliest, row) => (!earliest || row.created_at < earliest ? row.created_at : earliest),
+        null,
+      );
+      let completedSinceStart = 0;
+      if (batchStartedAt) {
+        const { data: completedRows, error: countError } = await (supabase as any)
+          .from('contact_verifications')
+          .select('organization_id')
+          .gte('verified_at', batchStartedAt);
+        if (countError) throw countError;
+        const stillPending = new Set(pendingRows.map((row) => row.organization_id));
+        completedSinceStart = (completedRows || []).filter(
+          (row: { organization_id: string }) => !stillPending.has(row.organization_id),
+        ).length;
+      }
+      return { rows, completedSinceStart };
     },
   });
+  const queue = queueState?.rows;
   const pendingQueue = (queue || []).filter((q) => q.status === 'pending');
   const queuedIds = new Set(pendingQueue.map((q) => q.organization_id));
   const lastScheduled = pendingQueue.reduce<string | null>((m, q) => (!m || q.scheduled_for > m ? q.scheduled_for : m), null);
   const [scheduling, setScheduling] = useState(false);
   const BATCH_KEY = 'cv-batch-total';
   const storedTotal = Number(typeof window !== 'undefined' ? localStorage.getItem(BATCH_KEY) : 0) || 0;
-  const batchTotal = Math.max(storedTotal, pendingQueue.length);
+  const completedSinceStart = queueState?.completedSinceStart || 0;
+  const batchTotal = Math.max(storedTotal, pendingQueue.length + completedSinceStart);
   const batchDone = batchTotal - pendingQueue.length;
   const batchPct = batchTotal ? Math.round((batchDone / batchTotal) * 100) : 0;
-  useEffect(() => {
-    if (queue && pendingQueue.length === 0 && storedTotal) localStorage.removeItem(BATCH_KEY);
-  }, [queue, pendingQueue.length, storedTotal]);
   useEffect(() => {
     const ch = supabase
       .channel('cv-queue')
