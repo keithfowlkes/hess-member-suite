@@ -52,6 +52,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { OrganizationCRMTab } from '@/components/OrganizationCRMTab';
+import { ContactAIVerifyButton } from '@/components/ContactAIVerifyButton';
 
 interface OrganizationViewModalProps {
   organization: Organization | null;
@@ -506,6 +507,14 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                           <span className="text-sm">{profile?.phone || 'Not provided'}</span>
                         </div>
                       </div>
+                      {!isEditing && (
+                        <ContactAIVerifyButton
+                          organizationName={currentData.name}
+                          firstName={profile?.first_name}
+                          lastName={profile?.last_name}
+                          title={profile?.primary_contact_title}
+                        />
+                      )}
                     </>
                   ) : (
                     <p className="text-sm text-muted-foreground">No primary contact information available</p>
@@ -595,6 +604,14 @@ export function OrganizationViewModal({ organization, isOpen, onClose }: Organiz
                       <p className="text-sm text-muted-foreground">Not provided</p>
                     )}
                   </div>
+                  {!isEditing && (
+                    <ContactAIVerifyButton
+                      organizationName={currentData.name}
+                      firstName={profile?.secondary_first_name}
+                      lastName={profile?.secondary_last_name}
+                      title={profile?.secondary_contact_title}
+                    />
+                  )}
                 </CardContent>
               </Card>
             </div>
