@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BadgeCheck } from 'lucide-react';
+import { BadgeCheck, BadgeX } from 'lucide-react';
 import { ContactVerificationTab } from '@/components/ContactVerificationTab';
 import { useContactVerifications, isCurrentlyVerified } from '@/hooks/useContactVerifications';
 import { useMembers } from '@/hooks/useMembers';
@@ -397,9 +397,15 @@ export default function Members() {
                               {isAdmin && isCurrentlyVerified(verifications[organization.id], organization.profiles?.first_name, organization.profiles?.last_name) && (
                                 <Badge variant="outline" className="text-xs bg-emerald-100 text-emerald-800 border-emerald-200" title="Primary contact verified">
                                   <BadgeCheck className="h-3 w-3 mr-1" />Verified
-                                </Badge>
-                              )}
-                            </div>
+                                 </Badge>
+                               )}
+                               {isAdmin && (organization.profiles?.first_name || organization.profiles?.last_name) &&
+                                 !isCurrentlyVerified(verifications[organization.id], organization.profiles?.first_name, organization.profiles?.last_name) && (
+                                 <Badge variant="outline" className="text-xs bg-amber-100 text-amber-800 border-amber-200" title="Primary contact not verified">
+                                   <BadgeX className="h-3 w-3 mr-1" />Unverified
+                                 </Badge>
+                               )}
+                             </div>
                           </div>
                         </CardHeader>
                         <CardContent className="pt-0 space-y-3">
