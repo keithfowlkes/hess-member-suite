@@ -80,19 +80,34 @@ export function FeeStatsDrilldownModal({
           )}
         </DialogHeader>
 
-        {summary && summary.length > 0 && (
+        {summary && summary.length > 0 && (() => {
+          const total = organizations.length;
+          const paidCount = organizations.filter((o) => o.has_paid_invoice === true).length;
+          const unpaidCount = total - paidCount;
+          const pct = (n: number) => (total > 0 ? Math.round((n / total) * 1000) / 10 : 0);
+          return (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-            {summary.map((s) => (
+            {summary.map((s) => {
+              let note: string | null = null;
+              if (showPaymentStatus && /paid revenue/i.test(s.label)) {
+                note = `${pct(paidCount)}% of organizations paid (${paidCount} of ${total})`;
+              } else if (showPaymentStatus && /outstanding/i.test(s.label)) {
+                note = `${pct(unpaidCount)}% of organizations outstanding (${unpaidCount} of ${total})`;
+              }
+              return (
               <div
                 key={s.label}
                 className={`rounded-md border p-3 ${toneClasses[s.tone || 'default']}`}
               >
                 <div className="text-xs font-medium opacity-80">{s.label}</div>
                 <div className="text-lg font-bold">{s.value}</div>
+                {note && <div className="text-xs font-medium mt-1 opacity-90">{note}</div>}
               </div>
-            ))}
+              );
+            })}
           </div>
-        )}
+          );
+        })()}
 
         {showPaymentStatus && (
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
