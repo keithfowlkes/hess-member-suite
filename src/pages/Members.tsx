@@ -183,6 +183,17 @@ export default function Members() {
         'Primary Office - Other': org.primary_office_other ? 'Yes' : 'No',
         'Primary Office Other Details': org.primary_office_other_details || '',
         
+        // Verification Status
+        'Primary Contact Verification Status': (() => {
+          if (!org.profiles?.first_name && !org.profiles?.last_name) return 'No Primary Contact';
+          const v = verifications[org.id];
+          if (isCurrentlyVerified(v, org.profiles?.first_name, org.profiles?.last_name)) return 'Verified';
+          return v ? 'Unverified' : 'Not Checked';
+        })(),
+        'Primary Contact Last Verified': verifications[org.id]?.verified_at
+          ? new Date(verifications[org.id].verified_at).toLocaleDateString()
+          : '',
+
         // Additional Information
         'Other Software Comments': org.other_software_comments || '',
         'Notes': org.notes || '',
