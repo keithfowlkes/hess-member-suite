@@ -75,6 +75,13 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
     return c;
   }, [rows]);
 
+  const pctStats = useMemo(() => {
+    const withContactCount = rows.filter((r) => r.state !== 'no_contact').length;
+    if (withContactCount === 0) return { verifiedPct: 0, notVerifiedPct: 0, total: 0 };
+    const verifiedPct = Math.round((counts.verified / withContactCount) * 100);
+    return { verifiedPct, notVerifiedPct: 100 - verifiedPct, total: withContactCount };
+  }, [rows, counts]);
+
   const visible = rows.filter(({ org, state }) => {
     const q = search.trim().toLowerCase();
     const name = `${org.profiles?.first_name || ''} ${org.profiles?.last_name || ''}`.toLowerCase();
@@ -153,13 +160,23 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Verified</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-bold text-emerald-700">{counts.verified}</CardContent></Card>
+          <CardContent><div className="text-2xl font-bold text-emerald-700">{counts.verified}</div>
+            <p className="text-xs text-muted-foreground mt-1">{pctStats.verifiedPct}% of {pctStats.total} organizations with contacts</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Not Verified</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-bold text-amber-700">{counts.notVerified}</CardContent></Card>
+          <CardContent><div className="text-2xl font-bold text-amber-700">{counts.notVerified}</div>
+            <p className="text-xs text-muted-foreground mt-1">{pctStats.notVerifiedPct}% of organizations not verified (incl. unchecked)</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Not Yet Checked</CardTitle></CardHeader>
           <CardContent className="text-2xl font-bold">{counts.never}</CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Verification Rate</CardTitle></CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pctStats.verifiedPct}%</div>
+            <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+              <div className="h-full bg-emerald-600" style={{ width: `${pctStats.verifiedPct}%` }} />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">{counts.verified} verified of {pctStats.total}</p>
+          </CardContent></Card>
       </div>
 
       <Card>
