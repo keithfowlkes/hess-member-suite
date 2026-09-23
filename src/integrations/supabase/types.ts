@@ -648,6 +648,57 @@ export type Database = {
           },
         ]
       }
+      contact_verification_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          organization_id: string
+          queued_by: string | null
+          scheduled_for: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          organization_id: string
+          queued_by?: string | null
+          scheduled_for: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          organization_id?: string
+          queued_by?: string | null
+          scheduled_for?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_verification_queue_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_verification_queue_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "public_organization_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_verifications: {
         Row: {
           confidence: string | null
@@ -2924,6 +2975,7 @@ export type Database = {
         Returns: boolean
       }
       email_exists: { Args: { p_email: string }; Returns: boolean }
+      ensure_contact_verification_job: { Args: never; Returns: undefined }
       fix_user_password_from_registration: { Args: never; Returns: string }
       generate_secure_token: { Args: never; Returns: string }
       get_board_member_revenue_summary: { Args: never; Returns: Json }
@@ -2958,6 +3010,7 @@ export type Database = {
       refresh_analytics_datacube_sql: { Args: never; Returns: undefined }
       refresh_public_views: { Args: never; Returns: undefined }
       setup_admin_user: { Args: never; Returns: undefined }
+      stop_contact_verification_job: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "member" | "cohort_leader" | "board_member"
