@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BadgeCheck } from 'lucide-react';
+import { ContactVerificationTab } from '@/components/ContactVerificationTab';
+import { useContactVerifications, isCurrentlyVerified } from '@/hooks/useContactVerifications';
 import { useMembers } from '@/hooks/useMembers';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload, TrendingUp, Download, ChevronDown } from 'lucide-react';
@@ -32,6 +35,7 @@ export default function Members() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'expired' | 'cancelled' | 'paid' | 'unpaid'>('active');
   const isPaymentFilter = statusFilter === 'paid' || statusFilter === 'unpaid';
   const { organizations, loading } = useMembers(isPaymentFilter ? 'all' : statusFilter);
+  const { data: verifications = {} } = useContactVerifications(!!isAdmin);
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
   const { invoices } = useInvoices();
   const invoicesByOrg = useMemo(() => {
@@ -306,6 +310,7 @@ export default function Members() {
             <Tabs defaultValue="organizations" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="organizations">Member Organizations</TabsTrigger>
+                {isAdmin && <TabsTrigger value="verification">Verification</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="organizations" className="space-y-4">
@@ -389,6 +394,11 @@ export default function Members() {
                                 {organization.membership_status}
                               </Badge>
                               <MembershipDuesBadge invoices={invoicesByOrg[organization.id]} compact showUnpaidFallback />
+                              {isAdmin && isCurrentlyVerified(verifications[organization.id], organization.profiles?.first_name, organization.profiles?.last_name) && (
+                                <Badge variant="outline" className="text-xs bg-emerald-100 text-emerald-800 border-emerald-200" title="Primary contact verified">
+                                  <BadgeCheck className="h-3 w-3 mr-1" />Verified
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         </CardHeader>
@@ -559,6 +569,11 @@ export default function Members() {
                   </div>
                 )}
               </TabsContent>
+              {isAdmin && (
+                <TabsContent value="verification" className="space-y-4">
+                  <ContactVerificationTab organizations={organizations} />
+                </TabsContent>
+              )}
             </Tabs>
           </div>
 
