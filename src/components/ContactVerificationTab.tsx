@@ -215,9 +215,6 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
   const batchDone = batchTotal - pendingQueue.length;
   const batchPct = batchTotal ? Math.round((batchDone / batchTotal) * 100) : 0;
   useEffect(() => {
-    if (queue && pendingQueue.length === 0 && storedTotal) localStorage.removeItem(BATCH_KEY);
-  }, [queue, pendingQueue.length, storedTotal]);
-  useEffect(() => {
     const ch = supabase
       .channel('cv-queue')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_verification_queue' }, () => {
