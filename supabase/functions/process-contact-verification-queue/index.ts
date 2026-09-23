@@ -28,8 +28,7 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
   }
 
-  let processed = 0;
-  for (const item of due || []) {
+  const processItem = async (item: { id: string; organization_id: string; attempts: number; queued_by: string | null }) => {
     const { data: org } = await db
       .from("organizations")
       .select("id, name, contact_person_id, profiles:contact_person_id(first_name, last_name, primary_contact_title)")
@@ -38,7 +37,7 @@ Deno.serve(async (req) => {
     const p: any = (org as any)?.profiles;
     if (!org || !p?.first_name || !p?.last_name) {
       await db.from("contact_verification_queue").delete().eq("id", item.id);
-      continue;
+      return 1;
     }
 
     const res = await fetch(`${url}/functions/v1/verify-contact-ai`, {
@@ -66,7 +65,7 @@ Deno.serve(async (req) => {
             .eq("id", row.id);
         }
       }
-      break;
+      return 0;
     }
 
     const data = await res.json().catch(() => null);
@@ -79,7 +78,7 @@ Deno.serve(async (req) => {
         last_error: data?.error || `HTTP ${res.status}`,
         updated_at: new Date().toISOString(),
       }).eq("id", item.id);
-      continue;
+      return 0;
     }
 
     const s = data.structured || {};
@@ -110,8 +109,16 @@ Deno.serve(async (req) => {
       verified_at: new Date().toISOString(),
     }, { onConflict: "organization_id" });
     await db.from("contact_verification_queue").delete().eq("id", item.id);
-    processed++;
-  }
+    return 1;
+  };
+
+  // Run the small due batch concurrently. Sequential web searches can exceed the
+  // edge-function lifetime before even the first queue row is removed, leaving
+  // the progress bar permanently at zero.
+  const results = await Promise.allSettled((due || []).map(processItem));
+  const processed = results.reduce((total, result) => (
+    total + (result.status === "fulfilled" ? result.value : 0)
+  ), 0);
 
   // Switch the background job off once nothing is left to do.
   const { count } = await db
