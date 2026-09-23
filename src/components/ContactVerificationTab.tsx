@@ -363,8 +363,8 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
             <Button disabled={running || scheduling} onClick={() => scheduleBatch(withContact(rows.filter((r) => r.state === 'never' || r.state === 'stale')))}>
               <Play className="h-4 w-4 mr-2" />Schedule unchecked ({counts.never})
             </Button>
-            <Button variant="outline" disabled={running || scheduling} onClick={() => scheduleBatch(withContact(visible))}>
-              Schedule shown list ({withContact(visible).length})
+            <Button variant="outline" disabled={running || scheduling} onClick={() => scheduleBatch(withContact(rows.filter((r) => r.state !== 'verified')))}>
+              Schedule unverified ({withContact(rows.filter((r) => r.state !== 'verified')).length})
             </Button>
             <Button variant="outline" disabled={running || scheduling} onClick={() => scheduleBatch(withContact(rows))}>
               Schedule all ({withContact(rows).length})
