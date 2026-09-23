@@ -61,6 +61,7 @@ export function ReplacementContactModal({ open, onOpenChange, organization, veri
         <div className="rounded-md border p-3 text-sm space-y-1">
           <div className="flex items-center gap-2 font-medium"><UserX className="h-4 w-4 text-amber-600" />Listed primary contact (unverified)</div>
           <div>{contactName || '—'}{p.primary_contact_title ? ` · ${p.primary_contact_title}` : ''}</div>
+          {p.email && <div className="text-muted-foreground">{p.email}</div>}
           {verification ? (
             <div className="text-muted-foreground">
               Last check: {verification.status}{verification.summary ? ` — ${verification.summary}` : ''}
