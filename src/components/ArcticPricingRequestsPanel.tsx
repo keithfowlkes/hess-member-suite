@@ -61,9 +61,12 @@ export function ArcticPricingRequestsPanel() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <div>
+      <Collapsible open={open} onOpenChange={setOpen}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-2">
+        <CollapsibleTrigger asChild>
+        <button type="button" className="text-left flex-1 min-w-0">
           <CardTitle className="text-base flex items-center gap-2">
+            <ChevronDown className={`h-4 w-4 transition-transform ${open ? '' : '-rotate-90'}`} />
             <Mail className="h-4 w-4 text-primary" />
             Arctic Security Pricing Requests
             <Badge variant="secondary">{requests.length}</Badge>
@@ -71,12 +74,14 @@ export function ArcticPricingRequestsPanel() {
           <p className="text-sm text-muted-foreground mt-1">
             Member submissions from the "Get Full Arctic Security Pricing" form.
           </p>
-        </div>
+        </button>
+        </CollapsibleTrigger>
         <Button variant="outline" size="sm" className="gap-2" onClick={load} disabled={loading}>
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </CardHeader>
+      <CollapsibleContent>
       <CardContent className="space-y-4">
         <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
           <Label htmlFor="arctic-pricing-emails" className="text-sm">

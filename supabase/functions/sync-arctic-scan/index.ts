@@ -91,7 +91,8 @@ function toRows(csv: string, observationTime: string) {
   const iCat = idx('category');
   const iUrg = idx('urgency');
   const iEvents = idx('# events');
-  const iGroups = idx('# unique event group id');
+  // Match the feed's "unique event group id" column regardless of prefix/plural.
+  const iGroups = header.findIndex((h) => h.includes('unique event group id'));
   const iIps = idx('# unique ip');
 
   if (iOrg < 0 || iCat < 0 || iUrg < 0) {
