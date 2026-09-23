@@ -28,6 +28,8 @@ import { OrganizationAccessModal } from '@/components/OrganizationAccessModal';
 import { HelpModal } from '@/components/HelpModal';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { FeeStatsDrilldownModal } from '@/components/FeeStatsDrilldownModal';
+import { useBoardMemberRevenue } from '@/hooks/useBoardMemberRevenue';
 
 import { useState, useEffect } from 'react';
 
@@ -49,6 +51,12 @@ const Index = () => {
   const [surveyAlertDismissed, setSurveyAlertDismissed] = useState(false);
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
   const [deepLinkedInvoice, setDeepLinkedInvoice] = useState<any>(null);
+  const [revenueBreakdownOpen, setRevenueBreakdownOpen] = useState(false);
+  const {
+    isBoardMember,
+    summary: boardRevenue,
+    loading: boardRevenueLoading,
+  } = useBoardMemberRevenue();
 
   // Handle emailed "Pay this invoice online" deep link: ?invoice=<id> opens the
   // invoice modal automatically once invoices have loaded.
@@ -626,7 +634,7 @@ const Index = () => {
             {/* Stats Grid */}
             <div className="space-y-6">
               {/* First Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isBoardMember ? 'xl:grid-cols-3' : ''}`}>
                 {firstRowStats.map((stat) => {
                   const Icon = stat.icon;
                   return (
@@ -677,6 +685,28 @@ const Index = () => {
                     </Button>
                   </CardContent>
                 </Card>
+
+                {isBoardMember && (
+                  <Card
+                    className="cursor-pointer border-primary/20 bg-primary/5 transition-shadow hover:shadow-md"
+                    onClick={() => setRevenueBreakdownOpen(true)}
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Billed Revenue</CardTitle>
+                      <DollarSign className="h-4 w-4 text-primary" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-foreground">
+                        {boardRevenueLoading
+                          ? '...'
+                          : `$${boardRevenue.totalBilled.toLocaleString()}`}
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Click to view the total revenue breakdown.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
               
               {/* Second Row */}
@@ -788,6 +818,34 @@ const Index = () => {
             open={feedbackDialogOpen}
             onOpenChange={setFeedbackDialogOpen}
           />
+
+          {isBoardMember && (
+            <FeeStatsDrilldownModal
+              isOpen={revenueBreakdownOpen}
+              onClose={() => setRevenueBreakdownOpen(false)}
+              title="Total Revenue Breakdown"
+              description="Annual fees billed across all organizations, and revenue actually collected."
+              organizations={boardRevenue.organizations}
+              amountLabel="Annual Fee"
+              summary={[
+                {
+                  label: 'Annual Total Billed',
+                  value: `$${boardRevenue.totalBilled.toLocaleString()}`,
+                },
+                {
+                  label: 'Current Paid Revenue',
+                  value: `$${boardRevenue.paidRevenue.toLocaleString()}`,
+                  tone: 'success',
+                },
+                {
+                  label: 'Outstanding',
+                  value: `$${Math.max(boardRevenue.totalBilled - boardRevenue.paidRevenue, 0).toLocaleString()}`,
+                  tone: 'warning',
+                },
+              ]}
+              getAmount={(organization) => organization.annual_fee_amount}
+            />
+          )}
         </main>
       </div>
     </SidebarProvider>
