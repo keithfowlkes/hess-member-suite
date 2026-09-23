@@ -339,6 +339,9 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
             <SelectItem value="never">Not yet checked</SelectItem>
           </SelectContent>
         </Select>
+        <Button variant="outline" onClick={downloadXlsx} disabled={visible.length === 0}>
+          <Download className="h-4 w-4 mr-2" />Download .xlsx ({visible.length})
+        </Button>
       </div>
 
       <div className="rounded-md border overflow-x-auto">
