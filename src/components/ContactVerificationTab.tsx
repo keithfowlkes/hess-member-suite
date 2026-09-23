@@ -8,7 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BadgeCheck, Loader2, Play, Search, Square, ExternalLink } from 'lucide-react';
+import { BadgeCheck, Download, Loader2, Play, Search, Square, ExternalLink } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import type { Organization } from '@/hooks/useMembers';
 import {
