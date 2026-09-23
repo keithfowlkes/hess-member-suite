@@ -59,6 +59,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { OrganizationCRMTab } from '@/components/OrganizationCRMTab';
+import { ContactAIVerifyButton } from '@/components/ContactAIVerifyButton';
 
 const organizationSchema = z.object({
   name: z.string().min(2, 'Organization name must be at least 2 characters'),
@@ -955,6 +956,12 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
                       )}
                     />
                   </div>
+                  <ContactAIVerifyButton
+                    organizationName={orgForm.watch('name') || organization?.name || ''}
+                    firstName={profileForm.watch('first_name')}
+                    lastName={profileForm.watch('last_name')}
+                    title={profileForm.watch('primary_contact_title')}
+                  />
                 </Form>
               </TabsContent>
 
@@ -1040,6 +1047,12 @@ export function ComprehensiveOrganizationDialog({ open, onOpenChange, organizati
                       )}
                     />
                   </div>
+                  <ContactAIVerifyButton
+                    organizationName={orgForm.watch('name') || organization?.name || ''}
+                    firstName={profileForm.watch('secondary_first_name')}
+                    lastName={profileForm.watch('secondary_last_name')}
+                    title={profileForm.watch('secondary_contact_title')}
+                  />
                 </Form>
               </TabsContent>
 
