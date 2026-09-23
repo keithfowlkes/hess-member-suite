@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
   for (const item of due || []) {
     const { data: org } = await db
       .from("organizations")
-      .select("id, name, profiles:contact_person_id(first_name, last_name, primary_contact_title)")
+      .select("id, name, contact_person_id, profiles:contact_person_id(first_name, last_name, primary_contact_title)")
       .eq("id", item.organization_id)
       .maybeSingle();
     const p: any = (org as any)?.profiles;
