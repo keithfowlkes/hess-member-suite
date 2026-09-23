@@ -602,6 +602,12 @@ export default function Members() {
             organization={selectedOrganization}
           />
 
+          <ReplacementContactModal
+            open={!!replacementOrg}
+            onOpenChange={(o) => { if (!o) setReplacementOrg(null); }}
+            organization={replacementOrg}
+            verification={replacementOrg ? verifications[replacementOrg.id] : undefined}
+          />
           <ImportMembersDialog
             open={importDialogOpen}
             onOpenChange={setImportDialogOpen}
