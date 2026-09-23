@@ -2857,6 +2857,7 @@ export type Database = {
       email_exists: { Args: { p_email: string }; Returns: boolean }
       fix_user_password_from_registration: { Args: never; Returns: string }
       generate_secure_token: { Args: never; Returns: string }
+      get_board_member_revenue_summary: { Args: never; Returns: Json }
       get_user_organization: { Args: { _user_id: string }; Returns: string }
       get_user_organization_by_contact: {
         Args: { _user_id: string }
