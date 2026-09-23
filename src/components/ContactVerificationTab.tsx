@@ -338,6 +338,9 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
             <Button variant="outline" disabled={running || scheduling} onClick={() => scheduleBatch(withContact(visible))}>
               Schedule shown list ({withContact(visible).length})
             </Button>
+            <Button variant="outline" disabled={running || scheduling} onClick={() => scheduleBatch(withContact(rows))}>
+              Schedule all ({withContact(rows).length})
+            </Button>
             {pendingQueue.length > 0 && (
               <Button variant="outline" onClick={cancelScheduled}>
                 <Square className="h-4 w-4 mr-2" />Cancel scheduled
