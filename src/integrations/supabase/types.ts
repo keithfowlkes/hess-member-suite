@@ -648,6 +648,75 @@ export type Database = {
           },
         ]
       }
+      contact_verifications: {
+        Row: {
+          confidence: string | null
+          contact_name: string
+          contact_title: string | null
+          created_at: string
+          found_title: string | null
+          id: string
+          institutional_url: string | null
+          linkedin_url: string | null
+          notes: string | null
+          organization_id: string
+          status: string
+          summary: string | null
+          updated_at: string
+          verified_at: string
+          verified_by: string | null
+        }
+        Insert: {
+          confidence?: string | null
+          contact_name: string
+          contact_title?: string | null
+          created_at?: string
+          found_title?: string | null
+          id?: string
+          institutional_url?: string | null
+          linkedin_url?: string | null
+          notes?: string | null
+          organization_id: string
+          status: string
+          summary?: string | null
+          updated_at?: string
+          verified_at?: string
+          verified_by?: string | null
+        }
+        Update: {
+          confidence?: string | null
+          contact_name?: string
+          contact_title?: string | null
+          created_at?: string
+          found_title?: string | null
+          id?: string
+          institutional_url?: string | null
+          linkedin_url?: string | null
+          notes?: string | null
+          organization_id?: string
+          status?: string
+          summary?: string | null
+          updated_at?: string
+          verified_at?: string
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_verifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_verifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "public_organization_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_software_entries: {
         Row: {
           admin_notes: string | null
