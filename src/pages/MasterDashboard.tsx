@@ -494,14 +494,16 @@ const MasterDashboard = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    const searchLower = userSearchTerm.toLowerCase();
+    const normalizedSearch = userSearchTerm.toLowerCase().replace(/_/g, ' ').trim();
+    const userRoles = user.user_roles?.map(r => r.role) || [];
+    const rolesText = (userRoles.length ? userRoles : ['member']).join(' ').toLowerCase().replace(/_/g, ' ');
     return (
-      user.email.toLowerCase().includes(searchLower) ||
-      user.first_name.toLowerCase().includes(searchLower) ||
-      user.last_name.toLowerCase().includes(searchLower) ||
-      (user.organization && user.organization.toLowerCase().includes(searchLower)) ||
-      user.user_roles?.[0]?.role?.toLowerCase().includes(searchLower) ||
-      (user.is_guest && 'guest'.includes(searchLower))
+      user.email.toLowerCase().includes(normalizedSearch) ||
+      user.first_name.toLowerCase().includes(normalizedSearch) ||
+      user.last_name.toLowerCase().includes(normalizedSearch) ||
+      (user.organization && user.organization.toLowerCase().includes(normalizedSearch)) ||
+      rolesText.includes(normalizedSearch) ||
+      (user.is_guest && 'guest'.includes(normalizedSearch))
     );
   }).sort((a, b) => {
     // If a column is being sorted, use that
