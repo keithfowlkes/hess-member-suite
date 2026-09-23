@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -176,7 +176,7 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
   const qc = useQueryClient();
   const { data: queue } = useQuery({
     queryKey: ['contact-verification-queue'],
-    refetchInterval: 60000,
+    refetchInterval: 10000,
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('contact_verification_queue')
@@ -189,6 +189,27 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
   const queuedIds = new Set(pendingQueue.map((q) => q.organization_id));
   const lastScheduled = pendingQueue.reduce<string | null>((m, q) => (!m || q.scheduled_for > m ? q.scheduled_for : m), null);
   const [scheduling, setScheduling] = useState(false);
+  const BATCH_KEY = 'cv-batch-total';
+  const storedTotal = Number(typeof window !== 'undefined' ? localStorage.getItem(BATCH_KEY) : 0) || 0;
+  const batchTotal = Math.max(storedTotal, pendingQueue.length);
+  const batchDone = batchTotal - pendingQueue.length;
+  const batchPct = batchTotal ? Math.round((batchDone / batchTotal) * 100) : 0;
+  useEffect(() => {
+    if (queue && pendingQueue.length === 0 && storedTotal) localStorage.removeItem(BATCH_KEY);
+  }, [queue, pendingQueue.length, storedTotal]);
+  useEffect(() => {
+    const ch = supabase
+      .channel('cv-queue')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_verification_queue' }, () => {
+        qc.invalidateQueries({ queryKey: ['contact-verification-queue'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_verifications' }, () => {
+        qc.invalidateQueries({ queryKey: ['contact-verification-queue'] });
+        qc.invalidateQueries({ queryKey: ['contact-verifications'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [qc]);
 
   /** Spread checks evenly across the next 24 hours so the AI service is never flooded. */
   const scheduleBatch = async (targets: Organization[]) => {
@@ -218,6 +239,7 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
       }
       const { error: jobError } = await (supabase as any).rpc('ensure_contact_verification_job');
       if (jobError) throw jobError;
+      localStorage.setItem(BATCH_KEY, String(pendingQueue.length + list.length));
       toast.success(`${list.length} verifications scheduled over the next 24 hours`);
     } catch (err: any) {
       toast.error(`Could not schedule verifications: ${err?.message || err}`);
@@ -228,6 +250,7 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
   };
 
   const cancelScheduled = async () => {
+    localStorage.removeItem(BATCH_KEY);
     const { error } = await (supabase as any).from('contact_verification_queue').delete().eq('status', 'pending');
     if (error) { toast.error(error.message); return; }
     await (supabase as any).rpc('stop_contact_verification_job');
@@ -333,6 +356,13 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
             <div className="text-sm rounded-md border bg-muted/40 p-3">
               <strong>{pendingQueue.length}</strong> verification{pendingQueue.length === 1 ? '' : 's'} scheduled in the background
               {lastScheduled && <> — expected to finish around {new Date(lastScheduled).toLocaleString()}</>}.
+              <div className="mt-2 space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span>{batchDone} of {batchTotal} complete</span>
+                  <span className="font-semibold">{batchPct}% complete</span>
+                </div>
+                <Progress value={batchPct} />
+              </div>
             </div>
           )}
           {running && (
