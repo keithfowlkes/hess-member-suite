@@ -14,6 +14,8 @@ export interface ContactVerification {
   institutional_url: string | null;
   notes: string | null;
   verified_at: string;
+  replacement_report?: any;
+  replacement_checked_at?: string | null;
 }
 
 export function useContactVerifications(enabled = true) {

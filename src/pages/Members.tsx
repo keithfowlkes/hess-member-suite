@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BadgeCheck, BadgeX } from 'lucide-react';
 import { ContactVerificationTab } from '@/components/ContactVerificationTab';
 import { useContactVerifications, isCurrentlyVerified } from '@/hooks/useContactVerifications';
+import { ReplacementContactModal } from '@/components/ReplacementContactModal';
 import { useMembers } from '@/hooks/useMembers';
 import { useOrganizationTotals } from '@/hooks/useOrganizationTotals';
 import { Plus, Search, Building2, Mail, Phone, MapPin, User, Grid3X3, List, Upload, TrendingUp, Download, ChevronDown } from 'lucide-react';
@@ -36,6 +37,7 @@ export default function Members() {
   const isPaymentFilter = statusFilter === 'paid' || statusFilter === 'unpaid';
   const { organizations, loading } = useMembers(isPaymentFilter ? 'all' : statusFilter);
   const { data: verifications = {} } = useContactVerifications(!!isAdmin);
+  const [replacementOrg, setReplacementOrg] = useState<any>(null);
   const { data: totals, isLoading: totalsLoading } = useOrganizationTotals();
   const { invoices } = useInvoices();
   const invoicesByOrg = useMemo(() => {
@@ -401,7 +403,12 @@ export default function Members() {
                                )}
                                {isAdmin && (organization.profiles?.first_name || organization.profiles?.last_name) &&
                                  !isCurrentlyVerified(verifications[organization.id], organization.profiles?.first_name, organization.profiles?.last_name) && (
-                                 <Badge variant="outline" className="text-xs bg-amber-100 text-amber-800 border-amber-200" title="Primary contact not verified">
+                                 <Badge
+                                   variant="outline"
+                                   className="text-xs bg-amber-100 text-amber-800 border-amber-200 cursor-pointer hover:bg-amber-200"
+                                   title="Click to see who holds this position now"
+                                   onClick={(e) => { e.stopPropagation(); setReplacementOrg(organization); }}
+                                 >
                                    <BadgeX className="h-3 w-3 mr-1" />Unverified
                                  </Badge>
                                )}
