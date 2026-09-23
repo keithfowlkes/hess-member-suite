@@ -219,6 +219,24 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
     qc.invalidateQueries({ queryKey: ['contact-verification-queue'] });
   };
 
+  /** Single checks run in real time and clear any scheduled queue entry for that org. */
+  const verifySingle = async (org: Organization) => {
+    setRunning(true);
+    setProgress({ done: 0, total: 1, current: org.name });
+    try {
+      await verifyOne(org);
+      await (supabase as any).from('contact_verification_queue').delete().eq('organization_id', org.id);
+      qc.invalidateQueries({ queryKey: ['contact-verification-queue'] });
+      toast.success(`Verified ${org.name}`);
+    } catch (err: any) {
+      toast.error(`Verification failed for ${org.name}: ${err?.message || err}`);
+    } finally {
+      invalidate();
+      setRunning(false);
+      setProgress({ done: 0, total: 0, current: '' });
+    }
+  };
+
   const withContact = (list: typeof rows) => list.filter((r) => r.state !== 'no_contact').map((r) => r.org);
 
   return (
