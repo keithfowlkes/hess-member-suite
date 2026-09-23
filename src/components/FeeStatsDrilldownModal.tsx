@@ -1,7 +1,10 @@
+import { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Building2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Building2, Search } from 'lucide-react';
 
 interface OrgRow {
   id: string;
@@ -12,6 +15,7 @@ interface OrgRow {
   email?: string;
   city?: string;
   state?: string;
+  has_paid_invoice?: boolean;
 }
 
 interface SummaryStat {
@@ -29,6 +33,7 @@ interface FeeStatsDrilldownModalProps {
   summary?: SummaryStat[];
   amountLabel?: string;
   getAmount?: (org: OrgRow) => number | null | undefined;
+  showPaymentStatus?: boolean;
 }
 
 const toneClasses: Record<string, string> = {
@@ -47,8 +52,20 @@ export function FeeStatsDrilldownModal({
   summary,
   amountLabel = 'Annual Fee',
   getAmount,
+  showPaymentStatus = false,
 }: FeeStatsDrilldownModalProps) {
-  const sorted = [...organizations].sort((a, b) => a.name.localeCompare(b.name));
+  const [search, setSearch] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
+  const sorted = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+    return organizations
+      .filter((org) => !normalizedSearch || org.name.toLowerCase().includes(normalizedSearch))
+      .filter((org) => {
+        if (!showPaymentStatus || paymentFilter === 'all') return true;
+        return paymentFilter === 'paid' ? org.has_paid_invoice === true : org.has_paid_invoice !== true;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [organizations, paymentFilter, search, showPaymentStatus]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -56,7 +73,7 @@ export function FeeStatsDrilldownModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
-            {title} ({sorted.length})
+            {title} ({sorted.length}{sorted.length !== organizations.length ? ` of ${organizations.length}` : ''})
           </DialogTitle>
           {description && (
             <p className="text-sm text-muted-foreground mt-1">{description}</p>
@@ -77,11 +94,35 @@ export function FeeStatsDrilldownModal({
           </div>
         )}
 
+        {showPaymentStatus && (
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search organizations"
+                className="pl-9"
+              />
+            </div>
+            <Select value={paymentFilter} onValueChange={(value: 'all' | 'paid' | 'unpaid') => setPaymentFilter(value)}>
+              <SelectTrigger className="w-full sm:w-44" aria-label="Filter by dues status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All dues statuses</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="unpaid">Not Paid</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <ScrollArea className="mt-3 max-h-[55vh] pr-3">
           {sorted.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Building2 className="h-10 w-10 mx-auto mb-3 opacity-40" />
-              <p>No organizations to display.</p>
+              <p>{search || paymentFilter !== 'all' ? 'No organizations match your search or filter.' : 'No organizations to display.'}</p>
             </div>
           ) : (
             <table className="w-full text-sm">
@@ -89,6 +130,7 @@ export function FeeStatsDrilldownModal({
                 <tr>
                   <th className="py-2 pr-2">Organization</th>
                   <th className="py-2 pr-2">Status</th>
+                  {showPaymentStatus && <th className="py-2 pr-2">Dues Status</th>}
                   <th className="py-2 pr-2 text-right">{amountLabel}</th>
                 </tr>
               </thead>
@@ -107,6 +149,13 @@ export function FeeStatsDrilldownModal({
                           </div>
                         )}
                       </td>
+                      {showPaymentStatus && (
+                        <td className="py-2 pr-2">
+                          <Badge variant={org.has_paid_invoice ? 'default' : 'outline'}>
+                            {org.has_paid_invoice ? 'Paid' : 'Not Paid'}
+                          </Badge>
+                        </td>
+                      )}
                       <td className="py-2 pr-2">
                         <Badge variant="secondary" className="capitalize">
                           {org.membership_status || 'unknown'}

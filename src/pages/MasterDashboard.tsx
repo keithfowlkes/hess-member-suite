@@ -653,7 +653,7 @@ const MasterDashboard = () => {
   const handleRolesChange = async (userId: string, newRoles: string[]) => {
     setUpdatingUser(userId);
     try {
-      await updateUserRoles(userId, newRoles as ('admin' | 'member' | 'cohort_leader')[]);
+      await updateUserRoles(userId, newRoles as ('admin' | 'member' | 'cohort_leader' | 'board_member')[]);
     } catch (error) {
       console.error('Roles update failed:', error);
       // Error toast is already handled in updateUserRoles
