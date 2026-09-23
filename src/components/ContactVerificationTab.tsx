@@ -238,6 +238,29 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
     }
   };
 
+  const downloadXlsx = () => {
+    const data = visible.map(({ org, v, state }) => ({
+      'Organization': org.name,
+      'Primary Contact': `${org.profiles?.first_name || ''} ${org.profiles?.last_name || ''}`.trim(),
+      'Contact Title': org.profiles?.primary_contact_title || '',
+      'Contact Email': org.profiles?.email || '',
+      'Status': labels[state],
+      'Confidence': v && state !== 'stale' ? v.confidence || '' : '',
+      'Found Title': v && state !== 'stale' ? v.found_title || '' : '',
+      'Summary': v && state !== 'stale' ? v.summary || '' : '',
+      'Institutional Source': v && state !== 'stale' ? v.institutional_url || '' : '',
+      'LinkedIn': v && state !== 'stale' ? v.linkedin_url || '' : '',
+      'Scheduled': queuedIds.has(org.id) ? 'Yes' : '',
+      'Last Checked': v ? new Date(v.verified_at).toLocaleString() : '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [{ wch: 32 }, { wch: 22 }, { wch: 24 }, { wch: 30 }, { wch: 14 }, { wch: 12 }, { wch: 24 }, { wch: 50 }, { wch: 34 }, { wch: 34 }, { wch: 10 }, { wch: 20 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Contact Verification');
+    XLSX.writeFile(wb, `contact-verification-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success(`Downloaded ${data.length} rows`);
+  };
+
   const withContact = (list: typeof rows) => list.filter((r) => r.state !== 'no_contact').map((r) => r.org);
 
   return (
