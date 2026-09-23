@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -156,6 +157,68 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
     toast.success(`Batch verification finished${failures ? ` (${failures} failed)` : ''}`);
   };
 
+  const qc = useQueryClient();
+  const { data: queue } = useQuery({
+    queryKey: ['contact-verification-queue'],
+    refetchInterval: 60000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('contact_verification_queue')
+        .select('organization_id, scheduled_for, status');
+      if (error) throw error;
+      return (data || []) as { organization_id: string; scheduled_for: string; status: string }[];
+    },
+  });
+  const pendingQueue = (queue || []).filter((q) => q.status === 'pending');
+  const queuedIds = new Set(pendingQueue.map((q) => q.organization_id));
+  const lastScheduled = pendingQueue.reduce<string | null>((m, q) => (!m || q.scheduled_for > m ? q.scheduled_for : m), null);
+  const [scheduling, setScheduling] = useState(false);
+
+  /** Spread checks evenly across the next 24 hours so the AI service is never flooded. */
+  const scheduleBatch = async (targets: Organization[]) => {
+    const list = targets.filter((o) => !queuedIds.has(o.id));
+    if (list.length === 0) {
+      toast.info('No new organizations to schedule');
+      return;
+    }
+    setScheduling(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const spacing = (24 * 60 * 60 * 1000) / list.length;
+      const start = Date.now() + 60 * 1000;
+      const rows = list.map((o, i) => ({
+        organization_id: o.id,
+        scheduled_for: new Date(start + i * spacing).toISOString(),
+        status: 'pending',
+        attempts: 0,
+        last_error: null,
+        queued_by: auth.user?.id || null,
+      }));
+      for (let i = 0; i < rows.length; i += 200) {
+        const { error } = await (supabase as any)
+          .from('contact_verification_queue')
+          .upsert(rows.slice(i, i + 200), { onConflict: 'organization_id' });
+        if (error) throw error;
+      }
+      const { error: jobError } = await (supabase as any).rpc('ensure_contact_verification_job');
+      if (jobError) throw jobError;
+      toast.success(`${list.length} verifications scheduled over the next 24 hours`);
+    } catch (err: any) {
+      toast.error(`Could not schedule verifications: ${err?.message || err}`);
+    } finally {
+      setScheduling(false);
+      qc.invalidateQueries({ queryKey: ['contact-verification-queue'] });
+    }
+  };
+
+  const cancelScheduled = async () => {
+    const { error } = await (supabase as any).from('contact_verification_queue').delete().eq('status', 'pending');
+    if (error) { toast.error(error.message); return; }
+    await (supabase as any).rpc('stop_contact_verification_job');
+    toast.success('Scheduled verifications cancelled');
+    qc.invalidateQueries({ queryKey: ['contact-verification-queue'] });
+  };
+
   const withContact = (list: typeof rows) => list.filter((r) => r.state !== 'no_contact').map((r) => r.org);
 
   return (
@@ -182,12 +245,17 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
       <Card>
         <CardContent className="pt-6 space-y-3">
           <div className="flex flex-wrap gap-2">
-            <Button disabled={running} onClick={() => runBatch(withContact(rows.filter((r) => r.state === 'never' || r.state === 'stale')))}>
-              <Play className="h-4 w-4 mr-2" />Verify unchecked ({counts.never})
+            <Button disabled={running || scheduling} onClick={() => scheduleBatch(withContact(rows.filter((r) => r.state === 'never' || r.state === 'stale')))}>
+              <Play className="h-4 w-4 mr-2" />Schedule unchecked ({counts.never})
             </Button>
-            <Button variant="outline" disabled={running} onClick={() => runBatch(withContact(visible))}>
-              Verify shown list ({withContact(visible).length})
+            <Button variant="outline" disabled={running || scheduling} onClick={() => scheduleBatch(withContact(visible))}>
+              Schedule shown list ({withContact(visible).length})
             </Button>
+            {pendingQueue.length > 0 && (
+              <Button variant="outline" onClick={cancelScheduled}>
+                <Square className="h-4 w-4 mr-2" />Cancel scheduled
+              </Button>
+            )}
             {running && (
               <Button variant="destructive" onClick={() => { stopRef.current = true; }}>
                 <Square className="h-4 w-4 mr-2" />Stop
@@ -195,8 +263,14 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            Each check uses AI and web search, so large batches take several minutes and use AI credits. Keep this page open while it runs.
+            Batches are spread evenly over 24 hours and run in the background, so you can close this page. Each check uses AI and web search and uses AI credits; if the AI limit is reached, remaining checks wait an hour and continue.
           </p>
+          {pendingQueue.length > 0 && (
+            <div className="text-sm rounded-md border bg-muted/40 p-3">
+              <strong>{pendingQueue.length}</strong> verification{pendingQueue.length === 1 ? '' : 's'} scheduled in the background
+              {lastScheduled && <> — expected to finish around {new Date(lastScheduled).toLocaleString()}</>}.
+            </div>
+          )}
           {running && (
             <div className="space-y-1">
               <Progress value={progress.total ? (progress.done / progress.total) * 100 : 0} />
@@ -254,6 +328,7 @@ export function ContactVerificationTab({ organizations }: { organizations: Organ
                     {state === 'verified' && <BadgeCheck className="h-3 w-3 mr-1" />}
                     {labels[state]}
                   </Badge>
+                  {queuedIds.has(org.id) && <div className="text-xs text-muted-foreground mt-1">Scheduled</div>}
                   {v?.confidence && state !== 'stale' && (
                     <div className="text-xs text-muted-foreground mt-1">{v.confidence} confidence</div>
                   )}
