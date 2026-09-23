@@ -1,0 +1,1 @@
+ALTER TABLE public.contact_verifications ADD COLUMN IF NOT EXISTS replacement_report jsonb, ADD COLUMN IF NOT EXISTS replacement_checked_at timestamptz;

@@ -711,6 +711,8 @@ export type Database = {
           linkedin_url: string | null
           notes: string | null
           organization_id: string
+          replacement_checked_at: string | null
+          replacement_report: Json | null
           status: string
           summary: string | null
           updated_at: string
@@ -728,6 +730,8 @@ export type Database = {
           linkedin_url?: string | null
           notes?: string | null
           organization_id: string
+          replacement_checked_at?: string | null
+          replacement_report?: Json | null
           status: string
           summary?: string | null
           updated_at?: string
@@ -745,6 +749,8 @@ export type Database = {
           linkedin_url?: string | null
           notes?: string | null
           organization_id?: string
+          replacement_checked_at?: string | null
+          replacement_report?: Json | null
           status?: string
           summary?: string | null
           updated_at?: string
