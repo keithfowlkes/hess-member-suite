@@ -88,7 +88,7 @@ export function ArcticPricingRequestModal({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Get Full Arctic Security Pricing</DialogTitle>
+          <DialogTitle>I'm interested in Arctic Security Services</DialogTitle>
           <DialogDescription>
             Your contact and institution details are pre-filled. Review, adjust if needed, and submit.
           </DialogDescription>
