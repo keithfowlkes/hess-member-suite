@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Search the web using Tavily
-async function searchWeb(query: string, apiKey: string): Promise<{ results: string[], authError: boolean }> {
+async function searchWeb(query: string, apiKey: string): Promise<{ results: string[], authError: boolean, quotaError?: boolean }> {
   console.log(`Searching web with Tavily for: ${query}`);
   
   try {
@@ -33,6 +33,9 @@ async function searchWeb(query: string, apiKey: string): Promise<{ results: stri
       if (response.status === 401 || response.status === 403) {
         console.warn('Tavily API key is invalid or unauthorized - will fall back to AI-only verification');
         return { results: [], authError: true };
+      }
+      if (response.status === 432 || response.status === 429) {
+        return { results: [], authError: false, quotaError: true };
       }
       
       return { results: [], authError: false };
@@ -98,13 +101,15 @@ serve(async (req) => {
     
     let webSearchResults: string[] = [];
     let tavilyAuthError = false;
+    let tavilyQuotaError = false;
     
     // Use Tavily for real web search if API key is available
     if (TAVILY_API_KEY) {
       console.log('Using Tavily for real-time web search...');
       
       for (const query of searchQueries) {
-        const { results, authError } = await searchWeb(query, TAVILY_API_KEY);
+        const { results, authError, quotaError } = await searchWeb(query, TAVILY_API_KEY);
+        if (quotaError) { tavilyQuotaError = true; break; }
         
         if (authError) {
           tavilyAuthError = true;
@@ -127,6 +132,15 @@ serve(async (req) => {
       }
     } else {
       console.log('TAVILY_API_KEY not configured - falling back to AI training data only');
+    }
+
+    // Never save a result when web search is unavailable - it produces false "Not Found" results.
+    if (!TAVILY_API_KEY || tavilyAuthError || tavilyQuotaError) {
+      const msg = tavilyQuotaError
+        ? 'Web search usage limit reached (Tavily). Checks will resume once the limit resets or the plan is upgraded.'
+        : 'Web search is not available (Tavily key missing or invalid).';
+      return new Response(JSON.stringify({ error: msg }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Build the prompt with real web search results
