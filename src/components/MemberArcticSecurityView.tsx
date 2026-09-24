@@ -387,7 +387,7 @@ export function MemberArcticSecurityView({ previewOrgName }: { previewOrgName?: 
                 </div>
                 <div className="ml-auto">
                   <Button size="sm" className="h-7 text-xs px-2.5 font-semibold" onClick={() => setPricingOpen(true)}>
-                    Get Full Arctic Security Pricing
+                    Click here to contact Arctic Security for services & pricing
                   </Button>
                 </div>
               </div>
