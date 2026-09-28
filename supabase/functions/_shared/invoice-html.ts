@@ -16,6 +16,7 @@ export interface InvoiceHtmlInput {
   notes?: string | null;
   invoiceId?: string | null; // when provided, renders the "Pay this invoice online" button
   paidDate?: string | null;  // when provided, renders a "PAID" stamp with this date
+  isOverdue?: boolean;       // when true (and not paid), renders an overdue notice banner
 }
 
 function formatDate(value: string): string {
@@ -32,6 +33,7 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
   const {
     invoiceNumber, invoiceDate, dueDate, periodStart, periodEnd,
     organizationName, organizationEmail, amount, proratedAmount, notes, invoiceId, paidDate,
+    isOverdue,
   } = input;
 
   const totalAmount = proratedAmount ?? amount;
