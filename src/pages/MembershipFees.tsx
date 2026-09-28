@@ -840,14 +840,16 @@ export default function MembershipFees() {
               const invoiceNumber = newInvoice?.invoice_number || `INV-${Date.now()}`;
               const subject = `HESS Consortium - Invoice ${invoiceNumber}`;
 
+              // Retain the original invoice's due date and period when resending;
+              // only brand-new invoices use the freshly computed values.
               const invoiceEmailData = {
                 organization_name: organization.name || '',
                 invoice_number: invoiceNumber,
                 amount: `$${(invoiceAmount || 0).toLocaleString()}`,
                 prorated_amount: proratedAmount ? `$${proratedAmount.toLocaleString()}` : undefined,
-                due_date: format(dueDate, 'yyyy-MM-dd'),
-                period_start_date: invoicePeriod.start,
-                period_end_date: invoicePeriod.end,
+                due_date: existing?.due_date || format(dueDate, 'yyyy-MM-dd'),
+                period_start_date: existing?.period_start_date || invoicePeriod.start,
+                period_end_date: existing?.period_end_date || invoicePeriod.end,
                 notes: newInvoice?.notes || ''
               };
 
