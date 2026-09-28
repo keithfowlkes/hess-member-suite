@@ -158,7 +158,9 @@ serve(async (req) => {
       due_date: invoice.due_date,
       period_start_date: invoice.period_start_date,
       period_end_date: invoice.period_end_date,
-      notes: invoice.notes
+      notes: invoice.notes,
+      status: invoice.status,
+      paid_date: invoice.paid_date
     }, invoiceId, true); // true for embedded logo
 
     // Get invoice email template from system_messages for subject
