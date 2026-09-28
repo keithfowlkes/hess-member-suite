@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS invoices_org_period_unique ON public.invoices (organization_id, period_start_date);
