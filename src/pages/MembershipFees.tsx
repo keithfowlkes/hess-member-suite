@@ -766,7 +766,7 @@ export default function MembershipFees() {
     setSelectedOrganizations(newSelected);
   };
 
-  const handleSendSelectedInvoices = async () => {
+  const handleSendSelectedInvoices = async (resendOnly = false) => {
       if (selectedOrganizations.size === 0) {
         toast({
           title: "No organizations selected",
@@ -784,7 +784,17 @@ export default function MembershipFees() {
 
         const invoicePeriod = getCurrentInvoicePeriod(defaultTermEndDate);
 
+        // Look up existing invoices for this period so we never create duplicates
+        const { data: existingRows } = await supabase
+          .from('invoices')
+          .select('id, organization_id, invoice_number, amount, prorated_amount, due_date, notes, status')
+          .in('organization_id', Array.from(selectedOrganizations))
+          .eq('period_start_date', invoicePeriod.start);
+        const existingByOrg = new Map((existingRows || []).map((r: any) => [r.organization_id, r]));
+
         let successCount = 0;
+        let reusedCount = 0;
+        let skippedCount = 0;
         let errorCount = 0;
         const emailsToSend = [];
 
@@ -793,15 +803,19 @@ export default function MembershipFees() {
             const organization = organizations.find(org => org.id === organizationId);
             if (!organization) continue;
 
+            const existing: any = existingByOrg.get(organizationId);
+            if (existing?.status === 'paid') { skippedCount++; continue; }
+            if (!existing && resendOnly) { skippedCount++; continue; }
+
             // Check if there's a prorated amount set for this organization
-            const proratedAmount = getProratedAmount(organizationId);
+            const proratedAmount = existing ? (existing.prorated_amount ?? undefined) : getProratedAmount(organizationId);
             // Check if organization has a specific fee tier set
             const feeTier = organizationFeeTiers[organizationId];
             const tierAmount = feeTier ? getFeeAmountForTier(feeTier) : null;
-            const invoiceAmount = proratedAmount || tierAmount || organization.annual_fee_amount || 1000;
+            const invoiceAmount = existing ? Number(existing.amount) : (proratedAmount || tierAmount || organization.annual_fee_amount || 1000);
 
-            // Create the invoice
-            const newInvoice = await createInvoice({
+            // Reuse the existing invoice for this period, otherwise create one
+            const newInvoice = existing || await createInvoice({
               organization_id: organizationId,
               amount: invoiceAmount,
               prorated_amount: proratedAmount,
@@ -813,7 +827,12 @@ export default function MembershipFees() {
                 : `Annual membership fee for ${organization.name}`
             });
 
-            successCount++;
+            if (existing) {
+              reusedCount++;
+              await supabase.from('invoices').update({ sent_date: new Date().toISOString(), status: existing.status === 'draft' ? 'sent' : existing.status }).eq('id', existing.id);
+            } else {
+              successCount++;
+            }
 
             // Prepare email for bulk sending if organization has email
             if (organization.email) {
@@ -2604,11 +2623,19 @@ export default function MembershipFees() {
                           <Eye className="h-4 w-4 mr-2" />
                           Preview Invoice
                         </Button>
-                        <Button 
-                          onClick={handleSendSelectedInvoices}
+                        <Button
+                          variant="outline"
+                          onClick={() => handleSendSelectedInvoices(true)}
                           disabled={selectedOrganizations.size === 0 || isSendingInvoices}
                         >
-                          {isSendingInvoices ? "Creating & Sending Invoices..." : "Create & Send Selected Invoices"}
+                          <Mail className="h-4 w-4 mr-2" />
+                          Resend Existing Invoice Emails
+                        </Button>
+                        <Button 
+                          onClick={() => handleSendSelectedInvoices(false)}
+                          disabled={selectedOrganizations.size === 0 || isSendingInvoices}
+                        >
+                          {isSendingInvoices ? "Sending Invoices..." : "Create & Send Selected Invoices"}
                         </Button>
                       </div>
                     </div>
