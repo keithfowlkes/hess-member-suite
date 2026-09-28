@@ -16,6 +16,7 @@ export interface InvoiceHtmlInput {
   notes?: string | null;
   invoiceId?: string | null; // when provided, renders the "Pay this invoice online" button
   paidDate?: string | null;  // when provided, renders a "PAID" stamp with this date
+  isOverdue?: boolean;       // when true (and not paid), renders an overdue notice banner
 }
 
 function formatDate(value: string): string {
@@ -32,6 +33,7 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
   const {
     invoiceNumber, invoiceDate, dueDate, periodStart, periodEnd,
     organizationName, organizationEmail, amount, proratedAmount, notes, invoiceId, paidDate,
+    isOverdue,
   } = input;
 
   const totalAmount = proratedAmount ?? amount;
@@ -53,10 +55,18 @@ export function buildInvoiceEmailHtml(input: InvoiceHtmlInput): string {
       </div>
     </div>` : '';
 
+  // Overdue notice banner shown only when the due date has passed and the invoice is unpaid.
+  const overdueNotice = (isOverdue && !isPaid) ? `
+    <div style="background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #dc2626; padding: 10px 14px; margin: 0 0 16px 0; border-radius: 4px;">
+      <p style="margin: 0; font-size: 14px; font-weight: bold; color: #b91c1c;">OVERDUE NOTICE</p>
+      <p style="margin: 4px 0 0 0; font-size: 13px; color: #7f1d1d;">This invoice is past due. Payment was due on ${due}. Please remit payment as soon as possible to keep your membership in good standing.</p>
+    </div>` : '';
+
   // Sizing is tuned so the rendered email fits on a single 8.5" x 11" page.
   return `
   <div style="font-family: Arial, sans-serif; line-height: 1.4; color: #333; font-size: 14px; background: #ffffff; padding: 16px 20px; max-width: 760px; margin: 0 auto;">
     ${paidStamp}
+    ${overdueNotice}
     <!-- Header: logo/company info + INVOICE title -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #666;">
       <tr>

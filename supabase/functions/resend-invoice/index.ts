@@ -24,6 +24,9 @@ function replaceTemplateVariables(content: string, data: Record<string, string>)
 // Generate invoice HTML using the shared template that mirrors the on-screen
 // Preview Invoice exactly (colors, layout, single-page sizing).
 async function generateInvoiceHTML(_template: any, templateData: Record<string, string>, invoice: any, invoiceId: string, _embedded: boolean = false) {
+  // Overdue when the due date has passed and the invoice is not paid.
+  const today = new Date().toISOString().split('T')[0];
+  const isOverdue = !!invoice.due_date && invoice.due_date < today && invoice.status !== 'paid' && !invoice.paid_date;
   return buildInvoiceEmailHtml({
     invoiceNumber: templateData['{{INVOICE_NUMBER}}'],
     invoiceId,
@@ -36,6 +39,7 @@ async function generateInvoiceHTML(_template: any, templateData: Record<string, 
     amount: Number(invoice.invoiceAmount) || 0,
     proratedAmount: invoice.proratedAmount ? Number(invoice.proratedAmount) : null,
     notes: invoice.notes || null,
+    isOverdue,
   });
 }
 
@@ -154,7 +158,9 @@ serve(async (req) => {
       due_date: invoice.due_date,
       period_start_date: invoice.period_start_date,
       period_end_date: invoice.period_end_date,
-      notes: invoice.notes
+      notes: invoice.notes,
+      status: invoice.status,
+      paid_date: invoice.paid_date
     }, invoiceId, true); // true for embedded logo
 
     // Get invoice email template from system_messages for subject
