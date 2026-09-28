@@ -173,8 +173,15 @@ serve(async (req) => {
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 30); // 30 days from now
 
-    // Create invoice record in database
-    const { data: invoice, error: invoiceError } = await supabase
+    // Reuse an existing invoice for this period instead of creating a duplicate
+    const { data: existingInvoice } = await supabase
+      .from('invoices').select('*')
+      .eq('organization_id', organizationId).eq('period_start_date', periodStartDate)
+      .maybeSingle();
+    if (existingInvoice) {
+      await supabase.from('invoices').update({ sent_date: new Date().toISOString() }).eq('id', existingInvoice.id);
+    }
+    const { data: invoice, error: invoiceError } = existingInvoice ? { data: existingInvoice, error: null } : await supabase
       .from('invoices')
       .insert({
         organization_id: organizationId,
@@ -206,7 +213,7 @@ serve(async (req) => {
     
     const templateData = {
       '{{LOGO}}': '<img src="https://members.hessconsortium.app/lovable-uploads/c2026cbe-1547-4c12-ba1e-542841a78351.png" alt="HESS Consortium Logo" style="max-height: 80px; width: auto;">',
-      '{{INVOICE_NUMBER}}': invoiceNumber,
+      '{{INVOICE_NUMBER}}': invoice.invoice_number,
       '{{INVOICE_ID}}': invoice.id,
       '{{INVOICE_DATE}}': formatDate(new Date().toISOString()),
       '{{DUE_DATE}}': formatDate(dueDate.toISOString()),

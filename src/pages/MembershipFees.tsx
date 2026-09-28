@@ -889,8 +889,8 @@ export default function MembershipFees() {
               const count = (data as any)?.count ?? emailsToSend.length;
               const windowHours = (data as any)?.windowHours ?? 12;
               toast({
-                title: "Invoices created — emails scheduled",
-                description: `${successCount} invoice${successCount !== 1 ? 's' : ''} created. ${count} email${count !== 1 ? 's' : ''} will be sent evenly over the next ${windowHours} hours to protect deliverability.`
+                title: resendOnly ? "Invoice emails scheduled" : "Invoices sent — emails scheduled",
+                description: `${successCount} new invoice${successCount !== 1 ? 's' : ''} created, ${reusedCount} existing invoice${reusedCount !== 1 ? 's' : ''} re-sent${skippedCount ? `, ${skippedCount} skipped (already paid or no invoice)` : ''}. ${count} email${count !== 1 ? 's' : ''} will be sent evenly over the next ${windowHours} hours to protect deliverability.`
               });
             }
           } catch (emailError) {
