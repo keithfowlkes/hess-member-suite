@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BadgeCheck, BadgeX } from 'lucide-react';
 import { ContactVerificationTab } from '@/components/ContactVerificationTab';
+import { MemberCancellationsTab } from '@/components/MemberCancellationsTab';
 import { useContactVerifications, isCurrentlyVerified } from '@/hooks/useContactVerifications';
 import { ReplacementContactModal } from '@/components/ReplacementContactModal';
 import { useMembers } from '@/hooks/useMembers';
@@ -324,6 +325,7 @@ export default function Members() {
               <TabsList>
                 <TabsTrigger value="organizations">Member Organizations</TabsTrigger>
                 {isAdmin && <TabsTrigger value="verification">Member Verifications</TabsTrigger>}
+                {isAdmin && <TabsTrigger value="cancellations">Member Cancellations</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="organizations" className="space-y-4">
@@ -596,6 +598,11 @@ export default function Members() {
               {isAdmin && (
                 <TabsContent value="verification" className="space-y-4">
                   <ContactVerificationTab organizations={organizations} />
+                </TabsContent>
+              )}
+              {isAdmin && (
+                <TabsContent value="cancellations" className="space-y-4">
+                  <MemberCancellationsTab />
                 </TabsContent>
               )}
             </Tabs>
