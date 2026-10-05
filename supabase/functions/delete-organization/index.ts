@@ -80,6 +80,23 @@ serve(async (req) => {
 
     console.log(`Found organization: ${organization.name}`);
 
+    // Save a restorable snapshot before deleting
+    try {
+      const { data: fullOrg } = await supabaseAdmin.from('organizations').select('*').eq('id', organizationId).single();
+      const { data: orgInvoices } = await supabaseAdmin.from('invoices').select('*').eq('organization_id', organizationId);
+      const p: any = organization.profiles;
+      await supabaseAdmin.from('organization_deletions').insert({
+        organization_id: organizationId,
+        organization_name: organization.name,
+        contact_name: p ? `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() : null,
+        contact_email: p?.email ?? null,
+        snapshot: { organization: fullOrg, invoices: orgInvoices ?? [], contact: p ?? null },
+        deleted_by: adminUserId,
+      });
+    } catch (snapErr) {
+      console.error('Snapshot save failed:', snapErr);
+    }
+
     const deletedItems = [];
     let userId = null;
 
