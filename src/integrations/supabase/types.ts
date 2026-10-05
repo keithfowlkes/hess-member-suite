@@ -1367,6 +1367,48 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_deletions: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string
+          deleted_at: string
+          deleted_by: string | null
+          id: string
+          organization_id: string
+          organization_name: string
+          restored_at: string | null
+          restored_by: string | null
+          snapshot: Json | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          organization_id: string
+          organization_name: string
+          restored_at?: string | null
+          restored_by?: string | null
+          snapshot?: Json | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          organization_id?: string
+          organization_name?: string
+          restored_at?: string | null
+          restored_by?: string | null
+          snapshot?: Json | null
+        }
+        Relationships: []
+      }
       organization_invitations: {
         Row: {
           can_edit_organization: boolean
