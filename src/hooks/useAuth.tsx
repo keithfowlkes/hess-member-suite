@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [viewMode, setViewMode] = useState<'admin' | 'member'>('admin');
+  const [viewMode, setViewMode] = useState<'admin' | 'member'>('member');
 
   useEffect(() => {
     let mounted = true;
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           if (mounted) {
             setIsAdmin(false);
-            setViewMode('admin'); // Reset view mode on sign out
+            setViewMode('member'); // Reset view mode on sign out
           }
         }
         
@@ -334,7 +334,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setSession(null);
       setIsAdmin(false);
-      setViewMode('admin');
+      setViewMode('member');
       
       // Clear any stored session data
       localStorage.removeItem('sb-tyovnvuluyosjnabrzjc-auth-token');
@@ -353,7 +353,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setSession(null);
       setIsAdmin(false);
-      setViewMode('admin');
+      setViewMode('member');
       
       // Clear stored session data
       localStorage.removeItem('sb-tyovnvuluyosjnabrzjc-auth-token');
