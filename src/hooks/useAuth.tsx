@@ -334,7 +334,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setSession(null);
       setIsAdmin(false);
-      setViewMode('admin');
+      setViewMode('member');
       
       // Clear any stored session data
       localStorage.removeItem('sb-tyovnvuluyosjnabrzjc-auth-token');
@@ -353,7 +353,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setSession(null);
       setIsAdmin(false);
-      setViewMode('admin');
+      setViewMode('member');
       
       // Clear stored session data
       localStorage.removeItem('sb-tyovnvuluyosjnabrzjc-auth-token');
