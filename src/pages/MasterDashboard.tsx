@@ -129,7 +129,7 @@ import { LatestLoginsModal } from '@/components/LatestLoginsModal';
 import { format } from 'date-fns';
 
 const MasterDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const { stats: dashboardStats, loading: statsLoading } = useDashboardStats();
   const { users, stats, settings, loading: settingsLoading, updateUserRoles, updateUserCohorts, deleteUser, deleteUserByEmail, resetUserPassword, changeUserPassword, updateSetting, cleanupOrphanedProfiles, cleanupSpecificUser } = useSettings();
   
@@ -565,7 +565,7 @@ const MasterDashboard = () => {
     );
   }
 
-  if (!user || !user.email || user.email !== 'keith.fowlkes@hessconsortium.org') {
+  if (!user || !isAdmin) {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex items-center justify-center">
