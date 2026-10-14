@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           if (mounted) {
             setIsAdmin(false);
-            setViewMode('admin'); // Reset view mode on sign out
+            setViewMode('member'); // Reset view mode on sign out
           }
         }
         
