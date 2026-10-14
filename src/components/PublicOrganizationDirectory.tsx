@@ -74,7 +74,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
   const [loading, setLoading] = useState(true);
   const [selectedOrganization, setSelectedOrganization] = useState<PublicOrganization | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { data: totals } = useOrganizationTotals();
 
   const fetchOrganizations = async () => {
@@ -133,7 +133,7 @@ function DirectoryContent({ showHeader = false, showStats = false }: { showHeade
   const canEditOrganization = (org: PublicOrganization) => {
     if (!user) return false;
     // This would need proper role checking, but for now just check if user exists
-    return user.email === 'keith.fowlkes@hessconsortium.org'; // Admin check
+    return isAdmin;
   };
 
   if (loading) {
